@@ -1,0 +1,198 @@
+{% extends "layouts/base_student.html" %}
+
+{% block title %}Mon Équipe - {{ team.name }} - HackFlow{% endblock %}
+
+{% block student_content %}
+<div class="container-fluid px-0">
+    <!-- Header Équipe avec Couverture Visuelle -->
+    <div class="card-modern overflow-hidden mb-4 position-relative">
+        <div class="position-relative" style="height: 160px;">
+            <img src="https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?w=1200&auto=format&fit=crop&q=80" alt="EcoTrack Cover" class="w-100 h-100" style="object-fit: cover;">
+            <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(180deg, rgba(15,23,42,0.2) 0%, rgba(15,23,42,0.8) 100%);"></div>
+        </div>
+        <div class="p-4 p-md-5 pt-3">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-4">
+                <div>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 rounded-pill px-3 py-1">
+                            {{ team.category }}
+                        </span>
+                        <span class="badge bg-light text-muted border rounded-pill px-3 py-1 font-mono">
+                            <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ team.table_number }}
+                        </span>
+                    </div>
+                    <h1 class="display-5 fw-bold text-dark mb-2">{{ team.name }}</h1>
+                    <p class="lead text-muted mb-0 max-w-2xl">{{ team.tagline }}</p>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#inviteModal">
+                        <i class="bi bi-person-plus-fill me-1"></i>Inviter un membre
+                    </button>
+                    <a href="{% url 'student:tasks_kanban' %}" class="btn btn-primary shadow-sm">
+                        <i class="bi bi-kanban-fill me-1"></i>Ouvrir le Kanban
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Colonne Gauche : Membres de l'Équipe -->
+        <div class="col-lg-8">
+            <div class="card-modern p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-1">Membres du Collectif ({{ team.members|length }}/5)</h5>
+                        <p class="text-muted small mb-0">Rôles, responsabilités et expertises de l'équipe.</p>
+                    </div>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">
+                        1 place disponible
+                    </span>
+                </div>
+
+                <div class="d-flex flex-column gap-3">
+                    {% for member in team.members %}
+                    <div class="p-3 rounded-3 border d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 bg-white card-modern-hoverable">
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="{{ member.avatar }}" alt="{{ member.name }}" class="rounded-circle border" width="48" height="48" style="object-fit: cover;">
+                            <div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <h6 class="fw-bold mb-0 text-dark">{{ member.name }}</h6>
+                                    {% if member.is_leader %}
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill small py-0 px-2" style="font-size: 0.68rem;">
+                                        <i class="bi bi-star-fill me-1"></i>Capitaine
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                <span class="small text-muted">{{ member.role }} • {{ member.email }}</span>
+                                <div class="d-flex flex-wrap gap-1 mt-2">
+                                    {% for skill in member.skills %}
+                                    <span class="badge-tag py-0 px-2" style="font-size: 0.7rem;">{{ skill }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2 ms-auto ms-sm-0">
+                            <button class="btn btn-sm btn-light border" title="Contacter sur Discord" data-demo-toast="Messagerie directe avec {{ member.name }} simulée.">
+                                <i class="bi bi-chat-text"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    <!-- Slot recrutement disponible -->
+                    <div class="p-4 rounded-3 border border-2 border-dashed border-primary border-opacity-50 bg-primary bg-opacity-10 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="badge bg-primary text-white rounded-pill">Slot #5 Ouvert</span>
+                                <strong class="text-primary">Profil recherché :</strong>
+                            </div>
+                            <p class="small text-muted mb-0">{{ team.seeking_skill }}</p>
+                        </div>
+                        <a href="{% url 'student:skills_matching' %}" class="btn btn-primary btn-sm rounded-pill px-3 flex-shrink-0">
+                            <i class="bi bi-search me-1"></i>Chercher dans la bourse aux talents
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne Droite : Liens & Ressources Projet -->
+        <div class="col-lg-4">
+            <div class="card-modern p-4 mb-4">
+                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-link-45deg text-primary me-2"></i>Ressources & Dépôts</h5>
+                <div class="d-flex flex-column gap-3">
+                    <a href="{{ team.repo_url }}" target="_blank" class="p-3 rounded-3 border text-decoration-none text-dark d-flex align-items-center justify-content-between hover-bg-light">
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="bi bi-github fs-4 text-dark"></i>
+                            <div>
+                                <div class="fw-bold small">Dépôt GitHub</div>
+                                <div class="text-muted small text-truncate" style="font-size: 0.75rem;">hackflow-teams/ecotrack-app</div>
+                            </div>
+                        </div>
+                        <i class="bi bi-box-arrow-up-right text-muted"></i>
+                    </a>
+
+                    <a href="{{ team.figma_url }}" target="_blank" class="p-3 rounded-3 border text-decoration-none text-dark d-flex align-items-center justify-content-between hover-bg-light">
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="bi bi-palette-fill fs-4 text-danger"></i>
+                            <div>
+                                <div class="fw-bold small">Maquettes Figma</div>
+                                <div class="text-muted small text-truncate" style="font-size: 0.75rem;">ecotrack-wireframes</div>
+                            </div>
+                        </div>
+                        <i class="bi bi-box-arrow-up-right text-muted"></i>
+                    </a>
+
+                    <a href="{{ team.demo_url }}" target="_blank" class="p-3 rounded-3 border text-decoration-none text-dark d-flex align-items-center justify-content-between hover-bg-light">
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="bi bi-globe fs-4 text-primary"></i>
+                            <div>
+                                <div class="fw-bold small">Environnement Démo</div>
+                                <div class="text-muted small text-truncate" style="font-size: 0.75rem;">ecotrack.demo.hackflow.fr</div>
+                            </div>
+                        </div>
+                        <i class="bi bi-box-arrow-up-right text-muted"></i>
+                    </a>
+                </div>
+
+                <div class="pt-3 border-top mt-3 text-center">
+                    <button class="btn btn-sm btn-outline-secondary w-100 rounded-pill" data-demo-toast="Ajout de lien externe simulé.">
+                        <i class="bi bi-plus-lg me-1"></i>Ajouter un lien ou un document
+                    </button>
+                </div>
+            </div>
+
+            <!-- Paramètres d'équipe -->
+            <div class="card-modern p-4">
+                <h6 class="fw-bold text-dark mb-3">Informations Organisation</h6>
+                <ul class="list-unstyled small text-muted d-flex flex-column gap-2 mb-0">
+                    <li class="d-flex justify-content-between">
+                        <span>Emplacement physique :</span>
+                        <strong class="text-dark">{{ team.table_number }}</strong>
+                    </li>
+                    <li class="d-flex justify-content-between">
+                        <span>Mentor référent assigné :</span>
+                        <strong class="text-primary">Dr. Marc Dubois</strong>
+                    </li>
+                    <li class="d-flex justify-content-between">
+                        <span>Statut du rendu final :</span>
+                        <span class="badge bg-warning text-dark">Brouillon</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Visuelle d'Invitation -->
+<div class="modal fade" id="inviteModal" tabindex="-1" aria-labelledby="inviteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content card-modern border-0">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold" id="inviteModalLabel"><i class="bi bi-person-plus-fill text-primary me-2"></i>Inviter un participant</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <label class="form-label small fw-semibold">Lien d'invitation direct pour rejoindre EcoTrack :</label>
+                <div class="input-group mb-4">
+                    <input type="text" class="form-control font-mono small" value="https://hackflow.fr/join/team-ecotrack-x89f" readonly>
+                    <button class="btn btn-primary" type="button" data-demo-toast="Lien d'invitation copié dans le presse-papier !">
+                        <i class="bi bi-clipboard me-1"></i>Copier
+                    </button>
+                </div>
+
+                <label class="form-label small fw-semibold">Ou inviter par email universitaire :</label>
+                <div class="input-group">
+                    <input type="email" class="form-control" placeholder="etudiant@universite.fr">
+                    <button class="btn btn-outline-primary" type="button" data-demo-toast="Invitation envoyée avec succès !">
+                        Envoyer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

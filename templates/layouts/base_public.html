@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block layout %}
+<div class="d-flex flex-column min-vh-100">
+    <!-- Navbar Publique Adaptative -->
+    <header class="app-public-navbar navbar navbar-expand-lg sticky-top py-3">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold fs-4" href="{% url 'core:landing' %}">
+                <span class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-3 p-2 shadow-sm" style="width: 38px; height: 38px;">
+                    <i class="bi bi-lightning-charge-fill"></i>
+                </span>
+                <span class="text-body fw-bold">Hack<span class="text-gradient-primary">Flow</span></span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarPublic" aria-controls="navbarPublic" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarPublic">
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-lg-3">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:landing' %}#presentation">Le Hackathon</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:landing' %}#etapes">Déroulement</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:landing' %}#mentors">Mentorat</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:landing' %}#faq">FAQ</a>
+                    </li>
+                </ul>
+
+                <div class="d-flex align-items-center gap-2">
+                    {% include "components/theme_toggle.html" %}
+                    <a href="{% url 'accounts:login' %}" class="btn btn-glass px-3 py-2">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Connexion
+                    </a>
+                    <a href="{% url 'accounts:register' %}" class="btn btn-primary px-3 py-2 shadow-sm">
+                        <i class="bi bi-person-plus me-1"></i> Inscription
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenu Principal Public -->
+    <main class="flex-grow-1">
+        {% block public_content %}{% endblock %}
+    </main>
+
+    <!-- Footer Public Adaptatif -->
+    <footer class="app-public-footer py-5 mt-auto">
+        <div class="container">
+            <div class="row g-4 justify-content-between">
+                <div class="col-lg-4">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-3 p-2" style="width: 32px; height: 32px;">
+                            <i class="bi bi-lightning-charge-fill"></i>
+                        </span>
+                        <span class="fs-4 fw-bold text-body">Hack<span class="text-gradient-primary">Flow</span></span>
+                    </div>
+                    <p class="small text-body-secondary mb-3">
+                        La plateforme intégrée pour propulser les hackathons étudiants : matching intelligent des compétences, collaboration agile, mentorat en temps réel et évaluation finale.
+                    </p>
+                    <div class="d-flex gap-2">
+                        <span class="badge bg-secondary bg-opacity-10 text-body font-mono border">Django 5</span>
+                        <span class="badge bg-secondary bg-opacity-10 text-body font-mono border">Bootstrap 5.3</span>
+                        <span class="badge bg-secondary bg-opacity-10 text-body font-mono border">Équipe 5 personnes</span>
+                    </div>
+                </div>
+
+                <div class="col-6 col-lg-2">
+                    <h6 class="text-body fw-bold mb-3">Espaces Démo</h6>
+                    <ul class="list-unstyled small d-flex flex-column gap-2">
+                        <li><a href="{% url 'student:dashboard' %}" class="text-decoration-none text-body-secondary"><i class="bi bi-chevron-right text-primary me-1"></i>Espace Étudiant</a></li>
+                        <li><a href="{% url 'mentor:dashboard' %}" class="text-decoration-none text-body-secondary"><i class="bi bi-chevron-right text-primary me-1"></i>Espace Mentor</a></li>
+                        <li><a href="{% url 'dashboard_admin:dashboard' %}" class="text-decoration-none text-body-secondary"><i class="bi bi-chevron-right text-primary me-1"></i>Cockpit Admin</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-6 col-lg-3">
+                    <h6 class="text-body fw-bold mb-3">Accès Rapide</h6>
+                    <ul class="list-unstyled small d-flex flex-column gap-2">
+                        <li><a href="{% url 'accounts:login' %}" class="text-decoration-none text-body-secondary"><i class="bi bi-chevron-right text-primary me-1"></i>Se connecter</a></li>
+                        <li><a href="{% url 'accounts:register' %}" class="text-decoration-none text-body-secondary"><i class="bi bi-chevron-right text-primary me-1"></i>Créer un compte</a></li>
+                        <li><a href="{% url 'core:landing' %}#faq" class="text-decoration-none text-body-secondary"><i class="bi bi-chevron-right text-primary me-1"></i>Foire aux questions</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-3">
+                    <h6 class="text-body fw-bold mb-3">Hackathon Info</h6>
+                    <div class="p-3 rounded-3 bg-body-tertiary border small">
+                        <div class="d-flex align-items-center gap-2 mb-2 text-body">
+                            <i class="bi bi-calendar-event text-primary"></i>
+                            <strong>HackFlow Annual 2026</strong>
+                        </div>
+                        <p class="mb-1 text-body-secondary">Campus Universitaire & En Ligne</p>
+                        <p class="mb-0 text-success"><i class="bi bi-record-fill me-1"></i>Inscriptions ouvertes</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-top mt-4 pt-4 d-flex flex-column flex-md-row justify-content-between align-items-center small text-body-secondary">
+                <p class="mb-0">&copy; 2026 HackFlow - Conçu avec soin pour les étudiants et organisateurs.</p>
+                <p class="mb-0">Projet académique développé par l'équipe de 5.</p>
+            </div>
+        </div>
+    </footer>
+</div>
+{% endblock %}

@@ -1,0 +1,128 @@
+{% extends "layouts/base_admin.html" %}
+
+{% block title %}Gestion des Participants - HackFlow Admin{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid px-0">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Répertoire des Participants</h2>
+            <p class="text-muted small mb-0">Gestion, affectation d'équipe et suivi des compétences de chaque participant et mentor.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary btn-sm rounded-pill px-3" data-demo-toast="Lancement de l'algorithme d'affectation automatique des 31 orphelins...">
+                <i class="bi bi-magic me-1"></i>Affectation auto
+            </button>
+            <button class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" data-demo-toast="Export CSV généré !">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i>Exporter CSV
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtres et Recherche -->
+    <div class="card-modern p-3 mb-4">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control border-start-0" placeholder="Rechercher par nom, email ou compétence...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select">
+                    <option selected>Tous les rôles</option>
+                    <option>Étudiants</option>
+                    <option>Mentors</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select">
+                    <option selected>Tous statuts</option>
+                    <option>En équipe</option>
+                    <option>Sans équipe</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary w-100" data-demo-toast="Filtres appliqués !">
+                    <i class="bi bi-funnel-fill me-1"></i>Filtrer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table des Participants -->
+    <div class="card-modern overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light border-bottom">
+                    <tr>
+                        <th class="ps-4 py-3 small text-uppercase text-muted fw-bold">Participant</th>
+                        <th class="py-3 small text-uppercase text-muted fw-bold">Établissement</th>
+                        <th class="py-3 small text-uppercase text-muted fw-bold">Rôle</th>
+                        <th class="py-3 small text-uppercase text-muted fw-bold">Équipe</th>
+                        <th class="py-3 small text-uppercase text-muted fw-bold">Compétences</th>
+                        <th class="py-3 small text-uppercase text-muted fw-bold">Statut</th>
+                        <th class="pe-4 py-3 text-end small text-uppercase text-muted fw-bold">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in participants_list %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 38px; height: 38px;">
+                                    {{ p.name|slice:":1" }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark">{{ p.name }}</div>
+                                    <div class="small text-muted font-mono" style="font-size: 0.75rem;">{{ p.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="small text-dark">{{ p.school }}</span>
+                        </td>
+                        <td>
+                            <span class="badge {% if p.role == 'Mentor' %}bg-purple bg-opacity-10 text-secondary border border-secondary border-opacity-25{% else %}bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25{% endif %} rounded-pill">
+                                {{ p.role }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if p.team != 'Aucune' %}
+                            <strong class="text-primary small">{{ p.team }}</strong>
+                            {% else %}
+                            <span class="badge bg-danger-subtle text-danger font-mono small">Orphelin</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-1">
+                                {% for s in p.skills %}
+                                <span class="badge-tag py-0 px-2" style="font-size: 0.68rem;">{{ s }}</span>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ p.status_color }}-subtle text-{{ p.status_color }} border border-{{ p.status_color }}-subtle rounded-pill">
+                                {{ p.status }}
+                            </span>
+                        </td>
+                        <td class="pe-4 text-end">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-light border rounded-pill" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 small">
+                                    <li><a class="dropdown-item" href="#" data-demo-toast="Profil de {{ p.name }} ouvert !"><i class="bi bi-person me-2"></i>Voir la fiche</a></li>
+                                    <li><a class="dropdown-item" href="#" data-demo-toast="Formulaire d'affectation d'équipe ouvert pour {{ p.name }} !"><i class="bi bi-diagram-3 me-2"></i>Affecter une équipe</a></li>
+                                    <li><a class="dropdown-item text-danger" href="#" data-demo-toast="Email de notification envoyé à {{ p.name }} !"><i class="bi bi-envelope me-2"></i>Envoyer un rappel</a></li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

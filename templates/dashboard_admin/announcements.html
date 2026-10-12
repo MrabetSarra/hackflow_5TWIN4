@@ -1,0 +1,107 @@
+{% extends "layouts/base_admin.html" %}
+
+{% block title %}Diffusion d'Annonces - HackFlow Admin{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid px-0">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Centre de Diffusion & Annonces Push</h2>
+            <p class="text-muted small mb-0">Communiquez instantanément avec l'ensemble des participants, les mentors ou des groupes ciblés.</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Formulaire de Nouvelle Annonce -->
+        <div class="col-lg-5">
+            <div class="card-modern p-4 mb-4">
+                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-broadcast text-primary me-2"></i>Diffuser un Message</h5>
+
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Titre de l'annonce</label>
+                        <input type="text" class="form-control" placeholder="ex: Le buffet du dîner est ouvert au Bâtiment B">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Audience cible</label>
+                        <select class="form-select">
+                            <option selected>Tous les participants (Général)</option>
+                            <option>Étudiants participants uniquement</option>
+                            <option>Mentors et experts uniquement</option>
+                            <option>Capitaines d'équipes uniquement</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Niveau d'importance</label>
+                        <div class="row g-2">
+                            <div class="col-4">
+                                <label class="card-modern p-2 text-center cursor-pointer border-primary bg-primary bg-opacity-10 w-100">
+                                    <input type="radio" name="prio_ann" class="form-check-input d-none" checked>
+                                    <span class="small fw-semibold text-primary">Info</span>
+                                </label>
+                            </div>
+                            <div class="col-4">
+                                <label class="card-modern p-2 text-center cursor-pointer w-100">
+                                    <input type="radio" name="prio_ann" class="form-check-input d-none">
+                                    <span class="small fw-semibold text-warning-emphasis">Important</span>
+                                </label>
+                            </div>
+                            <div class="col-4">
+                                <label class="card-modern p-2 text-center cursor-pointer w-100">
+                                    <input type="radio" name="prio_ann" class="form-check-input d-none">
+                                    <span class="small fw-semibold text-danger">Urgent</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-semibold">Contenu du message</label>
+                        <textarea class="form-control" rows="4" placeholder="Détaillez les informations pratiques, consignes ou liens utiles..."></textarea>
+                    </div>
+
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" id="sendDiscord" checked>
+                        <label class="form-check-label small text-muted" for="sendDiscord">
+                            Diffuser également sur le serveur Discord officiel (#annonces)
+                        </label>
+                    </div>
+
+                    <button type="button" class="btn btn-primary w-100 py-2 shadow-sm fw-semibold" data-demo-toast="Annonce push diffusée à l'ensemble des participants !">
+                        <i class="bi bi-send-fill me-2"></i>Diffuser immédiatement
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Historique des Annonces -->
+        <div class="col-lg-7">
+            <div class="card-modern p-4">
+                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-clock-history text-secondary me-2"></i>Historique des Annonces Publiées</h5>
+
+                <div class="d-flex flex-column gap-3">
+                    {% for ann in past_announcements %}
+                    <div class="p-3 rounded-3 border bg-white card-modern-hoverable">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill me-1 font-mono">{{ ann.category }}</span>
+                                <span class="badge bg-secondary-subtle text-secondary rounded-pill font-mono small">{{ ann.audience }}</span>
+                            </div>
+                            <span class="small text-muted font-mono">{{ ann.date }}</span>
+                        </div>
+
+                        <h6 class="fw-bold text-dark mb-1">{{ ann.title }}</h6>
+                        <div class="d-flex justify-content-between align-items-center small text-muted pt-2 border-top mt-2">
+                            <span><i class="bi bi-person me-1"></i>Publié par {{ ann.author }}</span>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">{{ ann.badge }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

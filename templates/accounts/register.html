@@ -1,0 +1,139 @@
+{% extends "layouts/base_public.html" %}
+
+{% block title %}Inscription au Hackathon - HackFlow{% endblock %}
+
+{% block public_content %}
+<div class="py-5 bg-gradient-subtle min-vh-100">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-xl-7">
+                <div class="card-modern p-4 p-md-5 shadow-lg">
+                    <div class="text-center mb-4">
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 rounded-pill px-3 py-1 mb-2">
+                            Édition HackFlow 2026
+                        </span>
+                        <h2 class="fw-bold text-dark">Rejoindre l'aventure Hackathon</h2>
+                        <p class="text-muted small">Remplissez vos informations pour être matché avec les meilleurs profils et démarrer le sprint.</p>
+                    </div>
+
+                    <form action="{% url 'student:dashboard' %}" method="get">
+                        <!-- Étape 1 : Rôle -->
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold text-uppercase text-muted">1. Vous participez en tant que :</label>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="card-modern p-3 d-flex align-items-center gap-3 cursor-pointer border-primary bg-primary bg-opacity-10 h-100">
+                                        <input type="radio" name="role_choice" class="form-check-input mt-0" checked>
+                                        <div>
+                                            <div class="fw-bold text-dark"><i class="bi bi-mortarboard-fill text-primary me-2"></i>Étudiant Participant</div>
+                                            <div class="text-muted small" style="font-size: 0.75rem;">Constituer une équipe, coder et présenter un projet.</div>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="card-modern p-3 d-flex align-items-center gap-3 cursor-pointer h-100">
+                                        <input type="radio" name="role_choice" class="form-check-input mt-0">
+                                        <div>
+                                            <div class="fw-bold text-dark"><i class="bi bi-lightbulb-fill text-secondary me-2"></i>Mentor / Expert</div>
+                                            <div class="text-muted small" style="font-size: 0.75rem;">Guider, conseiller et débloquer les équipes en direct.</div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Étape 2 : Identité -->
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold text-uppercase text-muted">2. Informations personnelles</label>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Prénom</label>
+                                    <input type="text" class="form-control" placeholder="ex: Camille" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Nom</label>
+                                    <input type="text" class="form-control" placeholder="ex: Laurent" required>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label small fw-semibold">Email Universitaire ou Professionnel</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white"><i class="bi bi-envelope"></i></span>
+                                        <input type="email" class="form-control" placeholder="camille.laurent@universite.fr" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Établissement / Université</label>
+                                    <input type="text" class="form-control" placeholder="ex: Polytech / Faculté d'Informatique">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Niveau d'études</label>
+                                    <select class="form-select">
+                                        {% for level in study_levels %}
+                                        <option value="{{ level }}">{{ level }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Étape 3 : Compétences pour le matching -->
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold text-uppercase text-muted">3. Compétences & Technologies clés</label>
+                            <p class="text-muted small mb-2">Sélectionnez vos forces pour optimiser la complémentarité de votre future équipe :</p>
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                {% for skill in available_skills %}
+                                <label class="badge-tag cursor-pointer bg-white border py-2 px-3">
+                                    <input type="checkbox" class="form-check-input me-1" {% if forloop.counter <= 3 %}checked{% endif %}>
+                                    <span>{{ skill }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Étape 4 : Bio et Liens -->
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold text-uppercase text-muted">4. Présentation & Liens</label>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Courte Bio / Ce qui vous motive</label>
+                                <textarea class="form-control" rows="3" placeholder="Parlez-nous en 2 phrases de vos centres d'intérêt, projets passés ou idées de hackathon..."></textarea>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white"><i class="bi bi-github"></i></span>
+                                        <input type="text" class="form-control" placeholder="Pseudo GitHub (optionnel)">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white"><i class="bi bi-linkedin"></i></span>
+                                        <input type="text" class="form-control" placeholder="Lien LinkedIn (optionnel)">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="charteAccept" checked required>
+                            <label class="form-check-label small text-muted" for="charteAccept">
+                                J'accepte le règlement du HackFlow 2026 et m'engage à participer avec fair-play et bienveillance.
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100 py-3 shadow-md fw-semibold">
+                            <i class="bi bi-check-circle-fill me-2"></i>Valider mon inscription & Trouver une équipe
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <p class="small text-muted mb-0">
+                            Déjà inscrit ?
+                            <a href="{% url 'accounts:login' %}" class="fw-bold text-primary text-decoration-none">Se connecter</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

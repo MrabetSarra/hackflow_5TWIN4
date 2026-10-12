@@ -1,0 +1,86 @@
+{% extends "layouts/base_public.html" %}
+
+{% block title %}Connexion - HackFlow{% endblock %}
+
+{% block public_content %}
+<div class="py-5 bg-gradient-subtle min-vh-100 d-flex align-items-center">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-5">
+                <!-- Carte de Connexion -->
+                <div class="card-modern p-4 p-md-5 shadow-lg">
+                    <div class="text-center mb-4">
+                        <span class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-3 p-3 mb-2 shadow-sm" style="width: 50px; height: 50px;">
+                            <i class="bi bi-lightning-charge-fill fs-4"></i>
+                        </span>
+                        <h3 class="fw-bold text-body">Bon retour sur HackFlow</h3>
+                        <p class="text-body-secondary small">Connectez-vous pour rejoindre votre équipe ou accompagner les participants.</p>
+                    </div>
+
+                    <!-- Bannière d'accès démo rapide -->
+                    <div class="p-3 rounded-3 bg-body-tertiary border border-primary border-opacity-25 mb-4">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-magic text-primary"></i>
+                            <span class="fw-bold small text-body">Connexion Démo Rapide (1 clic) :</span>
+                        </div>
+                        <div class="d-flex flex-column gap-2">
+                            {% for acc in demo_accounts %}
+                            <a href="{% url acc.url %}" class="btn btn-sm btn-outline-{{ acc.badge_color }} text-start d-flex align-items-center justify-content-between p-2 rounded-2">
+                                <span class="d-flex align-items-center gap-2">
+                                    <i class="bi {{ acc.icon }}"></i>
+                                    <strong>{{ acc.name }}</strong>
+                                </span>
+                                <span class="badge bg-{{ acc.badge_color }}">{{ acc.role }}</span>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="text-center position-relative my-4">
+                        <hr class="text-secondary opacity-25">
+                        <span class="position-absolute top-50 start-50 translate-middle bg-body px-3 small text-body-secondary">ou identifiants classiques</span>
+                    </div>
+
+                    <!-- Formulaire Visuel -->
+                    <form action="{% url 'student:dashboard' %}" method="get">
+                        <div class="mb-3">
+                            <label for="emailInput" class="form-label small fw-semibold text-body">Adresse Email universitaire</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-body-tertiary border-end-0 text-body-secondary"><i class="bi bi-envelope"></i></span>
+                                <input type="email" class="form-control border-start-0 ps-0" id="emailInput" placeholder="nom@etudiant.univ.fr" value="camille.laurent@etu.univ.fr">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label for="passwordInput" class="form-label small fw-semibold text-body mb-0">Mot de passe</label>
+                                <a href="#" class="small text-decoration-none text-primary" data-demo-toast="Un lien de réinitialisation fictif a été simulé.">Mot de passe oublié ?</a>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-text bg-body-tertiary border-end-0 text-body-secondary"><i class="bi bi-lock"></i></span>
+                                <input type="password" class="form-control border-start-0 ps-0" id="passwordInput" value="••••••••••••">
+                            </div>
+                        </div>
+
+                        <div class="mb-4 form-check">
+                            <input type="checkbox" class="form-check-input" id="rememberMe" checked>
+                            <label class="form-check-label small text-muted" for="rememberMe">Rester connecté sur cet appareil</label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold shadow-sm">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Se connecter
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <p class="small text-muted mb-0">
+                            Pas encore inscrit au hackathon ?
+                            <a href="{% url 'accounts:register' %}" class="fw-bold text-primary text-decoration-none">Créer un profil</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
