@@ -18,6 +18,10 @@ db.sqlite3
 db.sqlite3-journal
 /media/uploads/*
 !/media/uploads/.gitkeep
+<<<<<<< HEAD
+=======
+/private_media/
+>>>>>>> gestion_evenements
 
 # IDE & OS
 .vscode/

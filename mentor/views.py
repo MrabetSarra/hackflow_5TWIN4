@@ -1,5 +1,11 @@
 from django.shortcuts import render
+<<<<<<< HEAD
 
+=======
+from accounts.decorators import role_required
+
+@role_required('mentor')
+>>>>>>> gestion_evenements
 def dashboard(request):
     """
     Tableau de bord de l'espace Mentor.
@@ -53,6 +59,10 @@ def dashboard(request):
     return render(request, 'mentor/dashboard.html', context)
 
 
+<<<<<<< HEAD
+=======
+@role_required('mentor')
+>>>>>>> gestion_evenements
 def teams_list(request):
     """
     Répertoire des équipes du hackathon consultables par le mentor.
@@ -130,6 +140,10 @@ def teams_list(request):
     return render(request, 'mentor/teams_list.html', context)
 
 
+<<<<<<< HEAD
+=======
+@role_required('mentor')
+>>>>>>> gestion_evenements
 def help_requests(request):
     """
     File d'attente complète des tickets de mentorat.
@@ -177,6 +191,10 @@ def help_requests(request):
     return render(request, 'mentor/help_requests.html', context)
 
 
+<<<<<<< HEAD
+=======
+@role_required('mentor')
+>>>>>>> gestion_evenements
 def evaluations(request):
     """
     Historique et saisie des retours / feedbacks mentor.

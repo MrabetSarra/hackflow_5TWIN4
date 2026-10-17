@@ -1,4 +1,8 @@
 {% extends "layouts/base_public.html" %}
+<<<<<<< HEAD
+=======
+{% load static %}
+>>>>>>> gestion_evenements
 
 {% block title %}Connexion - HackFlow{% endblock %}
 
@@ -7,6 +11,7 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-8 col-lg-5">
+<<<<<<< HEAD
                 <!-- Carte de Connexion -->
                 <div class="card-modern p-4 p-md-5 shadow-lg">
                     <div class="text-center mb-4">
@@ -49,10 +54,37 @@
                                 <span class="input-group-text bg-body-tertiary border-end-0 text-body-secondary"><i class="bi bi-envelope"></i></span>
                                 <input type="email" class="form-control border-start-0 ps-0" id="emailInput" placeholder="nom@etudiant.univ.fr" value="camille.laurent@etu.univ.fr">
                             </div>
+=======
+                <div class="card-modern p-4 p-md-5 shadow-lg">
+                    <div class="text-center mb-4">
+                        <img src="{% static 'images/hackflow-mark.png' %}" alt="" width="64" height="48" class="mb-2" style="object-fit: contain;">
+                        <h3 class="fw-bold text-body">Bon retour sur HackFlow</h3>
+                        <p class="text-body-secondary small">Connectez-vous pour rejoindre votre espace HackFlow.</p>
+                    </div>
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <form method="post" action="{% url 'accounts:login' %}" novalidate>
+                        {% csrf_token %}
+                        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+                        <div class="mb-3">
+                            <label for="{{ form.username.id_for_label }}" class="form-label small fw-semibold text-body">{{ form.username.label }}</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-body-tertiary border-end-0 text-body-secondary"><i class="bi bi-person"></i></span>
+                                {{ form.username }}
+                            </div>
+                            {% for error in form.username.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+>>>>>>> gestion_evenements
                         </div>
 
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-1">
+<<<<<<< HEAD
                                 <label for="passwordInput" class="form-label small fw-semibold text-body mb-0">Mot de passe</label>
                                 <a href="#" class="small text-decoration-none text-primary" data-demo-toast="Un lien de réinitialisation fictif a été simulé.">Mot de passe oublié ?</a>
                             </div>
@@ -64,6 +96,20 @@
 
                         <div class="mb-4 form-check">
                             <input type="checkbox" class="form-check-input" id="rememberMe" checked>
+=======
+                                <label for="{{ form.password.id_for_label }}" class="form-label small fw-semibold text-body mb-0">Mot de passe</label>
+                                <a href="{% url 'accounts:password_reset_request' %}" class="small text-decoration-none">Mot de passe oublié ?</a>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-text bg-body-tertiary border-end-0 text-body-secondary"><i class="bi bi-lock"></i></span>
+                                {{ form.password }}
+                            </div>
+                            {% for error in form.password.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                        </div>
+
+                        <div class="mb-4 form-check">
+                            <input type="checkbox" class="form-check-input" id="rememberMe" name="remember_me" checked>
+>>>>>>> gestion_evenements
                             <label class="form-check-label small text-muted" for="rememberMe">Rester connecté sur cet appareil</label>
                         </div>
 

@@ -1,5 +1,11 @@
 from django.shortcuts import render
+<<<<<<< HEAD
 
+=======
+from accounts.decorators import role_required
+
+@role_required('student')
+>>>>>>> gestion_evenements
 def dashboard(request):
     """
     Tableau de bord de l'espace étudiant participant.
@@ -48,6 +54,10 @@ def dashboard(request):
     return render(request, 'student/dashboard.html', context)
 
 
+<<<<<<< HEAD
+=======
+@role_required('student')
+>>>>>>> gestion_evenements
 def team_detail(request):
     """
     Fiche de l'équipe étudiante et gestion des membres.
@@ -102,6 +112,10 @@ def team_detail(request):
     return render(request, 'student/team_detail.html', context)
 
 
+<<<<<<< HEAD
+=======
+@role_required('student')
+>>>>>>> gestion_evenements
 def skills_matching(request):
     """
     Bourse aux compétences : étudiants cherchant équipe & équipes recrutant.
@@ -174,6 +188,10 @@ def skills_matching(request):
     return render(request, 'student/skills_matching.html', context)
 
 
+<<<<<<< HEAD
+=======
+@role_required('student')
+>>>>>>> gestion_evenements
 def tasks_kanban(request):
     """
     Tableau Kanban de suivi des tâches de l'équipe.
@@ -200,6 +218,10 @@ def tasks_kanban(request):
     return render(request, 'student/tasks_kanban.html', context)
 
 
+<<<<<<< HEAD
+=======
+@role_required('student')
+>>>>>>> gestion_evenements
 def mentor_request(request):
     """
     Demande d'accompagnement mentor et suivi des tickets de l'équipe.
@@ -249,6 +271,10 @@ def mentor_request(request):
     return render(request, 'student/mentor_request.html', context)
 
 
+<<<<<<< HEAD
+=======
+@role_required('student')
+>>>>>>> gestion_evenements
 def project_submission(request):
     """
     Rendu final du projet de hackathon pour le jury.
