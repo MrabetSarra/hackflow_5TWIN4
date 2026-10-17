@@ -1,0 +1,110 @@
+{% extends "layouts/base_mentor.html" %}
+
+{% block title %}Feedbacks & Conseils Mentor - HackFlow{% endblock %}
+
+{% block mentor_content %}
+<div class="container-fluid px-0">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Retours & Conseils Post-Session</h2>
+            <p class="text-muted small mb-0">Consignez vos recommandations pour aider les équipes à structurer leur projet avant le jury final.</p>
+        </div>
+        <button class="btn btn-primary d-flex align-items-center gap-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#feedbackModal">
+            <i class="bi bi-plus-lg"></i> Nouveau Feedback
+        </button>
+    </div>
+
+    <!-- Historique des Feedbacks -->
+    <div class="row g-4">
+        {% for fb in feedbacks %}
+        <div class="col-lg-6">
+            <div class="card-modern p-4 h-100 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-1">Équipe : {{ fb.team_name }}</h5>
+                        <span class="text-muted small">Rédigé par {{ fb.mentor }}</span>
+                    </div>
+                    <span class="badge bg-light text-muted border font-mono small">{{ fb.date }}</span>
+                </div>
+
+                <!-- Évaluations indicatives -->
+                <div class="d-flex gap-4 p-3 rounded-3 bg-light mb-3">
+                    <div>
+                        <div class="text-muted small" style="font-size: 0.72rem;">Faisabilité Tech</div>
+                        <div class="text-warning small">
+                            {% for i in "12345" %}
+                            <i class="bi bi-star-fill {% if forloop.counter <= fb.tech_rating %}text-warning{% else %}text-muted opacity-25{% endif %}"></i>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-muted small" style="font-size: 0.72rem;">Ergonomie / UX</div>
+                        <div class="text-warning small">
+                            {% for i in "12345" %}
+                            <i class="bi bi-star-fill {% if forloop.counter <= fb.design_rating %}text-warning{% else %}text-muted opacity-25{% endif %}"></i>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-muted small" style="font-size: 0.72rem;">Pitch & Impact</div>
+                        <span class="badge bg-success-subtle text-success">{{ fb.pitch_readiness }}</span>
+                    </div>
+                </div>
+
+                <p class="text-secondary small fst-italic mb-3 flex-grow-1">"{{ fb.comment }}"</p>
+
+                <div class="pt-2 border-top text-end">
+                    <button class="btn btn-sm btn-link text-primary text-decoration-none p-0" data-demo-toast="Feedback partagé avec l'équipe !">
+                        <i class="bi bi-share me-1"></i>Partager à l'équipe
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal Visuelle Nouveau Feedback -->
+<div class="modal fade" id="feedbackModal" tabindex="-1" aria-labelledby="feedbackModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content card-modern border-0">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold" id="feedbackModalLabel"><i class="bi bi-pencil-square text-primary me-2"></i>Laisser un avis mentor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Équipe concernée</label>
+                    <select class="form-select">
+                        <option>EcoTrack</option>
+                        <option>MediConnect</option>
+                        <option>FinEd</option>
+                        <option>SafeCity</option>
+                        <option>StudyBuddy AI</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">État de maturité du pitch</label>
+                    <select class="form-select">
+                        <option>À revoir d'urgence</option>
+                        <option selected>En bonne voie</option>
+                        <option>Prêt pour le jury</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Commentaire et conseils prioritaires</label>
+                    <textarea class="form-control" rows="4" placeholder="Points forts observés, angles morts à surveiller..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" data-demo-toast="Feedback transmis à l'équipe avec succès !">
+                    Envoyer le feedback
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# Django
+*.log
+local_settings.py
+.env
+.env.*
+!.env.example
+db.sqlite3
+db.sqlite3-journal
+/media/uploads/*
+!/media/uploads/.gitkeep
+/private_media/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

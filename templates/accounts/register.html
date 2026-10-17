@@ -1,0 +1,34 @@
+{% extends "layouts/base_public.html" %}
+
+{% block title %}Créer un compte - HackFlow{% endblock %}
+
+{% block public_content %}
+<section class="py-5 bg-gradient-subtle min-vh-100 d-flex align-items-center">
+    <div class="container">
+        <div class="text-center mb-4">
+            <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 mb-3">HackFlow</span>
+            <h1 class="fw-bold text-body">Créer votre compte</h1>
+            <p class="text-body-secondary">Choisissez votre espace pour commencer.</p>
+        </div>
+        <div class="row justify-content-center g-4">
+            <div class="col-md-5 col-lg-4">
+                <a href="{% url 'accounts:register_role' 'student' %}" class="card-modern d-block h-100 p-4 text-decoration-none">
+                    <div class="stat-icon stat-icon-primary mb-3"><i class="bi bi-mortarboard-fill"></i></div>
+                    <h2 class="h4 fw-bold text-body">Je suis étudiant</h2>
+                    <p class="text-body-secondary mb-3">Trouvez une équipe, partagez vos compétences et participez au hackathon.</p>
+                    <span class="btn btn-primary">Créer un compte étudiant <i class="bi bi-arrow-right ms-1"></i></span>
+                </a>
+            </div>
+            <div class="col-md-5 col-lg-4">
+                <a href="{% url 'accounts:register_role' 'mentor' %}" class="card-modern d-block h-100 p-4 text-decoration-none">
+                    <div class="stat-icon stat-icon-accent mb-3"><i class="bi bi-lightbulb-fill"></i></div>
+                    <h2 class="h4 fw-bold text-body">Je suis mentor</h2>
+                    <p class="text-body-secondary mb-3">Présentez votre expertise et accompagnez les équipes pendant l’événement.</p>
+                    <span class="btn btn-outline-primary">Créer un compte mentor <i class="bi bi-arrow-right ms-1"></i></span>
+                </a>
+            </div>
+        </div>
+        <p class="text-center mt-4 small text-body-secondary">Déjà inscrit ? <a href="{% url 'accounts:login' %}" class="fw-semibold">Se connecter</a></p>
+    </div>
+</section>
+{% endblock %}

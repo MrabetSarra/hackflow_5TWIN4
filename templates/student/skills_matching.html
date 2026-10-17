@@ -1,0 +1,136 @@
+{% extends "layouts/base_student.html" %}
+
+{% block title %}Matching & Bourse aux Compétences - HackFlow{% endblock %}
+
+{% block student_content %}
+<div class="container-fluid px-0">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Bourse aux Talents & Matching</h2>
+            <p class="text-muted small mb-0">Trouvez le profil manquant pour compléter votre équipe ou découvrez les projets qui recrutent.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill font-mono">
+                <i class="bi bi-people-fill me-1"></i>38 participants encore disponibles
+            </span>
+        </div>
+    </div>
+
+    <!-- Barre de Recherche et Filtres -->
+    <div class="card-modern p-3 mb-4">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control border-start-0" placeholder="Rechercher par compétence (Python, React, IA, Figma...)">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select">
+                    <option selected>Toutes les spécialités</option>
+                    <option>Data Science / IA</option>
+                    <option>Développement Front-End</option>
+                    <option>Développement Back-End</option>
+                    <option>Design UI/UX & Produit</option>
+                    <option>DevOps & Cloud</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-primary w-100" data-demo-toast="Filtres appliqués pour la démo !">
+                    <i class="bi bi-funnel-fill me-1"></i>Filtrer les profils
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Système d'onglets (Participants sans équipe vs Équipes qui recrutent) -->
+    <ul class="nav nav-pills mb-4 gap-2" id="matchingTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active px-4 rounded-pill fw-semibold" id="students-tab" data-bs-toggle="pill" data-bs-target="#students-pane" type="button" role="tab">
+                <i class="bi bi-person-heart me-1"></i>Participants Disponibles ({{ students_looking|length }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link px-4 rounded-pill fw-semibold" id="teams-tab" data-bs-toggle="pill" data-bs-target="#teams-pane" type="button" role="tab">
+                <i class="bi bi-collection-fill me-1"></i>Équipes qui Recrutent ({{ teams_looking|length }})
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="matchingTabsContent">
+        <!-- ONGLET 1 : PARTICIPANTS SANS ÉQUIPE -->
+        <div class="tab-pane fade show active" id="students-pane" role="tabpanel">
+            <div class="row g-4">
+                {% for student in students_looking %}
+                <div class="col-md-6 col-xl-3">
+                    <div class="card-modern card-modern-hoverable p-4 h-100 d-flex flex-column text-center">
+                        <div class="position-relative d-inline-block mx-auto mb-3">
+                            <img src="{{ student.avatar }}" alt="{{ student.name }}" class="rounded-circle border" width="80" height="80" style="object-fit: cover;">
+                            <span class="position-absolute bottom-0 end-0 badge bg-success rounded-circle p-1 border border-2 border-white" title="Disponible"> </span>
+                        </div>
+                        
+                        <h5 class="fw-bold text-dark mb-1">{{ student.name }}</h5>
+                        <p class="text-primary small fw-semibold mb-1">{{ student.preferred_role }}</p>
+                        <p class="text-muted small mb-3">{{ student.school }}</p>
+
+                        <p class="text-muted small fst-italic mb-3 flex-grow-1">"{{ student.bio }}"</p>
+
+                        <!-- Compétences -->
+                        <div class="d-flex flex-wrap justify-content-center gap-1 mb-4">
+                            {% for skill in student.skills %}
+                            <span class="badge-tag">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
+
+                        <button class="btn btn-primary btn-sm rounded-pill w-100" data-demo-toast="Invitation envoyée à {{ student.name }} pour rejoindre EcoTrack !">
+                            <i class="bi bi-person-plus-fill me-1"></i>Inviter dans l'équipe
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- ONGLET 2 : ÉQUIPES QUI RECRUTENT -->
+        <div class="tab-pane fade" id="teams-pane" role="tabpanel">
+            <div class="row g-4">
+                {% for t in teams_looking %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card-modern card-modern-hoverable overflow-hidden h-100 d-flex flex-column">
+                        <div class="position-relative" style="height: 130px;">
+                            <img src="{{ t.cover_img }}" alt="{{ t.name }}" class="w-100 h-100" style="object-fit: cover;">
+                            <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 100%);"></div>
+                            <div class="position-absolute bottom-0 start-0 p-2 px-3 w-100 d-flex justify-content-between align-items-center">
+                                <span class="badge bg-primary bg-opacity-75 text-white border border-white border-opacity-25 rounded-pill px-2 py-1 font-mono small">
+                                    {{ t.category }}
+                                </span>
+                                <span class="badge bg-dark bg-opacity-75 text-white border border-white border-opacity-25 font-mono small">
+                                    {{ t.current_members }}/{{ t.target_members }} membres
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="p-4 d-flex flex-column flex-grow-1">
+                            <h4 class="fw-bold text-dark mb-2">{{ t.name }}</h4>
+                            <p class="text-muted small mb-3 flex-grow-1">{{ t.pitch }}</p>
+
+                        <div class="p-3 rounded-3 bg-light border mb-3">
+                            <div class="small fw-bold text-danger mb-1"><i class="bi bi-search me-1"></i>Profils recherchés urgents :</div>
+                            <div class="d-flex flex-wrap gap-1">
+                                {% for skill in t.missing_skills %}
+                                <span class="badge-tag badge-tag-urgent">{{ skill }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <button class="btn btn-outline-primary btn-sm rounded-pill w-100" data-demo-toast="Candidature spontanée transmise à l'équipe {{ t.name }} !">
+                            <i class="bi bi-send-fill me-1"></i>Postuler auprès de l'équipe
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

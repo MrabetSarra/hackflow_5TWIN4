@@ -1,0 +1,205 @@
+{% extends "layouts/base_student.html" %}
+
+{% block title %}Gestion des Tâches (Kanban) - HackFlow{% endblock %}
+
+{% block student_content %}
+<div class="container-fluid px-0">
+    <!-- En-tête Kanban -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Tableau Kanban du Sprint</h2>
+            <p class="text-muted small mb-0">Répartissez les responsabilités, suivez l'avancement en temps réel et anticipez les blocages.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary d-flex align-items-center gap-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#newTaskModal">
+                <i class="bi bi-plus-lg"></i> Nouvelle Tâche
+            </button>
+        </div>
+    </div>
+
+    <!-- Le Tableau Kanban -->
+    <div class="kanban-board">
+        <!-- COLONNE 1 : À FAIRE -->
+        <div class="kanban-col">
+            <div class="kanban-col-header">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-secondary rounded-circle p-1"> </span>
+                    <h6 class="fw-bold text-dark mb-0">À Faire</h6>
+                </div>
+                <span class="badge bg-secondary-subtle text-secondary font-mono">{{ todo_tasks|length }}</span>
+            </div>
+
+            <div class="kanban-items">
+                {% for task in todo_tasks %}
+                <div class="kanban-card">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge-tag badge-tag-{{ task.tag_color }}">{{ task.tag }}</span>
+                        {% if task.urgent %}
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill py-0 px-2" style="font-size: 0.68rem;">Urgent</span>
+                        {% endif %}
+                    </div>
+                    <h6 class="fw-bold text-dark small mb-3">{{ task.title }}</h6>
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <div class="d-flex align-items-center gap-1 small text-muted">
+                            <i class="bi bi-person-circle text-primary"></i>
+                            <span>{{ task.assignee }}</span>
+                        </div>
+                        <i class="bi bi-grip-vertical text-muted"></i>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- COLONNE 2 : EN COURS -->
+        <div class="kanban-col" style="background: rgba(99, 102, 241, 0.05); border-color: rgba(99, 102, 241, 0.2);">
+            <div class="kanban-col-header">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-primary rounded-circle p-1"> </span>
+                    <h6 class="fw-bold text-primary mb-0">En Cours</h6>
+                </div>
+                <span class="badge bg-primary-subtle text-primary font-mono">{{ in_progress_tasks|length }}</span>
+            </div>
+
+            <div class="kanban-items">
+                {% for task in in_progress_tasks %}
+                <div class="kanban-card border-primary border-opacity-25">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge-tag badge-tag-{{ task.tag_color }}">{{ task.tag }}</span>
+                        {% if task.urgent %}
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill py-0 px-2" style="font-size: 0.68rem;">Bloquant</span>
+                        {% endif %}
+                    </div>
+                    <h6 class="fw-bold text-dark small mb-3">{{ task.title }}</h6>
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <div class="d-flex align-items-center gap-1 small text-muted">
+                            <i class="bi bi-person-circle text-primary"></i>
+                            <span>{{ task.assignee }}</span>
+                        </div>
+                        <span class="spinner-grow spinner-grow-sm text-primary" style="width: 0.45rem; height: 0.45rem;" role="status"></span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- COLONNE 3 : EN REVUE -->
+        <div class="kanban-col">
+            <div class="kanban-col-header">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-warning rounded-circle p-1"> </span>
+                    <h6 class="fw-bold text-warning-emphasis mb-0">En Revue / Test</h6>
+                </div>
+                <span class="badge bg-warning-subtle text-warning-emphasis font-mono">{{ review_tasks|length }}</span>
+            </div>
+
+            <div class="kanban-items">
+                {% for task in review_tasks %}
+                <div class="kanban-card">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge-tag badge-tag-{{ task.tag_color }}">{{ task.tag }}</span>
+                        <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill py-0 px-2" style="font-size: 0.68rem;">Review</span>
+                    </div>
+                    <h6 class="fw-bold text-dark small mb-3">{{ task.title }}</h6>
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <div class="d-flex align-items-center gap-1 small text-muted">
+                            <i class="bi bi-person-circle text-primary"></i>
+                            <span>{{ task.assignee }}</span>
+                        </div>
+                        <i class="bi bi-check2-all text-warning"></i>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- COLONNE 4 : TERMINÉ -->
+        <div class="kanban-col" style="background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.2);">
+            <div class="kanban-col-header">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-success rounded-circle p-1"> </span>
+                    <h6 class="fw-bold text-success mb-0">Terminé</h6>
+                </div>
+                <span class="badge bg-success-subtle text-success font-mono">{{ done_tasks|length }}</span>
+            </div>
+
+            <div class="kanban-items">
+                {% for task in done_tasks %}
+                <div class="kanban-card opacity-75">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge-tag badge-tag-{{ task.tag_color }}">{{ task.tag }}</span>
+                        <span class="badge bg-success-subtle text-success rounded-pill py-0 px-2" style="font-size: 0.68rem;">Fait</span>
+                    </div>
+                    <h6 class="fw-semibold text-decoration-line-through text-muted small mb-3">{{ task.title }}</h6>
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <div class="d-flex align-items-center gap-1 small text-muted">
+                            <i class="bi bi-person-circle text-success"></i>
+                            <span>{{ task.assignee }}</span>
+                        </div>
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Visuelle de Création de Tâche -->
+<div class="modal fade" id="newTaskModal" tabindex="-1" aria-labelledby="newTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content card-modern border-0">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold" id="newTaskModalLabel"><i class="bi bi-plus-circle text-primary me-2"></i>Ajouter une nouvelle tâche</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Titre de la tâche</label>
+                    <input type="text" class="form-control" placeholder="ex: Créer le composant de carte d'empreinte carbone">
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Catégorie</label>
+                        <select class="form-select">
+                            <option>Frontend</option>
+                            <option>Backend</option>
+                            <option>Design & UX</option>
+                            <option>DevOps / Infra</option>
+                            <option>Pitch & Slides</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Assigné à</label>
+                        <select class="form-select">
+                            <option>Camille Laurent</option>
+                            <option>Youssef El Mansouri</option>
+                            <option>Éléonore Morin</option>
+                            <option>Lucas Bernard</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Niveau d'urgence</label>
+                    <div class="d-flex gap-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="prio" id="prio1" checked>
+                            <label class="form-check-label small" for="prio1">Normale</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="prio" id="prio2">
+                            <label class="form-check-label small text-danger fw-bold" for="prio2">Haute / Bloquante</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" data-demo-toast="Tâche ajoutée avec succès au tableau !">
+                    Créer la tâche
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

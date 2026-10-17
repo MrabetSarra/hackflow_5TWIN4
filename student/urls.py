@@ -1,0 +1,13 @@
+from django.urls import path
+from . import views
+
+app_name = 'student'
+
+urlpatterns = [
+    path('', views.dashboard, name='dashboard'),
+    path('team/', views.team_detail, name='team_detail'),
+    path('matching/', views.skills_matching, name='skills_matching'),
+    path('tasks/', views.tasks_kanban, name='tasks_kanban'),
+    path('mentor-request/', views.mentor_request, name='mentor_request'),
+    path('submission/', views.project_submission, name='project_submission'),
+]
