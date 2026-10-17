@@ -111,8 +111,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-<<<<<<< HEAD
-=======
 # Use the HackFlow profile model for Django authentication from the first migration.
 AUTH_USER_MODEL = 'accounts.User'
 
@@ -125,7 +123,6 @@ EMAIL_HOST_USER = os.environ.get('GMAIL_EMAIL', 'montahaguedhami@gmail.com')
 EMAIL_HOST_PASSWORD = os.environ.get('GMAIL_APP_PASSWORD', '')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
->>>>>>> gestion_evenements
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
@@ -150,10 +147,7 @@ STATICFILES_DIRS = [
 # Media files (Uploads)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media' / 'uploads'
-<<<<<<< HEAD
-=======
 PRIVATE_MEDIA_ROOT = BASE_DIR / 'private_media'
->>>>>>> gestion_evenements
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

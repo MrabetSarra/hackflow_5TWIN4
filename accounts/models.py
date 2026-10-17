@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-from django.db import models
-
-# Create your models here.
-=======
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
@@ -68,4 +63,3 @@ class PasswordResetCode(models.Model):
     @property
     def is_valid(self):
         return self.used_at is None and self.expires_at > timezone.now() and self.attempts < 5
->>>>>>> gestion_evenements

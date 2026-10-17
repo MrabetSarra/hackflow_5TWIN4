@@ -1,11 +1,7 @@
 from django.shortcuts import render
-<<<<<<< HEAD
-
-=======
 from accounts.decorators import role_required
 
 @role_required('admin')
->>>>>>> gestion_evenements
 def dashboard(request):
     """
     Cockpit principal pour les organisateurs du hackathon.
@@ -37,10 +33,7 @@ def dashboard(request):
     return render(request, 'dashboard_admin/dashboard.html', context)
 
 
-<<<<<<< HEAD
-=======
 @role_required('admin')
->>>>>>> gestion_evenements
 def participants(request):
     """
     Gestion des participants et filtrage.
@@ -112,10 +105,7 @@ def participants(request):
     return render(request, 'dashboard_admin/participants.html', context)
 
 
-<<<<<<< HEAD
-=======
 @role_required('admin')
->>>>>>> gestion_evenements
 def teams(request):
     """
     Gestion des équipes du hackathon.
@@ -171,10 +161,7 @@ def teams(request):
     return render(request, 'dashboard_admin/teams.html', context)
 
 
-<<<<<<< HEAD
-=======
 @role_required('admin')
->>>>>>> gestion_evenements
 def announcements(request):
     """
     Gestion et diffusion des annonces organisateur.
@@ -213,10 +200,7 @@ def announcements(request):
     return render(request, 'dashboard_admin/announcements.html', context)
 
 
-<<<<<<< HEAD
-=======
 @role_required('admin')
->>>>>>> gestion_evenements
 def judging(request):
     """
     Grille de notation du jury et classement final.
