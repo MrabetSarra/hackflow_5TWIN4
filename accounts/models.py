@@ -18,7 +18,7 @@ def validate_cv_size(upload):
 
 
 class User(AbstractUser):
-    id = models.AutoField(primary_key=True)
+    id = models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')
 
     class Role(models.TextChoices):
         STUDENT = "student", "Étudiant"
