@@ -1,130 +1,104 @@
-# ⚡ HackFlow - Plateforme de Gestion de Hackathon Étudiant
+<p align="center">
+  <img src="static/images/hackflow-logo.png" alt="HackFlow" width="340">
+</p>
 
-> Conçu pour une équipe de 5 développeurs. Couche Front-End & Templates sous **Django 5** et **Bootstrap 5.3**.
+<h1 align="center">HackFlow</h1>
 
----
+<p align="center"><strong>Build · Collaborate · Create</strong></p>
 
-## 🎯 Présentation du Projet
+<p align="center">
+  La plateforme qui aide les équipes étudiantes à transformer une idée en projet de hackathon.
+</p>
 
-HackFlow simplifie et centralise l'organisation d'un hackathon étudiant, de la formation des équipes jusqu'au pitch final devant le jury :
-- **Matching des compétences** : algorithme et bourse aux talents pour équilibrer les équipes.
-- **Gestion de sprint agile** : tableau Kanban pour répartir les tâches et anticiper les blocages.
-- **Mentorat en continu** : file d'attente d'assistance et accompagnement direct en visio.
-- **Cockpit organisateur** : suivi des 500 participants, KPIs en temps réel et notation officielle du jury.
+<p align="center">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white">
+  <img alt="Django" src="https://img.shields.io/badge/Django-5.2-092E20?logo=django&logoColor=white">
+  <img alt="SQLite" src="https://img.shields.io/badge/Database-SQLite-003B57?logo=sqlite&logoColor=white">
+</p>
 
----
+## À propos
 
-## 🛠️ Stack Technique
+HackFlow rassemble dans un même espace les outils utiles pendant un hackathon étudiant : trouver des coéquipiers, partager ses compétences, demander conseil à un mentor et suivre l’avancement d’un projet.
 
-- **Backend** : Django 5.2 (Python 3.11+)
-- **Templates** : Django Template Language (DTL)
-- **Front-End & UI/UX** : Bootstrap 5.3 (CDN), Bootstrap Icons 1.11, Google Fonts (*Plus Jakarta Sans* & *JetBrains Mono*), CSS personnalisé (`static/css/custom.css`)
-- **Base de données** : SQLite 3 (`db.sqlite3`)
-- **Stockage des médias** : `/media/uploads/`
-- **Langue & Région** : Français (`fr-fr`), Fuseau horaire Paris (`Europe/Paris`)
+L’expérience s’articule autour de trois espaces — **étudiant**, **mentor** et **organisateur** — afin que chacun retrouve les informations et les actions adaptées à son rôle.
 
----
+## Ce que propose HackFlow
 
-## 🚀 Démarrage Rapide
+- **Trouver son équipe** : découvrir des profils complémentaires et mettre en valeur ses compétences.
+- **Avancer ensemble** : visualiser les tâches, les jalons et le rendu du projet.
+- **Être accompagné** : solliciter un mentor et consulter les demandes d’aide.
+- **Organiser l’événement** : suivre les participants, les équipes, les annonces et les évaluations depuis un cockpit dédié.
+- **Présenter son profil** : gérer ses informations, sa photo et son CV.
 
-### 1. Cloner le projet et créer un environnement virtuel
-```powershell
+## Trois espaces, un objectif commun
+
+| Étudiants | Mentors | Organisateurs |
+|---|---|---|
+| Profil et compétences | Suivi des équipes | Vue d’ensemble du hackathon |
+| Équipes et matching | Demandes d’accompagnement | Participants et équipes |
+| Tâches et rendu du projet | Évaluations et retours | Annonces et notation |
+
+## État du projet
+
+HackFlow est un **prototype web en cours de développement**. La création de compte étudiant ou mentor, la connexion, les rôles, la gestion du profil et les fichiers associés sont reliés à la base de données. Les espaces métier présentent le parcours et l’interface cible ; plusieurs listes reposent encore sur des données d’exemple, et certaines actions affichent une confirmation de démonstration sans enregistrer de données.
+
+Cette version permet de découvrir l’expérience envisagée et constitue une base pour connecter progressivement les équipes, tâches, demandes et évaluations à des données persistantes.
+
+## Aperçu
+
+L’application comprend une page d’accueil publique et des tableaux de bord distincts pour chaque rôle. Pour explorer l’interface localement, consultez le démarrage rapide ci-dessous.
+
+## Démarrage rapide
+
+Prérequis : Python 3.10 ou plus récent.
+
+```bash
 git clone https://github.com/MrabetSarra/hackflow_5TWIN4.git
 cd hackflow_5TWIN4
 python -m venv .venv
+```
+
+Activez l’environnement virtuel, puis installez et lancez le projet :
+
+```bash
+# Windows PowerShell
 .\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-```
 
-### 2. Appliquer les migrations
-```powershell
+# macOS / Linux
+source .venv/bin/activate
+
+python -m pip install -r requirements.txt
 python manage.py migrate
-```
-
-### 3. Lancer le serveur de développement
-```powershell
 python manage.py runserver
 ```
-L'application est disponible sur : **[http://127.0.0.1:8000/](http://127.0.0.1:8000/)**
 
-La clé Django de développement peut être remplacée en définissant la variable
-d'environnement `DJANGO_SECRET_KEY`. Configurez impérativement une clé secrète
-privée avant tout déploiement.
+Ouvrez [http://127.0.0.1:8000/](http://127.0.0.1:8000/). La base SQLite locale est créée lors de l’application des migrations. L’envoi des codes de réinitialisation du mot de passe nécessite une configuration SMTP Gmail.
 
----
+## Technologies
 
-## 🧭 Les 4 Espaces Utilisateurs & 19 Routes Démo
+- **Backend :** Python et Django
+- **Données locales :** SQLite
+- **Interface :** Django Templates, Bootstrap, CSS et JavaScript
+- **Médias :** Pillow pour la photo de profil ; CV conservés dans un stockage privé local
 
-Une **barre flottante de bascule (Demo Switcher)** en bas à droite de l'écran permet de naviguer en un clic entre les espaces sans se déconnecter.
-
-### 1. Espace Visiteur (Public)
-| Route | Nom de l'URL | Description |
-|---|---|---|
-| `/` | `core:landing` | Landing page complète avec compte à rebours, étapes, chiffres clés, mentors et FAQ |
-| `/accounts/login/` | `accounts:login` | Page de connexion avec raccourcis de démo rapide (Étudiant, Mentor, Admin) |
-| `/accounts/register/` | `accounts:register` | Inscription avec choix de rôle et tags de compétences pour le matching |
-| `/accounts/profile/` | `accounts:profile` | Consultation et édition du profil utilisateur avec badges de succès |
-
-### 2. Espace Étudiant (Participant)
-| Route | Nom de l'URL | Description |
-|---|---|---|
-| `/student/` | `student:dashboard` | Tableau de bord avec jalons, deadlines urgentes et KPIs du sprint |
-| `/student/team/` | `student:team_detail` | Fiche d'équipe (*EcoTrack*), membres, liens (GitHub, Figma) et invitation |
-| `/student/matching/` | `student:skills_matching` | Bourse aux compétences (participants sans équipe & équipes qui recrutent) |
-| `/student/tasks/` | `student:tasks_kanban` | Tableau Kanban interactif (À faire, En cours, Revue, Terminé) |
-| `/student/mentor-request/` | `student:mentor_request` | Demande d'assistance mentor en direct et historique des tickets |
-| `/student/submission/` | `student:project_submission` | Formulaire de rendu final du projet (liens, vidéo, slides PDF) |
-
-### 3. Espace Mentor (Accompagnement)
-| Route | Nom de l'URL | Description |
-|---|---|---|
-| `/mentor/` | `mentor:dashboard` | Cockpit mentor (*Dr. Marc Dubois*), tickets urgents et planning de sessions |
-| `/mentor/teams/` | `mentor:teams_list` | Répertoire des équipes avec barre de progression et recherche par défi |
-| `/mentor/requests/` | `mentor:help_requests` | File d'attente complète des tickets d'aide avec niveau de criticité |
-| `/mentor/evaluations/` | `mentor:evaluations` | Fiches de retours et feedbacks constructifs post-session |
-
-### 4. Espace Admin (Organisateur)
-| Route | Nom de l'URL | Description |
-|---|---|---|
-| `/cockpit/` | `dashboard_admin:dashboard` | Cockpit global de supervision, KPIs, répartition par défi et fil d'activité live |
-| `/cockpit/participants/` | `dashboard_admin:participants` | Table des 500 participants avec recherche et filtres par statut |
-| `/cockpit/teams/` | `dashboard_admin:teams` | Gestion des 92 équipes, mentors assignés et état des livrables |
-| `/cockpit/announcements/` | `dashboard_admin:announcements` | Outil de diffusion d'annonces push en direct |
-| `/cockpit/judging/` | `dashboard_admin:judging` | Grille de notation officielle du jury et podium final en direct |
-
----
-
-## 🏗️ Architecture du Code
+## Organisation du dépôt
 
 ```text
-hackflow/
-├── hackflow/                  # Configuration principale (settings, urls, wsgi)
-├── core/                      # Application publique (Landing)
-├── accounts/                  # Authentification & Profils
-├── student/                   # Espace étudiant participant
-├── mentor/                    # Espace accompagnateur mentor
-├── dashboard_admin/           # Espace organisateur admin
-├── static/
-│   ├── css/custom.css         # Design system & styles HackFlow
-│   └── js/main.js             # Interactions, toasts démo, timer & toggle
-├── templates/
-│   ├── base.html              # Template racine
-│   ├── components/            # Composants réutilisables (demo_switcher.html)
-│   ├── layouts/               # Layouts parents par espace
-│   │   ├── base_public.html
-│   │   ├── base_student.html
-│   │   ├── base_mentor.html
-│   │   └── base_admin.html
-│   ├── core/
-│   ├── accounts/
-│   ├── student/
-│   ├── mentor/
-│   └── dashboard_admin/
-└── media/uploads/             # Dossier de téléversement des fichiers
+accounts/          Comptes, rôles et profils
+core/              Page publique
+student/           Espace étudiant
+mentor/            Espace mentor
+dashboard_admin/   Espace organisateur
+templates/         Pages et layouts
+static/             Styles, scripts et identité visuelle
 ```
+
+## Pistes d’évolution
+
+- Remplacer les données d’exemple par des modèles métier persistants.
+- Connecter les actions de gestion des équipes, tâches et demandes.
+- Ajouter des tests couvrant les parcours de compte et les permissions par rôle.
 
 ---
 
-## 🔌 Préparé pour la suite (Modèles ORM)
-
-Les contextes de données factices dans chaque `views.py` sont modélisés comme de futurs objets Django (`dict` facilement remplaçables par `Model.objects.all()` ou `filter()`). Les formulaires sont prêts à être convertis en `ModelForm` ou `Form` Django lors de l'étape suivante.
+**HackFlow — Build · Collaborate · Create**
