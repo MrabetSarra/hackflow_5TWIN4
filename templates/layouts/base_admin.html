@@ -41,6 +41,10 @@
                 <i class="bi bi-trophy-fill"></i>
                 <span>Grille & Jury Final</span>
             </a>
+            <a href="{% url 'student:jury_submissions' %}" class="nav-link-item {% if request.resolver_match.url_name == 'jury_submissions' %}active{% endif %}">
+                <i class="bi bi-file-earmark-zip-fill"></i>
+                <span>Project Submissions</span>
+            </a>
 
             <div class="sidebar-heading mt-3">Paramètres</div>
             <a href="{% url 'accounts:profile' %}" class="nav-link-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">

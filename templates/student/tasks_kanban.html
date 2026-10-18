@@ -1,37 +1,89 @@
 {% extends "layouts/base_student.html" %}
 
-{% block title %}Gestion des Tâches (Kanban) - HackFlow{% endblock %}
+{% block title %}Task Management (Kanban) - HackFlow{% endblock %}
 
 {% block student_content %}
 <div class="container-fluid px-0">
-    <!-- En-tête Kanban -->
+    <!-- Board header -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-1">Tableau Kanban du Sprint</h2>
-            <p class="text-muted small mb-0">Répartissez les responsabilités, suivez l'avancement en temps réel et anticipez les blocages.</p>
+            <h2 class="fw-bold text-dark mb-1">{% if board_view == 'scrum' %}Agile Scrum Management{% else %}Sprint Kanban Board{% endif %}</h2>
+            <p class="text-muted small mb-0">Share responsibilities, track progress, and spot blockers early.</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'student:tasks_kanban' %}?view=kanban" class="btn btn-primary" style="background-color: #fff; color: var(--hf-primary); border-color: var(--hf-primary);">Kanban</a>
+            <a href="{% url 'student:tasks_kanban' %}?view=scrum" class="btn btn-primary" style="background-color: #fff; color: var(--hf-primary); border-color: var(--hf-primary);">Agile Scrum</a>
             <button class="btn btn-primary d-flex align-items-center gap-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#newTaskModal">
-                <i class="bi bi-plus-lg"></i> Nouvelle Tâche
+                <i class="bi bi-plus-lg"></i> New Task
             </button>
         </div>
     </div>
 
-    <!-- Le Tableau Kanban -->
+    {% if board_view == 'scrum' %}
+    <div class="card-modern p-4 mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <h5 class="fw-bold text-body mb-0">{{ sprint.name }}</h5>
+                    <span class="badge bg-primary-subtle text-primary">Current Sprint</span>
+                </div>
+                <p class="text-body-secondary mb-0">{{ sprint.goal|default:"Set a clear goal for your sprint with your team." }}</p>
+            </div>
+            <div class="small text-body-secondary font-mono text-md-end">
+                {{ sprint.starts_at|date:"d/m H:i" }} — {{ sprint.ends_at|date:"d/m H:i" }}<br>
+                {{ sprint_task_count }} task(s) in the sprint
+            </div>
+        </div>
+    </div>
+
+    <div class="card-modern p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div><h5 class="fw-bold text-body mb-1">Product Backlog</h5><p class="text-body-secondary small mb-0">Tasks to plan for this sprint.</p></div>
+            <span class="badge bg-secondary-subtle text-secondary" data-backlog-count>{{ scrum_backlog|length }}</span>
+        </div>
+        <div class="row g-3">
+            {% for task in scrum_backlog %}
+            <div class="col-md-6 col-xl-4"><div class="kanban-card h-100" draggable="true" data-task-card data-backlog-card="true" data-task-id="{{ task.id }}">
+                <div class="d-flex justify-content-between align-items-start mb-2"><span class="badge-tag">{{ task.category }}</span><span class="small text-body-secondary">{{ task.priority }}</span></div>
+                <h6 class="fw-bold text-body">{{ task.title }}</h6>
+                <div class="small text-body-secondary mb-3">{{ task.assignee }} &middot; {{ task.status }}</div>
+                <div class="d-flex gap-2"><a class="btn btn-outline-secondary btn-sm rounded-pill" href="?view=scrum&amp;edit_task={{ task.id }}">Edit</a><button type="button" class="btn btn-outline-danger btn-sm rounded-pill" data-delete-task="{{ task.id }}" data-task-title="{{ task.title }}" data-bs-toggle="modal" data-bs-target="#deleteTaskModal">Delete</button><form method="post">{% csrf_token %}<input type="hidden" name="action" value="plan_task"><input type="hidden" name="task_id" value="{{ task.id }}"><button type="submit" class="btn btn-outline-primary btn-sm rounded-pill">Add to sprint</button></form></div>
+            </div></div>
+            {% empty %}<div class="col-12"><p class="text-body-secondary mb-0">The product backlog is empty.</p></div>{% endfor %}
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3"><div><h5 class="fw-bold text-body mb-1">Sprint Backlog</h5><p class="text-body-secondary small mb-0">Move tasks forward during the sprint.</p></div></div>
     <div class="kanban-board">
-        <!-- COLONNE 1 : À FAIRE -->
-        <div class="kanban-col">
+        {% for column in scrum_columns %}
+        <div class="kanban-col" data-status="{{ column.status }}">
+            <div class="kanban-col-header"><h6 class="fw-bold text-{{ column.color }} mb-0">{{ column.title }}</h6><span data-task-count class="badge bg-{{ column.color }}-subtle text-{{ column.color }}">{{ column.tasks|length }}</span></div>
+            <div class="kanban-items">
+                {% for task in column.tasks %}
+                <div class="kanban-card" draggable="true" data-task-card data-task-id="{{ task.id }}"><span class="badge-tag">{{ task.tag }}</span><h6 class="fw-bold text-body small mt-2">{{ task.title }}</h6><div class="small text-body-secondary mb-2">{{ task.assignee }}</div><div class="d-flex gap-2 mb-2"><a class="btn btn-outline-secondary btn-sm" href="?view=scrum&amp;edit_task={{ task.id }}">Edit</a><button type="button" class="btn btn-outline-danger btn-sm" data-delete-task="{{ task.id }}" data-task-title="{{ task.title }}" data-bs-toggle="modal" data-bs-target="#deleteTaskModal">Delete</button></div>
+                    <form method="post" class="d-flex flex-wrap gap-2 align-items-center">{% csrf_token %}<input type="hidden" name="task_id" value="{{ task.id }}"><input type="hidden" name="action" value="status"><select class="form-select form-select-sm flex-grow-1" name="status" aria-label="Change task status" onchange="this.form.requestSubmit()"><option value="todo" {% if task.status == 'todo' %}selected{% endif %}>To Do</option><option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>In Progress</option><option value="review" {% if task.status == 'review' %}selected{% endif %}>In Review</option><option value="done" {% if task.status == 'done' %}selected{% endif %}>Done</option></select><button class="btn btn-sm btn-outline-secondary" name="action" value="unplan_task" type="submit">Remove</button></form>
+                </div>
+                {% empty %}<p class="small text-body-secondary">No tasks here.</p>{% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Kanban board -->
+    <div class="kanban-board">
+        <!-- COLUMN 1: TO DO -->
+        <div class="kanban-col" data-status="todo">
             <div class="kanban-col-header">
                 <div class="d-flex align-items-center gap-2">
                     <span class="badge bg-secondary rounded-circle p-1"> </span>
-                    <h6 class="fw-bold text-dark mb-0">À Faire</h6>
+                    <h6 class="fw-bold text-dark mb-0">To Do</h6>
                 </div>
-                <span class="badge bg-secondary-subtle text-secondary font-mono">{{ todo_tasks|length }}</span>
+                <span data-task-count class="badge bg-secondary-subtle text-secondary font-mono">{{ todo_tasks|length }}</span>
             </div>
 
             <div class="kanban-items">
                 {% for task in todo_tasks %}
-                <div class="kanban-card">
+                <div class="kanban-card" draggable="true" data-task-card data-task-id="{{ task.id }}">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <span class="badge-tag badge-tag-{{ task.tag_color }}">{{ task.tag }}</span>
                         {% if task.urgent %}
@@ -39,6 +91,7 @@
                         {% endif %}
                     </div>
                     <h6 class="fw-bold text-dark small mb-3">{{ task.title }}</h6>
+                    <div class="d-flex gap-2 mb-3"><a class="btn btn-outline-secondary btn-sm" href="?edit_task={{ task.id }}">Edit</a><button type="button" class="btn btn-outline-danger btn-sm" data-delete-task="{{ task.id }}" data-task-title="{{ task.title }}" data-bs-toggle="modal" data-bs-target="#deleteTaskModal">Delete</button></div>
                     <div class="d-flex justify-content-between align-items-center pt-2 border-top">
                         <div class="d-flex align-items-center gap-1 small text-muted">
                             <i class="bi bi-person-circle text-primary"></i>
@@ -51,26 +104,27 @@
             </div>
         </div>
 
-        <!-- COLONNE 2 : EN COURS -->
-        <div class="kanban-col" style="background: rgba(99, 102, 241, 0.05); border-color: rgba(99, 102, 241, 0.2);">
+        <!-- COLUMN 2: IN PROGRESS -->
+        <div class="kanban-col" data-status="in_progress" style="background: rgba(99, 102, 241, 0.05); border-color: rgba(99, 102, 241, 0.2);">
             <div class="kanban-col-header">
                 <div class="d-flex align-items-center gap-2">
                     <span class="badge bg-primary rounded-circle p-1"> </span>
-                    <h6 class="fw-bold text-primary mb-0">En Cours</h6>
+                    <h6 class="fw-bold text-primary mb-0">In Progress</h6>
                 </div>
-                <span class="badge bg-primary-subtle text-primary font-mono">{{ in_progress_tasks|length }}</span>
+                <span data-task-count class="badge bg-primary-subtle text-primary font-mono">{{ in_progress_tasks|length }}</span>
             </div>
 
             <div class="kanban-items">
                 {% for task in in_progress_tasks %}
-                <div class="kanban-card border-primary border-opacity-25">
+                <div class="kanban-card border-primary border-opacity-25" draggable="true" data-task-card data-task-id="{{ task.id }}">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <span class="badge-tag badge-tag-{{ task.tag_color }}">{{ task.tag }}</span>
                         {% if task.urgent %}
-                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill py-0 px-2" style="font-size: 0.68rem;">Bloquant</span>
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill py-0 px-2" style="font-size: 0.68rem;">Blocking</span>
                         {% endif %}
                     </div>
                     <h6 class="fw-bold text-dark small mb-3">{{ task.title }}</h6>
+                    <div class="d-flex gap-2 mb-3"><a class="btn btn-outline-secondary btn-sm" href="?edit_task={{ task.id }}">Edit</a><button type="button" class="btn btn-outline-danger btn-sm" data-delete-task="{{ task.id }}" data-task-title="{{ task.title }}" data-bs-toggle="modal" data-bs-target="#deleteTaskModal">Delete</button></div>
                     <div class="d-flex justify-content-between align-items-center pt-2 border-top">
                         <div class="d-flex align-items-center gap-1 small text-muted">
                             <i class="bi bi-person-circle text-primary"></i>
@@ -83,24 +137,25 @@
             </div>
         </div>
 
-        <!-- COLONNE 3 : EN REVUE -->
-        <div class="kanban-col">
+        <!-- COLUMN 3: IN REVIEW -->
+        <div class="kanban-col" data-status="review">
             <div class="kanban-col-header">
                 <div class="d-flex align-items-center gap-2">
                     <span class="badge bg-warning rounded-circle p-1"> </span>
-                    <h6 class="fw-bold text-warning-emphasis mb-0">En Revue / Test</h6>
+                    <h6 class="fw-bold text-warning-emphasis mb-0">In Review / Testing</h6>
                 </div>
-                <span class="badge bg-warning-subtle text-warning-emphasis font-mono">{{ review_tasks|length }}</span>
+                <span data-task-count class="badge bg-warning-subtle text-warning-emphasis font-mono">{{ review_tasks|length }}</span>
             </div>
 
             <div class="kanban-items">
                 {% for task in review_tasks %}
-                <div class="kanban-card">
+                <div class="kanban-card" draggable="true" data-task-card data-task-id="{{ task.id }}">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <span class="badge-tag badge-tag-{{ task.tag_color }}">{{ task.tag }}</span>
                         <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill py-0 px-2" style="font-size: 0.68rem;">Review</span>
                     </div>
                     <h6 class="fw-bold text-dark small mb-3">{{ task.title }}</h6>
+                    <div class="d-flex gap-2 mb-3"><a class="btn btn-outline-secondary btn-sm" href="?edit_task={{ task.id }}">Edit</a><button type="button" class="btn btn-outline-danger btn-sm" data-delete-task="{{ task.id }}" data-task-title="{{ task.title }}" data-bs-toggle="modal" data-bs-target="#deleteTaskModal">Delete</button></div>
                     <div class="d-flex justify-content-between align-items-center pt-2 border-top">
                         <div class="d-flex align-items-center gap-1 small text-muted">
                             <i class="bi bi-person-circle text-primary"></i>
@@ -113,24 +168,25 @@
             </div>
         </div>
 
-        <!-- COLONNE 4 : TERMINÉ -->
-        <div class="kanban-col" style="background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.2);">
+        <!-- COLUMN 4: DONE -->
+        <div class="kanban-col" data-status="done" style="background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.2);">
             <div class="kanban-col-header">
                 <div class="d-flex align-items-center gap-2">
                     <span class="badge bg-success rounded-circle p-1"> </span>
-                    <h6 class="fw-bold text-success mb-0">Terminé</h6>
+                    <h6 class="fw-bold text-success mb-0">Done</h6>
                 </div>
-                <span class="badge bg-success-subtle text-success font-mono">{{ done_tasks|length }}</span>
+                <span data-task-count class="badge bg-success-subtle text-success font-mono">{{ done_tasks|length }}</span>
             </div>
 
             <div class="kanban-items">
                 {% for task in done_tasks %}
-                <div class="kanban-card opacity-75">
+                <div class="kanban-card opacity-75" draggable="true" data-task-card data-task-id="{{ task.id }}">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <span class="badge-tag badge-tag-{{ task.tag_color }}">{{ task.tag }}</span>
                         <span class="badge bg-success-subtle text-success rounded-pill py-0 px-2" style="font-size: 0.68rem;">Fait</span>
                     </div>
                     <h6 class="fw-semibold text-decoration-line-through text-muted small mb-3">{{ task.title }}</h6>
+                    <div class="d-flex gap-2 mb-3"><a class="btn btn-outline-secondary btn-sm" href="?edit_task={{ task.id }}">Edit</a><button type="button" class="btn btn-outline-danger btn-sm" data-delete-task="{{ task.id }}" data-task-title="{{ task.title }}" data-bs-toggle="modal" data-bs-target="#deleteTaskModal">Delete</button></div>
                     <div class="d-flex justify-content-between align-items-center pt-2 border-top">
                         <div class="d-flex align-items-center gap-1 small text-muted">
                             <i class="bi bi-person-circle text-success"></i>
@@ -143,63 +199,169 @@
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 
-<!-- Modal Visuelle de Création de Tâche -->
+<!-- Task creation modal -->
 <div class="modal fade" id="newTaskModal" tabindex="-1" aria-labelledby="newTaskModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content card-modern border-0">
             <div class="modal-header border-bottom">
-                <h5 class="modal-title fw-bold" id="newTaskModalLabel"><i class="bi bi-plus-circle text-primary me-2"></i>Ajouter une nouvelle tâche</h5>
+                <h5 class="modal-title fw-bold" id="newTaskModalLabel"><i class="bi bi-plus-circle text-primary me-2"></i>Add a New Task</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-4">
+            <form method="post"><div class="modal-body p-4">{% csrf_token %}<input type="hidden" name="action" value="create">
                 <div class="mb-3">
-                    <label class="form-label small fw-semibold">Titre de la tâche</label>
-                    <input type="text" class="form-control" placeholder="ex: Créer le composant de carte d'empreinte carbone">
+                    <label class="form-label small fw-semibold">Task title</label>
+                    <input type="text" name="title" class="form-control" placeholder="e.g. Create the carbon footprint card component" required>
                 </div>
                 <div class="row g-3 mb-3">
                     <div class="col-6">
-                        <label class="form-label small fw-semibold">Catégorie</label>
-                        <select class="form-select">
-                            <option>Frontend</option>
-                            <option>Backend</option>
-                            <option>Design & UX</option>
-                            <option>DevOps / Infra</option>
-                            <option>Pitch & Slides</option>
+                        <label class="form-label small fw-semibold">Category</label>
+                        <select name="category" class="form-select">
+                            <option>Frontend</option><option>Backend</option><option>Design & UX</option><option>DevOps / Infra</option><option>Pitch & Slides</option>
                         </select>
                     </div>
                     <div class="col-6">
-                        <label class="form-label small fw-semibold">Assigné à</label>
-                        <select class="form-select">
-                            <option>Camille Laurent</option>
-                            <option>Youssef El Mansouri</option>
-                            <option>Éléonore Morin</option>
-                            <option>Lucas Bernard</option>
+                        <label class="form-label small fw-semibold">Assigned to</label>
+                        <select name="assignee" class="form-select">
+                            <option value="">Unassigned</option>{% for member in team.memberships.all %}<option value="{{ member.user_id }}">{{ member.user.get_full_name|default:member.user.username }}</option>{% endfor %}
                         </select>
                     </div>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label small fw-semibold">Niveau d'urgence</label>
+                    <label class="form-label small fw-semibold">Priority</label>
                     <div class="d-flex gap-3">
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="prio" id="prio1" checked>
-                            <label class="form-check-label small" for="prio1">Normale</label>
+                            <input class="form-check-input" type="radio" name="priority" value="normal" id="prio1" checked>
+                            <label class="form-check-label small" for="prio1">Normal</label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="prio" id="prio2">
-                            <label class="form-check-label small text-danger fw-bold" for="prio2">Haute / Bloquante</label>
+                            <input class="form-check-input" type="radio" name="priority" value="high" id="prio2">
+                            <label class="form-check-label small text-danger fw-bold" for="prio2">High / Blocking</label>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer border-top">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Annuler</button>
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" data-demo-toast="Tâche ajoutée avec succès au tableau !">
-                    Créer la tâche
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">
+                    Create task
                 </button>
             </div>
+            </form>
         </div>
     </div>
 </div>
+{% if editing_task %}
+<div class="modal fade show d-block" id="editTaskModal" tabindex="-1" aria-labelledby="editTaskModalLabel" aria-modal="true" role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable task-edit-dialog">
+        <div class="modal-content card-modern border-0">
+            <div class="modal-header border-bottom"><h5 class="modal-title fw-bold" id="editTaskModalLabel"><i class="bi bi-pencil-square text-primary me-2"></i>Edit Task</h5><a class="btn-close" href="{% url 'student:tasks_kanban' %}{% if board_view == 'scrum' %}?view=scrum{% endif %}" aria-label="Close"></a></div>
+            <form method="post"><div class="modal-body p-4">{% csrf_token %}<input type="hidden" name="action" value="edit_task"><input type="hidden" name="task_id" value="{{ editing_task.id }}">
+                {% for field in edit_task_form %}<div class="mb-3"><label for="{{ field.id_for_label }}" class="form-label small fw-semibold">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}</div>{% endfor %}
+            </div><div class="modal-footer border-top task-edit-footer"><a class="btn btn-light" href="{% url 'student:tasks_kanban' %}{% if board_view == 'scrum' %}?view=scrum{% endif %}">Cancel</a><button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Confirm changes</button></div></form>
+        </div>
+    </div>
+</div>
+<div class="modal-backdrop fade show"></div>
+{% endif %}
+
+<div class="modal fade" id="deleteTaskModal" tabindex="-1" aria-labelledby="deleteTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content card-modern border-0">
+        <div class="modal-header border-bottom"><h5 class="modal-title fw-bold" id="deleteTaskModalLabel"><i class="bi bi-exclamation-triangle text-danger me-2"></i>Delete task?</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <form method="post"><div class="modal-body">{% csrf_token %}<input type="hidden" name="action" value="delete"><input type="hidden" name="task_id" id="deleteTaskId"><p class="mb-0">Are you sure you want to delete <strong id="deleteTaskTitle">this task</strong>? This cannot be undone.</p></div><div class="modal-footer border-top"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-danger">Delete task</button></div></form>
+    </div></div>
+</div>
+<script>
+document.querySelectorAll('[data-delete-task]').forEach((button) => {
+    button.addEventListener('click', () => {
+        document.getElementById('deleteTaskId').value = button.dataset.deleteTask;
+        document.getElementById('deleteTaskTitle').textContent = button.dataset.taskTitle;
+    });
+});
+</script>
+<script>
+(() => {
+    let draggedCard = null;
+    const board = document.querySelector('.kanban-board');
+    if (!board) return;
+
+    document.querySelectorAll('[data-task-card]').forEach((card) => {
+        card.addEventListener('dragstart', (event) => {
+            if (event.target.closest('button, input, select, textarea, a')) {
+                event.preventDefault();
+                return;
+            }
+            draggedCard = card;
+            card.classList.add('is-dragging');
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', card.dataset.taskId);
+        });
+        card.addEventListener('dragend', () => {
+            card.classList.remove('is-dragging');
+            document.querySelectorAll('.kanban-col.is-drop-target').forEach((column) => column.classList.remove('is-drop-target'));
+            draggedCard = null;
+        });
+    });
+
+    board.querySelectorAll('.kanban-col[data-status]').forEach((column) => {
+        column.addEventListener('dragover', (event) => {
+            if (!draggedCard) return;
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'move';
+            column.classList.add('is-drop-target');
+        });
+        column.addEventListener('dragleave', (event) => {
+            if (!column.contains(event.relatedTarget)) column.classList.remove('is-drop-target');
+        });
+        column.addEventListener('drop', async (event) => {
+            event.preventDefault();
+            column.classList.remove('is-drop-target');
+            const card = draggedCard;
+            if (!card || card.closest('.kanban-col') === column) return;
+
+            const status = column.dataset.status;
+            const cameFromBacklog = card.dataset.backlogCard === 'true';
+            const backlogWrapper = cameFromBacklog ? card.parentElement : null;
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+            const body = new FormData();
+            body.append('csrfmiddlewaretoken', csrfToken || '');
+            body.append('task_id', card.dataset.taskId);
+            body.append('status', status);
+            body.append('action', cameFromBacklog ? 'plan_task' : 'status');
+
+            try {
+                const response = await fetch(window.location.href, {
+                    method: 'POST',
+                    body,
+                    headers: {'X-Requested-With': 'XMLHttpRequest'},
+                    credentials: 'same-origin',
+                });
+                if (!response.ok || !(await response.json()).ok) throw new Error('Task update failed');
+
+                if (cameFromBacklog) {
+                    const backlogCount = document.querySelector('[data-backlog-count]');
+                    if (backlogCount) backlogCount.textContent = Math.max(0, Number(backlogCount.textContent) - 1);
+                    card.removeAttribute('data-backlog-card');
+                }
+                column.querySelector('.kanban-items').appendChild(card);
+                if (backlogWrapper && !backlogWrapper.querySelector('[data-task-card]')) backlogWrapper.remove();
+                card.classList.remove('border-primary', 'border-opacity-25', 'opacity-75');
+                if (status === 'in_progress') card.classList.add('border-primary', 'border-opacity-25');
+                if (status === 'done') card.classList.add('opacity-75');
+
+                const statusSelect = card.querySelector('select[name=status]');
+                if (statusSelect) statusSelect.value = status;
+                board.querySelectorAll('.kanban-col[data-status]').forEach((item) => {
+                    const count = item.querySelector('[data-task-count]');
+                    if (count) count.textContent = item.querySelectorAll('.kanban-items [data-task-card]').length;
+                });
+            } catch (error) {
+                window.location.reload();
+            }
+        });
+    });
+})();
+</script>
 {% endblock %}

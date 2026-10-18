@@ -1,171 +1,177 @@
 {% extends "layouts/base_student.html" %}
 
-{% block title %}Rendu du Projet - HackFlow{% endblock %}
+{% block title %}Project Submission - HackFlow{% endblock %}
 
 {% block student_content %}
 <div class="container-fluid px-0">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-1">Dépôt Final du Projet & Livrables</h2>
-            <p class="text-muted small mb-0">Renseignez tous les éléments nécessaires à l'évaluation par le jury officiel du hackathon.</p>
+            <h2 class="fw-bold text-dark mb-1">Final Project Submission & Deliverables</h2>
+            <p class="text-muted small mb-0">Provide all information required for the hackathon jury to evaluate your project.</p>
         </div>
         <div class="d-flex align-items-center gap-2">
-            <span class="badge bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-50 px-3 py-2 rounded-pill font-mono">
-                <i class="bi bi-stopwatch-fill me-1"></i>Date limite : {{ submission.deadline }}
+            <span class="badge {% if submission.is_locked %}bg-danger bg-opacity-10 text-danger border-danger{% else %}bg-warning bg-opacity-10 text-warning-emphasis border-warning{% endif %} border border-opacity-50 px-3 py-2 rounded-pill font-mono">
+                <i class="bi bi-stopwatch-fill me-1"></i>{% if submission.deadline %}Deadline: {{ submission.deadline }}{% else %}No deadline set{% endif %}
             </span>
         </div>
     </div>
 
-    <!-- Bannière Statut -->
+    <!-- Submission status banner -->
     <div class="alert alert-info border-0 shadow-sm rounded-4 p-4 mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
         <div class="d-flex align-items-center gap-3">
             <span class="d-inline-flex align-items-center justify-content-center bg-info bg-opacity-25 text-info-emphasis rounded-circle p-3" style="width: 50px; height: 50px;">
                 <i class="bi bi-cloud-arrow-up-fill fs-3"></i>
             </span>
             <div>
-                <h5 class="fw-bold mb-1 text-dark">Statut actuel : <span class="badge bg-warning text-dark">{{ submission.status }}</span></h5>
-                <p class="mb-0 text-muted small">Vous pouvez mettre à jour ce formulaire autant de fois que nécessaire jusqu'au Code Freeze final.</p>
+                <h5 class="fw-bold mb-1 text-dark">Current status: <span class="badge bg-warning text-dark">{{ submission.status }}</span></h5>
+                <p class="mb-0 text-muted small">{% if submission.is_locked %}The submission period is closed. You can no longer upload files or change your submission.{% else %}You can update this form until the deadline.{% endif %}</p>
             </div>
         </div>
         <div class="text-md-end">
-            <span class="small text-muted font-mono d-block mb-1">Temps restant estimé :</span>
-            <span class="fw-bold text-dark font-mono fs-5">{{ submission.time_left }}</span>
+            <span class="small text-muted font-mono d-block mb-1">Estimated time remaining:</span>
+            <span class="fw-bold text-dark font-mono fs-5">{% if submission.time_left %}<span data-live-countdown="{{ submission.deadline|date:'c' }}" data-countdown-prefix="In " data-countdown-expired="Deadline passed">In {{ submission.time_left|timeuntil }}</span>{% elif submission.deadline %}Deadline passed{% else %}No deadline set{% endif %}</span>
         </div>
     </div>
 
     <div class="row g-4">
-        <!-- Colonne Formulaire -->
+        <!-- Form column -->
         <div class="col-lg-8">
             <div class="card-modern p-4 p-md-5 mb-4">
-                <form>
-                    <h5 class="fw-bold text-dark mb-4 pb-2 border-bottom">1. Présentation Générale</h5>
+                <form method="post" enctype="multipart/form-data">{% csrf_token %}
+                    {% if submission.is_locked %}<div class="alert alert-danger" role="status"><i class="bi bi-lock-fill me-2"></i>Submission locked{% if submission.deadline %} after the deadline{% else %} until a deadline is configured{% endif %}.</div>{% endif %}
+                    <fieldset class="border-0 p-0 m-0" {% if submission.is_locked %}disabled{% endif %}>
+                    <h5 class="fw-bold text-dark mb-4 pb-2 border-bottom">1. General Overview</h5>
 
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Nom officiel du projet</label>
-                        <input type="text" class="form-control" value="{{ submission.project_name }}">
+                        <label class="form-label small fw-semibold">Official project name</label>
+                        <input type="text" name="project_name" class="form-control" value="{{ submission.project_name }}">
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Défi / Thématique choisie</label>
-                        <select class="form-select">
+                        <label class="form-label small fw-semibold">Challenge / Selected theme</label>
+                        <select name="category" class="form-select">
                             <option selected>{{ submission.category }}</option>
-                            <option>Défi 2 : IA & Productivité Étudiante</option>
-                            <option>Défi 3 : Santé Mentale & Bien-être</option>
-                            <option>Défi 4 : Inclusion Numérique & Accessibilité</option>
+                            <option>Challenge 2: AI & Student Productivity</option>
+                            <option>Challenge 3: Mental Health & Wellbeing</option>
+                            <option>Challenge 4: Digital Inclusion & Accessibility</option>
                         </select>
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label small fw-semibold">Pitch synthétique (150 mots max)</label>
-                        <textarea class="form-control" rows="3">{{ submission.short_pitch }}</textarea>
+                        <label class="form-label small fw-semibold">Short pitch (150 words max)</label>
+                        <textarea name="description" class="form-control" rows="3">{{ submission.short_pitch }}</textarea>
                     </div>
 
-                    <h5 class="fw-bold text-body mb-4 pb-2 border-bottom">2. Liens & Dépôts Techniques</h5>
+                    <h5 class="fw-bold text-body mb-4 pb-2 border-bottom">2. Links & Technical Repositories</h5>
 
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Lien du Répertoire GitHub / GitLab <span class="text-danger">*</span></label>
+                        <label class="form-label small fw-semibold">GitHub / GitLab Repository URL <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-github"></i></span>
-                            <input type="url" class="form-control" value="{{ submission.github_url }}" required>
+                            <input type="url" name="github_url" class="form-control" value="{{ submission.github_url }}" required>
                         </div>
-                        <small class="text-body-secondary" style="font-size: 0.75rem;">Le dépôt doit être public ou partagé avec les jurés.</small>
+                        <small class="text-body-secondary" style="font-size: 0.75rem;">The repository must be public or shared with the judges.</small>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Lien de la Démo en ligne (Staging / Production)</label>
+                        <label class="form-label small fw-semibold">Online Demo URL (Staging / Production)</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-globe"></i></span>
-                            <input type="url" class="form-control" value="{{ submission.demo_url }}">
+                            <input type="url" name="demo_url" class="form-control" value="{{ submission.demo_url }}">
                         </div>
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label small fw-semibold">Lien de la Vidéo Démo (Loom, YouTube, Vimeo)</label>
+                        <label class="form-label small fw-semibold">Demo Video URL (Loom, YouTube, Vimeo)</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-camera-video"></i></span>
-                            <input type="url" class="form-control" value="{{ submission.video_url }}">
+                            <input type="url" name="video_url" class="form-control" value="{{ submission.video_url }}">
                         </div>
-                        <small class="text-body-secondary" style="font-size: 0.75rem;">Vidéo de 3 minutes maximum présentant le cas d'usage et le fonctionnement en direct.</small>
+                        <small class="text-body-secondary" style="font-size: 0.75rem;">A 3-minute video showing the use case and live functionality.</small>
                     </div>
 
-                    <h5 class="fw-bold text-body mb-4 pb-2 border-bottom">3. Support de Présentation (Slides)</h5>
+                    <h5 class="fw-bold text-body mb-4 pb-2 border-bottom">3. Project Files</h5>
 
                     <div class="mb-4">
-                        <label class="form-label small fw-semibold">Fichier PDF du Pitch Deck</label>
+                        <label class="form-label small fw-semibold">Project ZIP archive</label>
                         <div class="p-4 rounded-3 border border-2 border-dashed text-center bg-light">
-                            <i class="bi bi-file-earmark-pdf-fill fs-2 text-danger mb-2"></i>
-                            <div class="fw-bold small mb-1">{{ submission.slide_file }}</div>
-                            <span class="text-muted small d-block mb-3">Fichier actuel (4.2 Mo)</span>
-                            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" data-demo-toast="Téléversement d'un nouveau fichier PDF simulé.">
-                                <i class="bi bi-arrow-repeat me-1"></i>Remplacer le fichier
-                            </button>
+                            <i class="bi bi-file-earmark-zip-fill fs-2 text-primary mb-2"></i>
+                            <div class="fw-bold small mb-1">{% if submission.slide_file %}{{ submission.slide_file|cut:"submissions/" }}{% else %}No ZIP archive uploaded yet{% endif %}</div>
+                            {% if submission.file_size %}<span class="text-muted small d-block mb-3">Current file ({{ submission.file_size|filesizeformat }})</span>{% else %}<span class="text-muted small d-block mb-3">ZIP archive only · 100 MB maximum</span>{% endif %}
+                            <input type="file" name="file" id="submission-file" class="d-none" accept=".zip,application/zip">
+                            <label for="submission-file" class="btn btn-outline-primary btn-sm rounded-pill">
+                                <i class="bi bi-cloud-arrow-up me-1"></i>{% if submission.slide_file %}Replace ZIP archive{% else %}Choose ZIP archive{% endif %}
+                            </label>
                         </div>
+                        {% for error in form.file.errors %}<div class="text-danger small mt-2">{{ error }}</div>{% endfor %}
+                        <small class="text-body-secondary d-block mt-2">Upload the project source as a valid .zip archive (maximum 100 MB). Admins and mentors can download it for review.</small>
                     </div>
 
                     <div class="d-flex flex-wrap justify-content-end gap-2 pt-3 border-top">
-                        <button type="button" class="btn btn-light px-4" data-demo-toast="Brouillon sauvegardé automatiquement !">
-                            Sauvegarder en brouillon
+                        <button type="submit" name="action" value="draft" class="btn btn-light px-4">
+                            Save as draft
                         </button>
-                        <button type="button" class="btn btn-primary px-4 shadow-sm" data-demo-toast="Félicitations ! Le projet EcoTrack a été officiellement soumis au jury !">
-                            <i class="bi bi-check2-circle me-1"></i>Valider & Soumettre Définitivement
+                        <button type="submit" name="action" value="submit" class="btn btn-primary px-4 shadow-sm">
+                            <i class="bi bi-check2-circle me-1"></i>Confirm & Submit
                         </button>
                     </div>
+                    </fieldset>
                 </form>
             </div>
         </div>
 
-        <!-- Colonne Checklist de validation -->
+        <!-- Submission checklist column -->
         <div class="col-lg-4">
             <div class="card-modern p-4 mb-4">
-                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-card-checklist text-success me-2"></i>Checklist de Conformité</h5>
-                <p class="small text-muted mb-3">Vérifiez tous les critères avant la soumission pour maximiser votre note :</p>
+                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-card-checklist text-success me-2"></i>Submission Checklist</h5>
+                <p class="small text-muted mb-3">Review each item before submitting to maximize your score:</p>
 
                 <div class="d-flex flex-column gap-3 small">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="chk1" checked>
                         <label class="form-check-label text-dark fw-semibold" for="chk1">
-                            README clair avec instructions d'installation
+                            Clear README with installation instructions
                         </label>
                     </div>
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="chk2" checked>
                         <label class="form-check-label text-dark fw-semibold" for="chk2">
-                            Prototype fonctionnel accessible sans authentification complexe
+                            Working prototype accessible without a complicated sign-in
                         </label>
                     </div>
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="chk3" checked>
                         <label class="form-check-label text-dark fw-semibold" for="chk3">
-                            Pitch deck au format PDF (max 10 slides)
+                            Project source packaged in a ZIP archive
                         </label>
                     </div>
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="chk4">
                         <label class="form-check-label text-dark fw-semibold" for="chk4">
-                            Vidéo de démonstration testée sans restriction de visionnage
+                            Demo video tested and accessible to viewers
                         </label>
                     </div>
                 </div>
             </div>
 
-            <!-- Critères du Jury -->
+            <!-- Jury Criteria -->
             <div class="card-modern p-4">
-                <h6 class="fw-bold text-dark mb-3">Barème de Notation du Jury</h6>
+                <h6 class="fw-bold text-dark mb-3">Jury Scoring Criteria</h6>
                 <div class="d-flex flex-column gap-2 small">
                     <div class="d-flex justify-content-between">
                         <span>Innovation & Impact</span>
                         <strong class="font-mono">25%</strong>
                     </div>
                     <div class="d-flex justify-content-between">
-                        <span>Faisabilité & Code</span>
+                        <span>Feasibility & Code</span>
                         <strong class="font-mono">25%</strong>
                     </div>
                     <div class="d-flex justify-content-between">
-                        <span>Design UI/UX</span>
+                        <span>UI/UX Design</span>
                         <strong class="font-mono">25%</strong>
                     </div>
                     <div class="d-flex justify-content-between">
-                        <span>Clarté du Pitch</span>
+                        <span>Pitch Clarity</span>
                         <strong class="font-mono">25%</strong>
                     </div>
                 </div>
