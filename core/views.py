@@ -1,4 +1,17 @@
 from django.shortcuts import render
+from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
+
+
+def csrf_failure(request, reason=''):
+    """Give users a safe way to reopen forms after their CSRF cookie rotates."""
+    referer = request.META.get('HTTP_REFERER', '')
+    retry_url = referer if referer and url_has_allowed_host_and_scheme(
+        referer, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ) else reverse('core:landing')
+    response = render(request, 'core/csrf_failure.html', {'retry_url': retry_url}, status=403)
+    response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    return response
 
 def landing(request):
     """

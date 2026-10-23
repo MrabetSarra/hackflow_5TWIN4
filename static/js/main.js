@@ -105,6 +105,25 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // 5. Compte à rebours du Hackathon (dynamique)
+  const updateDeadlineCountdowns = () => {
+    document.querySelectorAll('[data-live-countdown]').forEach((element) => {
+      const deadline = new Date(element.dataset.liveCountdown);
+      if (Number.isNaN(deadline.getTime())) return;
+
+      const remainingMinutes = Math.floor((deadline.getTime() - Date.now()) / 60000);
+      if (remainingMinutes < 0) {
+        element.textContent = element.dataset.countdownExpired || 'Deadline passed';
+        return;
+      }
+
+      const hours = Math.floor(remainingMinutes / 60);
+      const minutes = String(remainingMinutes % 60).padStart(2, '0');
+      element.textContent = `${element.dataset.countdownPrefix || ''}${hours}h${minutes}mn`;
+    });
+  };
+  updateDeadlineCountdowns();
+  window.setInterval(updateDeadlineCountdowns, 1000);
+
   const hoursEl = document.getElementById('cd-hours');
   const minsEl = document.getElementById('cd-minutes');
   const secsEl = document.getElementById('cd-seconds');

@@ -1,130 +1,119 @@
-# ⚡ HackFlow - Plateforme de Gestion de Hackathon Étudiant
+﻿<p align="center">
+  <img src="static/images/hackflow-logo.png" alt="HackFlow" width="340">
+</p>
 
-> Conçu pour une équipe de 5 développeurs. Couche Front-End & Templates sous **Django 5** et **Bootstrap 5.3**.
+<h1 align="center">HackFlow</h1>
 
----
+<p align="center"><strong>Build Â· Collaborate Â· Create</strong></p>
 
-## 🎯 Présentation du Projet
+<p align="center">
+  La plateforme qui aide les Ã©quipes Ã©tudiantes Ã  transformer une idÃ©e en projet de hackathon.
+</p>
 
-HackFlow simplifie et centralise l'organisation d'un hackathon étudiant, de la formation des équipes jusqu'au pitch final devant le jury :
-- **Matching des compétences** : algorithme et bourse aux talents pour équilibrer les équipes.
-- **Gestion de sprint agile** : tableau Kanban pour répartir les tâches et anticiper les blocages.
-- **Mentorat en continu** : file d'attente d'assistance et accompagnement direct en visio.
-- **Cockpit organisateur** : suivi des 500 participants, KPIs en temps réel et notation officielle du jury.
+<p align="center">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white">
+  <img alt="Django" src="https://img.shields.io/badge/Django-5.2-092E20?logo=django&logoColor=white">
+  <img alt="SQLite" src="https://img.shields.io/badge/Database-SQLite-003B57?logo=sqlite&logoColor=white">
+</p>
 
----
+## Ã€ propos
 
-## 🛠️ Stack Technique
+HackFlow rassemble dans un mÃªme espace les outils utiles pendant un hackathon Ã©tudiant : trouver des coÃ©quipiers, partager ses compÃ©tences, demander conseil Ã  un mentor et suivre lâ€™avancement dâ€™un projet.
 
-- **Backend** : Django 5.2 (Python 3.11+)
-- **Templates** : Django Template Language (DTL)
-- **Front-End & UI/UX** : Bootstrap 5.3 (CDN), Bootstrap Icons 1.11, Google Fonts (*Plus Jakarta Sans* & *JetBrains Mono*), CSS personnalisé (`static/css/custom.css`)
-- **Base de données** : SQLite 3 (`db.sqlite3`)
-- **Stockage des médias** : `/media/uploads/`
-- **Langue & Région** : Français (`fr-fr`), Fuseau horaire Paris (`Europe/Paris`)
+Lâ€™expÃ©rience sâ€™articule autour de trois espaces â€” **Ã©tudiant**, **mentor** et **organisateur** â€” afin que chacun retrouve les informations et les actions adaptÃ©es Ã  son rÃ´le.
 
----
+## Ce que propose HackFlow
 
-## 🚀 Démarrage Rapide
+- **Trouver son Ã©quipe** : dÃ©couvrir des profils complÃ©mentaires et mettre en valeur ses compÃ©tences.
+- **Avancer ensemble** : visualiser les tÃ¢ches, les jalons et le rendu du projet.
+- **ÃŠtre accompagnÃ©** : solliciter un mentor et consulter les demandes dâ€™aide.
+- **Organiser lâ€™Ã©vÃ©nement** : suivre les participants, les Ã©quipes, les annonces et les Ã©valuations depuis un cockpit dÃ©diÃ©.
+- **PrÃ©senter son profil** : gÃ©rer ses informations, sa photo et son CV.
+- **OpportunitÃ©s carriÃ¨re** : consulter des offres modÃ©rÃ©es, comprendre le score de correspondance et suivre ses candidatures.
 
-### 1. Cloner le projet et créer un environnement virtuel
-```powershell
+## Trois espaces, un objectif commun
+
+| Ã‰tudiants | Mentors | Organisateurs |
+|---|---|---|
+| Profil et compÃ©tences | Suivi des Ã©quipes | Vue dâ€™ensemble du hackathon |
+| Ã‰quipes et matching | Demandes dâ€™accompagnement | Participants et Ã©quipes |
+| TÃ¢ches et rendu du projet | Ã‰valuations et retours | Annonces et notation |
+
+## Ã‰tat du projet
+
+HackFlow est un **prototype web en cours de dÃ©veloppement**. La crÃ©ation de compte Ã©tudiant ou mentor, la connexion, les rÃ´les, la gestion du profil et les fichiers associÃ©s sont reliÃ©s Ã  la base de donnÃ©es. Les espaces mÃ©tier prÃ©sentent le parcours et lâ€™interface cible ; plusieurs listes reposent encore sur des donnÃ©es dâ€™exemple, et certaines actions affichent une confirmation de dÃ©monstration sans enregistrer de donnÃ©es.
+
+Cette version permet de dÃ©couvrir lâ€™expÃ©rience envisagÃ©e et constitue une base pour connecter progressivement les Ã©quipes, tÃ¢ches, demandes et Ã©valuations Ã  des donnÃ©es persistantes.
+
+## AperÃ§u
+
+Lâ€™application comprend une page dâ€™accueil publique et des tableaux de bord distincts pour chaque rÃ´le. Pour explorer lâ€™interface localement, consultez le dÃ©marrage rapide ci-dessous.
+
+## DÃ©marrage rapide
+
+PrÃ©requis : Python 3.10 ou plus rÃ©cent.
+
+```bash
 git clone https://github.com/MrabetSarra/hackflow_5TWIN4.git
 cd hackflow_5TWIN4
 python -m venv .venv
+```
+
+Activez lâ€™environnement virtuel, puis installez et lancez le projet :
+
+```bash
+# Windows PowerShell
 .\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-```
 
-### 2. Appliquer les migrations
-```powershell
+# macOS / Linux
+source .venv/bin/activate
+
+python -m pip install -r requirements.txt
 python manage.py migrate
-```
-
-### 3. Lancer le serveur de développement
-```powershell
 python manage.py runserver
 ```
-L'application est disponible sur : **[http://127.0.0.1:8000/](http://127.0.0.1:8000/)**
 
-La clé Django de développement peut être remplacée en définissant la variable
-d'environnement `DJANGO_SECRET_KEY`. Configurez impérativement une clé secrète
-privée avant tout déploiement.
+Ouvrez [http://127.0.0.1:8000/](http://127.0.0.1:8000/). La base SQLite locale est crÃ©Ã©e lors de lâ€™application des migrations. Lâ€™envoi des codes de rÃ©initialisation du mot de passe nÃ©cessite une configuration SMTP Gmail.
 
----
+## Technologies
 
-## 🧭 Les 4 Espaces Utilisateurs & 19 Routes Démo
+- **Backend :** Python et Django
+- **DonnÃ©es locales :** SQLite
+- **Interface :** Django Templates, Bootstrap, CSS et JavaScript
+- **MÃ©dias :** Pillow pour la photo de profil ; CV conservÃ©s dans un stockage privÃ© local
 
-Une **barre flottante de bascule (Demo Switcher)** en bas à droite de l'écran permet de naviguer en un clic entre les espaces sans se déconnecter.
+## Career opportunities
 
-### 1. Espace Visiteur (Public)
-| Route | Nom de l'URL | Description |
-|---|---|---|
-| `/` | `core:landing` | Landing page complète avec compte à rebours, étapes, chiffres clés, mentors et FAQ |
-| `/accounts/login/` | `accounts:login` | Page de connexion avec raccourcis de démo rapide (Étudiant, Mentor, Admin) |
-| `/accounts/register/` | `accounts:register` | Inscription avec choix de rôle et tags de compétences pour le matching |
-| `/accounts/profile/` | `accounts:profile` | Consultation et édition du profil utilisateur avec badges de succès |
+Students browse opportunities at `/careers/`. Organizers publish and manage offers at `/cockpit/careers/`; offers are entered directly by organizers, and external applications link to the employer.
 
-### 2. Espace Étudiant (Participant)
-| Route | Nom de l'URL | Description |
-|---|---|---|
-| `/student/` | `student:dashboard` | Tableau de bord avec jalons, deadlines urgentes et KPIs du sprint |
-| `/student/team/` | `student:team_detail` | Fiche d'équipe (*EcoTrack*), membres, liens (GitHub, Figma) et invitation |
-| `/student/matching/` | `student:skills_matching` | Bourse aux compétences (participants sans équipe & équipes qui recrutent) |
-| `/student/tasks/` | `student:tasks_kanban` | Tableau Kanban interactif (À faire, En cours, Revue, Terminé) |
-| `/student/mentor-request/` | `student:mentor_request` | Demande d'assistance mentor en direct et historique des tickets |
-| `/student/submission/` | `student:project_submission` | Formulaire de rendu final du projet (liens, vidéo, slides PDF) |
+### Organizer-published offers and CV matching
 
-### 3. Espace Mentor (Accompagnement)
-| Route | Nom de l'URL | Description |
-|---|---|---|
-| `/mentor/` | `mentor:dashboard` | Cockpit mentor (*Dr. Marc Dubois*), tickets urgents et planning de sessions |
-| `/mentor/teams/` | `mentor:teams_list` | Répertoire des équipes avec barre de progression et recherche par défi |
-| `/mentor/requests/` | `mentor:help_requests` | File d'attente complète des tickets d'aide avec niveau de criticité |
-| `/mentor/evaluations/` | `mentor:evaluations` | Fiches de retours et feedbacks constructifs post-session |
+Organizers create offers at `/cockpit/careers/new/`. New manual offers start as drafts; the status control supports publishing and archiving. The editor provides a live preview, explicit required/preferred skills, education, experience, languages, location/work-arrangement requirements, and project/other eligibility criteria. Skill weights use `Skill=weight` entries (for example `Python=25, SQL=15`). All positive weights are validated from 0 to 100 and normalized to exactly 100 when saved.
 
-### 4. Espace Admin (Organisateur)
-| Route | Nom de l'URL | Description |
-|---|---|---|
-| `/cockpit/` | `dashboard_admin:dashboard` | Cockpit global de supervision, KPIs, répartition par défi et fil d'activité live |
-| `/cockpit/participants/` | `dashboard_admin:participants` | Table des 500 participants avec recherche et filtres par statut |
-| `/cockpit/teams/` | `dashboard_admin:teams` | Gestion des 92 équipes, mentors assignés et état des livrables |
-| `/cockpit/announcements/` | `dashboard_admin:announcements` | Outil de diffusion d'annonces push en direct |
-| `/cockpit/judging/` | `dashboard_admin:judging` | Grille de notation officielle du jury et podium final en direct |
+Student matching uses the existing private profile PDF and existing profile fields. `pdfminer.six` extracts selectable text locally, limited to 10 MB and 20 pages. CV analysis runs locally; no CV text is sent to an external service, and raw extracted text is not stored. Structured evidence snippets and their timestamp are cached by the CV's SHA-256 digest. Scanned image-only PDFs are not OCR processed; unreadable or missing CVs show no compatibility percentage.
 
----
+Each explicit requirement receives an evidence-based match percentage or an unknown state. The overall score is `sum(match_pct Ã— weight) / sum(weights for requirements with reliable evidence)`. Profile coverage is evaluated requirement weight divided by all positive requirement weight. Scores are hidden below 30% coverage to avoid false precision. Explicit mandatory contradictions are shown separately; missing CV evidence remains unverified rather than being treated as proof that a student lacks a skill. Per-student/per-offer result caches are invalidated by CV, profile or offer changes. Students see only published offers whose publication date has arrived and whose deadline has not passed.
 
-## 🏗️ Architecture du Code
+Apply the additive schema changes with `python manage.py migrate`. Run `python manage.py check` and `python manage.py test career_opportunities` to verify the career module.
 
 ```text
-hackflow/
-├── hackflow/                  # Configuration principale (settings, urls, wsgi)
-├── core/                      # Application publique (Landing)
-├── accounts/                  # Authentification & Profils
-├── student/                   # Espace étudiant participant
-├── mentor/                    # Espace accompagnateur mentor
-├── dashboard_admin/           # Espace organisateur admin
-├── static/
-│   ├── css/custom.css         # Design system & styles HackFlow
-│   └── js/main.js             # Interactions, toasts démo, timer & toggle
-├── templates/
-│   ├── base.html              # Template racine
-│   ├── components/            # Composants réutilisables (demo_switcher.html)
-│   ├── layouts/               # Layouts parents par espace
-│   │   ├── base_public.html
-│   │   ├── base_student.html
-│   │   ├── base_mentor.html
-│   │   └── base_admin.html
-│   ├── core/
-│   ├── accounts/
-│   ├── student/
-│   ├── mentor/
-│   └── dashboard_admin/
-└── media/uploads/             # Dossier de téléversement des fichiers
+accounts/          Comptes, rÃ´les et profils
+core/              Page publique
+student/           Espace Ã©tudiant
+mentor/            Espace mentor
+dashboard_admin/   Espace organisateur
+templates/         Pages et layouts
+static/             Styles, scripts et identitÃ© visuelle
 ```
+
+## Pistes dâ€™Ã©volution
+
+- Remplacer les donnÃ©es dâ€™exemple par des modÃ¨les mÃ©tier persistants.
+- Connecter les actions de gestion des Ã©quipes, tÃ¢ches et demandes.
+- Ajouter des tests couvrant les parcours de compte et les permissions par rÃ´le.
 
 ---
 
-## 🔌 Préparé pour la suite (Modèles ORM)
+**HackFlow â€” Build Â· Collaborate Â· Create**
 
-Les contextes de données factices dans chaque `views.py` sont modélisés comme de futurs objets Django (`dict` facilement remplaçables par `Model.objects.all()` ou `filter()`). Les formulaires sont prêts à être convertis en `ModelForm` ou `Form` Django lors de l'étape suivante.
+

@@ -10,4 +10,9 @@ urlpatterns = [
     path('tasks/', views.tasks_kanban, name='tasks_kanban'),
     path('mentor-request/', views.mentor_request, name='mentor_request'),
     path('submission/', views.project_submission, name='project_submission'),
+    path('jury/submissions/', views.jury_submissions, name='jury_submissions'),
+    path('jury/submissions/<int:submission_id>/download/', views.download_submission, name='download_submission'),
+    path('invitation/<str:token>/<str:decision>/', views.respond_invitation, name='respond_invitation'),
+    path('messages/', views.message_inbox, name='messages'),
+    path('messages/<int:user_id>/', views.conversation, name='conversation'),
 ]

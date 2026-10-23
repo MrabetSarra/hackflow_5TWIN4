@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Session expirée · HackFlow{% endblock %}
+{% block layout %}
+<main class="container min-vh-100 d-flex align-items-center justify-content-center py-5">
+  <section class="card border-0 shadow-sm rounded-4" style="max-width: 560px; width: 100%;">
+    <div class="card-body p-4 p-md-5 text-center">
+      <span class="d-inline-flex rounded-circle bg-warning bg-opacity-10 text-warning-emphasis p-3 mb-3"><i class="bi bi-shield-exclamation fs-3"></i></span>
+      <h1 class="h3 fw-bold">Votre formulaire a expiré</h1>
+      <p class="text-secondary">La session ou le jeton de sécurité a changé depuis l’ouverture de cette page. Rechargez le formulaire, puis réessayez. Les données non envoyées peuvent être perdues.</p>
+      <div class="d-flex flex-wrap justify-content-center gap-2 mt-4">
+        <a class="btn btn-primary rounded-pill px-4" href="{{ retry_url }}"><i class="bi bi-arrow-clockwise me-1"></i>Recharger la page</a>
+        <a class="btn btn-outline-secondary rounded-pill px-4" href="{% url 'core:landing' %}">Accueil</a>
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}

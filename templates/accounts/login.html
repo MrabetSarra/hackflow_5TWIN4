@@ -1,7 +1,7 @@
 {% extends "layouts/base_public.html" %}
 {% load static %}
 
-{% block title %}Connexion - HackFlow{% endblock %}
+{% block title %}Log In - HackFlow{% endblock %}
 
 {% block public_content %}
 <div class="py-5 bg-gradient-subtle min-vh-100 d-flex align-items-center">
@@ -11,8 +11,8 @@
                 <div class="card-modern p-4 p-md-5 shadow-lg">
                     <div class="text-center mb-4">
                         <img src="{% static 'images/hackflow-mark.png' %}" alt="" width="64" height="48" class="mb-2" style="object-fit: contain;">
-                        <h3 class="fw-bold text-body">Bon retour sur HackFlow</h3>
-                        <p class="text-body-secondary small">Connectez-vous pour rejoindre votre espace HackFlow.</p>
+                        <h3 class="fw-bold text-body">Welcome back to HackFlow</h3>
+                        <p class="text-body-secondary small">Log in to access your HackFlow workspace.</p>
                     </div>
 
                     {% if form.non_field_errors %}
@@ -36,8 +36,8 @@
 
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <label for="{{ form.password.id_for_label }}" class="form-label small fw-semibold text-body mb-0">Mot de passe</label>
-                                <a href="{% url 'accounts:password_reset_request' %}" class="small text-decoration-none">Mot de passe oublié ?</a>
+                                <label for="{{ form.password.id_for_label }}" class="form-label small fw-semibold text-body mb-0">Password</label>
+                                <a href="{% url 'accounts:password_reset_request' %}" class="small text-decoration-none">Forgot password?</a>
                             </div>
                             <div class="input-group">
                                 <span class="input-group-text bg-body-tertiary border-end-0 text-body-secondary"><i class="bi bi-lock"></i></span>
@@ -48,18 +48,18 @@
 
                         <div class="mb-4 form-check">
                             <input type="checkbox" class="form-check-input" id="rememberMe" name="remember_me" checked>
-                            <label class="form-check-label small text-muted" for="rememberMe">Rester connecté sur cet appareil</label>
+                            <label class="form-check-label small text-muted" for="rememberMe">Keep me logged in on this device</label>
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold shadow-sm">
-                            <i class="bi bi-box-arrow-in-right me-2"></i>Se connecter
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Log in
                         </button>
                     </form>
 
                     <div class="text-center mt-4 pt-3 border-top">
                         <p class="small text-muted mb-0">
-                            Pas encore inscrit au hackathon ?
-                            <a href="{% url 'accounts:register' %}" class="fw-bold text-primary text-decoration-none">Créer un profil</a>
+                            Not registered for the hackathon yet?
+                            <a href="{% url 'accounts:register' %}" class="fw-bold text-primary text-decoration-none">Create an account</a>
                         </p>
                     </div>
                 </div>

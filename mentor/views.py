@@ -1,12 +1,20 @@
 from django.shortcuts import render
+from django.db.models import Q
+from django.utils import timezone
 from accounts.decorators import role_required
+from student.models import Announcement, Hackathon
 
 @role_required('mentor')
 def dashboard(request):
     """
     Tableau de bord de l'espace Mentor.
     """
+    hackathon = Hackathon.objects.filter(is_active=True).order_by('-starts_at').first()
+    recent_announcements = hackathon.announcements.filter(
+        audience__in=(Announcement.Audience.ALL, Announcement.Audience.MENTORS), is_draft=False,
+    ).filter(Q(scheduled_at__isnull=True) | Q(scheduled_at__lte=timezone.now())).order_by('-published_at')[:3] if hackathon else Announcement.objects.none()
     context = {
+        'recent_announcements': recent_announcements,
         'mentor_name': 'Dr. Marc Dubois',
         'specialty': 'Cloud Architecture & DevOps Lead',
         'stats': [

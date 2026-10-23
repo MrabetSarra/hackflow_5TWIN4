@@ -1,15 +1,15 @@
-{% extends "layouts/base_student.html" %}
+﻿{% extends "layouts/base_student.html" %}
 
-{% block title %}Mon Profil - HackFlow{% endblock %}
+{% block title %}My Profile - HackFlow{% endblock %}
 
 {% block student_content %}
 <div class="container-fluid px-0">
     <div class="mb-4 d-flex justify-content-between align-items-center gap-3">
         <div>
-        <h2 class="fw-bold text-body mb-1">Mon profil</h2>
-        <p class="text-body-secondary small mb-0">Les informations affichées proviennent de votre compte HackFlow.</p>
+        <h2 class="fw-bold text-body mb-1">My Profile</h2>
+        <p class="text-body-secondary small mb-0">The information shown here comes from your HackFlow account.</p>
         </div>
-        {% if not editing_details %}<a href="{% url 'accounts:profile' %}?edit=1" class="btn btn-outline-primary"><i class="bi bi-pencil-square me-1"></i>Modifier mes données</a>{% endif %}
+        {% if not editing_details %}<a href="{% url 'accounts:profile' %}?edit=1" class="btn btn-outline-primary"><i class="bi bi-pencil-square me-1"></i>Edit my details</a>{% endif %}
     </div>
 
     {% if messages %}
@@ -20,14 +20,14 @@
         <div class="col-lg-4">
             <section class="card-modern p-4 text-center h-100">
                 {% if profile_user.profile_photo %}
-                    <img src="{{ profile_user.profile_photo.url }}" alt="Photo de {{ profile_user.get_full_name }}" class="rounded-circle mb-3" width="96" height="96" style="object-fit: cover;">
+                    <img src="{{ profile_user.profile_photo.url }}" alt="Photo of {{ profile_user.get_full_name }}" class="rounded-circle mb-3" width="96" height="96" style="object-fit: cover;">
                 {% else %}
                     <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center fw-bold fs-2 mb-3" style="width: 96px; height: 96px;">
                         {{ profile_user.first_name|first|upper }}{{ profile_user.last_name|first|upper }}
                     </div>
                 {% endif %}
                 <h3 class="h4 fw-bold mb-1">{{ profile_user.get_full_name|default:profile_user.username }}</h3>
-                <p class="text-body-secondary mb-2">{{ profile_user.get_role_display }}</p>
+                <p class="text-body-secondary mb-2">{% if profile_user.role == 'student' %}Student{% else %}{{ profile_user.get_role_display }}{% endif %}</p>
                 <p class="small text-body-secondary mb-0">{{ profile_user.email }}</p>
                 {% if profile_user.bio %}
                 <p class="text-body-secondary small mt-4 mb-0">{{ profile_user.bio }}</p>
@@ -37,7 +37,7 @@
 
         <div class="col-lg-8">
             <section class="card-modern p-4 p-md-5 mb-4">
-                <h3 class="h5 fw-bold border-bottom pb-3 mb-4">Informations du compte</h3>
+                <h3 class="h5 fw-bold border-bottom pb-3 mb-4">Account Information</h3>
                 {% if editing_details %}
                 <form method="post">
                     {% csrf_token %}
@@ -52,49 +52,53 @@
                     </div>
                     {% endfor %}
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Enregistrer</button>
-                        <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Save</button>
+                        <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary">Cancel</a>
                     </div>
                 </form>
                 {% else %}
                 <dl class="row mb-0">
-                    <dt class="col-sm-4 text-body-secondary">Prénom</dt>
-                    <dd class="col-sm-8">{{ profile_user.first_name|default:'—' }}</dd>
+                    <dt class="col-sm-4 text-body-secondary">First name</dt>
+                    <dd class="col-sm-8">{{ profile_user.first_name|default:'â€”' }}</dd>
                     <dt class="col-sm-4 text-body-secondary">Nom</dt>
-                    <dd class="col-sm-8">{{ profile_user.last_name|default:'—' }}</dd>
-                    <dt class="col-sm-4 text-body-secondary">Nom d'utilisateur</dt>
+                    <dd class="col-sm-8">{{ profile_user.last_name|default:'â€”' }}</dd>
+                    <dt class="col-sm-4 text-body-secondary">Username</dt>
                     <dd class="col-sm-8">{{ profile_user.username }}</dd>
-                    <dt class="col-sm-4 text-body-secondary">Adresse e-mail</dt>
+                    <dt class="col-sm-4 text-body-secondary">Email address</dt>
                     <dd class="col-sm-8">{{ profile_user.email }}</dd>
                     <dt class="col-sm-4 text-body-secondary">CV</dt>
                     <dd class="col-sm-8">
-                        {% if profile_user.cv %}<a href="{% url 'accounts:download_cv' %}">Télécharger le CV (PDF)</a>{% else %}Aucun CV ajouté{% endif %}
+                        {% if profile_user.cv %}<a href="{% url 'accounts:download_cv' %}">Download CV (PDF)</a>{% else %}No CV uploaded{% endif %}
                     </dd>
-                    <dt class="col-sm-4 text-body-secondary">Établissement / organisation</dt>
-                    <dd class="col-sm-8">{{ profile_user.school|default:'—' }}</dd>
+                    <dt class="col-sm-4 text-body-secondary">School / organization</dt>
+                    <dd class="col-sm-8">{{ profile_user.school|default:'â€”' }}</dd>
                     {% if profile_user.role == 'student' %}
-                    <dt class="col-sm-4 text-body-secondary">Niveau d'études</dt>
-                    <dd class="col-sm-8">{{ profile_user.study_level|default:'—' }}</dd>
+                    <dt class="col-sm-4 text-body-secondary">Study level</dt>
+                    <dd class="col-sm-8">{{ profile_user.study_level|default:'â€”' }}</dd>
                     {% else %}
-                    <dt class="col-sm-4 text-body-secondary">Spécialité</dt>
-                    <dd class="col-sm-8">{{ profile_user.specialty|default:'—' }}</dd>
+                    <dt class="col-sm-4 text-body-secondary">Specialty</dt>
+                    <dd class="col-sm-8">{{ profile_user.specialty|default:'â€”' }}</dd>
                     {% endif %}
                 </dl>
                 {% endif %}
             </section>
 
-            {% if profile_user.role == 'student' and profile_user.skills %}
+            {% if profile_user.role == 'student' %}
             <section class="card-modern p-4 p-md-5 mb-4">
-                <h3 class="h5 fw-bold mb-3">Compétences</h3>
+                <div class="d-flex justify-content-between align-items-center gap-3 mb-3"><h3 class="h5 fw-bold mb-0">Skills</h3><a class="small text-decoration-none" href="{% url 'accounts:profile' %}?edit=1">Edit profile</a></div>
+                {% if profile_user.skills %}
                 <div class="d-flex flex-wrap gap-2">
                     {% for skill in profile_user.skills %}<span class="badge rounded-pill bg-primary bg-opacity-10 text-primary px-3 py-2">{{ skill }}</span>{% endfor %}
                 </div>
+                {% endif %}
+                {% if cv_detected_skills %}<div class="{% if profile_user.skills %}mt-4{% endif %}"><div class="small fw-semibold text-body-secondary mb-2">Detected in your CV</div><div class="d-flex flex-wrap gap-2">{% for item in cv_detected_skills %}<span class="badge rounded-pill bg-success bg-opacity-10 text-success px-3 py-2" title="{{ item.evidence }}"><i class="bi bi-file-earmark-check me-1"></i>{{ item.name }}</span>{% endfor %}</div></div>
+                {% elif not profile_user.skills %}<p class="text-body-secondary mb-0">No recognized skills detected yet. Upload a text-based PDF CV or add skills in your profile details.</p>{% endif %}
             </section>
             {% endif %}
 
             {% if profile_user.github_url or profile_user.linkedin_url %}
             <section class="card-modern p-4 p-md-5">
-                <h3 class="h5 fw-bold mb-3">Présence en ligne</h3>
+                <h3 class="h5 fw-bold mb-3">Online Presence</h3>
                 <div class="d-flex flex-column gap-2">
                     {% if profile_user.github_url %}<a href="{{ profile_user.github_url }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-github me-2"></i>{{ profile_user.github_url }}</a>{% endif %}
                     {% if profile_user.linkedin_url %}<a href="{{ profile_user.linkedin_url }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-linkedin me-2"></i>{{ profile_user.linkedin_url }}</a>{% endif %}
@@ -103,8 +107,8 @@
             {% endif %}
 
             <section class="card-modern p-4 p-md-5 mt-4">
-                <h3 class="h5 fw-bold mb-2">Photo de profil et CV</h3>
-                <p class="text-body-secondary small">Photo : JPG, PNG ou WebP, 5 Mo maximum. CV : PDF, 10 Mo maximum.</p>
+                <h3 class="h5 fw-bold mb-2">Profile Photo and CV</h3>
+                <p class="text-body-secondary small">Photo: JPG, PNG, or WebP, up to 5 MB. CV: PDF, up to 10 MB.</p>
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     {% if assets_form.non_field_errors %}<div class="alert alert-danger">{{ assets_form.non_field_errors }}</div>{% endif %}
@@ -115,10 +119,11 @@
                         {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
                     {% endfor %}
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-cloud-arrow-up me-1"></i>Enregistrer les fichiers</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-cloud-arrow-up me-1"></i>Save files</button>
                 </form>
             </section>
         </div>
     </div>
 </div>
 {% endblock %}
+
