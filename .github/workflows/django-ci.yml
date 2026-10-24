@@ -83,8 +83,8 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
 
-      - name: Report coverage (minimum 70%)
-        run: coverage report --fail-under=70 | tee coverage-report.txt
+      - name: Report coverage (minimum 80%)
+        run: coverage report --fail-under=80 | tee coverage-report.txt
 
       - name: Write test and coverage summary
         if: always()
