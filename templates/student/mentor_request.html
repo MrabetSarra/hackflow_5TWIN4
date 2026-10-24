@@ -6,12 +6,12 @@
 <div class="container-fluid px-0">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-1">Live Mentoring & Support</h2>
+            <h1 class="fw-bold text-dark mb-1">Live Mentoring & Support</h1>
             <p class="text-muted small mb-0">Blocked by a technical issue or need feedback on your product? Ask a mentor for help.</p>
         </div>
         <div class="d-flex align-items-center gap-2">
             <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill small fw-semibold">
-                <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>{{ mentor_count }} mentors online
+                <i aria-hidden="true" class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>{{ mentor_count }} mentors online
             </span>
         </div>
     </div>
@@ -20,63 +20,60 @@
         <!-- Left column: help request form -->
         <div class="col-lg-5">
             <div class="card-modern p-4 mb-4">
-                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-chat-left-dots-fill text-primary me-2"></i>New Help Request</h5>
+                <h5 class="fw-bold text-dark mb-3"><i aria-hidden="true" class="bi bi-chat-left-dots-fill text-primary me-2"></i>{% if editing_request %}Edit Help Request{% else %}New Help Request{% endif %}</h5>
 
-                <form method="post">{% csrf_token %}
+                <form method="post" novalidate>{% csrf_token %}
+                    <input type="hidden" name="action" value="{% if editing_request %}update{% else %}create{% endif %}">{% if editing_request %}<input type="hidden" name="request_id" value="{{ editing_request.pk }}">{% endif %}
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Issue / Request</label>
-                        <input type="text" name="subject" class="form-control" placeholder="e.g. HTTP 500 error while refreshing the JWT token" required>
+                        <label for="{{ form.subject.id_for_label }}" class="form-label small fw-semibold">Issue / Request</label>
+                        {{ form.subject }}{% for error in form.subject.errors %}<div id="{{ form.subject.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Area of expertise</label>
-                        <select class="form-select" name="category">
-                            <option>Back-End Development & Databases</option>
-                            <option>Front-End Development & Frameworks</option>
-                            <option>AI, LLMs & Machine Learning</option>
-                            <option>DevOps, Docker & Cloud Deployment</option>
-                            <option>UI/UX Design & User Experience</option>
-                            <option>Pitch & Presentation Structure</option>
-                        </select>
+                        <label for="{{ form.category.id_for_label }}" class="form-label small fw-semibold">Area of expertise</label>
+                        {{ form.category }}{% for error in form.category.errors %}<div id="{{ form.category.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Urgency</label>
+                        <label for="{{ form.urgency.id_for_label }}" class="form-label small fw-semibold">Urgency</label>
                         <div class="row g-2">
                             <div class="col-4">
                                 <label class="card-modern p-2 text-center cursor-pointer border-danger bg-danger bg-opacity-10 w-100">
-                                    <input type="radio" name="urgency" value="blocking" class="form-check-input d-none" checked>
+                                    <input type="radio" name="urgency" value="blocking" class="form-check-input d-none" {% if form.urgency.value == 'blocking' or not form.urgency.value %}checked{% endif %}>
                                     <span class="small fw-bold text-danger">Blocking</span>
                                 </label>
                             </div>
                             <div class="col-4">
                                 <label class="card-modern p-2 text-center cursor-pointer w-100">
-                                    <input type="radio" name="urgency" value="important" class="form-check-input d-none">
+                                    <input type="radio" name="urgency" value="important" class="form-check-input d-none" {% if form.urgency.value == 'important' %}checked{% endif %}>
                                     <span class="small fw-semibold text-warning-emphasis">Important</span>
                                 </label>
                             </div>
                             <div class="col-4">
                                 <label class="card-modern p-2 text-center cursor-pointer w-100">
-                                    <input type="radio" name="urgency" value="normal" class="form-check-input d-none">
+                                    <input type="radio" name="urgency" value="normal" class="form-check-input d-none" {% if form.urgency.value == 'normal' %}checked{% endif %}>
                                     <span class="small fw-semibold text-secondary">Advice</span>
                                 </label>
                             </div>
                         </div>
+                        {% for error in form.urgency.errors %}<div id="{{ form.urgency.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Meeting room link (Meet / Discord)</label>
-                        <input type="url" name="meeting_url" class="form-control" value="">
+                        <label for="{{ form.meeting_url.id_for_label }}" class="form-label small fw-semibold">Meeting room link (Meet / Discord)</label>
+                        {{ form.meeting_url }}{% for error in form.meeting_url.errors %}<div id="{{ form.meeting_url.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label small fw-semibold">Detailed description of the issue</label>
-                        <textarea class="form-control" name="description" rows="4" placeholder="Describe what you are trying to do, the error, and what you have already tried..." required></textarea>
+                        <label for="{{ form.description.id_for_label }}" class="form-label small fw-semibold">Detailed description of the issue</label>
+                        {{ form.description }}{% for error in form.description.errors %}<div id="{{ form.description.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
+                    {% for error in form.non_field_errors %}<div role="alert" class="alert alert-danger py-2">{{ error }}</div>{% endfor %}
 
-                    <button type="submit" class="btn btn-primary w-100 py-2 shadow-sm fw-semibold">
-                        <i class="bi bi-send-fill me-2"></i>Send help request
+                    <button type="submit" class="btn btn-primary rounded-pill w-100 py-2 shadow-sm fw-semibold">
+                        <i aria-hidden="true" class="bi bi-send-fill me-2"></i>{% if editing_request %}Save request changes{% else %}Send help request{% endif %}
                     </button>
+                    {% if editing_request %}<a href="{% url 'student:mentor_request' %}" class="btn btn-light rounded-pill w-100 mt-2">Cancel editing</a>{% endif %}
                 </form>
             </div>
         </div>
@@ -105,6 +102,7 @@
 
                     <h6 class="fw-bold text-dark mb-2">{{ req.subject }}</h6>
                     <p class="small text-muted mb-3">{{ req.category }}</p>
+                    {% if req.is_pending %}<div class="d-flex flex-wrap gap-2 mb-3"><a href="?edit={{ req.pk }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Edit request</a><button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" data-request-delete="{{ req.pk }}" data-request-subject="{{ req.subject }}" data-bs-toggle="modal" data-bs-target="#cancelMentorRequestModal">Cancel request</button></div>{% endif %}
 
                     <!-- Assigned Mentor -->
                     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 p-3 rounded-3 bg-white border">
@@ -116,7 +114,7 @@
                             </div>
                         </div>
                         <a href="{{ req.meeting_url }}" target="_blank" class="btn btn-success btn-sm rounded-pill px-3 shadow-sm d-flex align-items-center gap-2">
-                            <i class="bi bi-camera-video-fill"></i>Join meeting
+                            <i aria-hidden="true" class="bi bi-camera-video-fill"></i>Join meeting
                         </a>
                     </div>
                 </div>
@@ -125,14 +123,14 @@
 
             <!-- Previous Requests -->
             <div class="card-modern p-4">
-                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-clock-history text-secondary me-2"></i>Past Sessions</h5>
+                <h5 class="fw-bold text-dark mb-3"><i aria-hidden="true" class="bi bi-clock-history text-secondary me-2"></i>Past Sessions</h5>
                 <div class="d-flex flex-column gap-3">
                     {% for past in past_requests %}
                     <div class="p-3 rounded-3 border bg-white">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <div class="d-flex align-items-center gap-2">
                                 <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
-                                    <i class="bi bi-check2 me-1"></i>{{ past.status }}
+                                    <i aria-hidden="true" class="bi bi-check2 me-1"></i>{{ past.status }}
                                 </span>
                                 <span class="font-mono small text-muted">{{ past.id }}</span>
                             </div>
@@ -140,10 +138,11 @@
                         </div>
 
                         <h6 class="fw-bold text-dark mb-1">{{ past.subject }}</h6>
+                        {% if past.is_pending %}<div class="d-flex flex-wrap gap-2 my-2"><a href="?edit={{ past.pk }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Edit request</a><button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" data-request-delete="{{ past.pk }}" data-request-subject="{{ past.subject }}" data-bs-toggle="modal" data-bs-target="#cancelMentorRequestModal">Cancel request</button></div>{% endif %}
                         <p class="small text-muted mb-2">{{ past.category }} • Mentor: <strong>{{ past.mentor_name }}</strong></p>
 
                         <div class="p-2 rounded bg-light border-start border-3 border-success small text-muted">
-                            <i class="bi bi-chat-quote-fill me-1 text-success"></i><em>"{{ past.resolution_note }}"</em>
+                            {% if past.resolution_note %}<i aria-hidden="true" class="bi bi-chat-quote-fill me-1 text-success"></i><em>"{{ past.resolution_note }}"</em>{% else %}<i aria-hidden="true" class="bi bi-clock-history me-1 text-secondary"></i>This request date has passed.{% endif %}
                         </div>
                     </div>
                     {% endfor %}
@@ -152,4 +151,11 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="cancelMentorRequestModal" tabindex="-1" aria-labelledby="cancelMentorRequestTitle" aria-hidden="true" role="dialog" aria-modal="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content card-modern border-0"><div class="modal-header border-bottom"><h5 class="modal-title fw-bold" id="cancelMentorRequestTitle">Cancel help request</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><form method="post" id="cancelMentorRequestForm">{% csrf_token %}<input type="hidden" name="action" value="cancel"><input type="hidden" name="request_id" value=""><div class="modal-body"><p class="mb-0" id="cancelMentorRequestMessage"></p></div><div class="modal-footer border-top"><button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">Keep request</button><button type="submit" class="btn btn-danger rounded-pill px-3">Cancel request</button></div></form></div></div></div>
+<script>
+document.querySelectorAll('[data-request-delete]').forEach((button) => button.addEventListener('click', () => {
+    document.querySelector('#cancelMentorRequestForm [name="request_id"]').value = button.dataset.requestDelete;
+    document.getElementById('cancelMentorRequestMessage').textContent = `Cancel “${button.dataset.requestSubject}”?`;
+}));
+</script>
 {% endblock %}

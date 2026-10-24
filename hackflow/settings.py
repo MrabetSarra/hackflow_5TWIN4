@@ -11,25 +11,50 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+import tempfile
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load local secrets for development without adding them to source control.
+# Environment variables already set by the host take precedence over .env.
+_ENV_FILE = BASE_DIR / '.env'
+if _ENV_FILE.is_file():
+    for _line in _ENV_FILE.read_text(encoding='utf-8-sig').splitlines():
+        _line = _line.strip()
+        if not _line or _line.startswith('#') or '=' not in _line:
+            continue
+        _name, _value = _line.split('=', 1)
+        _name, _value = _name.strip(), _value.strip()
+        if _name and not os.environ.get(_name):
+            if len(_value) >= 2 and _value[0] == _value[-1] and _value[0] in ('"', "'"):
+                _value = _value[1:-1]
+            os.environ[_name] = _value
+
+
+def _env_bool(name, default=False):
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {'1', 'true', 'yes', 'on'}
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
-    'DJANGO_SECRET_KEY',
-    'django-insecure-hackflow-local-development-only',
-)
+DEBUG = _env_bool('DJANGO_DEBUG', False)
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '')
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = 'django-insecure-hackflow-local-development-only'
+    else:
+        raise RuntimeError('DJANGO_SECRET_KEY must be set when DJANGO_DEBUG is false.')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [host.strip() for host in os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if host.strip()]
+if '*' in ALLOWED_HOSTS:
+    raise RuntimeError('DJANGO_ALLOWED_HOSTS must list explicit hosts and cannot contain a wildcard.')
 
 
 # Application definition
@@ -47,6 +72,7 @@ INSTALLED_APPS = [
     'student.apps.StudentConfig',
     'mentor.apps.MentorConfig',
     'dashboard_admin.apps.DashboardAdminConfig',
+    'repositories.apps.RepositoriesConfig',
 ]
 
 MIDDLEWARE = [
@@ -58,6 +84,15 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# WhiteNoise is installed in deployed environments from requirements.txt. Keep
+# local management commands usable before dependencies have been installed.
+try:
+    import whitenoise  # noqa: F401
+except ImportError:
+    pass
+else:
+    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
 ROOT_URLCONF = 'hackflow.urls'
 
@@ -73,6 +108,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'student.context_processors.student_globals',
+                'repositories.context_processors.repository_assets',
                 'django.template.context_processors.media',
                 'django.template.context_processors.static',
             ],
@@ -89,7 +125,11 @@ WSGI_APPLICATION = 'hackflow.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': Path(os.environ.get('DATABASE_PATH', BASE_DIR / 'db.sqlite3')),
+        'OPTIONS': {
+            'timeout': 20,
+            'init_command': 'PRAGMA journal_mode=WAL',
+        },
     }
 }
 
@@ -115,14 +155,35 @@ AUTH_PASSWORD_VALIDATORS = [
 # Use the HackFlow profile model for Django authentication from the first migration.
 AUTH_USER_MODEL = 'accounts.User'
 
-# Gmail SMTP is used by the password reset flow. Keep the app password outside source control.
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.environ.get('GMAIL_EMAIL', 'montahaguedhami@gmail.com')
-EMAIL_HOST_PASSWORD = os.environ.get('GMAIL_APP_PASSWORD', '')
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+# Email is sent only when SMTP credentials are explicitly configured.
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = _env_bool('EMAIL_USE_TLS', True)
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'webmaster@localhost')
+
+if not DEBUG:
+    SESSION_COOKIE_SECURE = _env_bool('SESSION_COOKIE_SECURE', True)
+    CSRF_COOKIE_SECURE = _env_bool('CSRF_COOKIE_SECURE', True)
+    SECURE_SSL_REDIRECT = _env_bool('SECURE_SSL_REDIRECT', True)
+    SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '31536000'))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = _env_bool('SECURE_HSTS_INCLUDE_SUBDOMAINS', True)
+    SECURE_HSTS_PRELOAD = _env_bool('SECURE_HSTS_PRELOAD', False)
+    SECURE_CONTENT_TYPE_NOSNIFF = _env_bool('SECURE_CONTENT_TYPE_NOSNIFF', True)
+    X_FRAME_OPTIONS = os.environ.get('X_FRAME_OPTIONS', 'DENY')
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+_proxy_ssl_header = os.environ.get('SECURE_PROXY_SSL_HEADER', 'HTTP_X_FORWARDED_PROTO,https')
+if _proxy_ssl_header:
+    _header_name, _header_value = _proxy_ssl_header.split(',', 1)
+    SECURE_PROXY_SSL_HEADER = (_header_name.strip(), _header_value.strip())
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()]
 
 
 # Internationalization
@@ -141,14 +202,90 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = Path(os.environ.get('STATIC_ROOT', BASE_DIR / 'staticfiles'))
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
+try:
+    import whitenoise  # noqa: F401
+except ImportError:
+    pass
+else:
+    STORAGES = {
+        'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+        'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage'},
+    }
 
 # Media files (Uploads)
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media' / 'uploads'
-PRIVATE_MEDIA_ROOT = BASE_DIR / 'private_media'
+_EPHEMERAL_ROOT = Path(tempfile.gettempdir()) if not DEBUG else BASE_DIR
+MEDIA_ROOT = Path(os.environ.get('MEDIA_ROOT', _EPHEMERAL_ROOT / 'media' / 'uploads'))
+PRIVATE_MEDIA_ROOT = Path(os.environ.get('PRIVATE_MEDIA_ROOT', _EPHEMERAL_ROOT / 'private_media'))
+
+# Git repositories and upload previews are private application data, never media.
+REPOS_ROOT = Path(os.environ.get('HACKFLOW_REPOS_ROOT', _EPHEMERAL_ROOT / '.repository-data'))
+DATABASES['default']['NAME'] = Path(DATABASES['default']['NAME'])
+if not DATABASES['default']['NAME'].is_absolute():
+    DATABASES['default']['NAME'] = BASE_DIR / DATABASES['default']['NAME']
+for _directory in {
+    DATABASES['default']['NAME'].parent,
+    MEDIA_ROOT,
+    PRIVATE_MEDIA_ROOT,
+    REPOS_ROOT,
+}:
+    _directory.mkdir(parents=True, exist_ok=True)
+REPOSITORY_MAX_TOTAL_UPLOAD_SIZE = 50 * 1024 * 1024
+REPOSITORY_MAX_FILE_SIZE = 10 * 1024 * 1024
+REPOSITORY_MAX_FILES = 500
+REPOSITORY_MAX_ZIP_UNCOMPRESSED_SIZE = 100 * 1024 * 1024
+REPOSITORY_MAX_COMPRESSION_RATIO = 100
+REPOSITORY_MAX_BINARY_FILE_SIZE = 2 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 60 * 1024 * 1024
+# Directory uploads may include many files that the repository uploader later
+# ignores (for example, .git, node_modules, and virtual environments). Allow a
+# larger multipart count so those paths can be filtered during staging; the
+# uploader still enforces its own 500 accepted-file and byte-size limits.
+DATA_UPLOAD_MAX_NUMBER_FILES = 50000
+ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
+ANTHROPIC_MODEL = os.environ.get('ANTHROPIC_MODEL', 'claude-haiku-4-5-20251001')
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+OPENAI_MODEL = os.environ.get('OPENAI_MODEL', 'gpt-5-mini')
+OLLAMA_BASE_URL = os.environ.get('OLLAMA_BASE_URL', 'http://127.0.0.1:11434')
+OLLAMA_MODEL = os.environ.get('OLLAMA_MODEL', 'qwen2.5-coder:3b')
+REPOSITORY_AI_PROVIDER = os.environ.get('REPOSITORY_AI_PROVIDER', 'ollama')
+REPOSITORY_AI_TIMEOUT = int(os.environ.get('REPOSITORY_AI_TIMEOUT', '180'))
+REPOSITORY_AI_MAX_INPUT_CHARS = 24000
+REPOSITORY_AI_REQUESTS_PER_HOUR = 20
+REPOSITORY_AI_LOCAL_REQUESTS_PER_HOUR = 60
+REPOSITORY_BLOCK_PRIVATE_KEYS = True
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'standard': {'format': '{levelname} {asctime} {name}: {message}', 'style': '{'},
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler', 'stream': 'ext://sys.stdout',
+            'formatter': 'standard', 'level': 'WARNING',
+        },
+    },
+    'loggers': {
+        'django': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+        'student': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+        'accounts': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+        'repositories': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+    },
+}
+
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+_CELERY_ALWAYS_EAGER = os.environ.get('CELERY_TASK_ALWAYS_EAGER')
+CELERY_TASK_ALWAYS_EAGER = DEBUG if _CELERY_ALWAYS_EAGER is None else _CELERY_ALWAYS_EAGER.strip().lower() in {'1', 'true', 'yes', 'on'}
+CELERY_TASK_EAGER_PROPAGATES = True
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_RESULT_SERIALIZER = 'json'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
