@@ -43,7 +43,7 @@
                     <section class="border rounded-4 bg-body-tertiary p-3 mb-4" data-ai-generator data-endpoint="{% url 'dashboard_admin:announcement_generate' %}">
                         <div class="d-flex align-items-start gap-3 mb-3">
                             <span class="announce-stat-icon bg-primary-subtle text-primary"><i class="bi bi-stars"></i></span>
-                            <div><h3 class="h6 fw-bold mb-1">AI Announcement Generator</h3><p class="small text-body-secondary mb-0">Générez un brouillon avec Ollama. Il reste à vérifier avant toute publication.</p></div>
+                            <div><h3 class="h6 fw-bold mb-1">Assistant de rédaction</h3><p class="small text-body-secondary mb-0">Le brouillon ne sera pas publié automatiquement : utilisez « Insérer dans l’annonce », relisez-le, puis cliquez sur « Publier ».</p></div>
                         </div>
                         <div class="row g-2">
                             <div class="col-12"><label class="form-label small fw-semibold" for="ai-audience">Public cible</label>
@@ -53,7 +53,8 @@
                                 </select>
                             </div>
                             <div class="col-12"><label class="form-label small fw-semibold" for="ai-topic">Sujet et informations à inclure</label>
-                                <textarea class="form-control" id="ai-topic" rows="2" maxlength="500" placeholder="Ex. : rappeler la date limite et demander de déposer le ZIP" data-ai-topic></textarea>
+                                <textarea class="form-control" id="ai-topic" rows="2" maxlength="500" placeholder="Ex. : rappeler la date limite et demander de déposer le ZIP" data-ai-topic aria-describedby="ai-topic-help"></textarea>
+                                <div class="form-text" id="ai-topic-help">Précisez le sujet et les informations à communiquer.</div>
                             </div>
                             <div class="col-6"><label class="form-label small fw-semibold" for="ai-tone">Ton</label>
                                 <select class="form-select" id="ai-tone" data-ai-tone><option value="professionnel">Professionnel</option><option value="chaleureux">Chaleureux</option><option value="direct">Direct</option><option value="enthousiaste">Enthousiaste</option></select>
@@ -68,7 +69,7 @@
                             <div class="alert alert-info py-2 small" data-ai-target-note></div>
                             <div class="mb-2"><label class="form-label small fw-semibold" for="ai-result-title">Objet / titre — vérifiez et modifiez</label><input class="form-control" id="ai-result-title" maxlength="220" data-ai-result-title></div>
                             <div class="mb-2"><label class="form-label small fw-semibold" for="ai-result-body">Message — vérifiez et modifiez</label><textarea class="form-control" id="ai-result-body" rows="7" maxlength="5000" data-ai-result-body></textarea></div>
-                            <div class="d-flex flex-wrap gap-2"><button class="btn btn-primary btn-sm" type="button" data-ai-apply><i class="bi bi-pencil-square me-1"></i>Utiliser dans l’annonce</button><button class="btn btn-outline-secondary btn-sm" type="button" data-ai-copy><i class="bi bi-clipboard me-1"></i>Copier le texte</button></div>
+                            <div class="d-flex flex-wrap gap-2"><button class="btn btn-primary btn-sm" type="button" data-ai-apply><i class="bi bi-pencil-square me-1"></i>Insérer dans l’annonce</button><button class="btn btn-outline-secondary btn-sm" type="button" data-ai-copy><i class="bi bi-clipboard me-1"></i>Copier le texte</button></div>
                             <ul class="small mt-3 mb-0 d-none" data-ai-teams></ul>
                         </div>
                     </section>
@@ -208,11 +209,70 @@
   const count = document.querySelector('[data-char-count]');
   const form = body?.closest('form');
   if (!body) return;
+  const errorFor = (input) => {
+    let error = input.parentElement.querySelector('[data-client-error]');
+    if (!error) {
+      error = document.createElement('div');
+      error.className = 'invalid-feedback d-block';
+      error.dataset.clientError = '';
+      error.id = `${input.id}-client-error`;
+      input.insertAdjacentElement('afterend', error);
+    }
+    return error;
+  };
+  const clearError = (input) => {
+    const error = input.parentElement.querySelector('[data-client-error]');
+    if (error) {
+      error.remove();
+      if (input.getAttribute('aria-describedby') === error.id) input.removeAttribute('aria-describedby');
+    }
+    if (!input.parentElement.querySelector('.invalid-feedback:not([data-client-error])')) {
+      input.classList.remove('is-invalid');
+      input.removeAttribute('aria-invalid');
+    }
+  };
+  const setError = (input, message) => {
+    const error = errorFor(input);
+    error.textContent = message;
+    input.classList.add('is-invalid');
+    input.setAttribute('aria-invalid', 'true');
+    input.setAttribute('aria-describedby', error.id);
+  };
+  if (form) {
+    const draftButton = form.querySelector('[data-draft-button]');
+    const publishButton = form.querySelector('[data-publish-button]');
+    const validate = (action) => {
+      [title, category, audience, body, schedule].filter(Boolean).forEach(clearError);
+      const errors = [];
+      if (!title.value.trim()) { setError(title, 'Le titre est obligatoire.'); errors.push(title); }
+      if (title.value.trim().length > 220) { setError(title, 'Le titre ne peut pas dépasser 220 caractères.'); errors.push(title); }
+      if (category.value.trim().length > 80) { setError(category, 'La catégorie ne peut pas dépasser 80 caractères.'); errors.push(category); }
+      if (!audience.value) { setError(audience, 'Sélectionnez une audience.'); errors.push(audience); }
+      if (action !== 'draft' && !body.value.trim()) { setError(body, 'Ajoutez le contenu de votre annonce avant de la publier.'); errors.push(body); }
+      if (body.value.length > 5000) { setError(body, 'Le message ne peut pas dépasser 5 000 caractères.'); errors.push(body); }
+      if (schedule.value && new Date(schedule.value).getTime() <= Date.now()) { setError(schedule, 'Choisissez une date et une heure dans le futur.'); errors.push(schedule); }
+      return errors;
+    };
+    form.addEventListener('submit', (event) => {
+      const action = event.submitter?.value || (event.submitter === draftButton ? 'draft' : 'publish');
+      const errors = validate(action);
+      if (errors.length) {
+        event.preventDefault();
+        errors[0].focus();
+        errors[0].scrollIntoView({behavior: 'smooth', block: 'center'});
+      }
+    });
+    [title, category, audience, body, schedule].filter(Boolean).forEach((input) => {
+      input.addEventListener('input', () => clearError(input));
+      input.addEventListener('change', () => clearError(input));
+    });
+  }
   const generator = document.querySelector('[data-ai-generator]');
   if (generator && form) {
     const generateButton = generator.querySelector('[data-ai-generate]');
     const resultPanel = generator.querySelector('[data-ai-result]');
     const errorBox = generator.querySelector('[data-ai-error]');
+    const topicInput = generator.querySelector('[data-ai-topic]');
     const resultTitle = generator.querySelector('[data-ai-result-title]');
     const resultBody = generator.querySelector('[data-ai-result-body]');
     const applyButton = generator.querySelector('[data-ai-apply]');
@@ -220,12 +280,33 @@
     const teamsList = generator.querySelector('[data-ai-teams]');
     const targetNote = generator.querySelector('[data-ai-target-note]');
     let targetedEmail = false;
+    const clearTopicError = () => {
+      generator.querySelector('[data-topic-error]')?.remove();
+      topicInput.classList.remove('is-invalid');
+      topicInput.removeAttribute('aria-invalid');
+      topicInput.setAttribute('aria-describedby', 'ai-topic-help');
+    };
+    topicInput?.addEventListener('input', clearTopicError);
     generateButton?.addEventListener('click', async () => {
       errorBox.classList.add('d-none');
       resultPanel.classList.add('d-none');
+      clearTopicError();
+      if (!topicInput.value.trim()) {
+        const topicError = document.createElement('div');
+        topicError.className = 'invalid-feedback d-block';
+        topicError.dataset.topicError = '';
+        topicError.id = 'ai-topic-error';
+        topicError.textContent = 'Indiquez le sujet et les informations à transmettre.';
+        topicInput.classList.add('is-invalid');
+        topicInput.setAttribute('aria-invalid', 'true');
+        topicInput.setAttribute('aria-describedby', 'ai-topic-help ai-topic-error');
+        topicInput.insertAdjacentElement('afterend', topicError);
+        topicInput.focus();
+        return;
+      }
       const originalLabel = generateButton.innerHTML;
       generateButton.disabled = true;
-      generateButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Génération Ollama…';
+      generateButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Génération du brouillon…';
       const data = new URLSearchParams({
         audience: generator.querySelector('[data-ai-audience]').value,
         topic: generator.querySelector('[data-ai-topic]').value,
@@ -257,7 +338,7 @@
         }
         resultPanel.classList.remove('d-none');
       } catch (error) {
-        errorBox.textContent = error.message || 'Impossible de contacter Ollama.';
+        errorBox.textContent = error.message || 'Impossible de générer le brouillon. Réessayez.';
         errorBox.classList.remove('d-none');
       } finally {
         generateButton.disabled = false;

@@ -140,11 +140,11 @@ def ask_copilot(question, facts):
         content = result.get('message', {}).get('content', '')
         answer = json.loads(content)
     except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, TypeError, AttributeError) as exc:
-        raise CopilotError('Ollama ne répond pas ou sa réponse est invalide. Vérifiez le serveur local et le modèle configuré.') from exc
+        raise CopilotError('Le copilote est momentanément indisponible. Réessayez dans quelques instants.') from exc
     if not isinstance(answer, dict) or not isinstance(answer.get('answer'), str):
-        raise CopilotError('Ollama a renvoyé une réponse invalide.')
+        raise CopilotError('Le copilote a renvoyé une réponse invalide.')
     if not answer['answer'].strip():
-        raise CopilotError('Ollama a renvoyé une réponse vide. Réessayez avec une question plus précise.')
+        raise CopilotError('Le copilote n’a pas produit de réponse. Réessayez avec une question plus précise.')
     return {
         'answer': answer['answer'][:5000],
         'announcement_title': str(answer.get('announcement_title', ''))[:220],

@@ -176,3 +176,28 @@ class ApplicationForm(forms.ModelForm):
         model = CareerApplication
         fields = ['portfolio_url', 'note']
         widgets = {'note': forms.TextInput(attrs={'maxlength': 500})}
+
+
+class OrganizerApplicationUpdateForm(forms.Form):
+    status = forms.ChoiceField(choices=[
+        (CareerApplication.Status.REVIEW, 'Under review'),
+        (CareerApplication.Status.INTERVIEW, 'Interview'),
+        (CareerApplication.Status.ACCEPTED, 'Accepted'),
+        (CareerApplication.Status.REJECTED, 'Rejected'),
+        (CareerApplication.Status.WITHDRAWN, 'Withdrawn'),
+    ], widget=forms.Select(attrs={'class': 'form-select form-select-sm mb-2'}))
+    interview_at = forms.DateTimeField(
+        required=False,
+        input_formats=['%Y-%m-%dT%H:%M'],
+        widget=forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control form-control-sm'}, format='%Y-%m-%dT%H:%M'),
+    )
+    organizer_update = forms.CharField(
+        required=False, max_length=500,
+        widget=forms.Textarea(attrs={'rows': 2, 'class': 'form-control form-control-sm', 'placeholder': 'Message or interview details for the student'}),
+    )
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get('status') == CareerApplication.Status.INTERVIEW and not cleaned.get('interview_at'):
+            self.add_error('interview_at', 'Set an interview date and time before notifying the student.')
+        return cleaned
