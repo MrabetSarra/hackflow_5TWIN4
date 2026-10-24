@@ -11,7 +11,7 @@
                 <div class="card-modern p-4 p-md-5 shadow-lg">
                     <div class="text-center mb-4">
                         <img src="{% static 'images/hackflow-mark.png' %}" alt="" width="64" height="48" class="mb-2" style="object-fit: contain;">
-                        <h3 class="fw-bold text-body">Welcome back to HackFlow</h3>
+                        <h1 class="fw-bold text-body">Welcome back to HackFlow</h1>
                         <p class="text-body-secondary small">Log in to access your HackFlow workspace.</p>
                     </div>
 
@@ -28,10 +28,10 @@
                         <div class="mb-3">
                             <label for="{{ form.username.id_for_label }}" class="form-label small fw-semibold text-body">{{ form.username.label }}</label>
                             <div class="input-group">
-                                <span class="input-group-text bg-body-tertiary border-end-0 text-body-secondary"><i class="bi bi-person"></i></span>
+                                <span class="input-group-text bg-body-tertiary border-end-0 text-body-secondary"><i aria-hidden="true" class="bi bi-person"></i></span>
                                 {{ form.username }}
                             </div>
-                            {% for error in form.username.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                            {% for error in form.username.errors %}<div id="{{ form.username.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                         </div>
 
                         <div class="mb-3">
@@ -40,10 +40,10 @@
                                 <a href="{% url 'accounts:password_reset_request' %}" class="small text-decoration-none">Forgot password?</a>
                             </div>
                             <div class="input-group">
-                                <span class="input-group-text bg-body-tertiary border-end-0 text-body-secondary"><i class="bi bi-lock"></i></span>
+                                <span class="input-group-text bg-body-tertiary border-end-0 text-body-secondary"><i aria-hidden="true" class="bi bi-lock"></i></span>
                                 {{ form.password }}
                             </div>
-                            {% for error in form.password.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                            {% for error in form.password.errors %}<div id="{{ form.password.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                         </div>
 
                         <div class="mb-4 form-check">
@@ -52,7 +52,7 @@
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold shadow-sm">
-                            <i class="bi bi-box-arrow-in-right me-2"></i>Log in
+                            <i aria-hidden="true" class="bi bi-box-arrow-in-right me-2"></i>Log in
                         </button>
                     </form>
 

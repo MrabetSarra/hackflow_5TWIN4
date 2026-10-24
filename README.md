@@ -81,6 +81,18 @@ Ouvrez [http://127.0.0.1:8000/](http://127.0.0.1:8000/). La base SQLite locale e
 - **Interface :** Django Templates, Bootstrap, CSS et JavaScript
 - **Médias :** Pillow pour la photo de profil ; CV conservés dans un stockage privé local
 
+## AI task generation
+
+AI task suggestions reuse the repository AI provider configuration. Set `REPOSITORY_AI_PROVIDER` to `ollama`, `openai`, or `anthropic`; configure `OLLAMA_BASE_URL` and `OLLAMA_MODEL` for Ollama, `OPENAI_API_KEY` and `OPENAI_MODEL` for OpenAI, or `ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL` for Anthropic. `REPOSITORY_AI_TIMEOUT` controls provider timeouts.
+
+For background processing, set `CELERY_BROKER_URL` (default: `redis://localhost:6379/0`) and `CELERY_TASK_ALWAYS_EAGER` (`true` runs jobs synchronously; it defaults to the Django `DEBUG` value). Set `CELERY_TASK_ALWAYS_EAGER=false` when using a worker. Start it with:
+
+```bash
+celery -A hackflow worker -l info
+```
+
+Run `python manage.py evaluate_ai` for reproducible mocked metrics, or add `--live` to call the configured AI provider. The report is written to `reports/ai_metrics.md`.
+
 ## Organisation du dépôt
 
 ```text
@@ -102,3 +114,52 @@ static/             Styles, scripts et identité visuelle
 ---
 
 **HackFlow — Build · Collaborate · Create**
+
+## Testing and coverage
+
+Install the development dependencies and run the full Django suite:
+
+```bash
+python -m pip install -r requirements-dev.txt
+python manage.py test
+```
+
+For local Windows PowerShell, set a development key before running Django commands if your `.env` has `DJANGO_DEBUG=false`:
+
+```powershell
+$env:DJANGO_DEBUG = 'true'
+$env:DJANGO_SECRET_KEY = 'local-test-key-change-me'
+python manage.py test
+```
+
+Generate coverage reports with:
+
+```bash
+coverage run manage.py test
+coverage report --fail-under=70
+coverage html
+```
+
+The HTML report is written to `htmlcov/`. CI enforces 70% coverage and uploads that report as an artifact.
+
+## Environment variables
+
+Copy `.env.example` to `.env` and set the values for your environment:
+
+- Django: `DJANGO_DEBUG`, `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`.
+- Production security: `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, `SECURE_SSL_REDIRECT`, `SECURE_HSTS_SECONDS`, `SECURE_HSTS_INCLUDE_SUBDOMAINS`, `SECURE_HSTS_PRELOAD`, `SECURE_CONTENT_TYPE_NOSNIFF`, `X_FRAME_OPTIONS`, `SECURE_PROXY_SSL_HEADER`, and `CSRF_TRUSTED_ORIGINS`.
+- Email: `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL`. The console backend is used unless both SMTP credentials are set.
+- Private repository storage: `HACKFLOW_REPOS_ROOT`.
+- AI providers: `REPOSITORY_AI_PROVIDER`, `REPOSITORY_AI_TIMEOUT`, `OLLAMA_BASE_URL`, `OLLAMA_MODEL`, `OPENAI_API_KEY`, `OPENAI_MODEL`, `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`.
+- Background jobs: `CELERY_BROKER_URL`, `CELERY_TASK_ALWAYS_EAGER`.
+
+When `DJANGO_DEBUG=false`, Django refuses to start without `DJANGO_SECRET_KEY`. Never use `*` for allowed hosts. HTTPS and proxy values must match the hosting provider's configuration.
+
+## Security checklist
+
+- Keep `.env`, the local SQLite database, logs, and `.repository-data/` out of Git.
+- Use a long, unique production secret key and keep debug mode disabled.
+- Set exact allowed hosts and CSRF trusted origins for the deployed domain.
+- Enable HTTPS cookie protection and redirects when TLS is terminated by the application; configure the trusted proxy header only when the host guarantees it.
+- Configure SMTP credentials through environment variables; use a restricted mail account.
+- Review `python manage.py check --deploy` before deployment. HSTS preload is opt-in and should only be enabled when the domain is ready for permanent browser preload behavior.

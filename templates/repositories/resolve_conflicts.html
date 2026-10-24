@@ -1,0 +1,194 @@
+{% extends "layouts/base_student.html" %}
+{% load static %}
+{% block title %}Resolve conflicts · {{ repository.name }} - HackFlow{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'repositories/repositories.css' %}?v={{ repositories_css_version }}">{% endblock %}
+{% block student_content %}
+<h1 class="visually-hidden">Resolve conflicts in {{ repository.name }}</h1>
+<div class="container-fluid px-0 repository-page">
+    {% include "repositories/_messages.html" %}
+
+    <!-- Header -->
+    <div class="repo-header">
+        <div class="repo-header__breadcrumb">            <a href="{% url 'repositories:list' %}">Repositories</a>
+            <span class="text-body-secondary">/</span>
+            <a href="{% url 'repositories:detail' repository.slug %}">{{ repository.name }}</a>
+            <span class="text-body-secondary">/</span>
+            <a href="{% url 'repositories:merge_requests' repository.slug %}">Merge requests</a>
+            <span class="text-body-secondary">/</span>
+            <a href="{% url 'repositories:merge_request' repository.slug merge_request.pk %}">#{{ merge_request.pk }}</a>
+            <span class="text-body-secondary">/</span>
+            <span class="fw-semibold text-body">Resolve conflicts</span>
+        </div>
+        <div class="repo-header__name mt-1">
+            <i aria-hidden="true" class="bi bi-exclamation-triangle text-warning"></i>
+            <span>Resolve merge conflicts</span>
+        </div>
+        <p class="text-body-secondary small mt-1 mb-0">
+            <code class="repo-branch-badge">{{ merge_request.source_branch }}</code>
+            <i aria-hidden="true" class="bi bi-arrow-right mx-1"></i>
+            <code class="repo-branch-badge">{{ merge_request.target_branch }}</code>
+            &nbsp;· Choose a side or edit the merged result. AI suggestions are drafts only.
+        </p>
+    </div>
+
+    <form method="post" id="conflict-form" class="mt-3">
+        {% csrf_token %}
+
+        {% for path, conflict in conflicts %}
+        <div class="card-modern overflow-hidden mb-4">
+            <!-- File header -->
+            <div class="repo-toolbar" style="border-radius:.75rem .75rem 0 0;">
+                <div class="repo-toolbar__left">
+                    <i aria-hidden="true" class="bi bi-file-earmark-code text-warning"></i>
+                    <code class="fw-semibold small text-body font-mono">{{ path }}</code>
+                    {% if conflict.binary %}
+                    <span class="badge bg-warning-subtle text-warning-emphasis">Binary</span>
+                    {% endif %}
+                </div>
+                {% if not conflict.binary %}
+                <div class="repo-toolbar__right">
+                    <button class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0" type="button"
+                            data-ai-conflict data-feature="conflict_explain"
+                            data-path="{{ path }}" data-index="{{ forloop.counter0 }}"
+                            data-url="{% url 'repositories:ai_suggestion' repository.slug %}"
+                            style="font-size:.72rem;">
+                        <i aria-hidden="true" class="bi bi-stars me-1"></i>Explain
+                    </button>
+                    <button class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0" type="button"
+                            data-ai-conflict data-feature="conflict_suggest"
+                            data-path="{{ path }}" data-index="{{ forloop.counter0 }}"
+                            data-url="{% url 'repositories:ai_suggestion' repository.slug %}"
+                            style="font-size:.72rem;">
+                        <i aria-hidden="true" class="bi bi-lightbulb me-1"></i>Suggest
+                    </button>
+                    <span class="small text-body-secondary" id="ai-conflict-status-{{ forloop.counter0 }}" role="status"></span>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if conflict.binary %}
+            <div class="p-4">
+                <p class="text-body-secondary small mb-2">Choose which binary version to keep:</p>
+                <select class="form-select form-select-sm" name="choice_{{ forloop.counter0 }}" style="max-width:260px;">
+                    <option value="">— Choose a version —</option>
+                    <option value="source">Keep source ({{ merge_request.source_branch }})</option>
+                    <option value="target">Keep target ({{ merge_request.target_branch }})</option>
+                </select>
+            </div>
+            {% else %}
+            <!-- Side-by-side panels -->
+            <div class="p-3">
+                <div class="row g-3 mb-3">
+                    <div class="col-lg-6">
+                        <div class="conflict-panel">
+                            <div class="conflict-panel__header is-source">
+                                <span><i aria-hidden="true" class="bi bi-diagram-2 me-1"></i>Source — {{ merge_request.source_branch }}</span>
+                                <button class="btn btn-xs btn-outline-success rounded-pill px-2 py-0" type="button"
+                                        data-copy-panel="source-{{ forloop.counter0 }}"
+                                        data-target="result-{{ forloop.counter0 }}"
+                                        style="font-size:.7rem;">Use source</button>
+                            </div>
+                            <pre class="repository-diff p-2 m-0" style="max-height:240px;">{{ conflict.source }}</pre>
+                        </div>
+                        <textarea class="d-none" id="source-{{ forloop.counter0 }}">{{ conflict.source }}</textarea>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="conflict-panel">
+                            <div class="conflict-panel__header is-target">
+                                <span><i aria-hidden="true" class="bi bi-diagram-2 me-1"></i>Target — {{ merge_request.target_branch }}</span>
+                                <button class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0" type="button"
+                                        data-copy-panel="target-{{ forloop.counter0 }}"
+                                        data-target="result-{{ forloop.counter0 }}"
+                                        style="font-size:.7rem;">Use target</button>
+                            </div>
+                            <pre class="repository-diff p-2 m-0" style="max-height:240px;">{{ conflict.target }}</pre>
+                        </div>
+                        <textarea class="d-none" id="target-{{ forloop.counter0 }}">{{ conflict.target }}</textarea>
+                    </div>
+                </div>
+
+                <!-- Merged result editor -->
+                <div>
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <label class="form-label fw-semibold small mb-0" for="result-{{ forloop.counter0 }}">
+                            <i aria-hidden="true" class="bi bi-pencil-square text-primary me-1"></i>Result
+                        </label>
+                        <button class="btn btn-xs btn-outline-secondary rounded-pill px-2 py-0" type="button"
+                                data-join-target="target-{{ forloop.counter0 }}"
+                                data-join-source="source-{{ forloop.counter0 }}"
+                                data-target="result-{{ forloop.counter0 }}"
+                                style="font-size:.72rem;">Keep both</button>
+                    </div>
+                    <textarea class="form-control font-mono" id="result-{{ forloop.counter0 }}"
+                              name="result_{{ forloop.counter0 }}" rows="10"
+                              style="font-size:.82rem; font-family:'JetBrains Mono',monospace;">{{ conflict.draft }}</textarea>
+                </div>
+            </div>
+            <input type="hidden" name="choice_{{ forloop.counter0 }}" value="manual">
+            {% endif %}
+            <input type="hidden" name="path_{{ forloop.counter0 }}" value="{{ path }}">
+        </div>
+        {% endfor %}
+
+        <!-- Merge commit + actions -->
+        <div class="card-modern p-4">
+            <h6 class="fw-semibold text-body mb-3"><i aria-hidden="true" class="bi bi-diagram-2 text-primary me-1"></i>Complete merge</h6>
+            <div class="mb-3" style="max-width:520px;">
+                <label class="form-label fw-semibold small" for="merge-message">Merge commit message</label>
+                <input class="form-control form-control-sm" id="merge-message" name="commit_message"
+                       maxlength="200"
+                       value="Merge {{ merge_request.source_branch }} into {{ merge_request.target_branch }}">
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" name="action" value="save">
+                    <i aria-hidden="true" class="bi bi-floppy me-1"></i>Save progress
+                </button>
+                <button class="btn btn-sm btn-primary rounded-pill px-4" name="action" value="finish">
+                    <i aria-hidden="true" class="bi bi-check2-circle me-1"></i>Complete merge
+                </button>
+                <button class="btn btn-sm btn-outline-danger rounded-pill px-3 ms-auto" name="action" value="abort"
+                        onclick="return confirm('Abort this merge? All saved resolutions will be discarded.')">
+                    <i aria-hidden="true" class="bi bi-x-circle me-1"></i>Abort
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+{% block extra_js %}<script>
+document.querySelectorAll('[data-copy-panel]').forEach(btn => btn.addEventListener('click', () => {
+    document.getElementById(btn.dataset.target).value = document.getElementById(btn.dataset.copyPanel).value;
+}));
+document.querySelectorAll('[data-join-target]').forEach(btn => btn.addEventListener('click', () => {
+    const t = document.getElementById(btn.dataset.joinTarget).value;
+    const s = document.getElementById(btn.dataset.joinSource).value;
+    document.getElementById(btn.dataset.target).value = t.replace(/\s+$/, '') + '\n' + s;
+}));
+document.querySelectorAll('[data-ai-conflict]').forEach(btn => btn.addEventListener('click', async () => {
+    const idx = btn.dataset.index;
+    const status = document.getElementById('ai-conflict-status-' + idx);
+    status.textContent = 'Working…';
+    const form = document.getElementById('conflict-form');
+    try {
+        const res = await fetch(btn.dataset.url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value},
+            body: JSON.stringify({feature: btn.dataset.feature, merge_request_id: {{ merge_request.pk }}, path: btn.dataset.path})
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'AI unavailable.');
+        if (btn.dataset.feature === 'conflict_suggest') {
+            try {
+                const p = JSON.parse(data.suggestion);
+                document.getElementById('result-' + idx).value = p.result;
+                status.textContent = 'Draft: ' + p.explanation;
+            } catch {
+                document.getElementById('result-' + idx).value = data.suggestion;
+                status.textContent = 'Draft inserted. Review before completing.';
+            }
+        } else {
+            status.textContent = data.suggestion + (data.truncated ? ' (shortened)' : '');
+        }
+    } catch (e) { status.textContent = e.message; }
+}));
+</script>{% endblock %}

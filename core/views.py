@@ -1,5 +1,29 @@
 from django.shortcuts import render
 
+
+def error_page(request, exception=None, *, status=500):
+    role_destinations = {
+        'student': ('layouts/base_student.html', 'student:dashboard'),
+        'mentor': ('layouts/base_mentor.html', 'mentor:dashboard'),
+        'admin': ('layouts/base_admin.html', 'dashboard_admin:dashboard'),
+    }
+    role = getattr(getattr(request, 'user', None), 'role', None)
+    layout, dashboard_url = role_destinations.get(role, ('layouts/base_public.html', 'core:landing'))
+    template = {403: '403.html', 404: '404.html', 500: '500.html'}.get(status, '500.html')
+    return render(request, template, {'layout_template': layout, 'dashboard_url': dashboard_url}, status=status)
+
+
+def error_403(request, exception=None):
+    return error_page(request, exception, status=403)
+
+
+def error_404(request, exception=None):
+    return error_page(request, exception, status=404)
+
+
+def error_500(request):
+    return error_page(request, status=500)
+
 def landing(request):
     """
     Vue de la page d'accueil publique (Landing Page).
