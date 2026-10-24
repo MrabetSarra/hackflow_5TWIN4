@@ -1,0 +1,126 @@
+{% extends "layouts/base_mentor.html" %}
+
+{% block title %}{{ team.name }} - Espace Mentor - HackFlow{% endblock %}
+
+{% block mentor_content %}
+<div class="container-fluid px-0">
+    <nav aria-label="Fil d'Ariane" class="mb-3">
+        <ol class="breadcrumb small mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'mentor:teams_list' %}">Équipes</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ team.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h1 class="h2 fw-bold text-body mb-1">{{ team.name }}</h1>
+            <p class="text-body-secondary small mb-0">
+                {{ team.project_name|default:"Projet sans nom" }} • {{ team.category|default:"Thème libre" }}
+                {% if team.table_number %} • Table {{ team.table_number }}{% endif %}{% if team.room %} ({{ team.room }}){% endif %}
+            </p>
+        </div>
+        <form method="post" action="{% if is_followed %}{% url 'mentor:team_unfollow' team.pk %}{% else %}{% url 'mentor:team_follow' team.pk %}{% endif %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            {% if is_followed %}
+            <button type="submit" class="btn btn-outline-secondary rounded-pill px-3"><i class="bi bi-star me-1" aria-hidden="true"></i>Ne plus suivre</button>
+            {% else %}
+            <button type="submit" class="btn btn-primary rounded-pill px-3"><i class="bi bi-star-fill me-1" aria-hidden="true"></i>Suivre cette équipe</button>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8 d-flex flex-column gap-4">
+            <section class="card-modern p-4" aria-labelledby="project-title">
+                <h2 id="project-title" class="h5 fw-bold text-body mb-3">Projet</h2>
+                <p class="text-body-secondary small">{{ team.project_pitch|default:team.description|default:"Pas encore de description."|linebreaksbr }}</p>
+                <div class="d-flex justify-content-between small text-body-secondary mb-2">
+                    <span>Avancement ({{ team.tasks_done }}/{{ team.tasks_total }} tâches terminées)</span>
+                    <strong class="text-body">{{ team.progress }}%</strong>
+                </div>
+                <div class="progress" role="progressbar" aria-label="Avancement de {{ team.name }}" aria-valuenow="{{ team.progress }}" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar" style="width: {{ team.progress }}%;"></div>
+                </div>
+            </section>
+
+            <section class="card-modern p-4" aria-labelledby="requests-title">
+                <h2 id="requests-title" class="h5 fw-bold text-body mb-3">Demandes d'aide de l'équipe</h2>
+                <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
+                    {% for req in requests %}
+                    <li class="p-3 border rounded-3 d-flex justify-content-between align-items-center gap-2">
+                        <div>
+                            <span class="badge bg-{{ req.urgency_color }} rounded-pill me-1">{{ req.get_urgency_display }}</span>
+                            <strong class="small">{{ req.subject }}</strong>
+                            <div class="small text-body-secondary">{{ req.ticket_id }} • il y a {{ req.created_at|timesince }}{% if req.mentor %} • {{ req.mentor.get_full_name|default:req.mentor.username }}{% endif %}</div>
+                        </div>
+                        <span class="badge bg-body-secondary text-body">{{ req.get_status_display }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="text-body-secondary small">Aucune demande d'aide pour cette équipe.</li>
+                    {% endfor %}
+                </ul>
+            </section>
+
+            <section class="card-modern p-4" aria-labelledby="sessions-title">
+                <h2 id="sessions-title" class="h5 fw-bold text-body mb-3">Mes sessions avec l'équipe</h2>
+                <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
+                    {% for sess in sessions %}
+                    <li class="p-3 border rounded-3 d-flex justify-content-between align-items-center gap-2">
+                        <div>
+                            <strong class="small">{{ sess.topic }}</strong>
+                            <div class="small text-body-secondary">{{ sess.starts_at|date:"d/m/Y H:i" }} – {{ sess.ends_at|time:"H:i" }}</div>
+                        </div>
+                        <span class="badge bg-body-secondary text-body">{{ sess.get_status_display }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="text-body-secondary small">Aucune session planifiée avec cette équipe.</li>
+                    {% endfor %}
+                </ul>
+            </section>
+        </div>
+
+        <div class="col-lg-4 d-flex flex-column gap-4">
+            <section class="card-modern p-4" aria-labelledby="members-title">
+                <h2 id="members-title" class="h5 fw-bold text-body mb-3">Membres ({{ team.members_total }})</h2>
+                <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
+                    {% for membership in members %}
+                    <li class="small">
+                        <strong>{{ membership.user.get_full_name|default:membership.user.username }}</strong>
+                        {% if membership.user == team.captain %}<span class="badge bg-warning-subtle text-warning-emphasis ms-1">Capitaine</span>{% endif %}
+                        {% if membership.role %}<div class="text-body-secondary">{{ membership.role }}</div>{% endif %}
+                    </li>
+                    {% empty %}
+                    <li class="text-body-secondary small">Aucun membre.</li>
+                    {% endfor %}
+                </ul>
+            </section>
+
+            <section class="card-modern p-4" aria-labelledby="submission-title">
+                <h2 id="submission-title" class="h5 fw-bold text-body mb-3">Dernière soumission</h2>
+                {% if submission %}
+                <p class="small mb-1"><strong>{{ submission.milestone.title }}</strong> — {{ submission.get_status_display }}</p>
+                <ul class="list-unstyled small mb-0">
+                    {% if submission.github_url %}<li><a href="{{ submission.github_url }}" target="_blank" rel="noopener noreferrer">Dépôt de code<span class="visually-hidden"> (nouvel onglet)</span></a></li>{% endif %}
+                    {% if submission.demo_url %}<li><a href="{{ submission.demo_url }}" target="_blank" rel="noopener noreferrer">Démo en ligne<span class="visually-hidden"> (nouvel onglet)</span></a></li>{% endif %}
+                    {% if submission.video_url %}<li><a href="{{ submission.video_url }}" target="_blank" rel="noopener noreferrer">Vidéo<span class="visually-hidden"> (nouvel onglet)</span></a></li>{% endif %}
+                </ul>
+                {% else %}
+                <p class="text-body-secondary small mb-0">Aucune soumission pour le moment.</p>
+                {% endif %}
+            </section>
+
+            <section class="card-modern p-4" aria-labelledby="followers-title">
+                <h2 id="followers-title" class="h5 fw-bold text-body mb-3">Mentors qui suivent l'équipe</h2>
+                <ul class="list-unstyled small mb-0">
+                    {% for follow in followers %}
+                    <li>{{ follow.mentor.get_full_name|default:follow.mentor.username }} <span class="text-body-secondary">({{ follow.get_source_display|lower }})</span></li>
+                    {% empty %}
+                    <li class="text-body-secondary">Aucun mentor pour le moment.</li>
+                    {% endfor %}
+                </ul>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}
