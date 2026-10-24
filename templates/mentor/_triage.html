@@ -1,0 +1,52 @@
+{% if triage %}
+{% if triage.status == 'pending' or triage.status == 'running' %}
+<div class="d-flex align-items-center gap-2 small text-body-secondary">
+    <span class="spinner-border spinner-border-sm text-primary" aria-hidden="true"></span>
+    <span>Analyse IA en cours…</span>
+</div>
+{% elif triage.status == 'failed' %}
+<div class="d-flex flex-wrap align-items-center gap-2 small">
+    <span class="text-warning-emphasis"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>Analyse IA indisponible : {{ triage.error_message|default:"erreur inconnue" }}</span>
+    <form method="post" action="{% url 'mentor:triage_retry' req.pk %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next_url|default:request.get_full_path }}">
+        <button type="submit" class="btn btn-link btn-sm p-0">Relancer l'analyse</button>
+    </form>
+</div>
+{% else %}
+<div class="small">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+        <span class="badge bg-info-subtle text-info-emphasis"><i class="bi bi-stars me-1" aria-hidden="true"></i>Suggestion IA</span>
+        <span class="badge-tag">{{ triage.final_category }}</span>
+        <span class="badge bg-body-secondary text-body">Urgence : {{ triage.get_corrected_urgency_display|default:triage.get_suggested_urgency_display }}</span>
+        {% if triage.corrected_by %}<span class="badge bg-success-subtle text-success">Corrigée par {{ triage.corrected_by.get_full_name|default:triage.corrected_by.username }}</span>{% endif %}
+        {% if triage.latency_ms %}<span class="text-body-secondary font-mono">{{ triage.latency_ms }} ms</span>{% endif %}
+    </div>
+    {% if triage.summary %}<p class="mb-1 fst-italic">« {{ triage.summary }} »</p>{% endif %}
+    {% if not triage.corrected_by and triage.suggested_urgency != req.urgency %}
+    <p class="mb-1 text-warning-emphasis"><i class="bi bi-info-circle me-1" aria-hidden="true"></i>L'étudiant a indiqué « {{ req.get_urgency_display }} », l'IA estime « {{ triage.get_suggested_urgency_display }} ».</p>
+    {% endif %}
+    {% if triage.suggested_mentor %}<p class="mb-1 text-body-secondary">Mentor suggéré : <strong>{{ triage.suggested_mentor.get_full_name|default:triage.suggested_mentor.username }}</strong>{% if triage.suggested_mentor.specialty %} ({{ triage.suggested_mentor.specialty }}){% endif %}</p>{% endif %}
+    <details>
+        <summary class="text-primary">Corriger la suggestion</summary>
+        <form method="post" action="{% url 'mentor:triage_correct' req.pk %}" class="d-flex flex-column flex-sm-row gap-2 align-items-sm-end mt-2">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next_url|default:request.get_full_path }}">
+            <div>
+                <label for="triage-cat-{{ req.pk }}" class="form-label small mb-1">{{ correction_form.category.label }}</label>
+                <select id="triage-cat-{{ req.pk }}" name="category" class="form-select form-select-sm">
+                    {% for value, label in correction_form.category.field.choices %}<option value="{{ value }}" {% if value == triage.final_category %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="triage-urg-{{ req.pk }}" class="form-label small mb-1">{{ correction_form.urgency.label }}</label>
+                <select id="triage-urg-{{ req.pk }}" name="urgency" class="form-select form-select-sm">
+                    {% for value, label in correction_form.urgency.field.choices %}<option value="{{ value }}" {% if value == triage.final_urgency %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-outline-primary btn-sm">Enregistrer</button>
+        </form>
+    </details>
+</div>
+{% endif %}
+{% endif %}

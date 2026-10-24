@@ -61,6 +61,12 @@
 
             <p class="text-body-secondary small mb-3 p-3 bg-body-tertiary rounded-3">{{ req.description|linebreaksbr }}</p>
 
+            {% if req.triage %}
+            <div class="mb-3 p-3 border rounded-3 js-triage" id="triage-{{ req.pk }}" data-request-id="{{ req.pk }}" data-status="{{ req.triage.status }}" aria-live="polite">
+                {% include "mentor/_triage.html" with triage=req.triage %}
+            </div>
+            {% endif %}
+
             {% if req.status == 'resolved' and req.resolution_note %}
             <p class="small mb-3 p-3 rounded-3 bg-success-subtle"><strong>Résolution :</strong> {{ req.resolution_note }}</p>
             {% endif %}
@@ -131,4 +137,36 @@
 
     {% include "mentor/_pagination.html" %}
 </div>
+
+<script>
+// Met à jour les suggestions IA sans recharger la page tant qu'une analyse est en cours.
+(function () {
+    const url = "{% url 'mentor:triage_status' %}";
+    function pendingBoxes() {
+        return Array.from(document.querySelectorAll('.js-triage')).filter(function (box) {
+            return box.dataset.status === 'pending' || box.dataset.status === 'running';
+        });
+    }
+    function poll(attempt) {
+        const boxes = pendingBoxes();
+        if (!boxes.length || attempt > 60) { return; }
+        const ids = boxes.map(function (box) { return box.dataset.requestId; }).join(',');
+        const back = encodeURIComponent(window.location.pathname + window.location.search);
+        fetch(url + '?ids=' + ids + '&next=' + back, {headers: {'Accept': 'application/json'}, credentials: 'same-origin'})
+            .then(function (response) { return response.ok ? response.json() : {triages: {}}; })
+            .then(function (data) {
+                boxes.forEach(function (box) {
+                    const item = data.triages[box.dataset.requestId];
+                    if (item && item.status !== box.dataset.status) {
+                        box.dataset.status = item.status;
+                        box.innerHTML = item.html;
+                    }
+                });
+            })
+            .catch(function () { /* réseau indisponible : on réessaie au prochain tour */ })
+            .finally(function () { setTimeout(function () { poll(attempt + 1); }, 3000); });
+    }
+    setTimeout(function () { poll(0); }, 2000);
+})();
+</script>
 {% endblock %}
