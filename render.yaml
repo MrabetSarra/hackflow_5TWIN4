@@ -1,0 +1,88 @@
+services:
+  - type: web
+    name: esprit-5twin4-hackflow
+    runtime: python
+    plan: free
+    branch: main
+    # GitHub Actions deploys through the Render hook only after CI succeeds.
+    autoDeployTrigger: "off"
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: sh scripts/start.sh
+    healthCheckPath: /healthz/
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.11"
+      - key: DJANGO_DEBUG
+        value: "false"
+      - key: DJANGO_SECRET_KEY
+        sync: false
+      - key: DJANGO_ALLOWED_HOSTS
+        value: esprit-5twin4-hackflow.onrender.com
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://esprit-5twin4-hackflow.onrender.com
+      - key: SECURE_SSL_REDIRECT
+        value: "true"
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
+      - key: CSRF_COOKIE_SECURE
+        value: "true"
+      - key: SECURE_HSTS_SECONDS
+        value: "31536000"
+      - key: SECURE_HSTS_INCLUDE_SUBDOMAINS
+        value: "true"
+      - key: SECURE_HSTS_PRELOAD
+        value: "false"
+      - key: SECURE_CONTENT_TYPE_NOSNIFF
+        value: "true"
+      - key: X_FRAME_OPTIONS
+        value: DENY
+      - key: SECURE_PROXY_SSL_HEADER
+        value: HTTP_X_FORWARDED_PROTO,https
+      - key: DATABASE_PATH
+        value: /tmp/hackflow.sqlite3
+      - key: MEDIA_ROOT
+        value: /tmp/media/uploads
+      - key: PRIVATE_MEDIA_ROOT
+        value: /tmp/private_media
+      - key: HACKFLOW_REPOS_ROOT
+        value: /tmp/.repository-data
+      - key: STATIC_ROOT
+        value: /opt/render/project/src/staticfiles
+      - key: SEED_DEMO
+        value: "1"
+      - key: CELERY_TASK_ALWAYS_EAGER
+        value: "true"
+      - key: REPOSITORY_AI_PROVIDER
+        value: openai
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-5-mini
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ANTHROPIC_MODEL
+        value: claude-haiku-4-5-20251001
+      - key: OLLAMA_BASE_URL
+        value: http://127.0.0.1:11434
+      - key: OLLAMA_MODEL
+        value: qwen2.5-coder:3b
+      - key: REPOSITORY_AI_TIMEOUT
+        value: "30"
+      - key: DJANGO_SUPERUSER_USERNAME
+        sync: false
+      - key: DJANGO_SUPERUSER_EMAIL
+        sync: false
+      - key: DJANGO_SUPERUSER_PASSWORD
+        sync: false
+      - key: EMAIL_HOST
+        value: localhost
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "true"
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        value: webmaster@localhost

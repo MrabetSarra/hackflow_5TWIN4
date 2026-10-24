@@ -1,5 +1,6 @@
 import contextlib
 import difflib
+from functools import wraps
 import os
 import shutil
 import subprocess
@@ -9,10 +10,28 @@ from pathlib import Path
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.contrib import messages
+from django.http import JsonResponse
+from django.shortcuts import redirect
 
 
 class GitError(Exception):
     pass
+
+
+def git_failure_fallback(view):
+    """Turn unexpected Git executable failures into a user-facing response."""
+    @wraps(view)
+    def wrapped(request, *args, **kwargs):
+        try:
+            return view(request, *args, **kwargs)
+        except GitError:
+            message = 'Repository Git operations are unavailable. Check that Git is installed and try again.'
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('accept', ''):
+                return JsonResponse({'error': message}, status=503)
+            messages.error(request, message)
+            return redirect('repositories:list')
+    return wrapped
 
 
 _thread_locks = {}
@@ -343,10 +362,13 @@ def archive_stream(repository, revision):
     verify = _run(['--git-dir', repository.path, 'rev-parse', '--verify', f'{commit}^{{commit}}'], check=False)
     if verify.returncode:
         raise GitError('That repository version does not exist.')
-    process = subprocess.Popen(
-        ['git', '--git-dir', str(repository.path), 'archive', '--format=zip', verify.stdout.strip()],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False, env=git_env(),
-    )
+    try:
+        process = subprocess.Popen(
+            ['git', '--git-dir', str(repository.path), 'archive', '--format=zip', verify.stdout.strip()],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False, env=git_env(),
+        )
+    except OSError as exc:
+        raise GitError('Git could not be started. Check that Git is installed.') from exc
     def chunks():
         try:
             while True:

@@ -6,10 +6,14 @@ on:
     branches:
       - main
       - gestion_evenements
+      - student
+      - 'feature/**'
   pull_request:
     branches:
       - main
       - gestion_evenements
+      - student
+      - 'feature/**'
   workflow_dispatch:
 
 jobs:
@@ -39,6 +43,9 @@ jobs:
           if grep -RInE '^(<<<<<<< |=======$|>>>>>>> )' \
             --include='*.py' \
             --include='*.html' \
+            --include='*.yml' \
+            --include='*.yaml' \
+            --include='*.sh' \
             --include='*.txt' \
             --include='*.gitignore' \
             --exclude-dir=.git \
@@ -60,10 +67,46 @@ jobs:
         run: python manage.py makemigrations --check --dry-run
 
       - name: Run Django tests
-        run: coverage run manage.py test
+        run: coverage run manage.py test 2>&1 | tee test-output.txt
 
       - name: Report coverage (minimum 70%)
-        run: coverage report --fail-under=70
+        run: coverage report --fail-under=70 | tee coverage-report.txt
+
+      - name: Write test and coverage summary
+        if: always()
+        run: |
+          python - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          test_output = Path('test-output.txt').read_text(encoding='utf-8', errors='replace') if Path('test-output.txt').exists() else ''
+          report = Path('coverage-report.txt').read_text(encoding='utf-8', errors='replace') if Path('coverage-report.txt').exists() else ''
+          test_match = re.search(r'Ran\s+(\d+)\s+tests?', test_output)
+          total_line = next((line for line in reversed(report.splitlines()) if line.strip().startswith('TOTAL ')), '')
+          coverage = total_line.split()[-1] if total_line else 'unavailable'
+          tests = test_match.group(1) if test_match else 'unavailable'
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as summary:
+              summary.write('## Django CI summary\n\n')
+              summary.write(f'- Tests run: {tests}\n')
+              summary.write(f'- Coverage: {coverage}\n')
+          PY
+
+      - name: Check production security settings
+        env:
+          DJANGO_DEBUG: "False"
+          DJANGO_SECRET_KEY: ci-only-random-test-key-9f2a7c1e5b8d3a6f0c4e9b2d7a1c5f8e6d0b3a9c4f2e7d1
+          DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+          SECURE_SSL_REDIRECT: "true"
+          SESSION_COOKIE_SECURE: "true"
+          CSRF_COOKIE_SECURE: "true"
+          SECURE_HSTS_SECONDS: "31536000"
+          SECURE_HSTS_INCLUDE_SUBDOMAINS: "true"
+          SECURE_HSTS_PRELOAD: "false"
+          SECURE_CONTENT_TYPE_NOSNIFF: "true"
+          X_FRAME_OPTIONS: DENY
+          SECURE_PROXY_SSL_HEADER: HTTP_X_FORWARDED_PROTO,https
+        run: python manage.py check --deploy
 
       - name: Build HTML coverage report
         if: always()
@@ -76,3 +119,52 @@ jobs:
           name: hackflow-coverage-html
           path: htmlcov/
           if-no-files-found: warn
+
+  deploy:
+    name: Deploy to Render
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 7
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Trigger Render deploy and verify the live service
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${RENDER_DEPLOY_HOOK_URL:-}" || -z "${SITE_URL:-}" ]]; then
+            echo "Set RENDER_DEPLOY_HOOK_URL and SITE_URL in the production environment secrets."
+            exit 1
+          fi
+
+          if ! curl --fail --silent --request POST --max-time 20 \
+            --output /dev/null "$RENDER_DEPLOY_HOOK_URL"; then
+            echo "Render deploy hook request failed."
+            exit 1
+          fi
+
+          base_url="${SITE_URL%/}"
+          deadline=$(( $(date +%s) + 300 ))
+          healthy=0
+          while (( $(date +%s) < deadline )); do
+            if curl --fail --silent --connect-timeout 3 --max-time 5 \
+              --output /dev/null "$base_url/healthz/"; then
+              healthy=1
+              break
+            fi
+            sleep 5
+          done
+
+          if (( healthy == 0 )); then
+            echo "Render health check did not return HTTP 200 within five minutes."
+            exit 1
+          fi
+
+          sh scripts/smoke_test.sh "$base_url"

@@ -79,6 +79,7 @@ def _activity(repository, actor, kind, message, branch='', commit_hash=''):
 
 
 @role_required('student', 'mentor')
+@git_service.git_failure_fallback
 def history(request, slug):
     repository = get_team_repository(request.user, slug)
     branches = git_service.branch_names(repository)
@@ -98,6 +99,7 @@ def history(request, slug):
 
 
 @role_required('student', 'mentor')
+@git_service.git_failure_fallback
 def commit_view(request, slug, revision):
     repository = get_team_repository(request.user, slug)
     commit = git_service.commit_detail(repository, revision)
@@ -107,6 +109,7 @@ def commit_view(request, slug, revision):
 
 
 @role_required('student', 'mentor')
+@git_service.git_failure_fallback
 def compare(request, slug):
     repository = get_team_repository(request.user, slug)
     branches = git_service.branch_names(repository)
@@ -122,6 +125,7 @@ def compare(request, slug):
 
 
 @role_required('student')
+@git_service.git_failure_fallback
 def merge_request_list(request, slug):
     repository = get_team_repository(request.user, slug)
     branches = git_service.branch_names(repository)
@@ -174,6 +178,7 @@ def merge_request_list(request, slug):
 
 
 @role_required('student')
+@git_service.git_failure_fallback
 def merge_request_detail(request, slug, request_id):
     repository = get_team_repository(request.user, slug)
     mr = get_object_or_404(MergeRequest.objects.select_related('author', 'repository').prefetch_related('comments__author', 'reviewers'),
@@ -273,6 +278,7 @@ def merge_request_detail(request, slug, request_id):
 
 
 @role_required('student')
+@git_service.git_failure_fallback
 def resolve_conflicts(request, slug, request_id):
     repository = get_team_repository(request.user, slug)
     mr = get_object_or_404(MergeRequest, repository=repository, pk=request_id, status=MergeRequest.Status.APPROVED)
@@ -326,6 +332,7 @@ def resolve_conflicts(request, slug, request_id):
 
 
 @role_required('student')
+@git_service.git_failure_fallback
 def restore_commit(request, slug, revision):
     if request.method != 'POST':
         raise Http404

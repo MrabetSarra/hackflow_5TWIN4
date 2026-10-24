@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+import tempfile
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -84,6 +85,15 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# WhiteNoise is installed in deployed environments from requirements.txt. Keep
+# local management commands usable before dependencies have been installed.
+try:
+    import whitenoise  # noqa: F401
+except ImportError:
+    pass
+else:
+    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+
 ROOT_URLCONF = 'hackflow.urls'
 
 TEMPLATES = [
@@ -115,7 +125,11 @@ WSGI_APPLICATION = 'hackflow.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': Path(os.environ.get('DATABASE_PATH', BASE_DIR / 'db.sqlite3')),
+        'OPTIONS': {
+            'timeout': 20,
+            'init_command': 'PRAGMA journal_mode=WAL',
+        },
     }
 }
 
@@ -142,7 +156,7 @@ AUTH_PASSWORD_VALIDATORS = [
 AUTH_USER_MODEL = 'accounts.User'
 
 # Email is sent only when SMTP credentials are explicitly configured.
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
 EMAIL_USE_TLS = _env_bool('EMAIL_USE_TLS', True)
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
@@ -163,11 +177,13 @@ if not DEBUG:
     SECURE_HSTS_PRELOAD = _env_bool('SECURE_HSTS_PRELOAD', False)
     SECURE_CONTENT_TYPE_NOSNIFF = _env_bool('SECURE_CONTENT_TYPE_NOSNIFF', True)
     X_FRAME_OPTIONS = os.environ.get('X_FRAME_OPTIONS', 'DENY')
-    _proxy_ssl_header = os.environ.get('SECURE_PROXY_SSL_HEADER', 'HTTP_X_FORWARDED_PROTO,https')
-    if _proxy_ssl_header:
-        _header_name, _header_value = _proxy_ssl_header.split(',', 1)
-        SECURE_PROXY_SSL_HEADER = (_header_name.strip(), _header_value.strip())
-    CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()]
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+_proxy_ssl_header = os.environ.get('SECURE_PROXY_SSL_HEADER', 'HTTP_X_FORWARDED_PROTO,https')
+if _proxy_ssl_header:
+    _header_name, _header_value = _proxy_ssl_header.split(',', 1)
+    SECURE_PROXY_SSL_HEADER = (_header_name.strip(), _header_value.strip())
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()]
 
 
 # Internationalization
@@ -186,17 +202,38 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = Path(os.environ.get('STATIC_ROOT', BASE_DIR / 'staticfiles'))
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
+try:
+    import whitenoise  # noqa: F401
+except ImportError:
+    pass
+else:
+    STORAGES = {
+        'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+        'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage'},
+    }
 
 # Media files (Uploads)
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media' / 'uploads'
-PRIVATE_MEDIA_ROOT = BASE_DIR / 'private_media'
+_EPHEMERAL_ROOT = Path(tempfile.gettempdir()) if not DEBUG else BASE_DIR
+MEDIA_ROOT = Path(os.environ.get('MEDIA_ROOT', _EPHEMERAL_ROOT / 'media' / 'uploads'))
+PRIVATE_MEDIA_ROOT = Path(os.environ.get('PRIVATE_MEDIA_ROOT', _EPHEMERAL_ROOT / 'private_media'))
 
 # Git repositories and upload previews are private application data, never media.
-REPOS_ROOT = Path(os.environ.get('HACKFLOW_REPOS_ROOT', BASE_DIR / '.repository-data'))
+REPOS_ROOT = Path(os.environ.get('HACKFLOW_REPOS_ROOT', _EPHEMERAL_ROOT / '.repository-data'))
+DATABASES['default']['NAME'] = Path(DATABASES['default']['NAME'])
+if not DATABASES['default']['NAME'].is_absolute():
+    DATABASES['default']['NAME'] = BASE_DIR / DATABASES['default']['NAME']
+for _directory in {
+    DATABASES['default']['NAME'].parent,
+    MEDIA_ROOT,
+    PRIVATE_MEDIA_ROOT,
+    REPOS_ROOT,
+}:
+    _directory.mkdir(parents=True, exist_ok=True)
 REPOSITORY_MAX_TOTAL_UPLOAD_SIZE = 50 * 1024 * 1024
 REPOSITORY_MAX_FILE_SIZE = 10 * 1024 * 1024
 REPOSITORY_MAX_FILES = 500
@@ -229,19 +266,16 @@ LOGGING = {
         'standard': {'format': '{levelname} {asctime} {name}: {message}', 'style': '{'},
     },
     'handlers': {
-        'console': {'class': 'logging.StreamHandler', 'formatter': 'standard', 'level': 'WARNING'},
-        'file': {
-            'class': 'logging.FileHandler',
-            'filename': str(BASE_DIR / 'hackflow-errors.log'),
-            'formatter': 'standard',
-            'level': 'ERROR',
+        'console': {
+            'class': 'logging.StreamHandler', 'stream': 'ext://sys.stdout',
+            'formatter': 'standard', 'level': 'WARNING',
         },
     },
     'loggers': {
-        'django.request': {'handlers': ['console', 'file'], 'level': 'ERROR', 'propagate': False},
-        'student': {'handlers': ['console', 'file'], 'level': 'WARNING', 'propagate': False},
-        'accounts': {'handlers': ['console', 'file'], 'level': 'WARNING', 'propagate': False},
-        'repositories': {'handlers': ['console', 'file'], 'level': 'WARNING', 'propagate': False},
+        'django': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+        'student': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+        'accounts': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+        'repositories': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
     },
 }
 

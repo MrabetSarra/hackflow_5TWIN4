@@ -1,4 +1,10 @@
+from django.http import JsonResponse
 from django.shortcuts import render
+
+
+def healthz(request):
+    """Lightweight process health endpoint; deliberately does not query the DB."""
+    return JsonResponse({'status': 'ok'})
 
 
 def error_page(request, exception=None, *, status=500):

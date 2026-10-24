@@ -72,7 +72,7 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-Ouvrez [http://127.0.0.1:8000/](http://127.0.0.1:8000/). La base SQLite locale est créée lors de l’application des migrations. L’envoi des codes de réinitialisation du mot de passe nécessite une configuration SMTP Gmail.
+Ouvrez [http://127.0.0.1:8000/](http://127.0.0.1:8000/). La base SQLite locale est créée lors de l’application des migrations. Sans identifiants SMTP configurés, les courriels de réinitialisation s’affichent dans la console Django.
 
 ## Technologies
 
@@ -163,3 +163,97 @@ When `DJANGO_DEBUG=false`, Django refuses to start without `DJANGO_SECRET_KEY`. 
 - Enable HTTPS cookie protection and redirects when TLS is terminated by the application; configure the trusted proxy header only when the host guarantees it.
 - Configure SMTP credentials through environment variables; use a restricted mail account.
 - Review `python manage.py check --deploy` before deployment. HSTS preload is opt-in and should only be enabled when the domain is ready for permanent browser preload behavior.
+
+## Deployment
+
+### Architecture
+
+Render runs one native Python web service from the `main` branch. The Blueprint pins Python 3.12.11, collects static files, starts Django with Gunicorn through `scripts/start.sh`, and uses `/healthz/` for its health check. WhiteNoise serves static files. GitHub Actions is the deployment controller: a successful CI run on `main` triggers the Render Deploy Hook, waits for health, and runs the smoke checks. The app logs to stdout.
+
+The service uses SQLite and the free Render filesystem. `DATABASE_PATH`, uploads, private files, and Git repositories are stored under `/tmp`; they are ephemeral. **The free Render instance resets its data on restart and re-seeds the demo data at startup** (`SEED_DEMO=1`). Real user data will not survive a restart on this plan. Celery runs eagerly in the web process because this deployment has no background worker.
+
+### Environment variables
+
+The complete example is in `.env.production.example`. Configure the following values in Render; values marked **secret** must be stored in Render’s environment settings and must never be committed.
+
+| Variable | Render value or source | Purpose |
+| --- | --- | --- |
+| `PYTHON_VERSION` | `3.12.11` | Native runtime version. |
+| `DJANGO_DEBUG` | `false` | Production mode. |
+| `DJANGO_SECRET_KEY` | **Secret** | Required Django signing key. |
+| `DJANGO_ALLOWED_HOSTS` | `esprit-5twin4-Hackflow.onrender.com` | Hostnames accepted by Django. |
+| `CSRF_TRUSTED_ORIGINS` | `https://esprit-5twin4-HackFlow.onrender.com` | Trusted browser origin. |
+| `SECURE_SSL_REDIRECT` | `true` | Redirect HTTP to HTTPS. |
+| `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE` | `true` | Send cookies only over HTTPS. |
+| `SECURE_HSTS_SECONDS` | `31536000` | HSTS duration in seconds. |
+| `SECURE_HSTS_INCLUDE_SUBDOMAINS` | `true` | Apply HSTS to subdomains. |
+| `SECURE_HSTS_PRELOAD` | `false` | Keep preload opt-in until explicitly reviewed. |
+| `SECURE_CONTENT_TYPE_NOSNIFF` | `true` | Add the nosniff response header. |
+| `X_FRAME_OPTIONS` | `DENY` | Prevent framing by other sites. |
+| `SECURE_PROXY_SSL_HEADER` | `HTTP_X_FORWARDED_PROTO,https` | Trust Render’s HTTPS proxy header. |
+| `DATABASE_PATH` | `/tmp/hackflow.sqlite3` | Ephemeral SQLite database file. |
+| `MEDIA_ROOT` | `/tmp/media/uploads` | Upload storage. |
+| `PRIVATE_MEDIA_ROOT` | `/tmp/private_media` | Private student files. |
+| `HACKFLOW_REPOS_ROOT` | `/tmp/.repository-data` | Private Git repository storage. |
+| `STATIC_ROOT` | `/opt/render/project/src/staticfiles` | `collectstatic` output served by WhiteNoise. |
+| `SEED_DEMO` | `1` | Re-create demo data at startup. |
+| `CELERY_TASK_ALWAYS_EAGER` | `true` | Run jobs inline; no worker is deployed. |
+| `CELERY_BROKER_URL` | `redis://localhost:6379/0` | Unused while eager execution is enabled. |
+| `DJANGO_SUPERUSER_USERNAME` | **Secret/configuration** | Optional admin bootstrap username. |
+| `DJANGO_SUPERUSER_EMAIL` | **Secret/configuration** | Optional admin bootstrap email. |
+| `DJANGO_SUPERUSER_PASSWORD` | **Secret** | Optional admin bootstrap password. |
+| `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS` | `localhost`, `587`, `true` | SMTP connection settings. |
+| `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD` | **Secret** | Optional SMTP credentials; without both, Django uses its console backend. |
+| `DEFAULT_FROM_EMAIL` | `webmaster@localhost` | Sender address when SMTP is configured. |
+| `REPOSITORY_AI_PROVIDER` | `openai` | Selected optional AI provider. |
+| `REPOSITORY_AI_TIMEOUT` | `30` | Provider request timeout in seconds. |
+| `OPENAI_API_KEY` | **Secret** | Optional OpenAI credential. |
+| `OPENAI_MODEL` | `gpt-5-mini` | OpenAI model name. |
+| `ANTHROPIC_API_KEY` | **Secret** | Optional Anthropic credential. |
+| `ANTHROPIC_MODEL` | `claude-haiku-4-5-20251001` | Anthropic model name. |
+| `OLLAMA_BASE_URL`, `OLLAMA_MODEL` | Local defaults in the example | Optional local Ollama configuration. |
+| `PORT` | Set by Render | Port bound by the startup script. |
+| `RENDER_DEPLOY_HOOK_URL` | **GitHub `production` environment secret** | Starts the Render deploy after CI passes. |
+| `SITE_URL` | **GitHub `production` environment secret** | Public base URL used for health and smoke checks. |
+
+Render values declared with `sync: false` in `render.yaml` are intentionally entered in Render’s dashboard rather than stored in the repository. The admin command skips creation when any `DJANGO_SUPERUSER_*` value is missing; it never prints the password.
+
+### First deploy
+
+1. Connect the GitHub repository to Render and apply `render.yaml` to the intended web service. Confirm the service name and public hostname match the existing `esprit-5twin4-HackFlow` deployment before applying a Blueprint to an existing service.
+2. In Render, set `DJANGO_SECRET_KEY`. Set all three `DJANGO_SUPERUSER_*` values if the deployment needs the configured admin account. Add AI and SMTP credentials only when those integrations are used.
+3. In GitHub, create the `production` environment and add `RENDER_DEPLOY_HOOK_URL` and `SITE_URL` as environment secrets. Set `SITE_URL` to the HTTPS public URL, with no required trailing slash.
+4. Ensure the `main` branch requires the CI status check. Merge a pull request into `main`; the workflow runs checks and tests before calling the deploy hook, waiting for `/healthz/`, and running `scripts/smoke_test.sh`.
+
+The Blueprint sets Render `autoDeployTrigger: off` to avoid a second, duplicate deploy. As an alternative, use Render’s **After CI Checks Pass** auto-deploy setting and disable the GitHub Actions deploy-hook job. Do not enable both deployment paths at once.
+
+### Update and rollback
+
+Normal update flow: create a feature branch, open a pull request, wait for CI and review, then merge to `main`. The `main` push runs the test job and deploys only after it succeeds. The workflow polls the service for up to five minutes, then runs the curl smoke checks. The CI workflow also uploads an HTML coverage report artifact.
+
+Run the same HTTP smoke checks manually with `sh scripts/smoke_test.sh https://esprit-5twin4-Hackflow.onrender.com` (requires `curl`).
+
+To roll back, open the Render service’s deploy history and redeploy a previously successful commit. A rollback restores code, not ephemeral SQLite or uploaded data; the free instance may re-seed demo records on its next restart.
+
+### Troubleshooting
+
+- **Cold start:** Free services sleep while idle. The first request may take a minute; the deploy job allows five minutes for `/healthz/` to return HTTP 200.
+- **Data reset after restart:** This is expected on the free filesystem. Demo rows are re-seeded when `SEED_DEMO=1`; uploads and user-created records are not durable.
+- **Git is unavailable:** Check startup warnings. The app remains available, but repository operations and the optional repository demo seed need the Git executable in the runtime. The demo seed is skipped with a warning if Git is absent.
+- **CSRF 403 behind the proxy:** Check that `CSRF_TRUSTED_ORIGINS` contains the exact HTTPS origin and that `SECURE_PROXY_SSL_HEADER` matches Render’s forwarded protocol header.
+- **SQLite locked:** The app uses a 20-second SQLite timeout and WAL mode, but a single ephemeral SQLite file is not intended for sustained concurrent writes. Keep background jobs eager and avoid adding a second writer process on this plan.
+- **AI unavailable:** AI is optional. Check the selected `REPOSITORY_AI_PROVIDER`, its credential, and startup warnings. Missing credentials or an unreachable provider should not prevent the web service from starting.
+- **CI coverage or deployment fails:** Inspect the workflow summary, uploaded `hackflow-coverage-html` artifact, the failing job logs, and Render’s deploy logs. Verify both GitHub `production` secrets are present without printing their values.
+
+### Grading evidence
+
+| Requirement | Evidence |
+| --- | --- |
+| `DEBUG=False` and production configuration | Render environment plus `render.yaml`; `python manage.py check --deploy` in the CI log. |
+| Secrets outside source control | `sync: false` entries in `render.yaml`, GitHub `production` secrets, and `.gitignore` entries for `.env` and the database. |
+| CSRF protection | Production security settings and the smoke test’s POST-without-token check. |
+| Role access | `tests/test_access_matrix.py` and its CI test result. |
+| Custom error pages | `templates/404.html`, `templates/403.html`, `templates/500.html`, and `core/tests.py`. |
+| Tests and coverage | CI test count/coverage summary and the uploaded HTML coverage artifact. |
+| CI-gated deployment | GitHub Actions `test` then `deploy` jobs and the Render deploy history. |
+| Public service health | `https://esprit-5twin4-HackFlow.onrender.com/healthz/` and the post-deploy smoke-test output. |
