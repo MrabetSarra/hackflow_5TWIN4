@@ -1,0 +1,48 @@
+<div data-conversation-panel>
+    <div class="conversation-message-list d-flex flex-column gap-3 mb-3" data-message-list>
+        {% for message in thread %}
+        <div class="p-3 rounded-3 border {% if message.sender_id == request.user.id %}bg-primary bg-opacity-10 align-self-end{% else %}bg-body-tertiary align-self-start{% endif %}" style="max-width: 85%; min-width: 40%;">
+            <div class="d-flex justify-content-between gap-4 mb-1">
+                <strong class="small">{% if message.sender_id == request.user.id %}You{% else %}{{ other_user.get_full_name|default:other_user.username }}{% endif %}</strong>
+                <span class="small text-body-secondary">{{ message.created_at|date:"d/m/Y H:i" }}</span>
+            </div>
+            <p class="mb-0 text-break">{{ message.body|linebreaksbr }}</p>
+        </div>
+        {% empty %}
+        <p class="text-body-secondary mb-0">No messages yet. Send the first one below.</p>
+        {% endfor %}
+    </div>
+
+    <form method="post" action="{% url 'student:conversation' other_user.pk %}" data-message-form>
+        {% csrf_token %}
+        <label for="{{ message_form.body.id_for_label }}" class="form-label small fw-semibold">Your message</label>
+        {{ message_form.body }}
+        {% for error in message_form.body.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+        <div class="message-composer-actions d-flex justify-content-between align-items-center mt-3">
+            <div class="emoji-picker-wrap">
+                <button type="button" class="btn btn-outline-secondary rounded-circle emoji-picker-toggle" data-emoji-picker-toggle aria-expanded="false" aria-label="Open emoji picker" title="Insert emoji">
+                    <i class="bi bi-emoji-smile" aria-hidden="true"></i>
+                </button>
+                <div class="emoji-picker" data-emoji-picker role="group" aria-label="Choose an emoji" hidden>
+                    <button type="button" class="emoji-choice" data-emoji="😀" aria-label="Grinning face">😀</button>
+                    <button type="button" class="emoji-choice" data-emoji="😂" aria-label="Laughing face">😂</button>
+                    <button type="button" class="emoji-choice" data-emoji="😊" aria-label="Smiling face">😊</button>
+                    <button type="button" class="emoji-choice" data-emoji="😍" aria-label="Heart eyes">😍</button>
+                    <button type="button" class="emoji-choice" data-emoji="🤔" aria-label="Thinking face">🤔</button>
+                    <button type="button" class="emoji-choice" data-emoji="😎" aria-label="Cool face">😎</button>
+                    <button type="button" class="emoji-choice" data-emoji="🙌" aria-label="Celebration">🙌</button>
+                    <button type="button" class="emoji-choice" data-emoji="👍" aria-label="Thumbs up">👍</button>
+                    <button type="button" class="emoji-choice" data-emoji="👋" aria-label="Waving hand">👋</button>
+                    <button type="button" class="emoji-choice" data-emoji="🎉" aria-label="Party popper">🎉</button>
+                    <button type="button" class="emoji-choice" data-emoji="❤️" aria-label="Red heart">❤️</button>
+                    <button type="button" class="emoji-choice" data-emoji="🔥" aria-label="Fire">🔥</button>
+                    <button type="button" class="emoji-choice" data-emoji="✅" aria-label="Check mark">✅</button>
+                    <button type="button" class="emoji-choice" data-emoji="🚀" aria-label="Rocket">🚀</button>
+                    <button type="button" class="emoji-choice" data-emoji="🙏" aria-label="Thanks">🙏</button>
+                    <button type="button" class="emoji-choice" data-emoji="😢" aria-label="Sad face">😢</button>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary rounded-pill px-4"><i class="bi bi-send-fill me-1"></i>Send</button>
+        </div>
+    </form>
+</div>

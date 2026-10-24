@@ -1,0 +1,89 @@
+{% extends "layouts/base_admin.html" %}
+
+{% block title %}Gestion des Équipes - HackFlow Admin{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid px-0">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Supervision de l'Ensemble des Équipes</h2>
+            <p class="text-muted small mb-0">Contrôle des collectifs, mentors référents, tables et états de soumission des projets.</p>
+        </div>
+        <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-2">
+            <form method="get" class="d-flex align-items-center gap-2">
+                <label class="small text-muted" for="team-hackathon-filter">Hackathon</label>
+                <select id="team-hackathon-filter" name="hackathon" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="all" {% if selected_hackathon == 'all' %}selected{% endif %}>Tous les hackathons</option>
+                    {% for hackathon in hackathons %}<option value="{{ hackathon.pk }}" {% if selected_hackathon == hackathon.pk|stringformat:'s' %}selected{% endif %}>{{ hackathon.name }}{% if hackathon.is_active %} · actif{% endif %}</option>{% endfor %}
+                </select>
+            </form>
+            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill font-mono">{{ teams_count }} équipe{{ teams_count|pluralize }}</span>
+        </div>
+    </div>
+
+    <!-- Table des Équipes -->
+    <div class="card-modern overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light border-bottom">
+                    <tr>
+                        <th class="ps-4 py-3 small text-uppercase text-muted fw-bold">Équipe</th>
+                        <th class="py-3 small text-uppercase text-muted fw-bold">Défi / Thématique</th>
+                        <th class="py-3 small text-uppercase text-muted fw-bold">Capitaine</th>
+                        <th class="py-3 small text-uppercase text-muted fw-bold">Membres</th>
+                        <th class="py-3 small text-uppercase text-muted fw-bold">Emplacement</th>
+                        <th class="py-3 small text-uppercase text-muted fw-bold">Mentor Référent</th>
+                        <th class="py-3 small text-uppercase text-muted fw-bold">Livrable</th>
+                        <th class="pe-4 py-3 text-end small text-uppercase text-muted fw-bold">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in teams_list %}
+                    <tr>
+                        <td class="ps-4">
+                            <strong class="text-dark">{{ t.name }}</strong>
+                            <div class="small text-muted">{{ t.hackathon }}</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 rounded-pill small">
+                                {{ t.challenge }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="small text-dark">{{ t.leader }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary-subtle text-secondary font-mono">{{ t.members_count }}/{{ t.max_members }}</span>
+                        </td>
+                        <td>
+                            <span class="font-mono small text-muted">{{ t.table }}</span>
+                        </td>
+                        <td>
+                            <span class="small fw-semibold text-primary">{{ t.mentor }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ t.submission_color }}-subtle text-{{ t.submission_color }} border border-{{ t.submission_color }}-subtle rounded-pill">
+                                {{ t.submission_status }}
+                            </span>
+                        </td>
+                        <td class="pe-4 text-end">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-light border rounded-pill" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 small">
+                                    <li><a class="dropdown-item" href="{% url 'student:jury_submissions' %}"><i class="bi bi-folder2-open me-2"></i>Voir les dépôts</a></li>
+                                    {% if t.is_reviewable %}<li><a class="dropdown-item" href="{% url 'dashboard_admin:judging' %}"><i class="bi bi-stars me-2"></i>Ouvrir l’espace jury</a></li>{% endif %}
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="8" class="text-center text-muted py-5"><i class="bi bi-people fs-2 d-block mb-2"></i>Aucune équipe n’est enregistrée pour ce filtre.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,147 @@
+﻿{% extends 'layouts/base_admin.html' %}
+
+{% block admin_content %}
+<div class="container-fluid career-editor pb-4">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <nav aria-label="Breadcrumb" class="small mb-2">
+        <a href="{% url 'dashboard_admin:career_dashboard' %}" class="text-decoration-none text-secondary">Career opportunities</a>
+        <i class="bi bi-chevron-right mx-1 text-secondary" aria-hidden="true"></i>
+        <span class="text-body-secondary">{{ title }}</span>
+      </nav>
+      <div class="d-flex align-items-center gap-3">
+        <span class="career-editor-icon"><i class="bi bi-briefcase-fill"></i></span>
+        <div><h1 class="h2 fw-bold mb-1">{{ title }}</h1><p class="text-secondary mb-0">Create and publish an opportunity for students.</p></div>
+      </div>
+    </div>
+    <a class="btn btn-outline-secondary rounded-pill px-3" href="{% url 'dashboard_admin:career_dashboard' %}"><i class="bi bi-arrow-left me-1"></i>Back to opportunities</a>
+  </div>
+  <form method="post" id="career-opportunity-form" class="row g-4 align-items-start">
+    {% csrf_token %}
+    <div class="col-xl-8">
+      <section class="card career-editor-card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4 p-lg-5">
+          <div class="career-section-heading"><span class="career-section-number">01</span><div><h2 class="h5 fw-bold mb-1">Opportunity basics</h2><p class="small text-secondary mb-0">Set the role name, employer and a clear description.</p></div></div>
+          <div class="row g-3 mt-2">
+            <div class="col-md-7"><label class="form-label fw-semibold" for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>{{ form.title }}{% for error in form.title.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+            <div class="col-md-5"><label class="form-label fw-semibold" for="{{ form.company.id_for_label }}">{{ form.company.label }}</label>{{ form.company }}{% for error in form.company.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+            <div class="col-md-6"><label class="form-label fw-semibold" for="{{ form.opportunity_type.id_for_label }}">Opportunity type</label>{{ form.opportunity_type }}{% for error in form.opportunity_type.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+            <div class="col-md-6"><label class="form-label fw-semibold" for="{{ form.status.id_for_label }}">Publication status</label>{{ form.status }}{% for error in form.status.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+            <div class="col-12"><label class="form-label fw-semibold" for="{{ form.description.id_for_label }}">Description</label>{{ form.description }}<div class="form-text">Describe the role, responsibilities and application process clearly.</div>{% for error in form.description.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card career-editor-card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4 p-lg-5">
+          <div class="career-section-heading"><span class="career-section-number">02b</span><div><h2 class="h5 fw-bold mb-1">Project and eligibility criteria</h2><p class="small text-secondary mb-0">Add weighted evidence criteria. All nonzero weights are normalized to 100% when saved.</p></div></div>
+          {{ requirement_formset.management_form }}
+          {% if requirement_formset.non_form_errors %}<div class="alert alert-danger mt-3">{{ requirement_formset.non_form_errors }}</div>{% endif %}
+          <div class="row g-3 mt-1">
+            {% for req in requirement_formset %}
+              <div class="col-lg-6"><div class="border rounded-3 p-3 h-100">
+                {% for hidden in req.hidden_fields %}{{ hidden }}{% endfor %}
+                <div class="mb-2"><label class="form-label small" for="{{ req.kind.id_for_label }}">Requirement type</label>{{ req.kind }}{% for error in req.kind.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+                <div class="mb-2"><label class="form-label small" for="{{ req.name.id_for_label }}">Requirement</label>{{ req.name }}{% for error in req.name.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+                <div class="mb-2"><label class="form-label small" for="{{ req.description.id_for_label }}">Assessment details</label>{{ req.description }}</div>
+                <div class="d-flex align-items-center gap-3"><div class="flex-grow-1"><label class="form-label small" for="{{ req.weight.id_for_label }}">Weight</label>{{ req.weight }}{% for error in req.weight.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div><div class="form-check mt-3">{{ req.mandatory }}<label class="form-check-label small" for="{{ req.mandatory.id_for_label }}">Mandatory</label></div>{% if req.DELETE %}<div class="form-check mt-3">{{ req.DELETE }}<label class="form-check-label small" for="{{ req.DELETE.id_for_label }}">Remove</label></div>{% endif %}</div>
+              </div></div>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+
+      <section class="card career-editor-card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4 p-lg-5">
+          <div class="career-section-heading"><span class="career-section-number">02</span><div><h2 class="h5 fw-bold mb-1">Requirements</h2><p class="small text-secondary mb-0">Separate must-have skills from preferences.</p></div></div>
+          <div class="row g-3 mt-2">
+            <div class="col-md-6"><label class="form-label fw-semibold" for="{{ form.required_skills.id_for_label }}">Required skills</label>{{ form.required_skills }}<div class="form-text">{{ form.required_skills.help_text }}</div>{% for error in form.required_skills.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+            <div class="col-md-6"><label class="form-label fw-semibold" for="{{ form.preferred_skills.id_for_label }}">Preferred skills</label>{{ form.preferred_skills }}<div class="form-text">{{ form.preferred_skills.help_text }}</div>{% for error in form.preferred_skills.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+            <div class="col-md-6"><label class="form-label fw-semibold" for="{{ form.education.id_for_label }}">Education</label>{{ form.education }}<div class="row g-2 mt-1"><div class="col-7"><label class="form-label small" for="{{ form.education_weight.id_for_label }}">Weight</label>{{ form.education_weight }}</div><div class="col-5 form-check mt-4">{{ form.education_mandatory }}<label class="form-check-label small" for="{{ form.education_mandatory.id_for_label }}">Mandatory</label></div></div>{% for error in form.education.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+            <div class="col-md-6"><label class="form-label fw-semibold" for="{{ form.experience.id_for_label }}">Experience</label>{{ form.experience }}<div class="row g-2 mt-1"><div class="col-7"><label class="form-label small" for="{{ form.experience_weight.id_for_label }}">Weight</label>{{ form.experience_weight }}</div><div class="col-5 form-check mt-4">{{ form.experience_mandatory }}<label class="form-check-label small" for="{{ form.experience_mandatory.id_for_label }}">Mandatory</label></div></div>{% for error in form.experience.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+            <div class="col-12"><label class="form-label fw-semibold" for="{{ form.languages.id_for_label }}">Languages</label>{{ form.languages }}{% if form.languages.help_text %}<div class="form-text">{{ form.languages.help_text }}</div>{% endif %}<div class="row g-2 mt-1"><div class="col-md-4"><label class="form-label small" for="{{ form.language_weight.id_for_label }}">Combined language weight</label>{{ form.language_weight }}</div><div class="col-md-4 form-check mt-4">{{ form.language_mandatory }}<label class="form-check-label small" for="{{ form.language_mandatory.id_for_label }}">Mandatory</label></div></div>{% for error in form.languages.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card career-editor-card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4 p-lg-5">
+          <div class="career-section-heading"><span class="career-section-number">03</span><div><h2 class="h5 fw-bold mb-1">Location and timing</h2><p class="small text-secondary mb-0">Help students understand where and when the role takes place.</p></div></div>
+          <div class="row g-3 mt-2">
+            <div class="col-md-6"><label class="form-label fw-semibold" for="{{ form.location.id_for_label }}">Location</label>{{ form.location }}<div class="row g-2 mt-1"><div class="col-7"><label class="form-label small" for="{{ form.location_weight.id_for_label }}">Weight</label>{{ form.location_weight }}</div><div class="col-5 form-check mt-4">{{ form.location_mandatory }}<label class="form-check-label small" for="{{ form.location_mandatory.id_for_label }}">Mandatory</label></div></div>{% for error in form.location.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+            <div class="col-md-6"><label class="form-label fw-semibold" for="{{ form.work_mode.id_for_label }}">Work arrangement</label>{{ form.work_mode }}{% for error in form.work_mode.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+            <div class="col-md-4"><label class="form-label fw-semibold" for="{{ form.publication_date.id_for_label }}">Publication date</label>{{ form.publication_date }}{% for error in form.publication_date.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+            <div class="col-md-4"><label class="form-label fw-semibold" for="{{ form.deadline.id_for_label }}">Application deadline</label>{{ form.deadline }}{% for error in form.deadline.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+            <div class="col-md-4"><label class="form-label fw-semibold" for="{{ form.salary.id_for_label }}">Compensation</label>{{ form.salary }}{% for error in form.salary.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card career-editor-card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4 p-lg-5">
+          <div class="career-section-heading"><span class="career-section-number">04</span><div><h2 class="h5 fw-bold mb-1">Application and review</h2><p class="small text-secondary mb-0">Link to the employer or enable HackFlow applications.</p></div></div>
+          <div class="row g-3 mt-2">
+            <div class="col-12"><label class="form-label fw-semibold" for="{{ form.application_url.id_for_label }}">Application URL</label>{{ form.application_url }}<div class="form-text">Use the employerâ€™s official application page.</div>{% for error in form.application_url.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+            <div class="col-12"><label class="career-checkbox p-3 rounded-3 d-flex align-items-start gap-3" for="{{ form.internal_application.id_for_label }}">{{ form.internal_application }}<span><span class="d-block fw-semibold">Accept applications through HackFlow</span><span class="d-block small text-secondary">Students can submit a PDF CV and portfolio link to their private application record.</span></span></label>{% for error in form.internal_application.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+            <div class="col-12"><label class="form-label fw-semibold" for="{{ form.moderation_note.id_for_label }}">Organizer notes</label>{{ form.moderation_note }}{% for error in form.moderation_note.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
+          </div>
+        </div>
+      </section>
+
+      {% if form.non_field_errors %}<div class="alert alert-danger rounded-3">{{ form.non_field_errors }}</div>{% endif %}
+      <div class="d-flex justify-content-end gap-2"><a class="btn btn-light border rounded-pill px-4" href="{% url 'dashboard_admin:career_dashboard' %}">Cancel</a><button class="btn btn-primary rounded-pill px-4" type="submit"><i class="bi bi-check2 me-1"></i>Save opportunity</button></div>
+    </div>
+
+    <aside class="col-xl-4">
+      <div class="card border-0 shadow-sm rounded-4 career-side-card mb-4"><div class="card-body p-4">
+        <div class="d-flex align-items-center gap-2 mb-3"><i class="bi bi-eye text-primary fs-5"></i><h2 class="h6 fw-bold mb-0">Live offer preview</h2></div>
+        <span id="preview-type" class="small text-primary fw-semibold">{{ form.instance.get_opportunity_type_display|default:'Opportunity type' }}</span>
+        <h3 id="preview-title" class="h5 fw-bold mt-1">{{ form.instance.title|default:'Opportunity title' }}</h3>
+        <div id="preview-company" class="text-secondary">{{ form.instance.company|default:'Company' }}</div>
+        <div id="preview-location" class="small text-secondary mt-2">{{ form.instance.location|default:'Location and work arrangement' }}</div>
+        <p id="preview-description" class="small mt-3 mb-0">{{ form.instance.description|default:'The offer description will appear here.'|truncatechars:260 }}</p>
+      </div></div>
+      <div class="card border-0 shadow-sm rounded-4 career-side-card mb-4"><div class="card-body p-4">
+        <div class="d-flex align-items-center gap-2 mb-3"><i class="bi bi-lightbulb text-warning fs-5"></i><h2 class="h6 fw-bold mb-0">Before publishing</h2></div>
+        <ul class="career-checklist small text-secondary mb-0"><li>Confirm the source and application link.</li><li>Review mandatory and preferred requirements.</li><li>Check the deadline and work arrangement.</li><li>Publish only when the listing is ready for students.</li></ul>
+      </div></div>
+      <div class="card border-0 shadow-sm rounded-4 career-side-card"><div class="card-body p-4">
+        <div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-shield-check text-success fs-5"></i><h2 class="h6 fw-bold mb-0">Review and matching</h2></div>
+        <p class="small text-secondary mb-0">AI extracted fields are suggestions and remain unverified until reviewed. Student match scores are calculated from profile data and do not guarantee eligibility.</p>
+      </div></div>
+    </aside>
+  </form>
+</div>
+
+<style>
+  .career-editor { max-width: 1540px; }
+  .career-editor-icon { width: 48px; height: 48px; display: inline-flex; align-items: center; justify-content: center; border-radius: 15px; color: var(--bs-primary); background: rgba(var(--bs-primary-rgb), .1); font-size: 1.25rem; }
+  .career-editor-card, .career-side-card { background: var(--bs-body-bg); }
+  .career-section-heading { display: flex; align-items: center; gap: 14px; }
+  .career-section-number { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border-radius: 11px; background: rgba(var(--bs-primary-rgb), .1); color: var(--bs-primary); font-size: .75rem; font-weight: 700; }
+  .career-extraction-panel { border: 1px solid rgba(var(--bs-primary-rgb), .2); background: rgba(var(--bs-primary-rgb), .045); border-radius: 14px; padding: 16px; }
+  .career-checkbox { border: 1px solid var(--bs-border-color); cursor: pointer; }
+  .career-checkbox:has(input:checked) { border-color: var(--bs-primary); background: rgba(var(--bs-primary-rgb), .045); }
+  .career-checklist { padding-left: 1.1rem; }
+  .career-checklist li { padding: .35rem 0; }
+  .career-checklist li::marker { color: var(--bs-primary); }
+</style>
+<script>
+(() => {
+  const field = (name) => document.getElementById(`id_${name}`);
+  const text = (id, value, fallback) => { const node = document.getElementById(id); if (node) node.textContent = value.trim() || fallback; };
+  const update = () => {
+    text('preview-title', field('title')?.value || '', 'Opportunity title');
+    text('preview-company', field('company')?.value || '', 'Company');
+    text('preview-location', [field('location')?.value, field('work_mode')?.selectedOptions?.[0]?.text].filter(Boolean).join(' Â· '), 'Location and work arrangement');
+    text('preview-description', field('description')?.value || '', 'The offer description will appear here.');
+    text('preview-type', field('opportunity_type')?.selectedOptions?.[0]?.text || '', 'Opportunity type');
+  };
+  document.getElementById('career-opportunity-form')?.addEventListener('input', update);
+  document.getElementById('career-opportunity-form')?.addEventListener('change', update);
+  update();
+})();
+</script>
+{% endblock %}
+
+

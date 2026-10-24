@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block layout %}
+<div class="dashboard-wrapper">
+    <!-- Sidebar Admin Adaptative -->
+    <aside class="app-sidebar shadow-sm">
+        <div class="p-4 border-bottom border-light-subtle d-flex align-items-center justify-content-between">
+            <a href="{% url 'dashboard_admin:dashboard' %}" class="d-flex align-items-center gap-2 text-decoration-none">
+                <img src="{% static 'images/hackflow-mark.png' %}" alt="" width="44" height="32" style="object-fit: contain;">
+                <span class="fw-bold fs-5 text-body">Hack<span class="text-gradient-primary">Flow</span></span>
+            </a>
+            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-2 py-1 small">
+                Admin
+            </span>
+        </div>
+
+        <div class="py-3 flex-grow-1 overflow-y-auto">
+            <div class="sidebar-heading">Gestion Globale</div>
+            <a href="{% url 'dashboard_admin:dashboard' %}" class="nav-link-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <i class="bi bi-speedometer"></i>
+                <span>Cockpit Organisateur</span>
+            </a>
+            <a href="{% url 'dashboard_admin:participants' %}" class="nav-link-item {% if request.resolver_match.url_name == 'participants' %}active{% endif %}">
+                <i class="bi bi-person-lines-fill"></i>
+                <span>Participants</span>
+                {% if participants_count %}<span class="badge bg-secondary ms-auto rounded-pill px-2 py-0" style="font-size: 0.7rem;">{{ participants_count }}</span>{% endif %}
+            </a>
+            <a href="{% url 'dashboard_admin:teams' %}" class="nav-link-item {% if request.resolver_match.url_name == 'teams' %}active{% endif %}">
+                <i class="bi bi-diagram-3-fill"></i>
+                <span>Équipes & Projets</span>
+                <span class="badge bg-primary ms-auto rounded-pill px-2 py-0" style="font-size: 0.7rem;">92</span>
+            </a>
+
+            <div class="sidebar-heading mt-3">Événement & Évaluation</div>
+            <a href="{% url 'dashboard_admin:events_overview' %}" class="nav-link-item {% if request.resolver_match.url_name == 'events_overview' or request.resolver_match.url_name == 'event_edit' %}active{% endif %}">
+                <i class="bi bi-calendar2-week-fill"></i>
+                <span>Events Overview</span>
+            </a>
+            <a href="{% url 'dashboard_admin:announcements' %}" class="nav-link-item {% if request.resolver_match.url_name == 'announcements' or request.resolver_match.url_name == 'announcement_edit' %}active{% endif %}">
+                <i class="bi bi-megaphone-fill"></i>
+                <span>Annonces & Push</span>
+            </a>
+            <a href="{% url 'dashboard_admin:career_dashboard' %}" class="nav-link-item {% if request.resolver_match.namespace == 'dashboard_admin' and 'career_' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-briefcase-fill"></i>
+                <span>Career Opportunities</span>
+            </a>
+            <a href="{% url 'dashboard_admin:judging' %}" class="nav-link-item {% if request.resolver_match.url_name == 'judging' %}active{% endif %}">
+                <i class="bi bi-trophy-fill"></i>
+                <span>Grille & Jury Final</span>
+            </a>
+            <a href="{% url 'student:jury_submissions' %}" class="nav-link-item {% if request.resolver_match.url_name == 'jury_submissions' %}active{% endif %}">
+                <i class="bi bi-file-earmark-zip-fill"></i>
+                <span>Project Submissions</span>
+            </a>
+
+            <div class="sidebar-heading mt-3">Paramètres</div>
+            <a href="{% url 'accounts:profile' %}" class="nav-link-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                <i class="bi bi-person-gear"></i>
+                <span>Mon Profil Admin</span>
+            </a>
+        </div>
+
+        <div class="p-3 border-top border-light-subtle bg-body-tertiary">
+            <div class="d-flex align-items-center gap-3">
+                <span class="rounded-circle bg-danger bg-opacity-10 text-danger d-inline-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">{{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}</span>
+                <div class="flex-grow-1 min-w-0">
+                    <p class="mb-0 fw-semibold text-truncate small text-body">{{ request.user.get_full_name|default:request.user.username }}</p>
+                    <p class="mb-0 text-body-secondary small text-truncate" style="font-size: 0.75rem;">{{ request.user.get_role_display }}</p>
+                </div>
+                <a href="{% url 'accounts:logout' %}" class="text-secondary hover-text-danger p-1" title="Se déconnecter">
+                    <i class="bi bi-box-arrow-right fs-5"></i>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Container -->
+    <div class="app-main">
+        <!-- Topbar Admin -->
+        <header class="app-topbar justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-outline-secondary d-lg-none p-1 px-2" id="sidebarToggle" type="button" aria-label="Menu">
+                    <i class="bi bi-list fs-4"></i>
+                </button>
+                <div class="d-flex align-items-center gap-2 bg-body-tertiary text-body border px-3 py-1 rounded-pill small fw-semibold font-mono">
+                    <span class="badge bg-danger rounded-circle p-1"> </span>
+                    <span>Hackathon en direct : Phase de sprint</span>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+                {% include "components/theme_toggle.html" %}
+
+                <a href="{% url 'dashboard_admin:announcements' %}" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm d-none d-sm-inline-flex align-items-center gap-1">
+                    <i class="bi bi-broadcast"></i>
+                    <span>Diffuser une annonce</span>
+                </a>
+
+                <!-- Notifications -->
+                <div class="dropdown">
+                    <button class="btn btn-light position-relative rounded-circle p-2 border" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+                        <i class="bi bi-bell-fill text-secondary"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
+                            5
+                        </span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" style="width: 320px;">
+                        <li class="p-2 border-bottom fw-bold small text-muted">Alertes Organisateur</li>
+                        <li>
+                            <a class="dropdown-item p-2 rounded-2 small text-wrap d-flex gap-2 align-items-start" href="#">
+                                <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
+                                <div>
+                                    <div class="fw-semibold">12 participants sans équipe</div>
+                                    <div class="text-muted" style="font-size: 0.78rem;">Le matching automatique s'exécutera à 15h00.</div>
+                                </div>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Menu Profil -->
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="rounded-circle bg-danger bg-opacity-10 text-danger d-inline-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px;">{{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2">
+                        <li><h6 class="dropdown-header">{{ request.user.get_full_name|default:request.user.username }}</h6></li>
+                        <li><a class="dropdown-item rounded-2" href="{% url 'accounts:profile' %}"><i class="bi bi-person me-2"></i>Mon Profil</a></li>
+                        <li><a class="dropdown-item rounded-2" href="{% url 'dashboard_admin:participants' %}"><i class="bi bi-people me-2"></i>Participants</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item rounded-2 text-danger" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Déconnexion</a></li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Body -->
+        <main class="p-3 p-md-4 flex-grow-1">
+            {% block admin_content %}{% endblock %}
+        </main>
+    </div>
+</div>
+{% include "components/admin_copilot.html" %}
+{% endblock %}

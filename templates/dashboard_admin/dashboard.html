@@ -1,0 +1,104 @@
+{% extends "layouts/base_admin.html" %}
+
+{% block title %}Cockpit Organisateur - HackFlow Admin{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid px-0">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Cockpit Organisateur & Vue Globale</h2>
+            <p class="text-muted small mb-0">{% if active_hackathon %}Supervision de {{ active_hackathon.name }}{% if active_hackathon.edition %} · {{ active_hackathon.edition }}{% endif %}.{% else %}Supervision basée sur les données enregistrées dans HackFlow.{% endif %}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary btn-sm rounded-pill px-3" data-demo-toast="Rapport d'exportation CSV généré avec succès !">
+                <i class="bi bi-download me-1"></i>Exporter les données
+            </button>
+            <a href="{% url 'dashboard_admin:announcements' %}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm d-flex align-items-center gap-2">
+                <i class="bi bi-broadcast"></i> Diffuser un push
+            </a>
+        </div>
+    </div>
+
+    {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %} alert-dismissible fade show" role="status">
+        {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+    </div>
+    {% endfor %}
+
+    <!-- Alertes Organisateur -->
+    {% for alert in pending_alerts %}
+    <div class="alert {% if alert.urgent %}alert-danger{% else %}alert-warning{% endif %} d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 py-2 px-3 rounded-3 mb-3">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi {% if alert.urgent %}bi-exclamation-octagon-fill text-danger{% else %}bi-info-circle-fill text-warning{% endif %}"></i>
+            <span class="small fw-semibold text-dark">{{ alert.msg }}</span>
+        </div>
+        <a class="btn btn-sm {% if alert.urgent %}btn-danger{% else %}btn-warning{% endif %} py-1 px-3 rounded-pill" href="{{ alert.url }}">
+            {{ alert.action }}
+        </a>
+    </div>
+    {% endfor %}
+
+    <!-- KPIs Organisateur -->
+    <div class="row g-3 mb-4">
+        {% for kpi in kpis %}
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card card-modern h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted small fw-semibold">{{ kpi.label }}</span>
+                    <div class="stat-icon stat-icon-{{ kpi.color }}" style="width: 36px; height: 36px; font-size: 1.1rem;">
+                        <i class="bi {{ kpi.icon }}"></i>
+                    </div>
+                </div>
+                <div class="h2 fw-bold text-dark mb-1 font-mono">{{ kpi.value }}</div>
+                <div class="small text-muted font-mono" style="font-size: 0.75rem;">{{ kpi.sub }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- Répartition par défi -->
+        <div class="col-lg-6">
+            <div class="card-modern p-4 h-100">
+                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-pie-chart-fill text-primary me-2"></i>Répartition des Équipes par Thématique</h5>
+                <div class="d-flex flex-column gap-3">
+                    {% for c in challenges_stats %}
+                    <div>
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="fw-semibold text-dark">{{ c.name }}</span>
+                            <span class="font-mono text-muted">{{ c.count }} équipes ({{ c.percent }}%)</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ c.percent }}%;"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Flux d'Activité en Temps Réel -->
+        <div class="col-lg-6">
+            <div class="card-modern p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark mb-0"><i class="bi bi-activity text-danger me-2"></i>Activité récente enregistrée</h5>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill font-mono">Activité récente</span>
+                </div>
+
+                <div class="d-flex flex-column gap-3">
+                    {% for act in live_activity %}
+                    <div class="p-3 rounded-3 bg-light border d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="text-{{ act.color }} fs-5"><i class="bi {{ act.icon }}"></i></span>
+                            <span class="small fw-semibold text-dark">{{ act.event }}</span>
+                        </div>
+                        <span class="small text-muted font-mono" style="font-size: 0.72rem;">{{ act.time }}</span>
+                    </div>
+                    {% endfor %}
+                    {% if not live_activity %}<div class="text-secondary small">Aucune activité enregistrée pour le moment.</div>{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

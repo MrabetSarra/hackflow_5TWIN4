@@ -1,0 +1,28 @@
+<!-- HackFlow - Barre Flottante de Rôle (Démo) -->
+<div class="demo-switcher-bar d-none d-md-flex align-items-center shadow-lg" id="demoSwitcherBar">
+    <div class="d-flex align-items-center gap-2 pe-2 border-end border-secondary border-opacity-50">
+        <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 py-1 px-2 rounded-pill font-mono" style="font-size: 0.72rem;">
+            <i class="bi bi-toggles2 me-1"></i>Démo
+        </span>
+    </div>
+    <div class="d-flex align-items-center gap-1">
+        <a href="{% url 'core:landing' %}" class="demo-btn {% if request.resolver_match.app_name == 'core' and request.resolver_match.url_name == 'landing' %}active{% endif %}" title="Page d'accueil publique">
+            <i class="bi bi-globe2"></i> Visiteur
+        </a>
+        <a href="{% url 'student:dashboard' %}" class="demo-btn {% if request.resolver_match.app_name == 'student' %}active{% endif %}" title="Espace Participant Étudiant">
+            <i class="bi bi-mortarboard-fill"></i> Étudiant
+        </a>
+        <a href="{% url 'mentor:dashboard' %}" class="demo-btn {% if request.resolver_match.app_name == 'mentor' %}active{% endif %}" title="Espace Accompagnateur Mentor">
+            <i class="bi bi-lightbulb-fill"></i> Mentor
+        </a>
+        <a href="{% url 'dashboard_admin:dashboard' %}" class="demo-btn {% if request.resolver_match.app_name == 'dashboard_admin' %}active{% endif %}" title="Cockpit Organisateur Admin">
+            <i class="bi bi-shield-lock-fill"></i> Admin
+        </a>
+    </div>
+    <div class="ps-2 border-start border-secondary border-opacity-50">
+        <button class="btn btn-sm btn-dark text-white-50 hover-text-white p-1 rounded-circle theme-toggle-btn border-0" type="button" title="Basculer le thème">
+            <i class="bi bi-sun-fill text-warning theme-icon-light d-none"></i>
+            <i class="bi bi-moon-stars-fill text-info theme-icon-dark d-none"></i>
+        </button>
+    </div>
+</div>

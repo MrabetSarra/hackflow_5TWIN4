@@ -1,0 +1,172 @@
+{% extends "layouts/base_student.html" %}
+{% load announcement_format %}
+
+{% block title %}Dashboard Student - HackFlow{% endblock %}
+
+{% block student_content %}
+<div class="container-fluid px-0">
+    <!-- Welcome Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold text-body mb-1">Welcome to your workspace, {{ request.user.first_name|default:request.user.username }} 👋</h2>
+            <p class="text-body-secondary small mb-0">Hackathon {{ hackathon.edition }} • You are on team <strong class="text-primary">{{ team.name }}</strong>.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'student:mentor_request' %}" class="btn btn-outline-danger btn-sm rounded-pill px-3 d-flex align-items-center gap-2">
+                <i class="bi bi-headset"></i> Get help
+            </a>
+            <a href="{% url 'student:tasks_kanban' %}" class="btn btn-primary btn-sm rounded-pill px-3 d-flex align-items-center gap-2 shadow-sm">
+                <i class="bi bi-kanban"></i> View Tasks
+            </a>
+        </div>
+    </div>
+
+    <!-- Project Banner -->
+    <div class="card-modern overflow-hidden mb-4 border-0 shadow-sm position-relative">
+        <div class="position-relative" style="height: 150px;">
+            <img src="https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?w=1200&auto=format&fit=crop&q=80" alt="EcoTrack Cover" class="w-100 h-100" style="object-fit: cover;">
+            <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(90deg, rgba(15,23,42,0.88) 0%, rgba(15,23,42,0.45) 100%);"></div>
+            <div class="position-absolute bottom-0 start-0 p-3 p-md-4 text-white">
+                <span class="badge bg-success rounded-pill px-3 py-1 mb-1 font-mono small">{{ team.category }}</span>
+                <h3 class="fw-bold mb-1 text-white">{{ team.name }} • {{ team.table_number }}</h3>
+                <p class="small text-white-50 mb-0 d-none d-md-block">{{ team.project_pitch }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card card-modern h-100">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-body-secondary small fw-semibold">Project Progress</span>
+                    <span class="badge bg-primary-subtle text-primary">{{ progress }}%</span>
+                </div>
+                <div class="h3 fw-bold text-body mb-2 font-mono">{{ progress }}%</div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ progress }}%;"></div>
+                </div>
+            </div>
+        </div>
+
+        {% for stat in stats %}
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card card-modern h-100 d-flex align-items-center gap-3">
+                <div class="stat-icon stat-icon-{{ stat.color }}">
+                    <i class="bi {{ stat.icon }}"></i>
+                </div>
+                <div>
+                    <div class="h3 fw-bold text-body mb-0 font-mono">{{ stat.value }}</div>
+                    <div class="text-body-secondary small fw-semibold">{{ stat.label }}</div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- Left column: timeline and milestones -->
+        <div class="col-lg-8">
+            <div class="card-modern p-4 mb-4">
+                <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
+                    <div>
+                        <h5 class="fw-bold text-body mb-1"><i class="bi bi-signpost-split-fill text-primary me-2"></i>Hackathon Milestones & Schedule</h5>
+                        <p class="text-body-secondary small mb-0">Follow the key stages set by the organizers.</p>
+                    </div>
+                    <span class="badge bg-body-tertiary text-body-secondary border font-mono">48-hour Sprint</span>
+                </div>
+
+                <div class="d-flex flex-column gap-3">
+                    {% for item in timeline %}
+                    <div class="p-3 rounded-3 border d-flex align-items-center justify-content-between {% if item.status == 'done' %}bg-body-tertiary{% elif item.status == 'active' %}border-primary bg-primary bg-opacity-10{% else %}bg-body{% endif %}">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="fs-4 {% if item.status == 'done' %}text-success{% elif item.status == 'active' %}text-primary{% else %}text-body-secondary{% endif %}">
+                                <i class="bi {{ item.icon }}"></i>
+                            </span>
+                            <div>
+                                <h6 class="fw-bold mb-1 {% if item.status == 'active' %}text-primary{% else %}text-body{% endif %}">{{ item.title }}</h6>
+                                <span class="small text-body-secondary font-mono"><i class="bi bi-clock me-1"></i>{{ item.time|date:"l H:i" }}</span>
+                            </div>
+                        </div>
+                        <div>
+                            {% if item.status == 'done' %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Approved</span>
+                            {% elif item.status == 'active' %}
+                            <span class="badge bg-primary text-white px-2 py-1">In progress</span>
+                            {% else %}
+                            <span class="badge bg-secondary-subtle text-body-secondary px-2 py-1">Upcoming</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Carte Annonces Organisateur -->
+            <div class="card-modern p-4">
+                <h5 class="fw-bold text-body mb-3"><i class="bi bi-megaphone-fill text-warning me-2"></i>Latest Staff Announcements</h5>
+                <div class="d-flex flex-column gap-3">
+                    {% for ann in recent_announcements %}
+                    <div class="p-3 rounded-3 bg-body-tertiary border-start border-4 {% if ann.priority == 'urgent' %}border-danger{% elif ann.priority == 'important' %}border-warning{% else %}border-info{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <h6 class="fw-bold mb-0 text-body">{{ ann.title }}</h6>
+                            <span class="badge {% if ann.priority == 'urgent' %}bg-danger-subtle text-danger{% elif ann.priority == 'important' %}bg-warning-subtle text-warning-emphasis{% else %}bg-info-subtle text-info-emphasis{% endif %}">{{ ann.badge }}</span>
+                        </div>
+                        {% if ann.body %}<div class="small text-body-secondary mb-2">{{ ann.body|announcement_markdown }}</div>{% endif %}
+                        <div class="d-flex justify-content-between align-items-center small text-body-secondary">
+                            <span><i class="bi bi-person me-1"></i>{{ ann.author }}</span>
+                            <span class="font-mono">{{ ann.time|timesince }} ago</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Upcoming Deadlines & Team -->
+        <div class="col-lg-4">
+            <!-- Alertes & Deadlines Proches -->
+            <div class="card-modern p-4 mb-4">
+                <h5 class="fw-bold text-body mb-3"><i class="bi bi-alarm-fill text-danger me-2"></i>Upcoming Deadlines</h5>
+                <div class="d-flex flex-column gap-3">
+                    {% for dl in upcoming_deadlines %}
+                    <div class="p-3 rounded-3 border {% if dl.urgent %}border-danger-subtle bg-danger bg-opacity-10{% else %}bg-body-tertiary{% endif %}">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold small text-body">{{ dl.label }}</span>
+                            <span class="badge {% if dl.urgent %}bg-danger{% else %}bg-secondary{% endif %} rounded-pill font-mono">{{ dl.deadline|date:"l H:i" }}</span>
+                        </div>
+                        <div class="small {% if dl.urgent %}text-danger fw-semibold{% else %}text-body-secondary{% endif %} font-mono">
+                            <i class="bi bi-hourglass-split me-1"></i><span data-live-countdown="{{ dl.deadline|date:'c' }}" data-countdown-prefix="In " data-countdown-expired="Deadline passed">In {{ dl.deadline|timeuntil }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Team Summary -->
+            <div class="card-modern p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-body mb-0">My Team</h5>
+                    <a href="{% url 'student:team_detail' %}" class="small text-primary text-decoration-none fw-semibold">Manage <i class="bi bi-arrow-right"></i></a>
+                </div>
+                <div class="p-3 rounded-3 bg-body-tertiary mb-3">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <strong class="text-body">{{ team.name }}</strong>
+                        <span class="badge bg-success-subtle text-success">{{ team.member_count }}/{{ team.max_members }} members</span>
+                    </div>
+                    <p class="small text-body-secondary mb-0">{{ team.project_pitch }}</p>
+                </div>
+
+                <div class="alert alert-warning py-2 px-3 small d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-exclamation-circle-fill flex-shrink-0"></i>
+                    <div>There are <strong>{{ team.places_left }} spot(s)</strong> left to complete your team.</div>
+                </div>
+
+                <a href="{% url 'student:skills_matching' %}" class="btn btn-outline-primary btn-sm w-100 rounded-pill">
+                    <i class="bi bi-search me-1"></i>Find a teammate
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
