@@ -26,7 +26,7 @@ jobs:
       DJANGO_DEBUG: "True"
       DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+      SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL || secrets.SONAR_HOST_URL }}
 
     steps:
       - name: Checkout repository
@@ -82,7 +82,7 @@ jobs:
         run: |
           set -euo pipefail
           if [[ -z "${SONAR_HOST_URL:-}" ]]; then
-            echo "SONAR_HOST_URL is missing. Add it as a GitHub Actions repository variable (Settings > Secrets and variables > Actions > Variables)."
+            echo "SONAR_HOST_URL is missing. Add it as a repository Actions variable or secret named SONAR_HOST_URL (Settings > Secrets and variables > Actions). If it is stored in an Actions environment, attach that environment to this job."
             exit 1
           fi
           if [[ ! "$SONAR_HOST_URL" =~ ^https?://[^/]+ ]]; then
@@ -95,11 +95,11 @@ jobs:
           fi
 
       - name: SonarQube scan
-        if: ${{ env.SONAR_TOKEN != '' && vars.SONAR_HOST_URL != '' }}
+        if: ${{ env.SONAR_TOKEN != '' && env.SONAR_HOST_URL != '' }}
         uses: SonarSource/sonarqube-scan-action@v7
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+          SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}
 
       - name: Report coverage (minimum 80%)
         run: coverage report --fail-under=80 | tee coverage-report.txt
