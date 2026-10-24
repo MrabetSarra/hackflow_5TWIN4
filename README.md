@@ -29,6 +29,7 @@ L’expérience s’articule autour de trois espaces — **étudiant**, **mentor
 - **Être accompagné** : solliciter un mentor et consulter les demandes d’aide.
 - **Organiser l’événement** : suivre les participants, les équipes, les annonces et les évaluations depuis un cockpit dédié.
 - **Présenter son profil** : gérer ses informations, sa photo et son CV.
+- **Opportunités carrière** : consulter des offres modérées, comprendre le score de correspondance et suivre ses candidatures.
 
 ## Trois espaces, un objectif commun
 
@@ -72,7 +73,30 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-Ouvrez [http://127.0.0.1:8000/](http://127.0.0.1:8000/). La base SQLite locale est créée lors de l’application des migrations. Sans identifiants SMTP configurés, les courriels de réinitialisation s’affichent dans la console Django.
+Ouvrez [http://127.0.0.1:8000/](http://127.0.0.1:8000/). La base SQLite locale est créée lors de l’application des migrations. L’envoi des codes de réinitialisation du mot de passe nécessite une configuration SMTP Gmail.
+
+### Configuration du copilote IA local
+
+Le copilote admin utilise Ollama en local. Installez Ollama, téléchargez le modèle par défaut, puis démarrez le serveur Ollama :
+
+```powershell
+ollama pull qwen2.5:7b
+ollama serve
+```
+
+Le serveur Django se connecte par défaut à `http://127.0.0.1:11434`. `OLLAMA_BASE_URL` et `OLLAMA_COPILOT_MODEL` permettent de modifier l'adresse et le modèle du copilote. Le matching des équipes utilise un score pondéré calculé par Django ; ses propositions restent en attente de validation par l'organisateur.
+
+### AI Team Formation
+
+Les organisateurs lancent une proposition depuis la page Participants. Le score pondéré compare les compétences demandées et complémentaires, les rôles, les thèmes préférés, les disponibilités déclarées et la capacité des équipes. Les étudiants peuvent renseigner leurs rôles, thèmes et disponibilités dans leur profil (`/accounts/profile/?edit=1`). Les propositions expliquent les apports de chaque membre et les rôles ou compétences encore absents ; aucune affectation n'est enregistrée avant validation par l'organisateur. Les préférences et disponibilités sont facultatives et un champ vide reste neutre.
+
+### AI Hackathon Copilot
+
+Le copilote est intégré au cockpit organisateur (`/cockpit/`). Ses compteurs, risques d'échéance et listes de projets sont calculés par Django depuis la base ; Ollama génère uniquement l'explication et les recommandations. Les annonces générées peuvent être modifiées puis enregistrées comme brouillons ; elles ne sont jamais publiées automatiquement. Le modèle peut être réglé séparément via `OLLAMA_COPILOT_MODEL`.
+
+### AI Project Evaluation Assistant
+
+La page Jury (`/cockpit/judging/`) permet à l'organisateur de demander une analyse Ollama des soumissions réelles. L'assistant résume le projet, relève objectifs, technologies et cas d'usage, confronte les éléments visibles à la grille et propose des questions. Pour un ZIP, seuls les petits fichiers texte de présentation et manifestes connus sont lus localement, sans extraction. L'assistant n'attribue aucune note et ne classe ni ne désigne de gagnant ; la décision appartient au jury.
 
 ## Technologies
 
@@ -80,6 +104,20 @@ Ouvrez [http://127.0.0.1:8000/](http://127.0.0.1:8000/). La base SQLite locale e
 - **Données locales :** SQLite
 - **Interface :** Django Templates, Bootstrap, CSS et JavaScript
 - **Médias :** Pillow pour la photo de profil ; CV conservés dans un stockage privé local
+
+## Career opportunities
+
+Students browse opportunities at `/careers/`. Organizers publish and manage offers at `/cockpit/careers/`; offers are entered directly by organizers, and external applications link to the employer.
+
+### Organizer-published offers and CV matching
+
+Organizers create offers at `/cockpit/careers/new/`. New manual offers start as drafts; the status control supports publishing and archiving. The editor provides a live preview, explicit required/preferred skills, education, experience, languages, location/work-arrangement requirements, and project/other eligibility criteria. Skill weights use `Skill=weight` entries (for example `Python=25, SQL=15`). All positive weights are validated from 0 to 100 and normalized to exactly 100 when saved.
+
+Student matching uses the existing private profile PDF and existing profile fields. `pdfminer.six` extracts selectable text, while PyMuPDF and RapidOCR run local OCR on scanned pages when needed. Processing is limited to 10 MB and 20 pages. Install dependencies with `python -m pip install -r requirements.txt`; OCR runs on the same machine and sends no CV content to an external service. Raw extracted text is not stored; structured evidence snippets and their timestamp are cached by the CV's SHA-256 digest. Missing or unreadable evidence does not produce a compatibility percentage.
+
+Each explicit requirement receives an evidence-based match percentage or an unknown state. The overall score is `sum(match_pct × weight) / sum(weights for requirements with reliable evidence)`. Profile coverage is evaluated requirement weight divided by all positive requirement weight. Scores are hidden below 30% coverage to avoid false precision. Explicit mandatory contradictions are shown separately; missing CV evidence remains unverified rather than being treated as proof that a student lacks a skill. Per-student/per-offer result caches are invalidated by CV, profile or offer changes. Students see only published offers whose publication date has arrived and whose deadline has not passed.
+
+Apply the additive schema changes with `python manage.py migrate`. Run `python manage.py check` and `python manage.py test career_opportunities` to verify the career module.
 
 ## AI task generation
 

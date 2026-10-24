@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     'student.apps.StudentConfig',
     'mentor.apps.MentorConfig',
     'dashboard_admin.apps.DashboardAdminConfig',
+    'career_opportunities.apps.CareerOpportunitiesConfig',
     'repositories.apps.RepositoriesConfig',
 ]
 
@@ -95,6 +96,7 @@ else:
     MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
 ROOT_URLCONF = 'hackflow.urls'
+CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
 
 TEMPLATES = [
     {
@@ -184,6 +186,10 @@ if _proxy_ssl_header:
     _header_name, _header_value = _proxy_ssl_header.split(',', 1)
     SECURE_PROXY_SSL_HEADER = (_header_name.strip(), _header_value.strip())
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()]
+
+# Local AI-assisted participant-to-team matching through Ollama.
+OLLAMA_BASE_URL = os.environ.get('OLLAMA_BASE_URL', 'http://127.0.0.1:11434').rstrip('/')
+OLLAMA_COPILOT_MODEL = os.environ.get('OLLAMA_COPILOT_MODEL', 'qwen2.5:7b')
 
 
 # Internationalization
@@ -291,3 +297,17 @@ CELERY_RESULT_SERIALIZER = 'json'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Relative weights for available career profile criteria; scoring renormalizes
+# across fields that the current student profile actually contains.
+CAREER_MATCH_WEIGHTS = {
+    'skills': 40,
+    'education': 20,
+    'experience': 15,
+    'languages': 10,
+    'location': 10,
+    'availability': 5,
+}
+
+# CV OCR is performed locally through RapidOCR; no CV content is sent to an API.
+CV_OCR_DPI = int(os.environ.get('CV_OCR_DPI', '190'))

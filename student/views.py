@@ -68,6 +68,12 @@ def dashboard(request):
     deadlines = [{'label': m.title, 'deadline': m.due_at, 'badge': m.due_at.strftime('%A %Hh%M'),
                   'urgent': m.due_at <= now + timedelta(hours=6)} for m in milestones.filter(due_at__gte=now)[:3]]
     resolved = MentorRequest.objects.filter(student=request.user, status=MentorRequest.Status.RESOLVED).count()
+    announcement_audiences = [Announcement.Audience.ALL, Announcement.Audience.STUDENTS]
+    if hackathon and Team.objects.filter(hackathon=hackathon, captain=request.user).exists():
+        announcement_audiences.append(Announcement.Audience.CAPTAINS)
+    recent_announcements = hackathon.announcements.filter(
+        audience__in=announcement_audiences, is_draft=False,
+    ).filter(Q(scheduled_at__isnull=True) | Q(scheduled_at__lte=now)).order_by('-published_at')[:3] if hackathon else []
     context = {
         'team': team, 'hackathon': hackathon, 'timeline': timeline, 'upcoming_deadlines': deadlines,
         'progress': progress, 'completed_tasks': completed, 'total_tasks': total, 'resolved_requests': resolved,
@@ -76,9 +82,12 @@ def dashboard(request):
             {'label': 'Resolved mentor requests', 'value': resolved, 'icon': 'bi-headset', 'color': 'primary'},
             {'label': 'Open team spots', 'value': f'{team.places_left}' if team else 'Create a team', 'icon': 'bi-person-plus', 'color': 'warning'},
         ],
-        'recent_announcements': [{'title': announcement.title, 'author': announcement.author,
-                                  'time': announcement.published_at, 'badge': announcement.category}
-                                 for announcement in (hackathon.announcements.all()[:3] if hackathon else [])],
+        'recent_announcements': [{'title': announcement.title, 'body': announcement.body,
+                                  'author': announcement.author, 'time': announcement.published_at,
+                                  'category': announcement.category,
+                                  'priority_label': announcement.get_priority_display(),
+                                  'priority': announcement.priority}
+                                 for announcement in recent_announcements],
     }
     return render(request, 'student/dashboard.html', context)
 
@@ -767,14 +776,14 @@ def project_submission(request):
     return render(request, 'student/project_submission.html', context)
 
 
-@role_required('admin', 'mentor')
+@role_required('admin', 'organization', 'mentor')
 def jury_submissions(request):
     submissions = Submission.objects.exclude(file='').select_related('team', 'milestone').order_by('-submitted_at', '-updated_at')
-    template = 'dashboard_admin/submissions.html' if request.user.role == 'admin' else 'mentor/submissions.html'
+    template = 'dashboard_admin/submissions.html' if request.user.role in ('admin', 'organization') else 'mentor/submissions.html'
     return render(request, template, {'submissions': submissions})
 
 
-@role_required('admin', 'mentor')
+@role_required('admin', 'organization', 'mentor')
 def download_submission(request, submission_id):
     submission = get_object_or_404(Submission.objects.select_related('team'), pk=submission_id)
     if not submission.file:

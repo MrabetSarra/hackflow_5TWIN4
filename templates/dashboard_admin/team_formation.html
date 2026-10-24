@@ -1,0 +1,37 @@
+{% extends "layouts/base_admin.html" %}
+{% block title %}Team Formation · HackFlow{% endblock %}
+{% block admin_content %}
+<div class="container-fluid px-0">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div><a href="{% url 'dashboard_admin:participants' %}" class="small text-decoration-none"><i class="bi bi-arrow-left me-1"></i>Participants</a><h1 class="h3 fw-bold mt-2 mb-1">AI Team Formation</h1><p class="text-secondary small mb-0">{{ plan.hackathon_name|default:'Édition active' }} · équipes équilibrées selon compétences, rôles préférés, thématiques et disponibilités.</p></div>
+        <form method="post">{% csrf_token %}<input type="hidden" name="action" value="generate"><button class="btn btn-primary rounded-pill px-4"><i class="bi bi-stars me-1"></i>Générer une proposition</button></form>
+    </div>
+
+    {% for message in messages %}<div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %} alert-dismissible fade show" role="status">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button></div>{% endfor %}
+
+    <div class="alert alert-light border small text-secondary"><i class="bi bi-info-circle text-primary me-2"></i>Le score combine besoins de compétences (40 %), complémentarité des rôles (25 %), préférences (20 %), disponibilités (10 %) et équilibre de capacité (5 %). Les critères absents sont neutres. La proposition ne modifie rien avant validation.</div>
+
+    {% if plan %}
+    <div class="row g-3 mb-4">
+        <div class="col-sm-4"><div class="card-modern p-3 h-100"><div class="small text-secondary">Étudiants sans équipe</div><div class="h3 fw-bold mb-0">{{ plan.unassigned_count }}</div></div></div>
+        <div class="col-sm-4"><div class="card-modern p-3 h-100"><div class="small text-secondary">Affectations proposées</div><div class="h3 fw-bold mb-0">{{ plan.assignments|length }}</div></div></div>
+        <div class="col-sm-4"><div class="card-modern p-3 h-100"><div class="small text-secondary">Resteraient sans équipe</div><div class="h3 fw-bold mb-0">{{ plan.remaining_count }}</div></div></div>
+    </div>
+    {% if plan.remaining_students %}<div class="alert alert-warning"><strong>Capacité insuffisante :</strong> ces étudiants n’ont pas été affectés dans la proposition.<div class="d-flex flex-wrap gap-2 mt-2">{% for student in plan.remaining_students %}<span class="badge rounded-pill bg-white text-dark border">{{ student.name }}</span>{% endfor %}</div></div>{% endif %}
+
+    <div class="d-grid gap-3">
+        {% for team in plan.recommendations %}
+        <section class="card-modern p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3"><div><h2 class="h5 fw-bold mb-1">{{ team.team_name }}</h2><div class="small text-secondary">Composition proposée : {{ team.current_count }} → {{ team.recommended_count }} / {{ team.max_members }} membres</div></div>{% if team.full %}<span class="badge rounded-pill bg-warning-subtle text-warning-emphasis">Capacité atteinte</span>{% endif %}</div>
+            {% if team.additions %}<div class="d-grid gap-2 mb-3">{% for member in team.additions %}<div class="border rounded-3 p-3"><div class="d-flex flex-wrap justify-content-between gap-2"><strong>{{ member.name }}</strong><span class="badge rounded-pill bg-primary bg-opacity-10 text-primary">Compatibilité {{ member.score }}%</span></div><ul class="small text-secondary mb-0 mt-2">{% for reason in member.reasons %}<li>{{ reason }}</li>{% endfor %}</ul></div>{% endfor %}</div>{% else %}<p class="small text-secondary">Aucune nouvelle affectation recommandée à cette équipe.</p>{% endif %}
+            <div class="d-flex flex-wrap gap-2 small"><strong>À compléter :</strong>{% for skill in team.missing_skills %}<span class="badge rounded-pill bg-danger-subtle text-danger-emphasis">Compétence : {{ skill }}</span>{% endfor %}{% for role in team.missing_roles %}<span class="badge rounded-pill bg-warning-subtle text-warning-emphasis">Rôle : {{ role }}</span>{% endfor %}{% if not team.missing_skills and not team.missing_roles %}<span class="text-success">Aucun manque prioritaire détecté</span>{% endif %}</div>
+        </section>
+        {% empty %}<section class="card-modern p-4 text-secondary">Aucune équipe n’est disponible pour cette édition.</section>{% endfor %}
+    </div>
+
+    {% if plan.assignments %}<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4 p-3 rounded-3 border bg-body-tertiary"><div><strong>Validation organisateur</strong><div class="small text-secondary">Vérifiez les compositions et les rôles manquants avant d’enregistrer les affectations.</div></div><form method="post" onsubmit="return confirm('Valider cette composition et enregistrer toutes les affectations proposées ?');">{% csrf_token %}<input type="hidden" name="action" value="apply"><button class="btn btn-success rounded-pill px-4"><i class="bi bi-check2-circle me-1"></i>Valider la composition</button></form></div>{% endif %}
+    {% else %}
+    <div class="card-modern p-5 text-center"><div class="display-5 text-primary mb-2"><i class="bi bi-diagram-3"></i></div><h2 class="h5 fw-bold">Préparez une proposition d’équipe</h2><p class="text-secondary mb-0">Le moteur analysera les profils sans équipe et les places disponibles, puis expliquera les affectations suggérées.</p></div>
+    {% endif %}
+</div>
+{% endblock %}

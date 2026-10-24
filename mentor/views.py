@@ -11,7 +11,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from accounts.decorators import role_required
-from student.models import MentorRequest, Notification, Submission, Team
+from student.models import Announcement, Hackathon, MentorRequest, Notification, Submission, Team
 
 from .forms import (EvaluationForm, MentoringSessionForm, RequestFilterForm, ResolveRequestForm, TeamFilterForm,
                     TransferRequestForm)
@@ -97,7 +97,14 @@ def dashboard(request):
         {'label': 'Évaluations rédigées', 'value': MentorEvaluation.objects.filter(mentor=mentor).count(),
          'icon': 'bi-pencil-square', 'color': 'accent'},
     ]
+    # Annonces de l'organisation destinées aux mentors (fonctionnalité du module admin).
+    hackathon = Hackathon.objects.filter(is_active=True).order_by('-starts_at').first()
+    recent_announcements = hackathon.announcements.filter(
+        audience__in=(Announcement.Audience.ALL, Announcement.Audience.MENTORS), is_draft=False,
+    ).filter(Q(scheduled_at__isnull=True) | Q(scheduled_at__lte=timezone.now())).order_by('-published_at')[:3]         if hackathon else Announcement.objects.none()
+
     context = {
+        'recent_announcements': recent_announcements,
         'stats': stats,
         'pending_count': stats[1]['value'],
         'urgent_requests': urgent_requests,
