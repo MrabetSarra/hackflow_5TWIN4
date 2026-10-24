@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% load static mentor_tags %}
 
+{% block body_class %}mentor-space{% endblock %}
+
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/mentor.css' %}?v=3">{% endblock %}
+
 {% block layout %}
 {% mentor_counts as mentor_nav %}
 <div class="dashboard-wrapper">
@@ -100,8 +104,9 @@
 
                 <!-- Menu Profil -->
                 <div class="dropdown">
-                    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Menu du profil">
+                    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-expanded="false">
                         <span class="rounded-circle bg-secondary bg-opacity-10 text-secondary d-inline-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px;">{{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}</span>
+                        <span class="visually-hidden">Menu du profil</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2">
                         <li><h6 class="dropdown-header">{{ request.user.get_full_name|default:request.user.username }}</h6></li>

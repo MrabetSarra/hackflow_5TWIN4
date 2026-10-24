@@ -75,7 +75,7 @@
                     <article class="p-3 rounded-3 border card-modern-hoverable">
                         <div class="d-flex justify-content-between align-items-start mb-2 gap-2">
                             <div>
-                                <span class="badge bg-{{ req.urgency_color }} rounded-pill me-2">{{ req.get_urgency_display }}</span>
+                                <span class="badge text-bg-{{ req.urgency_color }} rounded-pill me-2">{{ req.get_urgency_display }}</span>
                                 <strong class="text-body">{{ req.team.name|default:"Sans équipe" }}</strong>
                                 {% if req.team.table_number %}<span class="text-body-secondary small ms-1">(Table {{ req.team.table_number }})</span>{% endif %}
                             </div>

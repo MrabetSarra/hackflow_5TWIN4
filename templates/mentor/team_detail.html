@@ -54,7 +54,7 @@
                     {% for req in requests %}
                     <li class="p-3 border rounded-3 d-flex justify-content-between align-items-center gap-2">
                         <div>
-                            <span class="badge bg-{{ req.urgency_color }} rounded-pill me-1">{{ req.get_urgency_display }}</span>
+                            <span class="badge text-bg-{{ req.urgency_color }} rounded-pill me-1">{{ req.get_urgency_display }}</span>
                             <strong class="small">{{ req.subject }}</strong>
                             <div class="small text-body-secondary">{{ req.ticket_id }} • il y a {{ req.created_at|timesince }}{% if req.mentor %} • {{ req.mentor.get_full_name|default:req.mentor.username }}{% endif %}</div>
                         </div>

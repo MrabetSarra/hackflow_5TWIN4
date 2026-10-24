@@ -276,6 +276,36 @@ class TriageViewTests(MentorViewsTestBase):
         self.assertContains(response, '0,500')
 
 
+class SeedMentorCommandTests(TestCase):
+    def test_seed_is_complete_and_idempotent(self):
+        from .models import MentorAssignment, MentorEvaluation, MentoringSession
+        call_command('seed_mentor', stdout=StringIO())
+        counts = (get_user_model().objects.count(), MentorRequest.objects.count(), MentoringSession.objects.count(),
+                  MentorEvaluation.objects.count(), MentorAssignment.objects.count())
+        call_command('seed_mentor', stdout=StringIO())
+        self.assertEqual(counts, (get_user_model().objects.count(), MentorRequest.objects.count(),
+                                  MentoringSession.objects.count(), MentorEvaluation.objects.count(),
+                                  MentorAssignment.objects.count()))
+        marc = get_user_model().objects.get(username='marc.dubois')
+        self.assertTrue(marc.check_password('HackFlow2026!'))
+        self.assertEqual(get_user_model().objects.filter(role='mentor').count(), 4)
+        self.assertGreaterEqual(MentorRequest.objects.filter(status=MentorRequest.Status.PENDING).count(), 5)
+        shared = MentorEvaluation.objects.get(mentor=marc, submission__team__name='EcoTrack')
+        self.assertTrue(shared.is_shared)
+        self.assertEqual(shared.scores.count(), 4)
+
+        self.client.force_login(marc)
+        for name in ('mentor:dashboard', 'mentor:teams_list', 'mentor:sessions_list', 'mentor:submissions',
+                     'mentor:evaluations'):
+            with self.subTest(page=name):
+                self.assertEqual(self.client.get(reverse(name)).status_code, 200)
+
+    def test_seed_refuses_role_conflict(self):
+        get_user_model().objects.create_user(username='sarah.benali', password='x-Strong-Pass-1', role='student')
+        with self.assertRaises(CommandError):
+            call_command('seed_mentor', stdout=StringIO())
+
+
 class EvaluateTriageCommandTests(TestCase):
     def test_command_writes_reports(self):
         dataset = [
