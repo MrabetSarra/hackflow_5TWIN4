@@ -19,6 +19,9 @@
                 {% if team.table_number %} • Table {{ team.table_number }}{% endif %}{% if team.room %} ({{ team.room }}){% endif %}
             </p>
         </div>
+        <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'mentor:session_create' %}?team={{ team.pk }}" class="btn btn-outline-primary rounded-pill px-3"><i class="bi bi-calendar-plus me-1" aria-hidden="true"></i>Planifier une session</a>
+        {% if submission %}<a href="{% url 'mentor:evaluation_create' submission.pk %}" class="btn btn-outline-primary rounded-pill px-3"><i class="bi bi-pencil-square me-1" aria-hidden="true"></i>Évaluer la soumission</a>{% endif %}
         <form method="post" action="{% if is_followed %}{% url 'mentor:team_unfollow' team.pk %}{% else %}{% url 'mentor:team_follow' team.pk %}{% endif %}">
             {% csrf_token %}
             <input type="hidden" name="next" value="{{ request.get_full_path }}">
@@ -28,6 +31,7 @@
             <button type="submit" class="btn btn-primary rounded-pill px-3"><i class="bi bi-star-fill me-1" aria-hidden="true"></i>Suivre cette équipe</button>
             {% endif %}
         </form>
+        </div>
     </div>
 
     <div class="row g-4">

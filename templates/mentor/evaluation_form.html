@@ -1,0 +1,99 @@
+{% extends "layouts/base_mentor.html" %}
+
+{% block title %}Évaluer {{ submission.team.name }} - Espace Mentor - HackFlow{% endblock %}
+
+{% block mentor_content %}
+<div class="container-fluid px-0" style="max-width: 980px;">
+    <nav aria-label="Fil d'Ariane" class="mb-3">
+        <ol class="breadcrumb small mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'mentor:submissions' %}">Soumissions</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{% if is_new %}Évaluer{% else %}Modifier l'évaluation{% endif %}</li>
+        </ol>
+    </nav>
+
+    <h1 class="h2 fw-bold text-body mb-1">{% if is_new %}Évaluer{% else %}Modifier l'évaluation de{% endif %} {{ submission.team.name }}</h1>
+    <p class="text-body-secondary small mb-4">{{ submission.project_name|default:submission.team.project_name }} • Jalon : {{ submission.milestone.title }}</p>
+
+    <!-- Rappel de la soumission -->
+    <section class="card-modern p-4 mb-4" aria-labelledby="recap-title">
+        <h2 id="recap-title" class="h6 fw-bold text-body mb-2">Rappel de la soumission</h2>
+        <p class="small text-body-secondary mb-2">{{ submission.project_summary|default:submission.description|default:"Pas de description fournie."|linebreaksbr }}</p>
+        <div class="d-flex flex-wrap gap-3 small">
+            {% if submission.github_url %}<a href="{{ submission.github_url }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-github me-1" aria-hidden="true"></i>Dépôt<span class="visually-hidden"> (nouvel onglet)</span></a>{% endif %}
+            {% if submission.demo_url %}<a href="{{ submission.demo_url }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-display me-1" aria-hidden="true"></i>Démo<span class="visually-hidden"> (nouvel onglet)</span></a>{% endif %}
+            {% if submission.video_url %}<a href="{{ submission.video_url }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-play-btn me-1" aria-hidden="true"></i>Vidéo<span class="visually-hidden"> (nouvel onglet)</span></a>{% endif %}
+            {% if submission.file %}<a href="{% url 'student:download_submission' submission.pk %}"><i class="bi bi-file-earmark-zip me-1" aria-hidden="true"></i>ZIP</a>{% endif %}
+        </div>
+    </section>
+
+    <form method="post" id="evaluation-form">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger" role="alert">{% for error in form.non_field_errors %}{{ error }}{% endfor %}</div>
+        {% endif %}
+
+        <fieldset class="card-modern p-4 mb-4">
+            <legend class="h5 fw-bold text-body mb-3">Grille de jugement</legend>
+            {% for criterion, score_field, comment_field in form.criterion_rows %}
+            <div class="row g-3 align-items-start py-3 {% if not forloop.last %}border-bottom{% endif %}">
+                <div class="col-md-5">
+                    <label for="{{ score_field.id_for_label }}" class="form-label fw-semibold mb-1">{{ criterion.name }} <span class="badge bg-primary-subtle text-primary">{{ criterion.weight }} %</span></label>
+                    {% if criterion.description %}<p class="small text-body-secondary mb-0" id="{{ score_field.id_for_label }}_desc">{{ criterion.description }}</p>{% endif %}
+                </div>
+                <div class="col-md-2">
+                    <div class="input-group">
+                        {{ score_field }}
+                        <span class="input-group-text">/ {{ criterion.max_score }}</span>
+                    </div>
+                    {% for error in score_field.errors %}<div id="{{ score_field.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-md-5">
+                    <label for="{{ comment_field.id_for_label }}" class="visually-hidden">{{ comment_field.label }}</label>
+                    {{ comment_field }}
+                </div>
+            </div>
+            {% endfor %}
+            <div class="d-flex justify-content-end align-items-center gap-2 pt-3">
+                <span class="text-body-secondary small">Total pondéré :</span>
+                <output id="weighted-total" class="h4 fw-bold font-mono mb-0" for="evaluation-form" aria-live="polite">—</output>
+                <span class="text-body-secondary">/ 20</span>
+            </div>
+        </fieldset>
+
+        <section class="card-modern p-4 mb-4" aria-label="Appréciation générale">
+            <div class="row g-3">
+                <div class="col-md-4">{% include "mentor/_field.html" with field=form.pitch_readiness %}</div>
+                <div class="col-md-8">{% include "mentor/_field.html" with field=form.general_comment %}</div>
+            </div>
+        </section>
+
+        <div class="d-flex justify-content-end gap-2">
+            <a href="{% if evaluation %}{% url 'mentor:evaluation_detail' evaluation.pk %}{% else %}{% url 'mentor:submissions' %}{% endif %}" class="btn btn-light border">Annuler</a>
+            <button type="submit" class="btn btn-primary">Enregistrer l'évaluation</button>
+        </div>
+    </form>
+</div>
+
+<script>
+// Aperçu du total /20 pendant la saisie (le calcul officiel reste fait côté serveur).
+(function () {
+    const inputs = document.querySelectorAll('#evaluation-form .js-score');
+    const output = document.getElementById('weighted-total');
+    function refresh() {
+        let weighted = 0, weights = 0;
+        inputs.forEach(function (input) {
+            const value = parseFloat(input.value);
+            if (Number.isNaN(value)) { return; }
+            const weight = parseFloat(input.dataset.weight), max = parseFloat(input.dataset.max);
+            weighted += Math.min(Math.max(value, 0), max) / max * weight;
+            weights += weight;
+        });
+        output.textContent = weights
+            ? (weighted / weights * 20).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+            : '—';
+    }
+    inputs.forEach(function (input) { input.addEventListener('input', refresh); });
+    refresh();
+})();
+</script>
+{% endblock %}
