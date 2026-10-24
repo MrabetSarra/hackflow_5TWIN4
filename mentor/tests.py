@@ -5,9 +5,10 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.test import TestCase
+from django.urls import reverse
 from django.utils import timezone
 
-from student.models import Hackathon, MentorRequest, Milestone, Submission, Team
+from student.models import Hackathon, MentorRequest, Milestone, Notification, Submission, Team, TeamMembership
 
 from .models import (DEFAULT_CRITERIA, Criterion, EvaluationScore, MentorAssignment, MentorEvaluation,
                      MentoringSession, RequestTriage)
@@ -175,3 +176,161 @@ class RequestTriageTests(TestCase):
         triage.corrected_urgency = 'blocking'
         self.assertEqual(triage.final_category, 'DevOps')
         self.assertEqual(triage.final_urgency, 'blocking')
+
+
+class MentorViewsTestBase(TestCase):
+    def setUp(self):
+        self.mentor, self.student, self.team, self.other_team, self.submission = make_fixtures()
+        self.other_mentor = get_user_model().objects.create_user(
+            username='mentor-2', password='Strong-Test-Pass-428!', role='mentor')
+        TeamMembership.objects.create(team=self.team, user=self.student)
+        self.pending = MentorRequest.objects.create(
+            student=self.student, team=self.team, subject='Docker crash', category='DevOps',
+            description='Le conteneur plante.', urgency=MentorRequest.Urgency.BLOCKING)
+        self.client.force_login(self.mentor)
+
+    def take(self, request_obj, user=None):
+        if user:
+            self.client.force_login(user)
+        return self.client.post(reverse('mentor:request_take', args=[request_obj.pk]))
+
+
+class MentorAccessTests(MentorViewsTestBase):
+    pages = ['mentor:dashboard', 'mentor:teams_list', 'mentor:help_requests']
+
+    def test_anonymous_is_redirected_to_login(self):
+        self.client.logout()
+        for name in self.pages:
+            with self.subTest(page=name):
+                response = self.client.get(reverse(name))
+                self.assertEqual(response.status_code, 302)
+                self.assertIn(reverse('accounts:login'), response.url)
+
+    def test_student_gets_403_everywhere(self):
+        self.client.force_login(self.student)
+        for name in self.pages:
+            with self.subTest(page=name):
+                self.assertEqual(self.client.get(reverse(name)).status_code, 403)
+        self.assertEqual(self.take(self.pending).status_code, 403)
+        self.pending.refresh_from_db()
+        self.assertEqual(self.pending.status, MentorRequest.Status.PENDING)
+
+    def test_actions_reject_get(self):
+        for name, arg in (('mentor:request_take', self.pending.pk), ('mentor:team_follow', self.team.pk)):
+            with self.subTest(action=name):
+                self.assertEqual(self.client.get(reverse(name, args=[arg])).status_code, 405)
+
+    def test_unknown_team_returns_404(self):
+        self.assertEqual(self.client.get(reverse('mentor:team_detail', args=[999999])).status_code, 404)
+
+
+class MentorDashboardTests(MentorViewsTestBase):
+    def test_dashboard_shows_real_data(self):
+        start = timezone.localtime().replace(hour=23, minute=0, second=0, microsecond=0)
+        MentoringSession.objects.create(mentor=self.mentor, team=self.team, topic='Point API',
+                                        starts_at=start, ends_at=start + timedelta(minutes=30))
+        response = self.client.get(reverse('mentor:dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Docker crash')
+        self.assertContains(response, 'Point API')
+        self.assertEqual(response.context['pending_count'], 1)
+
+
+class MentorTeamsTests(MentorViewsTestBase):
+    def test_list_and_filter_mine(self):
+        response = self.client.get(reverse('mentor:teams_list'))
+        self.assertContains(response, 'EcoTrack')
+        self.assertContains(response, 'FinEd')
+        MentorAssignment.follow(self.mentor, self.team)
+        response = self.client.get(reverse('mentor:teams_list'), {'mine': 'on'})
+        self.assertContains(response, 'EcoTrack')
+        self.assertNotContains(response, 'FinEd')
+
+    def test_search(self):
+        response = self.client.get(reverse('mentor:teams_list'), {'q': 'fin'})
+        self.assertContains(response, 'FinEd')
+        self.assertNotContains(response, 'EcoTrack')
+
+    def test_follow_and_unfollow(self):
+        self.client.post(reverse('mentor:team_follow', args=[self.team.pk]))
+        self.assertTrue(MentorAssignment.is_following(self.mentor, self.team))
+        self.client.post(reverse('mentor:team_unfollow', args=[self.team.pk]))
+        self.assertFalse(MentorAssignment.is_following(self.mentor, self.team))
+
+    def test_follow_ignores_external_next_url(self):
+        response = self.client.post(reverse('mentor:team_follow', args=[self.team.pk]),
+                                    {'next': 'https://evil.example.com/'})
+        self.assertEqual(response.url, reverse('mentor:teams_list'))
+
+    def test_team_detail(self):
+        response = self.client.get(reverse('mentor:team_detail', args=[self.team.pk]))
+        self.assertContains(response, 'EcoTrack')
+        self.assertContains(response, 'Docker crash')
+
+
+class HelpRequestActionTests(MentorViewsTestBase):
+    def test_take_assigns_mentor_follows_team_and_notifies(self):
+        self.take(self.pending)
+        self.pending.refresh_from_db()
+        self.assertEqual(self.pending.status, MentorRequest.Status.ACCEPTED)
+        self.assertEqual(self.pending.mentor, self.mentor)
+        self.assertEqual(MentorAssignment.objects.get(mentor=self.mentor, team=self.team).source,
+                         MentorAssignment.Source.AUTO)
+        self.assertTrue(Notification.objects.filter(user=self.student, title='Mentor en route').exists())
+
+    def test_cannot_take_already_taken_ticket(self):
+        self.take(self.pending)
+        self.take(self.pending, user=self.other_mentor)
+        self.pending.refresh_from_db()
+        self.assertEqual(self.pending.mentor, self.mentor)
+
+    def test_resolve_requires_note(self):
+        self.take(self.pending)
+        self.client.post(reverse('mentor:request_resolve', args=[self.pending.pk]), {'resolution_note': ''})
+        self.pending.refresh_from_db()
+        self.assertEqual(self.pending.status, MentorRequest.Status.ACCEPTED)
+
+    def test_resolve_own_ticket(self):
+        self.take(self.pending)
+        self.client.post(reverse('mentor:request_resolve', args=[self.pending.pk]),
+                         {'resolution_note': 'Variables injectées via le fichier .env'})
+        self.pending.refresh_from_db()
+        self.assertEqual(self.pending.status, MentorRequest.Status.RESOLVED)
+        self.assertIn('.env', self.pending.resolution_note)
+
+    def test_other_mentor_cannot_resolve_or_transfer_my_ticket(self):
+        self.take(self.pending)
+        self.client.force_login(self.other_mentor)
+        resolve = self.client.post(reverse('mentor:request_resolve', args=[self.pending.pk]),
+                                   {'resolution_note': 'Je prends ce ticket'})
+        transfer = self.client.post(reverse('mentor:request_transfer', args=[self.pending.pk]),
+                                    {'mentor': self.other_mentor.pk})
+        self.assertEqual(resolve.status_code, 404)
+        self.assertEqual(transfer.status_code, 404)
+        self.pending.refresh_from_db()
+        self.assertEqual(self.pending.status, MentorRequest.Status.ACCEPTED)
+        self.assertEqual(self.pending.mentor, self.mentor)
+
+    def test_transfer_to_other_mentor(self):
+        self.take(self.pending)
+        self.client.post(reverse('mentor:request_transfer', args=[self.pending.pk]),
+                         {'mentor': self.other_mentor.pk})
+        self.pending.refresh_from_db()
+        self.assertEqual(self.pending.mentor, self.other_mentor)
+        self.assertTrue(MentorAssignment.is_following(self.other_mentor, self.team))
+
+    def test_cannot_transfer_to_self_or_student(self):
+        self.take(self.pending)
+        for target in (self.mentor, self.student):
+            with self.subTest(target=target.username):
+                self.client.post(reverse('mentor:request_transfer', args=[self.pending.pk]), {'mentor': target.pk})
+                self.pending.refresh_from_db()
+                self.assertEqual(self.pending.mentor, self.mentor)
+
+    def test_queue_views(self):
+        self.assertContains(self.client.get(reverse('mentor:help_requests')), 'Docker crash')
+        self.take(self.pending)
+        self.assertNotContains(self.client.get(reverse('mentor:help_requests')), 'Docker crash')
+        self.assertContains(self.client.get(reverse('mentor:help_requests'), {'view': 'mine'}), 'Docker crash')
+        filtered = self.client.get(reverse('mentor:help_requests'), {'view': 'mine', 'urgency': 'normal'})
+        self.assertNotContains(filtered, 'Docker crash')
