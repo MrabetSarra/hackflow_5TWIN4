@@ -179,7 +179,7 @@ coverage xml -o coverage.xml
 coverage html
 ```
 
-The HTML report is written to `htmlcov/`; `coverage.xml` is the Cobertura report imported by SonarQube. CI enforces 70% coverage and uploads both reports. To publish analysis from GitHub Actions, configure the `SONAR_TOKEN` repository secret and `SONAR_HOST_URL` repository variable for your SonarQube Server; the scan runs after tests when the token is present.
+The HTML report is written to `htmlcov/`; `coverage.xml` is the Cobertura report imported by SonarQube. CI enforces 80% coverage and uploads both reports. To publish analysis from GitHub Actions, configure the `SONAR_TOKEN` repository secret and the absolute `SONAR_HOST_URL` repository variable (for example, `https://sonarqube.example.com`). The workflow validates the host URL before starting the scan.
 
 ## Environment variables
 
