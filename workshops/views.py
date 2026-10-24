@@ -339,8 +339,9 @@ def workshop_close(request, pk):
 def book(request, pk):
     ws = get_object_or_404(Workshop, pk=pk)
 
-    if not ws.is_open:
-        messages.error(request, 'Les inscriptions pour cet atelier sont fermées.')
+    closed_reason = ws.booking_closed_reason
+    if closed_reason:
+        messages.error(request, f'Réservation impossible : {closed_reason.lower()}.')
         return redirect('workshops:detail', slug=ws.slug)
 
     try:

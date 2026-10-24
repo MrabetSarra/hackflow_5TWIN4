@@ -164,6 +164,41 @@ class Workshop(models.Model):
         return self.ends_at < timezone.now()
 
     @property
+    def has_started(self):
+        """True dès l'heure de début (comparaison date + heure système)."""
+        return self.starts_at <= timezone.now()
+
+    @property
+    def is_ongoing(self):
+        now = timezone.now()
+        return self.starts_at <= now < self.ends_at
+
+    @property
+    def booking_closed_reason(self):
+        """
+        Raison pour laquelle la réservation est impossible.
+
+        Retourne '' si l'atelier est réservable. Comparaison faite sur les
+        datetime complets (donc le jour même, à l'heure près).
+        """
+        now = timezone.now()
+
+        if self.mode == self.Mode.RECORDED:
+            if not self.is_open:
+                return 'Inscriptions fermées'
+            if self.available_until and self.available_until < now:
+                return 'Replay expiré'
+            return ''
+
+        if self.is_past:
+            return 'Atelier terminé'
+        if not self.is_open:
+            return 'Inscriptions fermées'
+        if self.has_started:
+            return 'Atelier commencé'
+        return ''
+
+    @property
     def is_replay_available(self):
         if self.mode != Workshop.Mode.RECORDED:
             return False

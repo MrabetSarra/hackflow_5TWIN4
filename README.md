@@ -99,6 +99,7 @@ static/             Styles, scripts et identité visuelle
 Module autonome de formation, utilisable en **présentiel**, en **ligne (live)** ou en **replay vidéo**. Il s'appuie sur six modèles : `Workshop`, `Booking`, `Certificate`, `Badge`, `BadgeAward` et `WorkshopActivity`.
 
 - **Catalogue et réservation** : filtres (mode, niveau, places), liste d'attente automatique, détection de conflit d'horaire, promotion du premier inscrit en attente après une annulation.
+- **États temporels** : comparaison des dates/heures côté serveur ; le bouton « Réserver » est désactivé avec la raison exacte (atelier terminé, commencé, inscriptions fermées, replay expiré) et un compte à rebours en direct (jours/heures/minutes/secondes) s'affiche avant le début.
 - **Certificats vérifiables** : PDF généré avec `fpdf2`, QR code de vérification, code unique consultable publiquement sur `/workshops/verify/<code>/`.
 - **Badges** : cinq badges (premier atelier, assiduité, explorateur de modes, etc.) attribués automatiquement après un certificat.
 - **Trois briques d'IA, 100 % hors ligne** :
@@ -120,7 +121,7 @@ La commande est idempotente : elle crée les badges, cinq ateliers passés (hist
 python manage.py test workshops
 ```
 
-18 tests couvrent le CRUD, les permissions, les réservations, la liste d'attente, les conflits d'horaire, le check-in QR, les certificats, les badges et les recommandations.
+21 tests couvrent le CRUD, les permissions, les réservations, la liste d'attente, les conflits d'horaire, les états temporels (terminé / commencé / à venir), le check-in QR, les certificats, les badges et les recommandations.
 
 ## Pistes d’évolution
 

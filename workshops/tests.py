@@ -21,6 +21,9 @@ workshops/tests.py
  16.  Double annulation → pas de double promotion
  17.  Tri du catalogue par note
  18.  Un étudiant ne peut pas valider sa propre présence
+ 19.  Atelier passé → réservation impossible
+ 20.  Atelier à venir → compte à rebours affiché
+ 21.  Atelier commencé → réservation impossible
 """
 
 from datetime import timedelta
@@ -505,4 +508,49 @@ class WorkshopCrudTests(TestCase):
         self.assertEqual(booking.status, Booking.Status.CONFIRMED)
         self.assertFalse(
             Certificate.objects.filter(workshop=ws, user=self.student).exists()
+        )
+
+    # ------------------------------------------------------------------
+    # Test 19 — Atelier passé : bouton désactivé + réservation refusée
+    # ------------------------------------------------------------------
+    def test_19_past_workshop_cannot_be_booked(self):
+        ws = _make_workshop(self.admin, starts_offset_h=-3, duration_h=2)
+        self.client.login(username='student_user', password='Test1234!')
+
+        response = self.client.get(
+            reverse('workshops:detail', kwargs={'slug': ws.slug}))
+        self.assertContains(response, 'Atelier terminé')
+        self.assertNotContains(response, 'Réserver ma place')
+
+        self.client.post(reverse('workshops:book', kwargs={'pk': ws.pk}))
+        self.assertFalse(
+            Booking.objects.filter(workshop=ws, user=self.student).exists()
+        )
+
+    # ------------------------------------------------------------------
+    # Test 20 — Atelier à venir : compte à rebours affiché
+    # ------------------------------------------------------------------
+    def test_20_upcoming_workshop_shows_countdown(self):
+        ws = _make_workshop(self.admin, starts_offset_h=5)
+        self.client.login(username='student_user', password='Test1234!')
+
+        response = self.client.get(
+            reverse('workshops:detail', kwargs={'slug': ws.slug}))
+        self.assertContains(response, 'data-workshop-countdown')
+        self.assertContains(response, 'Réserver ma place')
+
+    # ------------------------------------------------------------------
+    # Test 21 — Atelier commencé mais pas terminé : réservation refusée
+    # ------------------------------------------------------------------
+    def test_21_started_workshop_cannot_be_booked(self):
+        ws = _make_workshop(self.admin, starts_offset_h=-1, duration_h=2)
+        self.client.login(username='student_user', password='Test1234!')
+
+        response = self.client.get(
+            reverse('workshops:detail', kwargs={'slug': ws.slug}))
+        self.assertContains(response, 'Atelier commencé')
+
+        self.client.post(reverse('workshops:book', kwargs={'pk': ws.pk}))
+        self.assertFalse(
+            Booking.objects.filter(workshop=ws, user=self.student).exists()
         )
