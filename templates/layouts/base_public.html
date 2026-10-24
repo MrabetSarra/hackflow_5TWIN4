@@ -34,10 +34,10 @@
                 <div class="d-flex align-items-center gap-2">
                     {% include "components/theme_toggle.html" %}
                     <a href="{% url 'accounts:login' %}" class="btn btn-glass px-3 py-2">
-                        <i class="bi bi-box-arrow-in-right me-1"></i> Connexion
+                        <i aria-hidden="true" class="bi bi-box-arrow-in-right me-1"></i> Connexion
                     </a>
                     <a href="{% url 'accounts:register' %}" class="btn btn-primary px-3 py-2 shadow-sm">
-                        <i class="bi bi-person-plus me-1"></i> Inscription
+                        <i aria-hidden="true" class="bi bi-person-plus me-1"></i> Inscription
                     </a>
                 </div>
             </div>
@@ -45,7 +45,7 @@
     </header>
 
     <!-- Contenu Principal Public -->
-    <main class="flex-grow-1">
+    <main id="main-content" class="flex-grow-1">
         {% block public_content %}{% endblock %}
     </main>
 
@@ -56,7 +56,7 @@
                 <div class="col-lg-4">
                     <div class="d-flex align-items-center gap-2 mb-3">
                         <span class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-3 p-2" style="width: 32px; height: 32px;">
-                            <i class="bi bi-lightning-charge-fill"></i>
+                            <i aria-hidden="true" class="bi bi-lightning-charge-fill"></i>
                         </span>
                         <span class="fs-4 fw-bold text-body">Hack<span class="text-gradient-primary">Flow</span></span>
                     </div>
@@ -73,18 +73,18 @@
                 <div class="col-6 col-lg-2">
                     <h6 class="text-body fw-bold mb-3">Espaces Démo</h6>
                     <ul class="list-unstyled small d-flex flex-column gap-2">
-                        <li><a href="{% url 'student:dashboard' %}" class="text-decoration-none text-body-secondary"><i class="bi bi-chevron-right text-primary me-1"></i>Espace Étudiant</a></li>
-                        <li><a href="{% url 'mentor:dashboard' %}" class="text-decoration-none text-body-secondary"><i class="bi bi-chevron-right text-primary me-1"></i>Espace Mentor</a></li>
-                        <li><a href="{% url 'dashboard_admin:dashboard' %}" class="text-decoration-none text-body-secondary"><i class="bi bi-chevron-right text-primary me-1"></i>Cockpit Admin</a></li>
+                        <li><a href="{% url 'student:dashboard' %}" class="text-decoration-none text-body-secondary"><i aria-hidden="true" class="bi bi-chevron-right text-primary me-1"></i>Espace Étudiant</a></li>
+                        <li><a href="{% url 'mentor:dashboard' %}" class="text-decoration-none text-body-secondary"><i aria-hidden="true" class="bi bi-chevron-right text-primary me-1"></i>Espace Mentor</a></li>
+                        <li><a href="{% url 'dashboard_admin:dashboard' %}" class="text-decoration-none text-body-secondary"><i aria-hidden="true" class="bi bi-chevron-right text-primary me-1"></i>Cockpit Admin</a></li>
                     </ul>
                 </div>
 
                 <div class="col-6 col-lg-3">
                     <h6 class="text-body fw-bold mb-3">Accès Rapide</h6>
                     <ul class="list-unstyled small d-flex flex-column gap-2">
-                        <li><a href="{% url 'accounts:login' %}" class="text-decoration-none text-body-secondary"><i class="bi bi-chevron-right text-primary me-1"></i>Se connecter</a></li>
-                        <li><a href="{% url 'accounts:register' %}" class="text-decoration-none text-body-secondary"><i class="bi bi-chevron-right text-primary me-1"></i>Créer un compte</a></li>
-                        <li><a href="{% url 'core:landing' %}#faq" class="text-decoration-none text-body-secondary"><i class="bi bi-chevron-right text-primary me-1"></i>Foire aux questions</a></li>
+                        <li><a href="{% url 'accounts:login' %}" class="text-decoration-none text-body-secondary"><i aria-hidden="true" class="bi bi-chevron-right text-primary me-1"></i>Se connecter</a></li>
+                        <li><a href="{% url 'accounts:register' %}" class="text-decoration-none text-body-secondary"><i aria-hidden="true" class="bi bi-chevron-right text-primary me-1"></i>Créer un compte</a></li>
+                        <li><a href="{% url 'core:landing' %}#faq" class="text-decoration-none text-body-secondary"><i aria-hidden="true" class="bi bi-chevron-right text-primary me-1"></i>Foire aux questions</a></li>
                     </ul>
                 </div>
 
@@ -92,11 +92,11 @@
                     <h6 class="text-body fw-bold mb-3">Hackathon Info</h6>
                     <div class="p-3 rounded-3 bg-body-tertiary border small">
                         <div class="d-flex align-items-center gap-2 mb-2 text-body">
-                            <i class="bi bi-calendar-event text-primary"></i>
+                            <i aria-hidden="true" class="bi bi-calendar-event text-primary"></i>
                             <strong>HackFlow Annual 2026</strong>
                         </div>
                         <p class="mb-1 text-body-secondary">Campus Universitaire & En Ligne</p>
-                        <p class="mb-0 text-success"><i class="bi bi-record-fill me-1"></i>Inscriptions ouvertes</p>
+                        <p class="mb-0 text-success"><i aria-hidden="true" class="bi bi-record-fill me-1"></i>Inscriptions ouvertes</p>
                     </div>
                 </div>
             </div>

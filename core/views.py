@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -12,6 +13,35 @@ def csrf_failure(request, reason=''):
     response = render(request, 'core/csrf_failure.html', {'retry_url': retry_url}, status=403)
     response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
     return response
+
+
+def healthz(request):
+    """Lightweight process health endpoint; deliberately does not query the DB."""
+    return JsonResponse({'status': 'ok'})
+
+
+def error_page(request, exception=None, *, status=500):
+    role_destinations = {
+        'student': ('layouts/base_student.html', 'student:dashboard'),
+        'mentor': ('layouts/base_mentor.html', 'mentor:dashboard'),
+        'admin': ('layouts/base_admin.html', 'dashboard_admin:dashboard'),
+    }
+    role = getattr(getattr(request, 'user', None), 'role', None)
+    layout, dashboard_url = role_destinations.get(role, ('layouts/base_public.html', 'core:landing'))
+    template = {403: '403.html', 404: '404.html', 500: '500.html'}.get(status, '500.html')
+    return render(request, template, {'layout_template': layout, 'dashboard_url': dashboard_url}, status=status)
+
+
+def error_403(request, exception=None):
+    return error_page(request, exception, status=403)
+
+
+def error_404(request, exception=None):
+    return error_page(request, exception, status=404)
+
+
+def error_500(request):
+    return error_page(request, status=500)
 
 def landing(request):
     """Build the public landing page from the current HackFlow records."""

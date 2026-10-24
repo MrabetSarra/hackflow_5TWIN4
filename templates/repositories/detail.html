@@ -1,0 +1,300 @@
+{% extends "layouts/base_student.html" %}
+{% load static %}
+{% block title %}{{ repository.name }} - HackFlow{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'repositories/repositories.css' %}?v={{ repositories_css_version }}">
+<style>
+/* Tab pill buttons — inline guarantee */
+.repo-tabs { display:flex !important; gap:.5rem !important; flex-wrap:wrap; margin-bottom:1.25rem !important; border-bottom:none !important; }
+.repo-tab {
+    display:inline-flex !important; align-items:center !important; gap:.35rem !important;
+    padding:.45rem 1rem !important; font-size:.875rem !important; font-weight:500 !important;
+    color:var(--hf-muted-text) !important; text-decoration:none !important;
+    border:1px solid var(--hf-card-border) !important; border-radius:999px !important;
+    background:var(--hf-card-bg) !important; white-space:nowrap !important;
+    transition:all .15s ease !important; line-height:1 !important;
+    border-bottom-color:var(--hf-card-border) !important;
+}
+.repo-tab:hover { color:var(--hf-primary) !important; border-color:var(--hf-primary) !important; background:rgba(99,102,241,.07) !important; }
+.repo-tab.active { color:#fff !important; background:var(--hf-primary) !important; border-color:var(--hf-primary) !important; font-weight:600 !important; box-shadow:0 2px 8px rgba(99,102,241,.35) !important; }
+</style>
+{% endblock %}
+{% block student_content %}
+<div class="container-fluid px-0 repository-page">
+    {% include "repositories/_messages.html" %}
+
+    <!-- ── Repo header ── -->
+    <div class="repo-header">
+        <div class="repo-header__breadcrumb">
+            <a href="{% url 'repositories:list' %}">Repositories</a>
+            <span class="text-body-secondary">/</span>
+            <span class="fw-semibold text-body">{{ repository.name }}</span>
+        </div>
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="repo-header__name"><h1 class="visually-hidden">{{ repository.name }}</h1>
+                <span>{{ repository.name }}</span>
+                <span class="repo-branch-badge">
+                    <i aria-hidden="true" class="bi bi-signpost-2-fill" style="font-size:.7rem;"></i>
+                    {{ branch }}
+                </span>
+            </div>
+            <!-- Action buttons (top-right, like GitHub) -->
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-sm btn-outline-secondary rounded-pill d-flex align-items-center gap-1"
+                   href="{% url 'repositories:download' repository.slug %}?branch={{ branch|urlencode }}">
+                    <i aria-hidden="true" class="bi bi-file-zip"></i><span class="d-none d-sm-inline">Download ZIP</span>
+                </a>
+                {% if can_write %}
+                    {% if branch in repository.protected_branches or branch == repository.default_branch %}
+                    <button class="btn btn-sm btn-outline-primary rounded-pill d-flex align-items-center gap-1"
+                            type="button" data-bs-toggle="collapse" data-bs-target="#branchCreate">
+                        <i aria-hidden="true" class="bi bi-plus-lg"></i><span class="d-none d-sm-inline">New branch to push</span>
+                    </button>
+                    {% else %}
+                    <a class="btn btn-sm btn-primary rounded-pill d-flex align-items-center gap-1"
+                       href="{% url 'repositories:push' repository.slug %}?branch={{ branch|urlencode }}">
+                        <i aria-hidden="true" class="bi bi-cloud-arrow-up"></i><span class="d-none d-sm-inline">Push to branch</span>
+                    </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        {% if repository.description %}
+        <p class="text-body-secondary small mt-1 mb-0">{{ repository.description }}</p>
+        {% endif %}
+    </div>
+
+    <!-- ── Tab nav ── -->
+    <nav class="repo-tabs mt-3">
+        <a class="repo-tab btn btn-sm rounded-pill d-inline-flex align-items-center gap-1 {% if not request.GET.view %}active btn-primary{% else %}btn-outline-secondary{% endif %}"
+           href="{% url 'repositories:detail' repository.slug %}?branch={{ branch|urlencode }}">
+            <i aria-hidden="true" class="bi bi-code-slash"></i>Code
+        </a>
+        <a class="repo-tab btn btn-sm btn-outline-secondary rounded-pill d-inline-flex align-items-center gap-1"
+           href="{% url 'repositories:history' repository.slug %}?branch={{ branch|urlencode }}">
+            <i aria-hidden="true" class="bi bi-clock-history"></i>History
+        </a>
+        <a class="repo-tab btn btn-sm btn-outline-secondary rounded-pill d-inline-flex align-items-center gap-1"
+           href="{% url 'repositories:compare' repository.slug %}">
+            <i aria-hidden="true" class="bi bi-arrow-left-right"></i>Compare
+        </a>
+        {% if can_write %}
+        <a class="repo-tab btn btn-sm btn-outline-secondary rounded-pill d-inline-flex align-items-center gap-1"
+           href="{% url 'repositories:merge_requests' repository.slug %}">
+            <i aria-hidden="true" class="bi bi-shuffle"></i>Merge requests
+            {% with count=repository.merge_requests.count %}
+            {% if count %}<span class="repo-tab-count badge rounded-pill bg-secondary-subtle text-secondary ms-1">{{ count }}</span>{% endif %}
+            {% endwith %}
+        </a>
+        {% endif %}
+    </nav>
+
+    <!-- ── Main layout: sidebar + content ── -->
+    <div class="row g-3 align-items-start">
+
+        <!-- ─ Left sidebar: branch list + file tree ─ -->
+        <div class="col-12 col-xl-3">
+
+            <!-- Branch selector card -->
+            <div class="card-modern mb-3">
+                <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+                    <span class="fw-semibold text-body small"><i aria-hidden="true" class="bi bi-diagram-2 text-primary me-1"></i>Branches</span>
+                    {% if can_write %}
+                    <button class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0" style="font-size:.75rem;" type="button"
+                            aria-label="Create a branch" data-bs-toggle="collapse" data-bs-target="#branchCreate">
+                        <i aria-hidden="true" class="bi bi-plus-lg"></i>
+                    </button>
+                    {% endif %}
+                </div>
+
+                {% if can_write %}
+                <form class="collapse p-3 border-bottom bg-body-tertiary" id="branchCreate" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add_branch">
+                    <p class="small text-body-secondary mb-2">The default branch stays protected — push to a new branch and open a merge request.</p>
+                    {% for field in branch_form %}
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold mb-1" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% for error in field.errors %}<div id="{{ field.id_for_label }}_errors" class="text-danger small">{{ error }}</div>{% endfor %}
+                    </div>
+                    {% endfor %}
+                    <button class="btn btn-primary btn-sm rounded-pill px-3" type="submit">Create branch</button>
+                </form>
+                {% endif %}
+
+                <!-- Branch form (branch picker) -->
+                <form method="get" class="p-2 border-bottom">
+                    <label class="visually-hidden" for="branch-selector">Switch branch</label>
+                    <select class="form-select form-select-sm" id="branch-selector" name="branch"
+                            onchange="this.form.submit()">
+                        {% for item in branches %}
+                        <option value="{{ item.name }}" {% if item.name == branch %}selected{% endif %}>{{ item.name }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+
+                <div class="p-1">
+                    {% for item in branches %}
+                    <div class="d-flex align-items-start justify-content-between gap-1 px-2 py-2 rounded-2
+                                {% if item.name == branch %}bg-primary bg-opacity-10{% endif %}">
+                        <div class="min-w-0">
+                            <a class="fw-semibold small text-decoration-none text-break
+                                      {% if item.name == branch %}text-primary{% else %}text-body{% endif %}"
+                               href="?branch={{ item.name|urlencode }}">
+                                <i aria-hidden="true" class="bi bi-diagram-2 me-1"></i>{{ item.name }}
+                            </a>
+                            {% if item.message %}
+                            <div class="small text-body-secondary text-truncate" style="font-size:.75rem;">{{ item.message|truncatechars:40 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex flex-column align-items-end gap-1 flex-shrink-0">
+                            {% if item.name == repository.default_branch or item.name in repository.protected_branches %}
+                            <span class="badge bg-warning-subtle text-warning-emphasis" style="font-size:.68rem;">protected</span>
+                            {% endif %}
+                            {% if is_captain and item.name != repository.default_branch %}
+                            <div class="d-flex gap-1">
+                                <form method="post">{% csrf_token %}
+                                    <input type="hidden" name="action" value="toggle_protection">
+                                    <input type="hidden" name="branch" value="{{ item.name }}">
+                                    <button class="btn btn-xs p-0 border-0 bg-transparent text-body-secondary"
+                                            title="{% if item.name in repository.protected_branches %}Unprotect{% else %}Protect{% endif %}"
+                                            style="font-size:.8rem;">
+                                        <i aria-hidden="true" class="bi {% if item.name in repository.protected_branches %}bi-shield-slash{% else %}bi-shield-check{% endif %}"></i>
+                                    </button>
+                                </form>
+                                <form method="post">{% csrf_token %}
+                                    <input type="hidden" name="action" value="delete_branch">
+                                    <input type="hidden" name="branch" value="{{ item.name }}">
+                                    <button class="btn btn-xs p-0 border-0 bg-transparent text-danger"
+                                            title="Delete branch" style="font-size:.8rem;"
+                                            onclick="return confirm('Delete branch {{ item.name|escapejs }}?')">
+                                        <i aria-hidden="true" class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="small text-body-secondary p-2 mb-0">No branches yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- File tree -->
+            <div class="card-modern">
+                <div class="p-3 border-bottom">
+                    <span class="fw-semibold text-body small"><i aria-hidden="true" class="bi bi-folder2 text-primary me-1"></i>Files
+                        <span class="repo-branch-badge ms-1">{{ branch }}</span>
+                    </span>
+                </div>
+                <div class="p-2">
+                    {% if tree %}
+                    <div class="repository-file-tree">
+                        {% include "repositories/_tree.html" with nodes=tree %}
+                    </div>
+                    {% else %}
+                    <p class="small text-body-secondary p-2 mb-0">No files on this branch yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- ─ Right: file viewer / readme ─ -->
+        <div class="col-12 col-xl-9">
+
+            {% if selected_file %}
+            <!-- File viewer -->
+            <div class="card-modern overflow-hidden">
+                <div class="repo-toolbar border-0" style="border-radius:.75rem .75rem 0 0; border-bottom: 1px solid var(--hf-card-border);">
+                    <div class="repo-toolbar__left">
+                        <i aria-hidden="true" class="bi bi-file-earmark-code text-primary"></i>
+                        <span class="fw-semibold text-body small font-mono">{{ selected_file }}</span>
+                    </div>
+                    <div class="repo-toolbar__right">
+                        <a class="btn btn-sm btn-outline-secondary rounded-pill" href="?branch={{ branch|urlencode }}">
+                            <i aria-hidden="true" class="bi bi-x-lg me-1"></i>Close
+                        </a>
+                    </div>
+                </div>
+                <pre class="repository-code mb-0"><code>{{ highlighted_file|safe }}</code></pre>
+            </div>
+
+            <!-- File comments -->
+            <div class="card-modern p-4 mt-3">
+                <h6 class="fw-bold text-body mb-3"><i aria-hidden="true" class="bi bi-chat-dots text-primary me-2"></i>File comments</h6>
+                {% for comment in file_comments %}
+                <div class="d-flex gap-3 py-3 border-bottom">
+                    <span class="repo-commit-row__avatar flex-shrink-0">{{ comment.author.0|upper|default:'?' }}</span>
+                    <div>
+                        <div class="small fw-semibold text-body">{{ comment.author|default:'Former member' }}
+                            <span class="text-body-secondary fw-normal ms-1">· {{ comment.created_at }}</span>
+                        </div>
+                        <div class="mt-1 text-body small">{{ comment.body|linebreaksbr }}</div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-body-secondary small mb-3">No comments on this file yet.</p>
+                {% endfor %}
+                <form method="post" action="{% url 'repositories:file_comment' repository.slug %}" class="mt-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="branch" value="{{ branch }}">
+                    <input type="hidden" name="file_path" value="{{ selected_file }}">
+                    <textarea class="form-control mb-2" id="file-comment" name="body" rows="3"
+                              maxlength="3000" required placeholder="Leave a comment on this file…">{{ file_comment_state.body }}</textarea>
+                    {% if file_comment_state.error %}<div class="text-danger small mb-2" role="alert">{{ file_comment_state.error }}</div>{% endif %}
+                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3" type="submit">
+                        <i aria-hidden="true" class="bi bi-send me-1"></i>Comment
+                    </button>
+                </form>
+            </div>
+
+            {% elif readme_html %}
+            <!-- README viewer (GitHub style: file list header + readme below) -->
+            <div class="card-modern overflow-hidden">
+                <div class="repo-toolbar" style="border-radius:.75rem .75rem 0 0;">
+                    <div class="repo-toolbar__left">
+                        <i aria-hidden="true" class="bi bi-file-earmark-text text-primary"></i>
+                        <span class="fw-semibold text-body small">README.md</span>
+                    </div>
+                </div>
+                <article class="repository-readme p-4">{{ readme_html|safe }}</article>
+            </div>
+
+            {% else %}
+            <!-- Empty / no README -->
+            <div class="card-modern p-5 text-center d-flex flex-column align-items-center justify-content-center" style="min-height:260px;">
+                <span class="repository-empty-icon mb-3"><i aria-hidden="true" class="bi bi-folder2-open"></i></span>
+                <h5 class="fw-bold text-body mb-1">Browse your project files</h5>
+                <p class="text-body-secondary small mb-0">Select a file in the tree to preview it, or push your first snapshot.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ── Recent activity (like GitHub's recent commits strip) ── -->
+    <div class="card-modern mt-4">
+        <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+            <span class="fw-semibold text-body small"><i aria-hidden="true" class="bi bi-activity text-primary me-1"></i>Recent activity</span>
+            <a href="{% url 'repositories:history' repository.slug %}?branch={{ branch|urlencode }}"
+               class="small text-primary text-decoration-none">View all commits <i aria-hidden="true" class="bi bi-arrow-right"></i></a>
+        </div>
+        <div class="p-2">
+            {% for activity in activities %}
+            <div class="repo-activity-item px-2">
+                <div class="repo-activity-dot"></div>
+                <div class="text-body small">
+                    <span class="fw-semibold">{{ activity.actor|default:'A former member' }}</span>
+                    {{ activity.message }}
+                    <span class="text-body-secondary">· {{ activity.created_at }}</span>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-body-secondary small p-2 mb-0">No activity yet. Push your first commit to get started.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

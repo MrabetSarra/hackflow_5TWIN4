@@ -1,0 +1,63 @@
+{% extends "layouts/base_student.html" %}
+{% load static %}
+{% block title %}Repositories - HackFlow{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'repositories/repositories.css' %}?v={{ repositories_css_version }}">{% endblock %}
+{% block student_content %}
+<div class="container-fluid px-0 repository-page">
+    {% include "repositories/_messages.html" %}
+
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h1 class="fw-bold text-body mb-1"><i aria-hidden="true" class="bi bi-diagram-2 text-primary me-2"></i>Repositories</h1>
+            <p class="text-body-secondary small mb-0">Your team's shared code, versioned and organized.</p>
+        </div>
+        {% if team %}
+        <a href="{% url 'repositories:create' %}" class="btn btn-primary rounded-pill px-4 d-flex align-items-center gap-2" style="white-space:nowrap;">
+            <i aria-hidden="true" class="bi bi-plus-lg"></i>New repository
+        </a>
+        {% endif %}
+    </div>
+
+    {% if not team %}
+    <!-- No team state -->
+    <div class="card-modern p-5 text-center">
+        <span class="repository-empty-icon mx-auto mb-3 d-inline-flex"><i aria-hidden="true" class="bi bi-people"></i></span>
+        <h5 class="fw-bold text-body mb-1">Join a team to get started</h5>
+        <p class="text-body-secondary small mb-0">Repositories are shared with your team. Join or create a team first.</p>
+    </div>
+
+    {% elif repositories %}
+    <!-- Repository list -->
+    <div class="card-modern overflow-hidden">
+        {% for repository in repositories %}
+        <a class="repository-card d-flex align-items-start gap-3 p-3 text-decoration-none text-body border-bottom"
+           href="{% url 'repositories:detail' repository.slug %}"
+           style="transition: background .12s ease;">
+            <span class="repository-card-icon mt-1"><i aria-hidden="true" class="bi bi-diagram-2"></i></span>
+            <div class="flex-grow-1 min-w-0">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="fw-bold text-primary">{{ repository.name }}</span>
+                    <span class="repo-branch-badge"><i aria-hidden="true" class="bi bi-diagram-2"></i>{{ repository.default_branch }}</span>
+                </div>
+                <p class="text-body-secondary small mb-1 mt-1">{{ repository.description|default:'No description yet.'|truncatechars:160 }}</p>
+                <span class="small text-body-secondary"><i aria-hidden="true" class="bi bi-clock me-1"></i>Updated {{ repository.created_at|date:"M j, Y" }}</span>
+            </div>
+            <i aria-hidden="true" class="bi bi-chevron-right text-body-secondary mt-1 flex-shrink-0 d-none d-sm-block"></i>
+        </a>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <!-- Empty state -->
+    <div class="card-modern p-5 text-center">
+        <span class="repository-empty-icon mx-auto mb-3 d-inline-flex"><i aria-hidden="true" class="bi bi-diagram-2"></i></span>
+        <h5 class="fw-bold text-body mb-1">No repositories yet</h5>
+        <p class="text-body-secondary small mb-4">Create a repository to give your team a shared place for project code and version history.</p>
+        <a href="{% url 'repositories:create' %}" class="btn btn-primary rounded-pill px-4 mx-auto d-inline-flex align-items-center gap-2">
+            <i aria-hidden="true" class="bi bi-plus-lg"></i>Create your first repository
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,186 @@
+{% extends "layouts/base_student.html" %}
+{% load static %}
+{% load repo_tags %}
+{% block title %}Push to {{ branch }} · {{ repository.name }} - HackFlow{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'repositories/repositories.css' %}?v={{ repositories_css_version }}">{% endblock %}
+{% block student_content %}
+<h1 class="visually-hidden">Push to {{ repository.name }}</h1>
+<div class="container-fluid px-0 repository-page">
+    {% include "repositories/_messages.html" %}
+
+    <!-- Header -->
+    <div class="repo-header">
+        <div class="repo-header__breadcrumb">
+            <a href="{% url 'repositories:list' %}">Repositories</a>
+            <span class="text-body-secondary">/</span>
+            <a href="{% url 'repositories:detail' repository.slug %}?branch={{ branch|urlencode }}">{{ repository.name }}</a>
+            <span class="text-body-secondary">/</span>
+            <span class="fw-semibold text-body">Push</span>
+        </div>
+        <div class="repo-header__name mt-1">
+            <i aria-hidden="true" class="bi bi-cloud-arrow-up text-primary"></i>
+            <span>Push to</span> <span class="repo-branch-badge"><i aria-hidden="true" class="bi bi-diagram-2"></i> {{ branch }}</span>
+        </div>
+        <p class="text-body-secondary small mt-1 mb-0">Upload a folder or ZIP snapshot. Changes will be reviewed before committing.</p>
+    </div>
+
+    <!-- Upload form -->
+    <div class="row g-4 mt-0">
+        <div class="col-lg-8">
+            <div class="card-modern">
+                <div class="p-3 border-bottom">
+                    <span class="fw-semibold text-body small"><i aria-hidden="true" class="bi bi-upload text-primary me-1"></i>Select files to upload</span>
+                </div>
+                <div class="p-4">
+                    {% for error in form.non_field_errors %}
+                    <div class="alert alert-danger rounded-3 border-0 mb-3">{{ error }}</div>
+                    {% endfor %}
+
+                    <form method="post" enctype="multipart/form-data" id="repository-upload-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="upload_files" value="1">
+                        <input type="hidden" name="branch" value="{{ branch }}">
+                        <input type="hidden" name="upload_paths" id="upload-paths" value="[]">
+
+                        <!-- Folder upload -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold" for="id_upload">
+                                <i aria-hidden="true" class="bi bi-folder2-open text-primary me-1"></i>Project folder
+                            </label>
+                            <div class="repo-upload-zone" onclick="document.getElementById('id_upload').click()">
+                                <i aria-hidden="true" class="bi bi-folder-plus fs-2 text-primary mb-2 d-block"></i>
+                                <div class="fw-semibold text-body mb-1">Click to choose a folder</div>
+                                <div class="small text-body-secondary">or drag and drop your project folder here</div>
+                                <input class="d-none" type="file" name="upload" id="id_upload" multiple
+                                       webkitdirectory directory>
+                            </div>
+                            <div class="form-text mt-2">
+                                <i aria-hidden="true" class="bi bi-info-circle me-1"></i>
+                                Folders like <code>node_modules</code>, <code>.git</code>, and virtual environments are skipped automatically. Up to 500 files.
+                            </div>
+                        </div>
+
+                        <!-- Divider -->
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <hr class="flex-grow-1 m-0">
+                            <span class="small text-body-secondary px-2">or</span>
+                            <hr class="flex-grow-1 m-0">
+                        </div>
+
+                        <!-- ZIP / single file -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold" for="id_zip_upload">
+                                <i aria-hidden="true" class="bi bi-file-zip text-primary me-1"></i>ZIP archive or single file
+                            </label>
+                            <input class="form-control" type="file" name="upload" id="id_zip_upload" accept=".zip,*/*">
+                            <div class="form-text">Select one ZIP archive or a single file.</div>
+                            {% for error in form.upload.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Upload mode -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold" for="id_upload_mode">
+                                <i aria-hidden="true" class="bi bi-sliders text-primary me-1"></i>Upload mode
+                            </label>
+                            {{ form.upload_mode }}
+                            <div class="form-text">
+                                <strong>Keep missing files</strong> — updates uploaded files, leaves others intact.<br>
+                                <strong>Replace everything</strong> — treats upload as a full snapshot, marks missing files as deleted.
+                            </div>
+                        </div>
+
+                        <!-- Status + submit -->
+                        <div id="upload-status" class="small mb-3" role="status" aria-live="polite"></div>
+                        <button class="btn btn-primary rounded-pill px-4 d-flex align-items-center gap-2"
+                                type="submit" id="upload-submit">
+                            <i aria-hidden="true" class="bi bi-eye"></i>Preview changes
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help sidebar -->
+        <div class="col-lg-4">
+            <div class="card-modern p-4">
+                <h6 class="fw-semibold text-body mb-3"><i aria-hidden="true" class="bi bi-question-circle text-primary me-1"></i>How it works</h6>
+                <ol class="text-body-secondary small ps-3 d-flex flex-column gap-2 mb-0">
+                    <li>Choose your project folder or a ZIP archive.</li>
+                    <li>We'll scan for changes against the current branch.</li>
+                    <li>You'll see a diff preview — review added, modified and deleted files.</li>
+                    <li>Write a commit message and confirm to push.</li>
+                </ol>
+            </div>
+            <div class="card-modern p-4 mt-3">
+                <h6 class="fw-semibold text-body mb-2"><i aria-hidden="true" class="bi bi-shield-check text-success me-1"></i>Auto-ignored paths</h6>
+                <div class="d-flex flex-wrap gap-1">
+                    {% for p in ".git,node_modules,venv,.venv,__pycache__,.env,.idea,.vscode"|split:"," %}
+                    <code class="badge bg-body-tertiary text-body-secondary border" style="font-size:.75rem;">{{ p }}</code>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script>
+(function () {
+    const form = document.getElementById('repository-upload-form');
+    const zone = form.querySelector('.repo-upload-zone');
+    const folderInput = document.getElementById('id_upload');
+
+    // Highlight drop zone on file selection
+    folderInput.addEventListener('change', () => {
+        if (folderInput.files.length) {
+            zone.classList.add('is-active');
+            zone.querySelector('.fw-semibold').textContent = folderInput.files.length + ' file(s) selected';
+        }
+    });
+
+    form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        const folder = document.getElementById('id_upload');
+        const archive = document.getElementById('id_zip_upload');
+        const ignoredDirs = new Set(['.git', 'node_modules', 'venv', '.venv', '__pycache__', '.idea', '.vscode']);
+        const ignoredExact = new Set(['.ds_store', '.env']);
+        const folderFiles = Array.from(folder.files).map(file => ({file, path: file.webkitRelativePath || file.name}));
+        const accepted = folderFiles.filter(({path}) => {
+            const normalized = path.replaceAll('\\', '/');
+            const parts = normalized.split('/');
+            const name = parts[parts.length - 1].toLowerCase();
+            return !parts.some(part => ignoredDirs.has(part.toLowerCase()) || ignoredExact.has(part.toLowerCase())) && !name.endsWith('.pyc');
+        });
+        const archiveFiles = Array.from(archive.files);
+        const paths = [...accepted.map(item => item.path), ...archiveFiles.map(file => file.name)];
+        const status = document.getElementById('upload-status');
+        if (accepted.length + archiveFiles.length > 500) {
+            status.className = 'small mb-3 text-danger';
+            status.textContent = 'More than 500 files after filtering. Split into smaller uploads.';
+            return;
+        }
+        document.getElementById('upload-paths').value = JSON.stringify(paths);
+        const body = new FormData(form);
+        body.delete('upload');
+        for (const {file} of accepted) body.append('upload', file, file.name);
+        for (const file of archiveFiles) body.append('upload', file, file.name);
+        body.set('upload_paths', JSON.stringify(paths));
+        const button = document.getElementById('upload-submit');
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading…';
+        status.className = 'small mb-3 text-body-secondary';
+        status.textContent = 'Uploading files and preparing the diff preview…';
+        try {
+            const response = await fetch(form.action || window.location.href, {method: 'POST', body, credentials: 'same-origin'});
+            const html = await response.text();
+            document.open(); document.write(html); document.close();
+        } catch (error) {
+            button.disabled = false;
+            button.innerHTML = '<i aria-hidden="true" class="bi bi-eye me-2"></i>Preview changes';
+            status.className = 'small mb-3 text-danger';
+            status.textContent = 'Upload failed. Check your connection and try again.';
+        }
+    });
+})();
+</script>{% endblock %}
