@@ -32,6 +32,9 @@ class User(AbstractUser):
     study_level = models.CharField(max_length=100, blank=True)
     skills = models.JSONField(default=list, blank=True)
     specialty = models.CharField(max_length=150, blank=True)
+    preferred_roles = models.JSONField(default=list, blank=True)
+    preferred_categories = models.CharField(max_length=200, blank=True)
+    availability_windows = models.JSONField(default=list, blank=True)
     profile_photo = models.ImageField(
         upload_to='profile_photos/',
         blank=True,

@@ -53,7 +53,7 @@ def opportunity_list(request):
         qs = qs.filter(pk__in=saved_ids)
 
     analysis = analyze_student_cv(request.user)
-    offers = qs.select_related('source').prefetch_related('skills', 'requirements').distinct()
+    offers = qs.prefetch_related('skills', 'requirements').distinct()
     offers = list(offers)
     matches = calculate_matches(request.user, offers, cv_analysis=analysis)
     cards = [{'opportunity': offer, 'match': matches[offer.pk], 'saved': offer.pk in saved_ids} for offer in offers]

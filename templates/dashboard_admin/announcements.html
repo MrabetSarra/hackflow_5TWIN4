@@ -40,6 +40,38 @@
                 <form method="post" class="announce-form" novalidate>
                     {% csrf_token %}
                     <input type="hidden" name="submit_action" value="publish" data-submit-action>
+                    <section class="border rounded-4 bg-body-tertiary p-3 mb-4" data-ai-generator data-endpoint="{% url 'dashboard_admin:announcement_generate' %}">
+                        <div class="d-flex align-items-start gap-3 mb-3">
+                            <span class="announce-stat-icon bg-primary-subtle text-primary"><i class="bi bi-stars"></i></span>
+                            <div><h3 class="h6 fw-bold mb-1">AI Announcement Generator</h3><p class="small text-body-secondary mb-0">Générez un brouillon avec Ollama. Il reste à vérifier avant toute publication.</p></div>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-12"><label class="form-label small fw-semibold" for="ai-audience">Public cible</label>
+                                <select class="form-select" id="ai-audience" data-ai-audience>
+                                    {% for value, label in form.fields.audience.choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+                                    <option value="teams_without_submission">Équipes sans dépôt pour le dernier jalon</option>
+                                </select>
+                            </div>
+                            <div class="col-12"><label class="form-label small fw-semibold" for="ai-topic">Sujet et informations à inclure</label>
+                                <textarea class="form-control" id="ai-topic" rows="2" maxlength="500" placeholder="Ex. : rappeler la date limite et demander de déposer le ZIP" data-ai-topic></textarea>
+                            </div>
+                            <div class="col-6"><label class="form-label small fw-semibold" for="ai-tone">Ton</label>
+                                <select class="form-select" id="ai-tone" data-ai-tone><option value="professionnel">Professionnel</option><option value="chaleureux">Chaleureux</option><option value="direct">Direct</option><option value="enthousiaste">Enthousiaste</option></select>
+                            </div>
+                            <div class="col-6"><label class="form-label small fw-semibold" for="ai-type">Format</label>
+                                <select class="form-select" id="ai-type" data-ai-type><option value="annonce">Annonce</option><option value="rappel">Rappel</option><option value="email">Email</option></select>
+                            </div>
+                            <div class="col-12"><button class="btn btn-outline-primary w-100" type="button" data-ai-generate><i class="bi bi-stars me-2"></i>Générer un brouillon</button></div>
+                        </div>
+                        <div class="alert alert-danger py-2 small mt-3 mb-0 d-none" role="alert" data-ai-error></div>
+                        <div class="mt-3 d-none" data-ai-result>
+                            <div class="alert alert-info py-2 small" data-ai-target-note></div>
+                            <div class="mb-2"><label class="form-label small fw-semibold" for="ai-result-title">Objet / titre — vérifiez et modifiez</label><input class="form-control" id="ai-result-title" maxlength="220" data-ai-result-title></div>
+                            <div class="mb-2"><label class="form-label small fw-semibold" for="ai-result-body">Message — vérifiez et modifiez</label><textarea class="form-control" id="ai-result-body" rows="7" maxlength="5000" data-ai-result-body></textarea></div>
+                            <div class="d-flex flex-wrap gap-2"><button class="btn btn-primary btn-sm" type="button" data-ai-apply><i class="bi bi-pencil-square me-1"></i>Utiliser dans l’annonce</button><button class="btn btn-outline-secondary btn-sm" type="button" data-ai-copy><i class="bi bi-clipboard me-1"></i>Copier le texte</button></div>
+                            <ul class="small mt-3 mb-0 d-none" data-ai-teams></ul>
+                        </div>
+                    </section>
                     {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
                     <div class="mb-3">
                         <label class="form-label small fw-semibold" for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
@@ -176,6 +208,77 @@
   const count = document.querySelector('[data-char-count]');
   const form = body?.closest('form');
   if (!body) return;
+  const generator = document.querySelector('[data-ai-generator]');
+  if (generator && form) {
+    const generateButton = generator.querySelector('[data-ai-generate]');
+    const resultPanel = generator.querySelector('[data-ai-result]');
+    const errorBox = generator.querySelector('[data-ai-error]');
+    const resultTitle = generator.querySelector('[data-ai-result-title]');
+    const resultBody = generator.querySelector('[data-ai-result-body]');
+    const applyButton = generator.querySelector('[data-ai-apply]');
+    const copyButton = generator.querySelector('[data-ai-copy]');
+    const teamsList = generator.querySelector('[data-ai-teams]');
+    const targetNote = generator.querySelector('[data-ai-target-note]');
+    let targetedEmail = false;
+    generateButton?.addEventListener('click', async () => {
+      errorBox.classList.add('d-none');
+      resultPanel.classList.add('d-none');
+      const originalLabel = generateButton.innerHTML;
+      generateButton.disabled = true;
+      generateButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Génération Ollama…';
+      const data = new URLSearchParams({
+        audience: generator.querySelector('[data-ai-audience]').value,
+        topic: generator.querySelector('[data-ai-topic]').value,
+        tone: generator.querySelector('[data-ai-tone]').value,
+        message_type: generator.querySelector('[data-ai-type]').value,
+        csrfmiddlewaretoken: form.querySelector('[name="csrfmiddlewaretoken"]').value,
+      });
+      try {
+        const response = await fetch(generator.dataset.endpoint, {
+          method: 'POST', headers: {'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}, body: data,
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || 'La génération a échoué.');
+        resultTitle.value = payload.title;
+        resultBody.value = payload.body;
+        targetedEmail = payload.is_targeted_email;
+        applyButton.disabled = targetedEmail;
+        teamsList.replaceChildren();
+        if (targetedEmail) {
+          targetNote.textContent = `${payload.target_team_count} équipe(s) sans dépôt pour « ${payload.milestone} »${payload.deadline ? ` · échéance ${payload.deadline}` : ''}. Ce modèle contient {{team_name}}. La publication HackFlow ne cible pas précisément ce sous-groupe : vérifiez les destinataires et utilisez ce texte pour un envoi individuel.`;
+          payload.target_teams.forEach(team => { const item = document.createElement('li'); item.textContent = team; teamsList.append(item); });
+          if (payload.target_team_count > payload.target_teams.length) {
+            const rest = document.createElement('li'); rest.textContent = `Liste limitée aux ${payload.target_teams.length} premières équipes.`; teamsList.append(rest);
+          }
+          teamsList.classList.remove('d-none');
+        } else {
+          targetNote.textContent = 'Brouillon généré. Relisez-le et modifiez-le avant de le publier.';
+          teamsList.classList.add('d-none');
+        }
+        resultPanel.classList.remove('d-none');
+      } catch (error) {
+        errorBox.textContent = error.message || 'Impossible de contacter Ollama.';
+        errorBox.classList.remove('d-none');
+      } finally {
+        generateButton.disabled = false;
+        generateButton.innerHTML = originalLabel;
+      }
+    });
+    applyButton?.addEventListener('click', () => {
+      if (targetedEmail) return;
+      title.value = resultTitle.value;
+      body.value = resultBody.value;
+      body.dispatchEvent(new Event('input', {bubbles: true}));
+      title.dispatchEvent(new Event('input', {bubbles: true}));
+      document.querySelector('[data-preview-title]')?.scrollIntoView({behavior: 'smooth', block: 'center'});
+    });
+    copyButton?.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(`Objet : ${resultTitle.value}\n\n${resultBody.value}`);
+        copyButton.innerHTML = '<i class="bi bi-check2 me-1"></i>Copié';
+      } catch (_) { resultBody.select(); document.execCommand('copy'); }
+    });
+  }
   const escapeHtml = value => value.replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const renderPreview = value => {
     const safe = escapeHtml(value).replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,

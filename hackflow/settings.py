@@ -126,6 +126,10 @@ EMAIL_HOST_USER = os.environ.get('GMAIL_EMAIL', 'montahaguedhami@gmail.com')
 EMAIL_HOST_PASSWORD = os.environ.get('GMAIL_APP_PASSWORD', '')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
+# Local AI-assisted participant-to-team matching through Ollama.
+OLLAMA_BASE_URL = os.environ.get('OLLAMA_BASE_URL', 'http://127.0.0.1:11434').rstrip('/')
+OLLAMA_COPILOT_MODEL = os.environ.get('OLLAMA_COPILOT_MODEL', 'qwen2.5:7b')
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/

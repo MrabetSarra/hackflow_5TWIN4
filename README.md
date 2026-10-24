@@ -75,6 +75,29 @@ python manage.py runserver
 
 Ouvrez [http://127.0.0.1:8000/](http://127.0.0.1:8000/). La base SQLite locale est crÃ©Ã©e lors de lâ€™application des migrations. Lâ€™envoi des codes de rÃ©initialisation du mot de passe nÃ©cessite une configuration SMTP Gmail.
 
+### Configuration du copilote IA local
+
+Le copilote admin utilise Ollama en local. Installez Ollama, tÃ©lÃ©chargez le modÃ¨le par dÃ©faut, puis dÃ©marrez le serveur Ollama :
+
+```powershell
+ollama pull qwen2.5:7b
+ollama serve
+```
+
+Le serveur Django se connecte par dÃ©faut Ã  `http://127.0.0.1:11434`. `OLLAMA_BASE_URL` et `OLLAMA_COPILOT_MODEL` permettent de modifier l'adresse et le modÃ¨le du copilote. Le matching des Ã©quipes utilise un score pondÃ©rÃ© calculÃ© par Django ; ses propositions restent en attente de validation par l'organisateur.
+
+### AI Team Formation
+
+Les organisateurs lancent une proposition depuis la page Participants. Le score pondéré compare les compétences demandées et complémentaires, les rôles, les thèmes préférés, les disponibilités déclarées et la capacité des équipes. Les étudiants peuvent renseigner leurs rôles, thèmes et disponibilités dans leur profil (`/accounts/profile/?edit=1`). Les propositions expliquent les apports de chaque membre et les rôles ou compétences encore absents ; aucune affectation n'est enregistrée avant validation par l'organisateur. Les préférences et disponibilités sont facultatives et un champ vide reste neutre.
+
+### AI Hackathon Copilot
+
+Le copilote est intégré au cockpit organisateur (`/cockpit/`). Ses compteurs, risques d'échéance et listes de projets sont calculés par Django depuis la base ; Ollama génère uniquement l'explication et les recommandations. Les annonces générées peuvent être modifiées puis enregistrées comme brouillons ; elles ne sont jamais publiées automatiquement. Le modèle peut être réglé séparément via `OLLAMA_COPILOT_MODEL`.
+
+### AI Project Evaluation Assistant
+
+La page Jury (`/cockpit/judging/`) permet à l'organisateur de demander une analyse Ollama des soumissions réelles. L'assistant résume le projet, relève objectifs, technologies et cas d'usage, confronte les éléments visibles à la grille et propose des questions. Pour un ZIP, seuls les petits fichiers texte de présentation et manifestes connus sont lus localement, sans extraction. L'assistant n'attribue aucune note et ne classe ni ne désigne de gagnant ; la décision appartient au jury.
+
 ## Technologies
 
 - **Backend :** Python et Django

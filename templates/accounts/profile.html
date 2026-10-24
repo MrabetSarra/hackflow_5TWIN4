@@ -94,6 +94,26 @@
                 {% if cv_detected_skills %}<div class="{% if profile_user.skills %}mt-4{% endif %}"><div class="small fw-semibold text-body-secondary mb-2">Detected in your CV</div><div class="d-flex flex-wrap gap-2">{% for item in cv_detected_skills %}<span class="badge rounded-pill bg-success bg-opacity-10 text-success px-3 py-2" title="{{ item.evidence }}"><i class="bi bi-file-earmark-check me-1"></i>{{ item.name }}</span>{% endfor %}</div></div>
                 {% elif not profile_user.skills %}<p class="text-body-secondary mb-0">No recognized skills detected yet. Upload a text-based PDF CV or add skills in your profile details.</p>{% endif %}
             </section>
+
+            <section class="card-modern p-4 p-md-5 mb-4">
+                <div class="d-flex justify-content-between align-items-center gap-3 mb-3"><h3 class="h5 fw-bold mb-0">Team formation preferences</h3><a class="small text-decoration-none" href="{% url 'accounts:profile' %}?edit=1">Edit profile</a></div>
+                <div class="mb-3"><div class="small text-body-secondary fw-semibold">Preferred roles</div><div class="d-flex flex-wrap gap-2 mt-2">
+                    {% if 'developer' in profile_user.preferred_roles %}<span class="badge rounded-pill bg-primary bg-opacity-10 text-primary">Development</span>{% endif %}
+                    {% if 'designer' in profile_user.preferred_roles %}<span class="badge rounded-pill bg-primary bg-opacity-10 text-primary">Design / UX</span>{% endif %}
+                    {% if 'business' in profile_user.preferred_roles %}<span class="badge rounded-pill bg-primary bg-opacity-10 text-primary">Business / Pitch</span>{% endif %}
+                    {% if 'product' in profile_user.preferred_roles %}<span class="badge rounded-pill bg-primary bg-opacity-10 text-primary">Product</span>{% endif %}
+                    {% if 'data_ai' in profile_user.preferred_roles %}<span class="badge rounded-pill bg-primary bg-opacity-10 text-primary">Data / AI</span>{% endif %}
+                    {% if not profile_user.preferred_roles %}<span class="small text-body-secondary">No role preference provided.</span>{% endif %}
+                </div></div>
+                <div class="mb-3"><div class="small text-body-secondary fw-semibold">Preferred project themes</div><div>{{ profile_user.preferred_categories|default:'Not provided' }}</div></div>
+                <div><div class="small text-body-secondary fw-semibold">Availability</div><div class="d-flex flex-wrap gap-2 mt-2">
+                    {% if 'weekday_day' in profile_user.availability_windows %}<span class="badge rounded-pill bg-light text-body border">Weekday daytime</span>{% endif %}
+                    {% if 'weekday_evening' in profile_user.availability_windows %}<span class="badge rounded-pill bg-light text-body border">Weekday evenings</span>{% endif %}
+                    {% if 'weekend' in profile_user.availability_windows %}<span class="badge rounded-pill bg-light text-body border">Weekends</span>{% endif %}
+                    {% if 'flexible' in profile_user.availability_windows %}<span class="badge rounded-pill bg-light text-body border">Flexible</span>{% endif %}
+                    {% if not profile_user.availability_windows %}<span class="small text-body-secondary">Not provided.</span>{% endif %}
+                </div></div>
+            </section>
             {% endif %}
 
             {% if profile_user.github_url or profile_user.linkedin_url %}

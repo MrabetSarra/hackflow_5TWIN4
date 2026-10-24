@@ -7,7 +7,7 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Exists, OuterRef, Q
 from django.db.models.functions import Coalesce
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.dateparse import parse_date
@@ -17,94 +17,267 @@ from accounts.decorators import role_required
 from student.models import Announcement, Hackathon, HackathonRegistration, MentorRequest, Submission, Team, TeamMembership
 from career_opportunities.models import ApplicationHistory, CareerApplication
 from .forms import AnnouncementForm, HackathonForm
+from .copilot import CopilotError, ask_copilot, build_hackathon_snapshot
+from .announcement_generator import AnnouncementGenerationError, generate_announcement_draft
+from .team_formation import generate_team_plan
 
 @role_required('admin', 'organization')
 def dashboard(request):
-    """
-    Cockpit principal pour les organisateurs du hackathon.
-    """
+    facts, active_hackathon = build_hackathon_snapshot()
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'ask_copilot':
+            question = request.POST.get('question', '').strip()[:1000]
+            if not question:
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'error': 'Saisissez une question.'}, status=400)
+                messages.error(request, 'Saisissez une question pour le copilote.')
+            else:
+                try:
+                    result = ask_copilot(question, facts)
+                    history = request.session.get('admin_copilot_history', [])
+                    history.extend([
+                        {'role': 'user', 'content': question},
+                        {'role': 'assistant', 'content': result['answer'],
+                         'announcement_title': result['announcement_title'],
+                         'announcement_body': result['announcement_body']},
+                    ])
+                    request.session['admin_copilot_history'] = history[-20:]
+                    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                        return JsonResponse(result)
+                except CopilotError as exc:
+                    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                        history = request.session.get('admin_copilot_history', [])
+                        history.extend([
+                            {'role': 'user', 'content': question},
+                            {'role': 'assistant', 'content': str(exc)},
+                        ])
+                        request.session['admin_copilot_history'] = history[-20:]
+                        return JsonResponse({'error': str(exc)}, status=503)
+                    messages.error(request, str(exc))
+            return redirect('dashboard_admin:dashboard')
+        if action == 'save_announcement':
+            title = request.POST.get('announcement_title', '').strip()[:220]
+            body = request.POST.get('announcement_body', '').strip()[:5000]
+            if not active_hackathon:
+                messages.error(request, 'Aucun hackathon actif pour enregistrer cette annonce en brouillon.')
+            elif not title or not body:
+                messages.error(request, 'Le titre et le contenu du brouillon sont requis.')
+            else:
+                Announcement.objects.create(
+                    hackathon=active_hackathon, title=title, body=body,
+                    author=(request.user.get_full_name() or request.user.username)[:120],
+                    category='Rappel', audience=Announcement.Audience.ALL,
+                    priority=Announcement.Priority.IMPORTANT, is_draft=True,
+                )
+                messages.success(request, 'Annonce enregistrée comme brouillon. Elle n’a pas été publiée.')
+            return redirect('dashboard_admin:dashboard')
+
+    categories = facts['categories_equipes']
+    total_category_teams = sum(item['count'] for item in categories) or 1
+    challenges_stats = [{**item, 'percent': round(item['count'] * 100 / total_category_teams)} for item in categories]
+    placed_pct = round(facts['etudiants_affectes'] * 100 / facts['participants_inscrits']) if facts['participants_inscrits'] else 0
+    kpis = [
+        {'label': 'Participants inscrits', 'value': facts['participants_inscrits'], 'icon': 'bi-people-fill', 'color': 'primary', 'sub': 'Données du hackathon'},
+        {'label': 'Équipes', 'value': facts['equipes'], 'icon': 'bi-diagram-3-fill', 'color': 'success', 'sub': 'Équipes en base'},
+        {'label': 'Étudiants affectés', 'value': f"{placed_pct}%", 'icon': 'bi-pie-chart-fill', 'color': 'accent', 'sub': f"{facts['etudiants_sans_equipe']} sans équipe"},
+        {'label': 'Demandes mentor ouvertes', 'value': facts['demandes_mentorat_ouvertes'], 'icon': 'bi-headset', 'color': 'warning', 'sub': f"{facts['demandes_bloquantes_ouvertes']} bloquante(s)"},
+    ]
+    pending_alerts = []
+    if facts['taches_en_retard']:
+        pending_alerts.append({'msg': f"{facts['taches_en_retard']} tâche(s) non terminée(s) ont dépassé leur échéance.", 'action': 'Voir les équipes', 'url': '/cockpit/teams/', 'urgent': True})
+    if facts['etudiants_sans_equipe']:
+        pending_alerts.append({'msg': f"{facts['etudiants_sans_equipe']} étudiant(s) inscrit(s) n’ont pas d’équipe.", 'action': 'Voir les participants', 'url': '/cockpit/participants/?status=unassigned', 'urgent': False})
+
+    live_activity = []
+    team_queryset = Team.objects.filter(hackathon=active_hackathon) if active_hackathon else Team.objects.all()
+    for membership in TeamMembership.objects.filter(team__in=team_queryset).select_related('team').order_by('-joined_at')[:3]:
+        live_activity.append({'at': membership.joined_at, 'event': f'Un membre a rejoint {membership.team.name}', 'icon': 'bi-people-fill', 'color': 'success'})
+    for submission in Submission.objects.filter(team__in=team_queryset).exclude(submitted_at__isnull=True).select_related('team').order_by('-submitted_at')[:3]:
+        live_activity.append({'at': submission.submitted_at, 'event': f'Livrable reçu pour {submission.team.name}', 'icon': 'bi-cloud-check-fill', 'color': 'primary'})
+    live_activity.sort(key=lambda item: item['at'], reverse=True)
+    for activity in live_activity:
+        activity['time'] = timezone.localtime(activity['at']).strftime('%d/%m %H:%M')
+
     context = {
-        'kpis': [
-            {'label': 'Participants Inscrits', 'value': '520', 'icon': 'bi-people-fill', 'color': 'primary', 'sub': '+45 depuis hier'},
-            {'label': 'Équipes Actives', 'value': '92', 'icon': 'bi-diagram-3-fill', 'color': 'success', 'sub': '84 complètes à 100%'},
-            {'label': 'Participants Placés', 'value': '94%', 'icon': 'bi-pie-chart-fill', 'color': 'accent', 'sub': '31 sans équipe'},
-            {'label': 'Interventions Mentors', 'value': '34', 'icon': 'bi-headset', 'color': 'warning', 'sub': 'Temps moyen : 14 min'},
-        ],
-        'challenges_stats': [
-            {'name': 'Climat & Transition Écologique', 'count': 28, 'percent': 30},
-            {'name': 'IA & Productivité Étudiante', 'count': 26, 'percent': 28},
-            {'name': 'Santé & Bien-être', 'count': 20, 'percent': 22},
-            {'name': 'FinTech & Inclusion', 'count': 18, 'percent': 20},
-        ],
-        'live_activity': [
-            {'event': 'Nouvelle équipe formée : "CodeCraft"', 'time': 'Il y a 3 min', 'icon': 'bi-people-fill', 'color': 'success'},
-            {'event': 'Ticket mentor #T-108 ouvert par "FinEd"', 'time': 'Il y a 8 min', 'icon': 'bi-bell-fill', 'color': 'warning'},
-            {'event': 'Livrable intermédiaire déposé par "EcoTrack"', 'time': 'Il y a 14 min', 'icon': 'bi-cloud-check-fill', 'color': 'primary'},
-            {'event': 'Nouveau participant inscrit : Sarah K. (Polytech)', 'time': 'Il y a 22 min', 'icon': 'bi-person-plus-fill', 'color': 'info'},
-        ],
-        'pending_alerts': [
-            {'msg': '31 étudiants sont encore orphelins d\'équipe.', 'action': 'Lancer le matching auto', 'urgent': True},
-            {'msg': 'Table 14 : Signalement de problème de connexion WiFi.', 'action': 'Notifier support réseau', 'urgent': False},
-        ]
+        'active_hackathon': active_hackathon,
+        'facts': facts,
+        'kpis': kpis,
+        'challenges_stats': challenges_stats,
+        'live_activity': live_activity[:4],
+        'pending_alerts': pending_alerts,
+        'copilot_history': request.session.get('admin_copilot_history', []),
     }
     return render(request, 'dashboard_admin/dashboard.html', context)
 
 
 @role_required('admin', 'organization')
-def teams(request):
-    """
-    Gestion des équipes du hackathon.
-    """
-    context = {
-        'teams_list': [
-            {
-                'name': 'EcoTrack',
-                'challenge': 'Climat & Énergie',
-                'leader': 'Camille Laurent',
-                'members_count': 4,
-                'table': 'Table 14',
-                'mentor': 'Dr. Marc Dubois',
-                'submission_status': 'Brouillon prêt',
-                'submission_color': 'warning',
-                'progress': 68,
-            },
-            {
-                'name': 'MediConnect',
-                'challenge': 'Santé & Bien-être',
-                'leader': 'Karim Bensaid',
-                'members_count': 3,
-                'table': 'Table 08',
-                'mentor': 'Dr. Marc Dubois',
-                'submission_status': 'Non soumis',
-                'submission_color': 'danger',
-                'progress': 45,
-            },
-            {
-                'name': 'StudyBuddy AI',
-                'challenge': 'Éducation & IA',
-                'leader': 'Claire Fontaine',
-                'members_count': 5,
-                'table': 'Table 19',
-                'mentor': 'Thomas Vasseur',
-                'submission_status': 'Validé & Rendu',
-                'submission_color': 'success',
-                'progress': 88,
-            },
-            {
-                'name': 'FinEd',
-                'challenge': 'FinTech Éducative',
-                'leader': 'Julien Fabre',
-                'members_count': 4,
-                'table': 'Table 21',
-                'mentor': 'Sarah Benali',
-                'submission_status': 'En cours',
-                'submission_color': 'secondary',
-                'progress': 55,
-            },
-        ]
-    }
-    return render(request, 'dashboard_admin/teams.html', context)
+@require_POST
+def copilot_ask(request):
+    """Return one grounded copilot reply to the admin chat as JSON."""
+    question = request.POST.get('question', '').strip()[:1000]
+    if not question:
+        return JsonResponse({'error': 'Saisissez une question.'}, status=400)
 
+    facts, _ = build_hackathon_snapshot()
+    try:
+        result = ask_copilot(question, facts)
+    except CopilotError as exc:
+        history = request.session.get('admin_copilot_history', [])
+        history.extend([
+            {'role': 'user', 'content': question},
+            {'role': 'assistant', 'content': str(exc)},
+        ])
+        request.session['admin_copilot_history'] = history[-20:]
+        request.session.save()
+        return JsonResponse({'error': str(exc)}, status=503)
+
+    history = request.session.get('admin_copilot_history', [])
+    history.extend([
+        {'role': 'user', 'content': question},
+        {'role': 'assistant', 'content': result['answer'],
+         'announcement_title': result['announcement_title'],
+         'announcement_body': result['announcement_body']},
+    ])
+    request.session['admin_copilot_history'] = history[-20:]
+    return JsonResponse(result)
+
+
+@role_required('admin', 'organization')
+@require_POST
+def generate_announcement(request):
+    """Generate editable announcement copy without publishing or sending it."""
+    try:
+        result = generate_announcement_draft(
+            audience=request.POST.get('audience', '').strip(),
+            topic=request.POST.get('topic', ''),
+            tone=request.POST.get('tone', 'professionnel'),
+            message_type=request.POST.get('message_type', 'annonce'),
+        )
+    except ValueError as exc:
+        return JsonResponse({'error': str(exc)}, status=400)
+    except AnnouncementGenerationError as exc:
+        return JsonResponse({'error': str(exc)}, status=503)
+    return JsonResponse(result)
+
+
+@role_required('admin', 'organization')
+def team_formation(request):
+    if request.method == 'POST' and request.POST.get('action') == 'generate':
+        plan = generate_team_plan()
+        request.session['team_formation_plan'] = plan
+        if not plan['assignments']:
+            messages.warning(request, 'Aucune affectation proposée : vérifiez les profils sans équipe et les places disponibles.')
+        return redirect('dashboard_admin:team_formation')
+    if request.method == 'POST' and request.POST.get('action') == 'apply':
+        plan = request.session.get('team_formation_plan') or {}
+        assignments = plan.get('assignments', [])
+        if not assignments:
+            messages.error(request, 'Générez un plan avant de le valider.')
+            return redirect('dashboard_admin:team_formation')
+        User = get_user_model()
+        user_ids = [item['student_id'] for item in assignments]
+        team_ids = {item['team_id'] for item in assignments}
+        with transaction.atomic():
+            active_hackathon = Hackathon.objects.filter(is_active=True).order_by('-starts_at', '-pk').first()
+            team_queryset = Team.objects.filter(hackathon_id=plan.get('hackathon_id')) if plan.get('hackathon_id') else Team.objects.all()
+            locked_teams = {team.pk: team for team in team_queryset.select_for_update().filter(pk__in=team_ids)}
+            student_queryset = User.objects.select_for_update().filter(pk__in=user_ids, role='student', is_active=True)
+            if (active_hackathon.pk if active_hackathon else None) != plan.get('hackathon_id'):
+                student_queryset = student_queryset.none()
+            elif active_hackathon:
+                registered_ids = HackathonRegistration.objects.filter(hackathon=active_hackathon).values('user_id')
+                student_queryset = student_queryset.filter(pk__in=registered_ids)
+            available_students = set(student_queryset.annotate(
+                has_team=Exists(TeamMembership.objects.filter(user_id=OuterRef('pk'))),
+            ).filter(has_team=False).values_list('pk', flat=True))
+            team_totals = {team_id: team.memberships.count() for team_id, team in locked_teams.items()}
+            valid = len(locked_teams) == len(team_ids) and available_students == set(user_ids)
+            for assignment in assignments:
+                team_id = assignment['team_id']
+                if team_id not in team_totals:
+                    valid = False
+                    break
+                team_totals[team_id] += 1
+            if any(team_totals[team_id] > locked_teams[team_id].max_members for team_id in team_totals):
+                valid = False
+            if not valid:
+                request.session.pop('team_formation_plan', None)
+                messages.error(request, 'Les profils ou places disponibles ont changé. Générez un nouveau plan avant de l’appliquer.')
+                return redirect('dashboard_admin:team_formation')
+            TeamMembership.objects.bulk_create([
+                TeamMembership(team_id=item['team_id'], user_id=item['student_id']) for item in assignments
+            ])
+        request.session.pop('team_formation_plan', None)
+        messages.success(request, f"Composition validée et {len(assignments)} affectation(s) enregistrée(s).")
+        return redirect('dashboard_admin:participants')
+
+    plan = request.session.get('team_formation_plan')
+    return render(request, 'dashboard_admin/team_formation.html', {'plan': plan})
+
+
+@role_required('admin', 'organization')
+def teams(request):
+    active_hackathon = Hackathon.objects.filter(is_active=True).order_by('-starts_at', '-pk').first()
+    hackathons = Hackathon.objects.order_by('-is_active', '-starts_at', 'name')
+    selected_hackathon = request.GET.get('hackathon', '').strip()
+    if not selected_hackathon:
+        selected_hackathon = 'all'
+    teams_queryset = Team.objects.select_related('hackathon', 'captain').prefetch_related(
+        'memberships__user', 'submissions__milestone', 'mentor_requests__mentor',
+    )
+    if selected_hackathon == 'all':
+        pass
+    elif selected_hackathon.isdigit() and hackathons.filter(pk=int(selected_hackathon)).exists():
+        teams_queryset = teams_queryset.filter(hackathon_id=int(selected_hackathon))
+    elif active_hackathon:
+        selected_hackathon = str(active_hackathon.pk)
+        teams_queryset = teams_queryset.filter(hackathon=active_hackathon)
+    else:
+        selected_hackathon = 'all'
+
+    teams_list = []
+    for team in teams_queryset.order_by('name'):
+        latest_submission = max(team.submissions.all(), key=lambda item: (item.updated_at, item.pk), default=None)
+        if not latest_submission:
+            submission_status, submission_color = 'Aucun livrable', 'secondary'
+        else:
+            status_colors = {
+                Submission.Status.DRAFT: ('Brouillon', 'warning'),
+                Submission.Status.SUBMITTED: ('Soumis', 'primary'),
+                Submission.Status.APPROVED: ('Validé', 'success'),
+                Submission.Status.REVISION: ('À corriger', 'danger'),
+            }
+            submission_status, submission_color = status_colors.get(
+                latest_submission.status, (latest_submission.get_status_display(), 'secondary'),
+            )
+        mentor_request = next((item for item in team.mentor_requests.all() if item.mentor_id), None)
+        captain = team.captain
+        teams_list.append({
+            'id': team.pk,
+            'name': team.name,
+            'hackathon': team.hackathon.name,
+            'challenge': team.category or 'Non renseigné',
+            'leader': (captain.get_full_name().strip() or captain.username) if captain else 'Non désigné',
+            'members_count': len(team.memberships.all()),
+            'max_members': team.max_members,
+            'table': team.table_number or team.room or '—',
+            'mentor': (mentor_request.mentor.get_full_name().strip() or mentor_request.mentor.username) if mentor_request else 'Non assigné',
+            'submission_status': submission_status,
+            'submission_color': submission_color,
+            'submission_id': latest_submission.pk if latest_submission else None,
+            'is_reviewable': bool(latest_submission and latest_submission.submitted_at and latest_submission.status in (
+                Submission.Status.SUBMITTED, Submission.Status.APPROVED, Submission.Status.REVISION,
+            )),
+        })
+
+    return render(request, 'dashboard_admin/teams.html', {
+        'teams_list': teams_list,
+        'teams_count': len(teams_list),
+        'hackathons': hackathons,
+        'selected_hackathon': selected_hackathon,
+        'active_hackathon': active_hackathon,
+    })
 
 @role_required('admin', 'organization')
 def announcements(request):
@@ -477,43 +650,6 @@ def participant_toggle_active(request, user_id):
     participant.save(update_fields=['is_active'])
     state = 'activé' if participant.is_active else 'désactivé'
     messages.success(request, f"Le compte de {participant.get_full_name() or participant.username} a été {state}.")
-    return redirect('dashboard_admin:participants')
-
-
-@require_POST
-@role_required('admin', 'organization')
-def participants_auto_assign(request):
-    active_hackathon = Hackathon.objects.filter(is_active=True).order_by('-starts_at').first()
-    teams = list(Team.objects.filter(hackathon=active_hackathon).order_by('name')) if active_hackathon else list(Team.objects.order_by('name'))
-    if not teams:
-        messages.error(request, "Aucune équipe n'est disponible pour l'affectation.")
-        return redirect('dashboard_admin:participants')
-
-    User = get_user_model()
-    orphaned = list(User.objects.filter(role='student', is_active=True).annotate(
-        has_team=Exists(TeamMembership.objects.filter(user_id=OuterRef('pk'))),
-    ).filter(has_team=False).order_by('date_joined', 'pk'))
-    assigned = 0
-    with transaction.atomic():
-        counts = {team.pk: team.memberships.count() for team in teams}
-        for student in orphaned:
-            available = [team for team in teams if counts[team.pk] < team.max_members]
-            if not available:
-                break
-            skill_set = {str(skill).casefold() for skill in (student.skills or [])}
-
-            def score(team):
-                requested = team.seeking_skill.casefold().strip()
-                match = int(bool(requested) and any(requested in skill or skill in requested for skill in skill_set))
-                return match, -(counts[team.pk] / max(team.max_members, 1)), team.name
-
-            selected = max(available, key=score)
-            TeamMembership.objects.create(team=selected, user=student)
-            counts[selected.pk] += 1
-            assigned += 1
-    messages.success(request, f'{assigned} participant(s) affecté(s) automatiquement.')
-    if assigned < len(orphaned):
-        messages.warning(request, f"{len(orphaned) - assigned} participant(s) restent sans équipe faute de places disponibles.")
     return redirect('dashboard_admin:participants')
 
 

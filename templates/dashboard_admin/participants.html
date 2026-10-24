@@ -10,12 +10,7 @@
             <p class="text-muted small mb-0">{{ participants_count }} compte(s) étudiant ou mentor.</p>
         </div>
         <div class="d-flex gap-2">
-            <form method="post" action="{% url 'dashboard_admin:participants_auto_assign' %}" onsubmit="return confirm('Affecter automatiquement les étudiants sans équipe aux places disponibles ?');">
-                {% csrf_token %}
-                <button class="btn btn-outline-primary btn-sm rounded-pill px-3" type="submit">
-                    <i class="bi bi-magic me-1"></i>Affectation auto
-                </button>
-            </form>
+            <a class="btn btn-outline-primary btn-sm rounded-pill px-3" href="{% url 'dashboard_admin:team_formation' %}"><i class="bi bi-stars me-1"></i>Composer des équipes équilibrées</a>
             <a class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" href="{% url 'dashboard_admin:participants_export' %}?q={{ filters.q|urlencode }}&amp;role={{ filters.role|urlencode }}&amp;status={{ filters.status|urlencode }}">
                 <i class="bi bi-file-earmark-spreadsheet me-1"></i>Exporter CSV
             </a>
