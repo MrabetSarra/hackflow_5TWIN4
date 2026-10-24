@@ -1,4 +1,5 @@
 import json
+import shutil
 from pathlib import Path
 from urllib.parse import urlencode
 
@@ -100,6 +101,59 @@ def repository_create(request):
         messages.error(request, 'Join or create a team before creating a repository.')
         return redirect('repositories:list')
     return render(request, 'repositories/create.html', {'team': team, 'form': RepositoryForm(team=team)})
+
+
+@role_required('student')
+def repository_edit(request, slug):
+    team = student_team(request.user)
+    if not team:
+        from django.http import Http404
+        raise Http404
+    repository = Repository.objects.filter(team=team, slug=slug).first()
+    if not repository:
+        from django.http import Http404
+        raise Http404
+
+    form = RepositoryForm(request.POST or None, instance=repository, team=team)
+    if request.method == 'POST' and form.is_valid():
+        updated_repository = form.save(commit=False)
+        # Keep the repository path and URLs stable when its display name changes.
+        updated_repository.slug = repository.slug
+        updated_repository.save()
+        messages.success(request, 'Repository updated successfully.')
+        return redirect('repositories:list')
+    return render(request, 'repositories/edit.html', {
+        'team': team,
+        'repository': repository,
+        'form': form,
+    })
+
+
+@role_required('student')
+def repository_delete(request, slug):
+    from django.http import Http404
+
+    if request.method != 'POST':
+        raise Http404
+    team = student_team(request.user)
+    if not team:
+        raise Http404
+    repository = Repository.objects.filter(team=team, slug=slug).first()
+    if not repository:
+        raise Http404
+
+    # Remove only this repository's bare Git directory, after verifying the
+    # resolved target is directly inside the configured team repository folder.
+    repository_path = repository.path.resolve()
+    expected_parent = (settings.REPOS_ROOT / str(repository.team_id)).resolve()
+    if repository_path.parent != expected_parent or repository_path.name != f'{repository.slug}.git':
+        messages.error(request, 'The repository files could not be safely located; nothing was deleted.')
+        return redirect('repositories:list')
+    if repository_path.exists():
+        shutil.rmtree(repository_path)
+    repository.delete()
+    messages.success(request, 'Repository and its stored Git history were deleted.')
+    return redirect('repositories:list')
 
 
 @role_required('student', 'mentor')

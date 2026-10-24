@@ -31,20 +31,33 @@
     <!-- Repository list -->
     <div class="card-modern overflow-hidden">
         {% for repository in repositories %}
-        <a class="repository-card d-flex align-items-start gap-3 p-3 text-decoration-none text-body border-bottom"
-           href="{% url 'repositories:detail' repository.slug %}"
-           style="transition: background .12s ease;">
+        <div class="repository-card d-flex align-items-center gap-3 p-3 border-bottom"
+             style="transition: background .12s ease;">
             <span class="repository-card-icon mt-1"><i aria-hidden="true" class="bi bi-diagram-2"></i></span>
-            <div class="flex-grow-1 min-w-0">
+            <a class="flex-grow-1 min-w-0 text-decoration-none text-body" href="{% url 'repositories:detail' repository.slug %}">
                 <div class="d-flex align-items-center gap-2 flex-wrap">
                     <span class="fw-bold text-primary">{{ repository.name }}</span>
                     <span class="repo-branch-badge"><i aria-hidden="true" class="bi bi-diagram-2"></i>{{ repository.default_branch }}</span>
                 </div>
                 <p class="text-body-secondary small mb-1 mt-1">{{ repository.description|default:'No description yet.'|truncatechars:160 }}</p>
                 <span class="small text-body-secondary"><i aria-hidden="true" class="bi bi-clock me-1"></i>Updated {{ repository.created_at|date:"M j, Y" }}</span>
+            </a>
+            <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                <a href="{% url 'repositories:edit' repository.slug %}"
+                   class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                   aria-label="Modify {{ repository.name }}">
+                    <i aria-hidden="true" class="bi bi-pencil-square me-1"></i>Modify
+                </a>
+                <form method="post" action="{% url 'repositories:delete' repository.slug %}"
+                      onsubmit="return confirm('Delete {{ repository.name|escapejs }} and its Git history? This cannot be undone.');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                            aria-label="Delete {{ repository.name }}">
+                        <i aria-hidden="true" class="bi bi-trash me-1"></i>Delete
+                    </button>
+                </form>
             </div>
-            <i aria-hidden="true" class="bi bi-chevron-right text-body-secondary mt-1 flex-shrink-0 d-none d-sm-block"></i>
-        </a>
+        </div>
         {% endfor %}
     </div>
 
