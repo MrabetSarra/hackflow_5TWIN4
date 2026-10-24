@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Count, Q
@@ -10,7 +11,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 from django.views.decorators.cache import never_cache
 from accounts.decorators import role_required
-from .forms import ApplicationForm, CareerRequirementFormSet, OpportunityForm
+from .forms import ApplicationForm, CareerRequirementFormSet, OpportunityForm, OrganizerApplicationUpdateForm
 from .models import ApplicationHistory, CareerApplication, CareerRequirement, Opportunity, OpportunitySkill, SavedOpportunity
 from .services.matching import calculate_match, calculate_matches
 from .services.cv_analysis import analyze_student_cv
@@ -76,8 +77,15 @@ def opportunity_list(request):
 
 
 @never_cache
-@role_required('student')
+@login_required
 def opportunity_detail(request, pk):
+    role = getattr(request.user, 'role', None)
+    if role in ('admin', 'organization'):
+        opportunity = get_object_or_404(Opportunity, pk=pk)
+        return render(request, 'career_opportunities/preview.html', {'opportunity': opportunity})
+    if role != 'student':
+        raise PermissionDenied
+
     opportunity = get_object_or_404(Opportunity, pk=pk, status=Opportunity.Status.PUBLISHED)
     today = timezone.localdate()
     if opportunity.deadline and opportunity.deadline < today:
@@ -152,12 +160,20 @@ def my_applications(request):
         qs = qs.filter(status=status)
     paginator = Paginator(qs, 10)
     page_obj = paginator.get_page(request.GET.get('page'))
+    applications = list(page_obj.object_list)
+    if applications:
+        analysis = analyze_student_cv(request.user)
+        matches = calculate_matches(request.user, [app.opportunity for app in applications], cv_analysis=analysis)
+        for app in applications:
+            app.match_result = matches[app.opportunity_id]
+            app.match_score = app.match_result['score']
+            app.match_eligible = app.match_score is not None and app.match_score >= 50
     all_apps = CareerApplication.objects.filter(user=request.user)
     counts = {key: all_apps.filter(status=key).count() for key, _ in CareerApplication.Status.choices}
     filters = request.GET.copy()
     filters.pop('page', None)
     return render(request, 'career_opportunities/applications.html', {
-        'applications': page_obj.object_list, 'page_obj': page_obj, 'query': query, 'status_filter': status,
+        'applications': applications, 'page_obj': page_obj, 'query': query, 'status_filter': status,
         'statuses': CareerApplication.Status.choices, 'counts': counts, 'total_count': sum(counts.values()),
         'filter_query': filters.urlencode(),
     })
@@ -168,8 +184,7 @@ def my_applications(request):
 def application_status(request, pk):
     application = get_object_or_404(CareerApplication, pk=pk, user=request.user)
     new_status = request.POST.get('status')
-    allowed = {CareerApplication.Status.INTENDED, CareerApplication.Status.WITHDRAWN, CareerApplication.Status.INTERVIEW, CareerApplication.Status.ACCEPTED, CareerApplication.Status.REJECTED}
-    if new_status in allowed:
+    if new_status == CareerApplication.Status.WITHDRAWN and application.status not in (CareerApplication.Status.ACCEPTED, CareerApplication.Status.REJECTED, CareerApplication.Status.WITHDRAWN):
         old_status = application.status
         application.status = new_status
         application.save(update_fields=['status', 'updated_at'])
@@ -242,22 +257,63 @@ def organizer_edit(request, pk):
 @never_cache
 @role_required('admin', 'organization')
 def organizer_applications(request):
-    applications = CareerApplication.objects.select_related('user', 'opportunity').prefetch_related('history')
-    return render(request, 'career_opportunities/organizer_applications.html', {'applications': applications[:200], 'statuses': CareerApplication.Status.choices})
+    queryset = CareerApplication.objects.select_related('user', 'opportunity').prefetch_related('history').order_by('-updated_at')
+    page_obj = Paginator(queryset, 20).get_page(request.GET.get('page'))
+    applications = list(page_obj.object_list)
+    for application in applications:
+        analysis = analyze_student_cv(application.user)
+        match = calculate_matches(application.user, [application.opportunity], cv_analysis=analysis)[application.opportunity_id]
+        application.match_score = match['score']
+        application.match_eligible = match['score'] is not None and match['score'] >= 50
+        application.update_form = OrganizerApplicationUpdateForm(prefix=f'application-{application.pk}', initial={
+            'status': application.status if application.status in dict(OrganizerApplicationUpdateForm.base_fields['status'].choices) else CareerApplication.Status.REVIEW,
+            'interview_at': timezone.localtime(application.interview_at).strftime('%Y-%m-%dT%H:%M') if application.interview_at else '',
+            'organizer_update': application.organizer_update,
+        })
+    return render(request, 'career_opportunities/organizer_applications.html', {
+        'applications': applications, 'page_obj': page_obj,
+    })
 
 
 @role_required('admin', 'organization')
 @require_POST
 def organizer_application_status(request, pk):
     application = get_object_or_404(CareerApplication.objects.select_related('user', 'opportunity'), pk=pk)
-    new_status = request.POST.get('status')
-    allowed = {CareerApplication.Status.REVIEW, CareerApplication.Status.INTERVIEW, CareerApplication.Status.ACCEPTED, CareerApplication.Status.REJECTED, CareerApplication.Status.WITHDRAWN}
-    if new_status in allowed and new_status != application.status:
-        old_status = application.status
-        application.status = new_status
-        application.save(update_fields=['status', 'updated_at'])
-        ApplicationHistory.objects.create(application=application, actor=request.user, old_status=old_status, new_status=new_status)
-        Notification.objects.create(user=application.user, title='Application status updated', message=f'{application.opportunity.title}: {application.get_status_display()}.', icon='bi-briefcase-fill', url='/careers/applications/')
+    form = OrganizerApplicationUpdateForm(request.POST, prefix=f'application-{application.pk}')
+    if not form.is_valid():
+        messages.error(request, 'Choose a valid status and provide an interview date when scheduling an interview.')
+        return redirect('dashboard_admin:career_applications')
+
+    new_status = form.cleaned_data['status']
+    interview_at = form.cleaned_data['interview_at'] if new_status == CareerApplication.Status.INTERVIEW else None
+    organizer_update = form.cleaned_data['organizer_update'].strip()
+    if new_status == CareerApplication.Status.INTERVIEW:
+        analysis = analyze_student_cv(application.user)
+        match = calculate_match(application.user, application.opportunity, cv_analysis=analysis)
+        if match['score'] is None or match['score'] < 50:
+            messages.error(request, 'An interview can only be scheduled when the applicant has a reliable match score of at least 50%.')
+            return redirect('dashboard_admin:career_applications')
+
+    old_status = application.status
+    application.status = new_status
+    application.interview_at = interview_at
+    application.organizer_update = organizer_update
+    application.save(update_fields=['status', 'interview_at', 'organizer_update', 'updated_at'])
+    history_note = organizer_update or (f'Interview scheduled for {timezone.localtime(interview_at):%Y-%m-%d %H:%M}' if interview_at else '')
+    ApplicationHistory.objects.create(
+        application=application, actor=request.user, old_status=old_status,
+        new_status=new_status, note=history_note[:500],
+    )
+    notification_message = f'{application.opportunity.title}: {application.get_status_display()}.'
+    if interview_at:
+        notification_message += f' Interview: {timezone.localtime(interview_at):%b %d, %Y %H:%M}.'
+    elif organizer_update:
+        notification_message += f' {organizer_update}'
+    Notification.objects.create(
+        user=application.user, title='Application update', message=notification_message[:240],
+        icon='bi-briefcase-fill', url='/careers/applications/',
+    )
+    messages.success(request, 'The student has been notified about the application update.')
     return redirect('dashboard_admin:career_applications')
 
 

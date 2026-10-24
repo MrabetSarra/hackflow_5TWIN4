@@ -168,6 +168,8 @@ class CareerApplication(models.Model):
     cv = models.FileField(upload_to='career_applications/', storage=PrivateCVStorage(), blank=True, validators=[FileExtensionValidator(['pdf']), validate_cv_size, validate_application_cv])
     portfolio_url = models.URLField(blank=True)
     note = models.CharField(max_length=500, blank=True)
+    interview_at = models.DateTimeField(null=True, blank=True)
+    organizer_update = models.CharField(max_length=500, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
