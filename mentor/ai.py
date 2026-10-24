@@ -115,13 +115,19 @@ def call_ollama(ticket_text):
             {'role': 'user', 'content': ticket_text},
         ],
     }).encode('utf-8')
-    request = urllib.request.Request(f'{_base_url()}/api/chat', data=body, method='POST',
-                                     headers={'content-type': 'application/json'})
+    headers = {'content-type': 'application/json'}
+    # En production (Render), Ollama est joint via le proxy protégé par jeton (ollama_proxy.py).
+    token = getattr(settings, 'OLLAMA_PROXY_TOKEN', '')
+    if token:
+        headers['Authorization'] = f'Bearer {token}'
+    request = urllib.request.Request(f'{_base_url()}/api/chat', data=body, method='POST', headers=headers)
     try:
         with urllib.request.urlopen(request, timeout=_timeout()) as response:
             payload = json.loads(response.read().decode('utf-8'))
         return payload['message']['content']
     except urllib.error.HTTPError as exc:
+        if exc.code in (401, 403):
+            raise TriageError('Le proxy Ollama a refusé l’accès : vérifiez OLLAMA_PROXY_TOKEN.') from exc
         if exc.code == 404:
             raise TriageError(f"Le modèle « {model_name()} » n'est pas installé (ollama pull {model_name()}).") from exc
         raise TriageError(f'Ollama a répondu avec une erreur HTTP {exc.code}.') from exc
