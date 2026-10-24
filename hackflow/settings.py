@@ -172,4 +172,7 @@ CAREER_MATCH_WEIGHTS = {
     'availability': 5,
 }
 
+# CV OCR is performed locally through RapidOCR; no CV content is sent to an API.
+CV_OCR_DPI = int(os.environ.get('CV_OCR_DPI', '190'))
+
 

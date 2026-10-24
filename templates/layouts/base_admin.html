@@ -99,7 +99,7 @@
 
                 <!-- Notifications -->
                 <div class="dropdown">
-                    <button class="btn btn-light position-relative rounded-circle p-2 border" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+                    <button class="btn btn-light position-relative rounded-circle p-2 border" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
                         <i class="bi bi-bell-fill text-secondary"></i>
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
                             5
@@ -121,7 +121,7 @@
 
                 <!-- Menu Profil -->
                 <div class="dropdown">
-                    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-expanded="false">
+                    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Menu du compte administrateur">
                         <span class="rounded-circle bg-danger bg-opacity-10 text-danger d-inline-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px;">{{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2">
@@ -137,7 +137,7 @@
 
         <!-- Main Content Body -->
         <main class="p-3 p-md-4 flex-grow-1">
-            {% block admin_content %}{% endblock %}
+            {% block admin_content %}{% block profile_content %}{% endblock %}{% endblock %}
         </main>
     </div>
 </div>

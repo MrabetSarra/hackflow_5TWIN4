@@ -1,22 +1,32 @@
 ﻿{% extends 'layouts/base_student.html' %}
 {% block student_content %}
 <style>
-.application-board{--ink:#172033;--muted:#68758a;--line:#e8edf4;color:var(--ink)}
-.application-hero{background:radial-gradient(circle at 85% 5%,rgba(117,141,255,.28),transparent 30%),linear-gradient(125deg,#111c38,#202f59 68%,#354677);border-radius:1.5rem;color:#fff;overflow:hidden;position:relative}
+.application-board{--ink:var(--bs-body-color);--muted:#68758a;--line:var(--bs-border-color);color:var(--ink)}
+.application-hero{background:radial-gradient(circle at 84% 8%,rgba(255,255,255,.2),transparent 31%),linear-gradient(118deg,#3e5fc3 0%,#4e70d2 58%,#6685df 100%);border-radius:1.5rem;color:#fff;overflow:hidden;position:relative}
 .application-hero:after{content:"";position:absolute;width:220px;height:220px;border:1px solid rgba(255,255,255,.13);border-radius:50%;right:-60px;bottom:-130px;box-shadow:0 0 0 28px rgba(255,255,255,.035),0 0 0 58px rgba(255,255,255,.025)}
-.application-stat{border:1px solid var(--line);border-radius:1rem;background:#fff;transition:transform .18s ease,box-shadow .18s ease}.application-stat:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(25,39,68,.07)}
-.application-row{border:1px solid var(--line);border-radius:1.15rem;background:#fff;transition:box-shadow .18s ease,transform .18s ease}.application-row:hover{box-shadow:0 12px 30px rgba(25,39,68,.07);transform:translateY(-1px)}
+.application-hero-content{display:flex;justify-content:space-between;align-items:center;gap:2rem;position:relative;z-index:1}
+.application-hero-copy{max-width:660px}.application-hero h1{color:#fff !important;letter-spacing:-.045em}.application-hero-copy p{color:rgba(255,255,255,.9)!important}.application-hero-summary{min-width:220px;padding:1rem 1.15rem;border:1px solid rgba(255,255,255,.3);border-radius:1rem;background:rgba(28,48,112,.2);backdrop-filter:blur(8px)}
+.application-hero-summary .summary-number{font-size:2rem;line-height:1;font-weight:750;letter-spacing:-.05em}.application-hero-summary .summary-track{height:5px;border-radius:99px;background:rgba(255,255,255,.18);overflow:hidden}.application-hero-summary .summary-track span{display:block;height:100%;background:#9ce7c3;border-radius:inherit}
+.application-stat{border:1px solid var(--line);border-radius:1rem;background:var(--bs-body-bg);transition:transform .18s ease,box-shadow .18s ease}.application-stat:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(25,39,68,.07)}
+.application-row{border:1px solid var(--line);border-radius:1.15rem;background:var(--bs-body-bg);transition:box-shadow .18s ease,transform .18s ease}.application-row:hover{box-shadow:0 12px 30px rgba(25,39,68,.07);transform:translateY(-1px)}
 .application-mark{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:#eef2ff;color:#4458cf;font-size:1.15rem;flex:0 0 auto}
 .application-board .form-control,.application-board .form-select{border-color:#e2e8f0;min-height:42px}.application-board .form-control:focus,.application-board .form-select:focus{border-color:#8998f4;box-shadow:0 0 0 .2rem rgba(79,95,210,.12)}
-@media(max-width:767.98px){.application-actions{width:100%}.application-actions form{flex:1}.application-actions .form-select{min-width:0}}
+@media(max-width:767.98px){.application-hero-content{align-items:stretch;flex-direction:column;gap:1.25rem}.application-hero-summary{max-width:320px}.application-actions{width:100%}.application-actions form{flex:1}.application-actions .form-select{min-width:0}}
 </style>
 <div class="container-fluid application-board py-2">
   <section class="application-hero p-4 p-lg-5 mb-4">
-    <div class="position-relative" style="z-index:1;max-width:720px">
-      <span class="badge rounded-pill text-bg-light bg-opacity-10 text-white border border-light border-opacity-25 px-3 py-2 mb-3"><i class="bi bi-kanban me-1"></i> CAREER TRACKER</span>
-      <h1 class="display-6 fw-bold mb-2">My applications</h1>
-      <p class="mb-4 text-white-50">Keep every opportunity moving. Review your progress and update your next step in one place.</p>
-      <a href="{% url 'career_opportunities:list' %}" class="btn btn-light rounded-pill fw-semibold px-4"><i class="bi bi-search me-2"></i>Explore opportunities</a>
+    <div class="application-hero-content">
+      <div class="application-hero-copy">
+        <span class="badge rounded-pill text-bg-light bg-opacity-10 text-white border border-light border-opacity-25 px-3 py-2 mb-3"><i class="bi bi-kanban me-1"></i> CAREER TRACKER <span class="opacity-50 mx-1">/</span> OVERVIEW</span>
+        <h1 class="display-6 fw-bold mb-2">My applications</h1>
+        <p class="mb-4 text-white-50">Keep every opportunity moving. Review your progress and update your next step in one place.</p>
+        <a href="{% url 'career_opportunities:list' %}" class="btn btn-light rounded-pill fw-semibold px-4"><i class="bi bi-search me-2"></i>Explore opportunities</a>
+      </div>
+      <div class="application-hero-summary" aria-label="Application pipeline summary">
+        <div class="d-flex justify-content-between align-items-center mb-2"><span class="small text-white-50">Your pipeline</span><i class="bi bi-arrow-up-right text-white-50" aria-hidden="true"></i></div>
+        <div class="d-flex align-items-end gap-2 mb-3"><span class="summary-number">{{ total_count }}</span><span class="small text-white-50 mb-1">tracked</span></div>
+        <div class="d-flex flex-wrap gap-2 small"><span class="badge rounded-pill border border-light border-opacity-25 bg-white bg-opacity-10 text-white">{{ counts.submitted }} submitted</span><span class="badge rounded-pill border border-light border-opacity-25 bg-white bg-opacity-10 text-white">{{ counts.interview }} interview{{ counts.interview|pluralize }}</span><span class="badge rounded-pill border border-light border-opacity-25 bg-white bg-opacity-10 text-white">{{ counts.accepted }} offer{{ counts.accepted|pluralize }}</span></div>
+      </div>
     </div>
   </section>
 
@@ -29,7 +39,7 @@
 
   <form method="get" class="card border-0 shadow-sm rounded-4 p-3 mb-3">
     <div class="row g-2 align-items-end">
-      <div class="col-md-7"><label for="application-search" class="form-label small fw-semibold">Find an opportunity</label><div class="input-group"><span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-secondary"></i></span><input id="application-search" class="form-control border-start-0" name="q" value="{{ query }}" placeholder="Search title or company"></div></div>
+      <div class="col-md-7"><label for="application-search" class="form-label small fw-semibold">Find an opportunity</label><div class="input-group"><span class="input-group-text bg-body border-end-0"><i class="bi bi-search text-secondary"></i></span><input id="application-search" class="form-control border-start-0" name="q" value="{{ query }}" placeholder="Search title or company"></div></div>
       <div class="col-md-3"><label for="application-status" class="form-label small fw-semibold">Application status</label><select id="application-status" class="form-select" name="status"><option value="">All statuses</option>{% for value,label in statuses %}<option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
       <div class="col-md-2 d-flex gap-2"><a href="{% url 'career_opportunities:applications' %}" class="btn btn-light flex-fill">Reset</a><button class="btn btn-primary flex-fill">Filter</button></div>
     </div>
@@ -42,7 +52,7 @@
         <div class="d-flex flex-wrap align-items-center gap-3">
           <div class="application-mark"><i class="bi bi-building"></i></div>
           <div class="flex-grow-1 min-w-0">
-            <div class="d-flex flex-wrap align-items-center gap-2 mb-1"><a class="h5 fw-bold text-decoration-none text-dark mb-0" href="{% url 'career_opportunities:detail' app.opportunity_id %}">{{ app.opportunity.title }}</a>
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-1"><a class="h5 fw-bold text-decoration-none text-body mb-0" href="{% url 'career_opportunities:detail' app.opportunity_id %}">{{ app.opportunity.title }}</a>
               {% if app.status == 'accepted' %}<span class="badge rounded-pill text-bg-success-subtle text-success">{{ app.get_status_display }}</span>
               {% elif app.status == 'rejected' or app.status == 'withdrawn' %}<span class="badge rounded-pill text-bg-secondary-subtle text-secondary">{{ app.get_status_display }}</span>
               {% elif app.status == 'interview' %}<span class="badge rounded-pill text-bg-warning-subtle text-warning-emphasis"><i class="bi bi-calendar2-check me-1"></i>{{ app.get_status_display }}</span>

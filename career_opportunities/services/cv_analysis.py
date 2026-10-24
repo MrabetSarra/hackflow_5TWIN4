@@ -1,8 +1,10 @@
 """Local, deterministic extraction of limited career evidence from private PDFs."""
 import hashlib
 import re
+from functools import lru_cache
 from io import BytesIO
 
+from django.conf import settings
 from django.utils import timezone
 from pdfminer.high_level import extract_text
 
@@ -10,6 +12,10 @@ from ..models import StudentCVAnalysis
 
 MAX_PDF_BYTES = 10 * 1024 * 1024
 MAX_PDF_PAGES = 20
+MIN_TEXT_FOR_OCR = 100
+MIN_PAGE_TEXT_FOR_OCR = 35
+OCR_DPI = 190
+ANALYSIS_VERSION = 2
 SKILL_ALIASES = {
     'Python': ('python',), 'Django': ('django',), 'Java': ('java',),
     'JavaScript': ('javascript', 'js'), 'TypeScript': ('typescript', 'ts'),
@@ -23,6 +29,42 @@ SKILL_ALIASES = {
     'FastAPI': ('fastapi',), 'Flutter': ('flutter',), 'PostgreSQL': ('postgresql', 'postgres'),
 }
 LANGUAGES = ('Arabic', 'English', 'French', 'German', 'Italian', 'Spanish', 'Turkish')
+
+
+@lru_cache(maxsize=1)
+def _ocr_engine():
+    """Load the local OCR engine once per application process."""
+    from rapidocr import RapidOCR
+
+    return RapidOCR()
+
+
+def _text_density(value):
+    return len(re.sub(r'[^\w]', '', value or '', flags=re.UNICODE))
+
+
+def _ocr_sparse_pages(content):
+    """Read selectable text and OCR only sparse pages, entirely on this server."""
+    import pymupdf
+
+    page_texts = []
+    ocr_attempted = False
+    engine = None
+    with pymupdf.open(stream=content, filetype='pdf') as document:
+        for page in document[:MAX_PDF_PAGES]:
+            text = page.get_text('text') or ''
+            if _text_density(text) < MIN_PAGE_TEXT_FOR_OCR:
+                ocr_attempted = True
+                if engine is None:
+                    engine = _ocr_engine()
+                pixmap = page.get_pixmap(dpi=getattr(settings, 'CV_OCR_DPI', OCR_DPI), alpha=False)
+                result = engine(pixmap.tobytes('png'))
+                recognized = '\n'.join(getattr(result, 'txts', None) or [])
+                if _text_density(recognized) > _text_density(text):
+                    text = recognized
+            if text.strip():
+                page_texts.append(text.strip())
+    return '\n'.join(page_texts), ocr_attempted
 
 
 def _evidence_line(text, term):
@@ -104,22 +146,49 @@ def analyze_student_cv(user, *, force=False):
         return {'status': 'unreadable', 'analyzed_at': None, 'cv_digest': '', 'data': {}}
     digest = hashlib.sha256(content).hexdigest()
     cached = StudentCVAnalysis.objects.filter(user=user, cv_digest=digest).first()
-    if cached and not force:
-        return {'status': cached.status, 'analyzed_at': cached.analyzed_at, 'cv_digest': digest, 'data': cached.structured_data}
+    cached_data = cached.structured_data if cached and isinstance(cached.structured_data, dict) else {}
+    if cached and not force and cached_data.get('analysis_version') == ANALYSIS_VERSION:
+        return {'status': cached.status, 'analyzed_at': cached.analyzed_at, 'cv_digest': digest,
+                'data': cached_data, 'ocr_status': cached_data.get('ocr_status', 'not_needed')}
+    if cached and cached_data.get('analysis_version') != ANALYSIS_VERSION:
+        # Older analyses may have cached scanned PDFs as empty before OCR existed.
+        user.career_match_cache.all().delete()
     if not content.startswith(b'%PDF-'):
-        status, data = StudentCVAnalysis.Status.UNREADABLE, {}
+        status, data, ocr_status = StudentCVAnalysis.Status.UNREADABLE, {}, 'not_needed'
     else:
+        pdf_parse_failed = False
         try:
             text = extract_text(BytesIO(content), maxpages=MAX_PDF_PAGES) or ''
+        except Exception:
+            text = ''
+            pdf_parse_failed = True
+        try:
+            ocr_status = 'not_needed'
+            if _text_density(text) < MIN_TEXT_FOR_OCR:
+                try:
+                    ocr_text, ocr_attempted = _ocr_sparse_pages(content)
+                    if ocr_attempted:
+                        ocr_status = 'used' if _text_density(ocr_text) else 'no_text'
+                    if _text_density(ocr_text) > _text_density(text):
+                        text = ocr_text
+                except Exception:
+                    # OCR is best-effort: never log or persist document/parser details.
+                    ocr_status = 'unavailable'
             if not text.strip():
-                status, data = StudentCVAnalysis.Status.EMPTY, {}
+                status = (StudentCVAnalysis.Status.UNREADABLE if pdf_parse_failed and ocr_status == 'unavailable'
+                          else StudentCVAnalysis.Status.EMPTY)
+                data = {}
             else:
                 status, data = StudentCVAnalysis.Status.READY, _extract_profile(text[:250_000])
+            data['ocr_status'] = ocr_status
         except Exception:
             # Never log or persist parser errors that may include document content.
-            status, data = StudentCVAnalysis.Status.UNREADABLE, {}
+            status, data, ocr_status = StudentCVAnalysis.Status.UNREADABLE, {}, 'not_needed'
+    data['analysis_version'] = ANALYSIS_VERSION
+    data.setdefault('ocr_status', ocr_status)
     analysis, _ = StudentCVAnalysis.objects.update_or_create(
         user=user,
         defaults={'cv_digest': digest, 'status': status, 'structured_data': data, 'analyzed_at': timezone.now()},
     )
-    return {'status': analysis.status, 'analyzed_at': analysis.analyzed_at, 'cv_digest': digest, 'data': analysis.structured_data}
+    return {'status': analysis.status, 'analyzed_at': analysis.analyzed_at, 'cv_digest': digest,
+            'data': analysis.structured_data, 'ocr_status': ocr_status}

@@ -233,8 +233,8 @@ def calculate_match(user, opportunity, *, cv_analysis=None, use_cache=True):
 
     if analysis.get('status') != 'ready':
         breakdown = [_criterion_result(name=name, kind=kind, weight=weight, mandatory=mandatory, match=None,
-            evidence=[], reason=('Upload a readable, text-based PDF CV to evaluate this requirement.' if analysis.get('status') == 'missing'
-                                 else 'The existing CV could not be read. Upload a text-based PDF; scanned-image OCR is not enabled.'),
+            evidence=[], reason=('Upload a readable PDF CV to evaluate this requirement.' if analysis.get('status') == 'missing'
+                                 else 'No reliable text could be read from this CV. OCR is attempted locally for scanned pages.'),
             suggestion='Update your private CV in your HackFlow profile.') for name, kind, weight, mandatory in criteria]
         result = {'score': None, 'coverage': 0, 'requirements_evaluated': 0, 'missing_evidence_count': len(breakdown),
             'mandatory_status': 'unknown', 'mandatory': 'unverified', 'eligibility': {'status': 'unverified'},

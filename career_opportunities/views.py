@@ -90,13 +90,24 @@ def opportunity_detail(request, pk):
     application = CareerApplication.objects.filter(user=request.user, opportunity=opportunity).first()
     form = ApplicationForm(request.POST or None)
     if request.method == 'POST' and 'apply' in request.POST and form.is_valid():
-        if opportunity.internal_application and not request.user.cv:
+        already_submitted = application and application.status in {
+            CareerApplication.Status.SUBMITTED,
+            CareerApplication.Status.REVIEW,
+            CareerApplication.Status.INTERVIEW,
+            CareerApplication.Status.ACCEPTED,
+            CareerApplication.Status.REJECTED,
+        }
+        if opportunity.internal_application and already_submitted:
+            messages.info(request, 'You have already applied for this opportunity. You can follow its status in My applications.')
+        elif opportunity.internal_application and not request.user.cv:
             messages.error(request, 'Upload your CV in your HackFlow profile before applying through HackFlow.')
         else:
             application, created = CareerApplication.objects.get_or_create(
                 user=request.user, opportunity=opportunity,
                 defaults={'status': CareerApplication.Status.SUBMITTED if opportunity.internal_application else CareerApplication.Status.INTENDED},
             )
+            if opportunity.internal_application and application.status == CareerApplication.Status.WITHDRAWN:
+                application.status = CareerApplication.Status.SUBMITTED
             if opportunity.internal_application and request.user.cv:
                 application.cv.name = request.user.cv.name
             for field in ('portfolio_url', 'note'):

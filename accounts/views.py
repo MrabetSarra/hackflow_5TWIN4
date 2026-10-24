@@ -203,6 +203,13 @@ def register_role_view(request, role):
 
 @login_required
 def profile_view(request):
+    role = getattr(request.user, 'role', None)
+    if role in ('admin', 'organization'):
+        layout_template = 'layouts/base_admin.html'
+    elif role == 'mentor':
+        layout_template = 'layouts/base_mentor.html'
+    else:
+        layout_template = 'layouts/base_student.html'
     cv_skill_additions = []
     cv_detected_skills = []
     if request.user.role == 'student' and request.user.cv:
@@ -221,6 +228,7 @@ def profile_view(request):
             messages.success(request, 'Your profile information has been updated.' if request.user.role == 'student' else 'Les informations de votre profil ont été mises à jour.')
             return redirect('accounts:profile')
         return render(request, 'accounts/profile.html', {
+            'layout_template': layout_template,
             'profile_user': request.user,
             'assets_form': form,
             'details_form': details_form,
@@ -251,6 +259,7 @@ def profile_view(request):
         return redirect('accounts:profile')
 
     return render(request, 'accounts/profile.html', {
+        'layout_template': layout_template,
         'profile_user': request.user,
         'assets_form': form,
         'details_form': details_form,

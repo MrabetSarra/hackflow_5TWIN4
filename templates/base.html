@@ -38,7 +38,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
     <!-- HackFlow Custom CSS -->
-    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}?v=display-controls-3">
     
     {% block extra_css %}{% endblock %}
 </head>
@@ -46,11 +46,13 @@
 
     {% block layout %}{% endblock %}
 
+    {% include "components/accessibility_button.html" %}
+
     <!-- Bootstrap 5.3 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     
     <!-- HackFlow Custom JS -->
-    <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/main.js' %}?v=display-controls-3"></script>
     
     {% block extra_js %}{% endblock %}
 </body>

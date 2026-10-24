@@ -63,7 +63,8 @@ def dashboard(request):
         ],
         'recent_announcements': [{'title': announcement.title, 'body': announcement.body,
                                   'author': announcement.author, 'time': announcement.published_at,
-                                  'badge': announcement.category or announcement.get_priority_display(),
+                                  'category': announcement.category,
+                                  'priority_label': announcement.get_priority_display(),
                                   'priority': announcement.priority}
                                  for announcement in recent_announcements],
     }

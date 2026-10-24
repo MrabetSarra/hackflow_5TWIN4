@@ -11,7 +11,7 @@
   {% if cv_status == 'missing' %}
     <div class="alert alert-info border-0 rounded-4 d-flex flex-wrap justify-content-between align-items-center gap-3"><div><strong>Add your CV to get personalized matches.</strong><div class="small">Your offers are still available; no score is invented without a readable CV.</div></div><a class="btn btn-primary btn-sm rounded-pill" href="{% url 'accounts:profile' %}">Complete profile</a></div>
   {% elif cv_status != 'ready' %}
-    <div class="alert alert-warning border-0 rounded-4 d-flex flex-wrap justify-content-between align-items-center gap-3"><div><strong>Your CV could not be analyzed.</strong><div class="small">Use a text-based PDF up to 10 MB. Image-only scanned PDFs are not OCR processed.</div></div><a class="btn btn-outline-dark btn-sm rounded-pill" href="{% url 'accounts:profile' %}">Update CV</a></div>
+    <div class="alert alert-warning border-0 rounded-4 d-flex flex-wrap justify-content-between align-items-center gap-3"><div><strong>Your CV could not be analyzed.</strong><div class="small">Scanned pages are read locally with OCR. Try a clearer PDF if no text could be recognized.</div></div><a class="btn btn-outline-dark btn-sm rounded-pill" href="{% url 'accounts:profile' %}">Update CV</a></div>
   {% endif %}
 
   <form method="get" class="card border-0 shadow-sm rounded-4 p-3 p-lg-4 mb-4">

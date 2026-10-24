@@ -1,8 +1,8 @@
-﻿{% extends "layouts/base_student.html" %}
+﻿{% extends layout_template %}
 
 {% block title %}My Profile - HackFlow{% endblock %}
 
-{% block student_content %}
+{% block profile_content %}
 <div class="container-fluid px-0">
     <div class="mb-4 d-flex justify-content-between align-items-center gap-3">
         <div>
@@ -92,7 +92,7 @@
                 </div>
                 {% endif %}
                 {% if cv_detected_skills %}<div class="{% if profile_user.skills %}mt-4{% endif %}"><div class="small fw-semibold text-body-secondary mb-2">Detected in your CV</div><div class="d-flex flex-wrap gap-2">{% for item in cv_detected_skills %}<span class="badge rounded-pill bg-success bg-opacity-10 text-success px-3 py-2" title="{{ item.evidence }}"><i class="bi bi-file-earmark-check me-1"></i>{{ item.name }}</span>{% endfor %}</div></div>
-                {% elif not profile_user.skills %}<p class="text-body-secondary mb-0">No recognized skills detected yet. Upload a text-based PDF CV or add skills in your profile details.</p>{% endif %}
+                {% elif not profile_user.skills %}<p class="text-body-secondary mb-0">No skills detected yet. CV text is extracted locally, including scanned pages when OCR can read them. You can also add skills in your profile details.</p>{% endif %}
             </section>
 
             <section class="card-modern p-4 p-md-5 mb-4">
