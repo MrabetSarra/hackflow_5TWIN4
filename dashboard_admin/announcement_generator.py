@@ -93,11 +93,11 @@ def generate_announcement_draft(*, audience, topic, tone, message_type):
             result = json.loads(response.read().decode('utf-8'))
         draft = json.loads(result.get('message', {}).get('content', ''))
     except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, TypeError, AttributeError) as exc:
-        raise AnnouncementGenerationError('Ollama ne répond pas ou a renvoyé un brouillon invalide. Vérifiez le serveur et le modèle local.') from exc
+        raise AnnouncementGenerationError('La génération du brouillon est momentanément indisponible. Réessayez dans quelques instants.') from exc
     title = str(draft.get('title', '')).strip()[:220] if isinstance(draft, dict) else ''
     body = str(draft.get('body', '')).strip()[:5000] if isinstance(draft, dict) else ''
     if not title or not body:
-        raise AnnouncementGenerationError('Ollama a renvoyé un brouillon incomplet. Réessayez avec un sujet plus précis.')
+        raise AnnouncementGenerationError('Le brouillon généré est incomplet. Réessayez avec un sujet plus précis.')
 
     return {
         'title': title, 'body': body, 'audience': audience,

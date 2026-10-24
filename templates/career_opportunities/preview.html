@@ -1,0 +1,45 @@
+{% extends 'layouts/base_admin.html' %}
+{% block title %}Aperçu de l’offre · HackFlow{% endblock %}
+{% block admin_content %}
+<div class="container-fluid px-0" style="max-width:1000px">
+  <a class="btn btn-sm btn-outline-secondary rounded-pill mb-4" href="{% url 'dashboard_admin:career_dashboard' %}"><i class="bi bi-arrow-left me-1"></i>Retour aux offres</a>
+  <article class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card-body p-4 p-lg-5">
+      <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+        <div>
+          <span class="badge text-bg-primary-subtle text-primary mb-2">{{ opportunity.get_opportunity_type_display }}</span>
+          <h1 class="h2 fw-bold mb-1">{{ opportunity.title }}</h1>
+          <p class="fs-5 text-secondary mb-0">{{ opportunity.company }}</p>
+        </div>
+        <span class="badge rounded-pill {% if opportunity.status == 'published' %}text-bg-success{% elif opportunity.status == 'draft' %}text-bg-secondary{% else %}text-bg-warning{% endif %}">{{ opportunity.get_status_display }}</span>
+      </div>
+
+      <div class="d-flex flex-wrap gap-3 my-4 small text-secondary">
+        {% if opportunity.location %}<span><i class="bi bi-geo-alt me-1"></i>{{ opportunity.location }}</span>{% endif %}
+        <span><i class="bi bi-laptop me-1"></i>{{ opportunity.get_work_mode_display }}</span>
+        {% if opportunity.publication_date %}<span><i class="bi bi-calendar-check me-1"></i>Publication : {{ opportunity.publication_date|date:'d/m/Y' }}</span>{% endif %}
+        {% if opportunity.deadline %}<span><i class="bi bi-calendar-event me-1"></i>Échéance : {{ opportunity.deadline|date:'d/m/Y' }}</span>{% endif %}
+        {% if opportunity.salary %}<span><i class="bi bi-cash-coin me-1"></i>{{ opportunity.salary }}</span>{% endif %}
+      </div>
+
+      <hr>
+      <h2 class="h5 fw-bold mt-4">Présentation de l’offre</h2>
+      <div class="text-body-secondary" style="line-height:1.75">{{ opportunity.description|linebreaks }}</div>
+
+      {% if opportunity.education or opportunity.experience or opportunity.languages or opportunity.skills.exists or opportunity.requirements.exists %}
+      <h2 class="h5 fw-bold mt-4">Compétences et critères</h2>
+      <div class="d-flex flex-wrap gap-2">
+        {% for skill in opportunity.skills.all %}<span class="badge rounded-pill text-bg-light border">{{ skill.name }}</span>{% endfor %}
+        {% if opportunity.education %}<span class="badge rounded-pill text-bg-light border">{{ opportunity.education }}</span>{% endif %}
+        {% if opportunity.experience %}<span class="badge rounded-pill text-bg-light border">{{ opportunity.experience }}</span>{% endif %}
+        {% for language in opportunity.languages %}<span class="badge rounded-pill text-bg-light border">{{ language }}</span>{% endfor %}
+        {% for requirement in opportunity.requirements.all %}<span class="badge rounded-pill text-bg-light border">{{ requirement.name }}</span>{% endfor %}
+      </div>
+      {% endif %}
+
+      {% if opportunity.application_url %}<a class="btn btn-primary rounded-pill mt-4" href="{{ opportunity.application_url }}" target="_blank" rel="noopener noreferrer">Voir le lien de candidature <i class="bi bi-box-arrow-up-right ms-1"></i></a>{% endif %}
+      <a class="btn btn-outline-primary rounded-pill mt-4" href="{% url 'dashboard_admin:career_edit' opportunity.pk %}"><i class="bi bi-pencil-square me-1"></i>Modifier l’offre</a>
+    </div>
+  </article>
+</div>
+{% endblock %}

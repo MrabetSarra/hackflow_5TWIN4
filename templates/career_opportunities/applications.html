@@ -61,13 +61,23 @@
             </div>
             <div class="text-secondary">{{ app.opportunity.company }}{% if app.opportunity.location %}<span class="mx-1">·</span><i class="bi bi-geo-alt me-1"></i>{{ app.opportunity.location }}{% endif %}</div>
             <div class="small text-secondary mt-2"><i class="bi bi-clock me-1"></i>Updated {{ app.updated_at|date:'M j, Y' }} <span class="mx-1">·</span>Added {{ app.created_at|date:'M j, Y' }}</div>
+            <div class="mt-3">
+              {% if app.match_score != None %}
+                {% if app.match_eligible %}<span class="badge rounded-pill text-bg-success-subtle text-success"><i class="bi bi-check-circle me-1"></i>Eligible for interview review · {{ app.match_score }}%</span><p class="small text-secondary mt-1 mb-0">The organizer will post the interview date and updates here.</p>
+                {% else %}<span class="badge rounded-pill text-bg-secondary-subtle text-secondary"><i class="bi bi-dash-circle me-1"></i>Below the 50% consideration threshold · {{ app.match_score }}%</span><p class="small text-secondary mt-1 mb-0">This application is not selected for interview consideration based on the current match.</p>{% endif %}
+              {% else %}<span class="badge rounded-pill text-bg-warning-subtle text-warning-emphasis"><i class="bi bi-info-circle me-1"></i>Eligibility not yet determined</span><p class="small text-secondary mt-1 mb-0">There is not enough readable CV or profile evidence to calculate a reliable match.</p>{% endif %}
+            </div>
+            {% if app.status == 'interview' %}
+              <div class="alert alert-warning border-0 rounded-3 py-2 px-3 mt-3 mb-0 small">
+                <strong><i class="bi bi-calendar2-check me-1"></i>Interview</strong>
+                {% if app.interview_at %}<span>scheduled for <time datetime="{{ app.interview_at|date:'c' }}">{{ app.interview_at|date:'M j, Y · H:i' }}</time></span>
+                {% else %}<span>date to be confirmed by the organizer.</span>{% endif %}
+                {% if app.organizer_update %}<div class="mt-1">{{ app.organizer_update }}</div>{% endif %}
+              </div>
+            {% elif app.organizer_update %}<div class="alert alert-light border rounded-3 py-2 px-3 mt-3 mb-0 small"><strong>Organizer update:</strong> {{ app.organizer_update }}</div>{% endif %}
           </div>
           <div class="application-actions d-flex align-items-center gap-2">
-            <form method="post" action="{% url 'career_opportunities:application_status' app.pk %}" class="d-flex gap-2">{% csrf_token %}
-              <select class="form-select form-select-sm" name="status" aria-label="Update application status">
-                <option value="intended" {% if app.status == 'intended' %}selected{% endif %}>Intention</option>{% if app.status == 'submitted' %}<option value="submitted" selected disabled>Submitted</option>{% endif %}{% if app.status == 'review' %}<option value="review" selected disabled>Under review</option>{% endif %}<option value="interview" {% if app.status == 'interview' %}selected{% endif %}>Interview</option><option value="accepted" {% if app.status == 'accepted' %}selected{% endif %}>Accepted</option><option value="rejected" {% if app.status == 'rejected' %}selected{% endif %}>Rejected</option><option value="withdrawn" {% if app.status == 'withdrawn' %}selected{% endif %}>Withdrawn</option>
-              </select><button class="btn btn-sm btn-outline-primary px-3" aria-label="Save status">Save</button>
-            </form>
+            {% if app.status != 'accepted' and app.status != 'rejected' and app.status != 'withdrawn' %}<form method="post" action="{% url 'career_opportunities:application_status' app.pk %}" onsubmit="return confirm('Withdraw this application?');">{% csrf_token %}<input type="hidden" name="status" value="withdrawn"><button class="btn btn-sm btn-outline-secondary rounded-pill px-3">Withdraw</button></form>{% endif %}
             <a href="{% url 'career_opportunities:detail' app.opportunity_id %}" class="btn btn-sm btn-light rounded-pill" aria-label="View opportunity"><i class="bi bi-arrow-up-right"></i></a>
           </div>
         </div>
