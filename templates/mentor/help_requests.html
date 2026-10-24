@@ -1,60 +1,172 @@
 {% extends "layouts/base_mentor.html" %}
 
-{% block title %}File d'Attente des Demandes d'Aide - HackFlow{% endblock %}
+{% block title %}Demandes d'Aide - Espace Mentor - HackFlow{% endblock %}
 
 {% block mentor_content %}
 <div class="container-fluid px-0">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-1">File d'Attente des Tickets d'Assistance</h2>
-            <p class="text-muted small mb-0">Intervenez en direct auprès des équipes pour débloquer leurs difficultés techniques ou conceptuelles.</p>
+            <h1 class="h2 fw-bold text-body mb-1">Demandes d'Aide des Équipes</h1>
+            <p class="text-body-secondary small mb-0">Prenez en charge un ticket, débloquez l'équipe puis marquez-le comme résolu.</p>
         </div>
-        <div class="d-flex gap-2">
-            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-2 rounded-pill font-mono">
-                <i class="bi bi-broadcast me-1"></i>{{ requests|length }} tickets non assignés
-            </span>
+        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-2 rounded-pill font-mono">
+            <i class="bi bi-broadcast me-1" aria-hidden="true"></i>{{ counts.pending }} ticket{{ counts.pending|pluralize }} en attente
+        </span>
+    </div>
+
+    <!-- Onglets + filtre -->
+    <div class="card-modern p-3 mb-4">
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+            <nav aria-label="Affichage des tickets">
+                <ul class="nav nav-pills gap-1">
+                    <li class="nav-item"><a class="nav-link {% if view == 'pending' %}active{% endif %}" {% if view == 'pending' %}aria-current="page"{% endif %} href="?view=pending">File d'attente <span class="badge bg-body-secondary text-body ms-1">{{ counts.pending }}</span></a></li>
+                    <li class="nav-item"><a class="nav-link {% if view == 'mine' %}active{% endif %}" {% if view == 'mine' %}aria-current="page"{% endif %} href="?view=mine">Mes tickets en cours <span class="badge bg-body-secondary text-body ms-1">{{ counts.mine }}</span></a></li>
+                    <li class="nav-item"><a class="nav-link {% if view == 'resolved' %}active{% endif %}" {% if view == 'resolved' %}aria-current="page"{% endif %} href="?view=resolved">Mes tickets résolus</a></li>
+                </ul>
+            </nav>
+            <form method="get" class="d-flex gap-2 align-items-center" role="search" aria-label="Filtrer par urgence">
+                <input type="hidden" name="view" value="{{ view }}">
+                <label for="{{ form.urgency.id_for_label }}" class="visually-hidden">{{ form.urgency.label }}</label>
+                {{ form.urgency }}
+                <button type="submit" class="btn btn-outline-primary text-nowrap"><i class="bi bi-funnel-fill me-1" aria-hidden="true"></i>Filtrer</button>
+            </form>
         </div>
     </div>
 
     <!-- Liste des Tickets -->
     <div class="d-flex flex-column gap-3">
         {% for req in requests %}
-        <div class="card-modern p-4 border-start border-4 {% if req.urgency == 'Bloquant' %}border-danger{% elif req.urgency == 'Important' %}border-warning{% else %}border-secondary{% endif %}">
+        <article class="card-modern p-4 border-start border-4 border-{{ req.urgency_color }}" aria-labelledby="req-{{ req.pk }}-title">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3 mb-3">
                 <div>
-                    <div class="d-flex align-items-center gap-2 mb-1">
-                        <span class="badge bg-{{ req.urgency_color }} rounded-pill">{{ req.urgency }}</span>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                        <span class="badge text-bg-{{ req.urgency_color }} rounded-pill">{{ req.get_urgency_display }}</span>
                         <span class="badge-tag">{{ req.category }}</span>
-                        <span class="font-mono small text-muted">{{ req.id }}</span>
+                        <span class="font-mono small text-body-secondary">{{ req.ticket_id }}</span>
                     </div>
-                    <h5 class="fw-bold text-dark mb-1">{{ req.subject }}</h5>
-                    <div class="small text-muted">
-                        Équipe <strong class="text-primary">{{ req.team }}</strong> • Emplacement : <strong class="text-dark">{{ req.table }}</strong>
+                    <h2 id="req-{{ req.pk }}-title" class="h5 fw-bold text-body mb-1">{{ req.subject }}</h2>
+                    <div class="small text-body-secondary">
+                        {% if req.team %}
+                        Équipe <a href="{% url 'mentor:team_detail' req.team.pk %}" class="fw-semibold">{{ req.team.name }}</a>
+                        {% if req.team.table_number %} • Table <strong class="text-body">{{ req.team.table_number }}</strong>{% endif %}
+                        {% if req.team.room %} ({{ req.team.room }}){% endif %}
+                        {% else %}Sans équipe{% endif %}
+                        • Demandé par {{ req.student.get_full_name|default:req.student.username }}
                     </div>
                 </div>
-
-                <div class="text-md-end font-mono small text-muted">
-                    <i class="bi bi-stopwatch me-1"></i>En attente depuis : <strong>{{ req.time_waiting }}</strong>
+                <div class="text-md-end font-mono small text-body-secondary">
+                    <i class="bi bi-stopwatch me-1" aria-hidden="true"></i>Créé il y a <strong>{{ req.created_at|timesince }}</strong>
                 </div>
             </div>
 
-            <p class="text-secondary small mb-4 p-3 bg-light rounded-3">{{ req.description }}</p>
+            <p class="text-body-secondary small mb-3 p-3 bg-body-tertiary rounded-3">{{ req.description|linebreaksbr }}</p>
+
+            {% if req.triage %}
+            <div class="mb-3 p-3 border rounded-3 js-triage" id="triage-{{ req.pk }}" data-request-id="{{ req.pk }}" data-status="{{ req.triage.status }}" aria-live="polite">
+                {% include "mentor/_triage.html" with triage=req.triage %}
+            </div>
+            {% endif %}
+
+            {% if req.status == 'resolved' and req.resolution_note %}
+            <p class="small mb-3 p-3 rounded-3 bg-success-subtle"><strong>Résolution :</strong> {{ req.resolution_note }}</p>
+            {% endif %}
 
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 pt-3 border-top">
-                <a href="{{ req.meet_url }}" target="_blank" class="btn btn-outline-success btn-sm rounded-pill px-3">
-                    <i class="bi bi-camera-video me-1"></i>Rejoindre la salle visio
+                {% if req.meeting_url %}
+                <a href="{{ req.meeting_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-success btn-sm rounded-pill px-3">
+                    <i class="bi bi-camera-video me-1" aria-hidden="true"></i>Rejoindre la salle visio<span class="visually-hidden"> (nouvel onglet)</span>
                 </a>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-outline-secondary btn-sm rounded-pill" data-demo-toast="Ticket {{ req.id }} transféré à un autre mentor.">
-                        Transférer
+                {% else %}<span></span>{% endif %}
+
+                {% if req.status == 'pending' %}
+                <form method="post" action="{% url 'mentor:request_take' req.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-check2 me-1" aria-hidden="true"></i>Prendre en charge
                     </button>
-                    <button class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm" data-demo-toast="Vous avez pris en charge le ticket {{ req.id }} !">
-                        <i class="bi bi-check2 me-1"></i>Prendre en charge
+                </form>
+                {% elif req.status == 'accepted' %}
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-outline-primary btn-sm rounded-pill" href="{% url 'mentor:session_create' %}?request={{ req.pk }}">
+                        <i class="bi bi-calendar-plus me-1" aria-hidden="true"></i>Planifier une session
+                    </a>
+                    <button class="btn btn-outline-secondary btn-sm rounded-pill" type="button" data-bs-toggle="collapse" data-bs-target="#transfer-{{ req.pk }}" aria-expanded="false" aria-controls="transfer-{{ req.pk }}">
+                        <i class="bi bi-arrow-left-right me-1" aria-hidden="true"></i>Transférer
+                    </button>
+                    <button class="btn btn-success btn-sm rounded-pill px-4" type="button" data-bs-toggle="collapse" data-bs-target="#resolve-{{ req.pk }}" aria-expanded="false" aria-controls="resolve-{{ req.pk }}">
+                        <i class="bi bi-check2-all me-1" aria-hidden="true"></i>Marquer résolu
                     </button>
                 </div>
+                {% else %}
+                <span class="badge bg-success-subtle text-success">Résolu</span>
+                {% endif %}
             </div>
+
+            {% if req.status == 'accepted' %}
+            <div class="collapse mt-3" id="resolve-{{ req.pk }}">
+                <form method="post" action="{% url 'mentor:request_resolve' req.pk %}" class="p-3 border rounded-3">
+                    {% csrf_token %}
+                    <label for="resolution-{{ req.pk }}" class="form-label small fw-semibold">{{ resolve_form.resolution_note.label }}</label>
+                    <textarea id="resolution-{{ req.pk }}" name="resolution_note" class="form-control mb-2" rows="3" maxlength="2000" minlength="5" required aria-required="true" placeholder="Ce qui a été fait pour débloquer l'équipe…"></textarea>
+                    <button type="submit" class="btn btn-success btn-sm">Confirmer la résolution</button>
+                </form>
+            </div>
+            <div class="collapse mt-3" id="transfer-{{ req.pk }}">
+                <form method="post" action="{% url 'mentor:request_transfer' req.pk %}" class="p-3 border rounded-3 d-flex flex-column flex-sm-row gap-2 align-items-sm-end">
+                    {% csrf_token %}
+                    <div class="flex-grow-1">
+                        <label for="transfer-mentor-{{ req.pk }}" class="form-label small fw-semibold">{{ transfer_form.mentor.label }}</label>
+                        <select id="transfer-mentor-{{ req.pk }}" name="mentor" class="form-select" required aria-required="true">
+                            {% for value, label in transfer_form.mentor.field.choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-outline-secondary">Transférer</button>
+                </form>
+            </div>
+            {% endif %}
+        </article>
+        {% empty %}
+        <div class="card-modern p-5 text-center text-body-secondary">
+            <i class="bi bi-inbox fs-2 d-block mb-2" aria-hidden="true"></i>
+            {% if view == 'mine' %}Vous n'avez aucun ticket en cours.{% elif view == 'resolved' %}Vous n'avez encore résolu aucun ticket.{% else %}Aucune demande en attente pour le moment.{% endif %}
         </div>
         {% endfor %}
     </div>
+
+    {% include "mentor/_pagination.html" %}
 </div>
+
+<script>
+// Met à jour les suggestions IA sans recharger la page tant qu'une analyse est en cours.
+(function () {
+    const url = "{% url 'mentor:triage_status' %}";
+    function pendingBoxes() {
+        return Array.from(document.querySelectorAll('.js-triage')).filter(function (box) {
+            return box.dataset.status === 'pending' || box.dataset.status === 'running';
+        });
+    }
+    function poll(attempt) {
+        const boxes = pendingBoxes();
+        if (!boxes.length || attempt > 60) { return; }
+        const ids = boxes.map(function (box) { return box.dataset.requestId; }).join(',');
+        const back = encodeURIComponent(window.location.pathname + window.location.search);
+        fetch(url + '?ids=' + ids + '&next=' + back, {headers: {'Accept': 'application/json'}, credentials: 'same-origin'})
+            .then(function (response) { return response.ok ? response.json() : {triages: {}}; })
+            .then(function (data) {
+                boxes.forEach(function (box) {
+                    const item = data.triages[box.dataset.requestId];
+                    if (item && item.status !== box.dataset.status) {
+                        box.dataset.status = item.status;
+                        box.innerHTML = item.html;
+                    }
+                });
+            })
+            .catch(function () { /* réseau indisponible : on réessaie au prochain tour */ })
+            .finally(function () { setTimeout(function () { poll(attempt + 1); }, 3000); });
+    }
+    setTimeout(function () { poll(0); }, 2000);
+})();
+</script>
 {% endblock %}

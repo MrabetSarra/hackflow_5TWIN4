@@ -1,10 +1,15 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static mentor_tags %}
+
+{% block body_class %}mentor-space{% endblock %}
+
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/mentor.css' %}?v=3">{% endblock %}
 
 {% block layout %}
+{% mentor_counts as mentor_nav %}
 <div class="dashboard-wrapper">
     <!-- Sidebar Mentor -->
-    <aside class="app-sidebar shadow-sm">
+    <aside class="app-sidebar shadow-sm" aria-label="Navigation mentor">
         <div class="p-4 border-bottom border-light-subtle d-flex align-items-center justify-content-between">
             <a href="{% url 'mentor:dashboard' %}" class="d-flex align-items-center gap-2 text-decoration-none">
                 <img src="{% static 'images/hackflow-mark.png' %}" alt="" width="44" height="32" style="object-fit: contain;">
@@ -24,23 +29,32 @@
             <a href="{% url 'mentor:help_requests' %}" class="nav-link-item {% if request.resolver_match.url_name == 'help_requests' %}active{% endif %}">
                 <i class="bi bi-bell-fill"></i>
                 <span>Demandes d'Aide</span>
-                <span class="badge bg-danger ms-auto rounded-pill px-2 py-0" style="font-size: 0.7rem;">3 en attente</span>
+                {% if mentor_nav.pending %}<span class="badge bg-danger ms-auto rounded-pill px-2 py-0" style="font-size: 0.7rem;">{{ mentor_nav.pending }} en attente</span>{% endif %}
             </a>
-            <a href="{% url 'mentor:teams_list' %}" class="nav-link-item {% if request.resolver_match.url_name == 'teams_list' %}active{% endif %}">
+            <a href="{% url 'mentor:teams_list' %}" class="nav-link-item {% if request.resolver_match.url_name == 'teams_list' or request.resolver_match.url_name == 'team_detail' %}active{% endif %}">
                 <i class="bi bi-collection-fill"></i>
                 <span>Équipes & Projets</span>
-                <span class="badge bg-secondary-subtle text-secondary ms-auto rounded-pill px-2 py-0" style="font-size: 0.7rem;">12</span>
+                <span class="badge bg-secondary-subtle text-secondary ms-auto rounded-pill px-2 py-0" style="font-size: 0.7rem;" title="Équipes suivies">{{ mentor_nav.followed }}</span>
             </a>
 
-            <a href="{% url 'student:jury_submissions' %}" class="nav-link-item {% if request.resolver_match.url_name == 'jury_submissions' %}active{% endif %}">
-                <i class="bi bi-file-earmark-zip-fill"></i>
-                <span>Project Submissions</span>
+            <a href="{% url 'mentor:sessions_list' %}" class="nav-link-item {% if request.resolver_match.url_name in 'sessions_list session_create session_update session_delete' %}active{% endif %}">
+                <i class="bi bi-calendar-event" aria-hidden="true"></i>
+                <span>Sessions</span>
+            </a>
+            <a href="{% url 'mentor:submissions' %}" class="nav-link-item {% if request.resolver_match.url_name == 'submissions' or request.resolver_match.url_name == 'evaluation_create' %}active{% endif %}">
+                <i class="bi bi-file-earmark-zip-fill" aria-hidden="true"></i>
+                <span>Soumissions à évaluer</span>
             </a>
 
             <div class="sidebar-heading mt-3">Suivi & Feedbacks</div>
-            <a href="{% url 'mentor:evaluations' %}" class="nav-link-item {% if request.resolver_match.url_name == 'evaluations' %}active{% endif %}">
+            <a href="{% url 'mentor:evaluations' %}" class="nav-link-item {% if request.resolver_match.url_name in 'evaluations evaluation_detail evaluation_update evaluation_delete' %}active{% endif %}">
                 <i class="bi bi-pencil-square"></i>
                 <span>Retours & Conseils</span>
+            </a>
+
+            <a href="{% url 'mentor:ai_metrics' %}" class="nav-link-item {% if request.resolver_match.url_name == 'ai_metrics' %}active{% endif %}">
+                <i class="bi bi-stars" aria-hidden="true"></i>
+                <span>Métriques IA</span>
             </a>
 
             <div class="sidebar-heading mt-3">Paramètres</div>
@@ -57,7 +71,7 @@
                     <p class="mb-0 fw-semibold text-truncate small">{{ request.user.get_full_name|default:request.user.username }}</p>
                     <p class="mb-0 text-muted small text-truncate" style="font-size: 0.75rem;">{{ request.user.specialty|default:request.user.school|default:request.user.get_role_display }}</p>
                 </div>
-                <a href="{% url 'accounts:logout' %}" class="text-secondary hover-text-danger p-1" title="Se déconnecter">
+                <a href="{% url 'accounts:logout' %}" class="text-secondary hover-text-danger p-1" title="Se déconnecter" aria-label="Se déconnecter">
                     <i class="bi bi-box-arrow-right fs-5"></i>
                 </a>
             </div>
@@ -81,15 +95,18 @@
             <div class="d-flex align-items-center gap-3">
                 {% include "components/theme_toggle.html" %}
 
+                {% if mentor_nav.pending %}
                 <a href="{% url 'mentor:help_requests' %}" class="btn btn-outline-danger btn-sm d-none d-sm-flex align-items-center gap-2 rounded-pill px-3">
-                    <i class="bi bi-lightning-fill"></i>
-                    <span>3 équipes attendent une aide</span>
+                    <i class="bi bi-lightning-fill" aria-hidden="true"></i>
+                    <span>{{ mentor_nav.pending }} demande{{ mentor_nav.pending|pluralize }} en attente</span>
                 </a>
+                {% endif %}
 
                 <!-- Menu Profil -->
                 <div class="dropdown">
                     <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-expanded="false">
                         <span class="rounded-circle bg-secondary bg-opacity-10 text-secondary d-inline-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px;">{{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}</span>
+                        <span class="visually-hidden">Menu du profil</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2">
                         <li><h6 class="dropdown-header">{{ request.user.get_full_name|default:request.user.username }}</h6></li>
@@ -103,7 +120,9 @@
         </header>
 
         <!-- Main Content Body -->
-        <main class="p-3 p-md-4 flex-grow-1">
+        <main class="p-3 p-md-4 flex-grow-1" id="main-content">
+            {# La page profil (accounts) affiche déjà ses propres messages. #}
+            {% if request.resolver_match.app_name == 'mentor' %}{% include "repositories/_messages.html" %}{% endif %}
             {% block mentor_content %}{% block profile_content %}{% endblock %}{% endblock %}
         </main>
     </div>
