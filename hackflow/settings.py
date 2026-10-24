@@ -60,6 +60,7 @@ if '*' in ALLOWED_HOSTS:
 # Application definition
 
 INSTALLED_APPS = [
+    'django_prometheus',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -75,17 +76,17 @@ INSTALLED_APPS = [
     'career_opportunities.apps.CareerOpportunitiesConfig',
     'repositories.apps.RepositoriesConfig',
 ]
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
-
 # WhiteNoise is installed in deployed environments from requirements.txt. Keep
 # local management commands usable before dependencies have been installed.
 try:
@@ -257,6 +258,7 @@ ANTHROPIC_MODEL = os.environ.get('ANTHROPIC_MODEL', 'claude-haiku-4-5-20251001')
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 OPENAI_MODEL = os.environ.get('OPENAI_MODEL', 'gpt-5-mini')
 OLLAMA_BASE_URL = os.environ.get('OLLAMA_BASE_URL', 'http://127.0.0.1:11434')
+OLLAMA_PROXY_TOKEN = os.environ.get('OLLAMA_PROXY_TOKEN', '')
 OLLAMA_MODEL = os.environ.get('OLLAMA_MODEL', 'qwen2.5-coder:3b')
 REPOSITORY_AI_PROVIDER = os.environ.get('REPOSITORY_AI_PROVIDER', 'ollama')
 REPOSITORY_AI_TIMEOUT = int(os.environ.get('REPOSITORY_AI_TIMEOUT', '180'))

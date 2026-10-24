@@ -11,3 +11,4 @@ onnxruntime>=1.18,<2
 Markdown==3.10.3
 bleach==6.4.0
 Pygments==2.21.0
+django-prometheus>=2.3,<3

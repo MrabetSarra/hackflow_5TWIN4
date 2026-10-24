@@ -9,6 +9,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Q
 from django.utils import timezone
+from hackflow.ollama import request_headers as ollama_request_headers
 
 from student.models import Hackathon, HackathonRegistration, MentorRequest, Milestone, Submission, Task, Team, TeamMembership
 
@@ -132,7 +133,7 @@ def ask_copilot(question, facts):
     base_url = getattr(settings, 'OLLAMA_BASE_URL', 'http://127.0.0.1:11434').rstrip('/')
     request = urllib.request.Request(
         f'{base_url}/api/chat', data=json.dumps(payload).encode('utf-8'),
-        headers={'Content-Type': 'application/json'}, method='POST',
+        headers=ollama_request_headers(), method='POST',
     )
     try:
         with urllib.request.urlopen(request, timeout=120) as response:

@@ -12,6 +12,7 @@ from django.utils.module_loading import import_string
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from hackflow.ollama import request_headers as ollama_request_headers
 
 from .models import AIUsageLog
 
@@ -187,9 +188,9 @@ def _ollama_complete(prompt):
         'messages': [{'role': 'user', 'content': prompt}],
         'stream': False,
     }).encode('utf-8')
-    request = urllib.request.Request(f'{base_url}/api/chat', data=body, method='POST', headers={
-        'content-type': 'application/json',
-    })
+    request = urllib.request.Request(
+        f'{base_url}/api/chat', data=body, method='POST', headers=ollama_request_headers(),
+    )
     try:
         with urllib.request.urlopen(request, timeout=settings.REPOSITORY_AI_TIMEOUT) as response:
             payload = json.loads(response.read().decode('utf-8'))
