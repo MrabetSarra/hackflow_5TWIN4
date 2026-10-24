@@ -72,6 +72,17 @@ class MentorAssignmentTests(TestCase):
         with self.assertRaises(ValidationError):
             assignment.full_clean()
 
+    def test_follow_is_idempotent_and_keeps_first_source(self):
+        MentorAssignment.follow(self.mentor, self.team, MentorAssignment.Source.AUTO)
+        MentorAssignment.follow(self.mentor, self.team)
+        self.assertEqual(MentorAssignment.objects.filter(mentor=self.mentor, team=self.team).count(), 1)
+        self.assertEqual(MentorAssignment.objects.get().source, MentorAssignment.Source.AUTO)
+        self.assertTrue(MentorAssignment.is_following(self.mentor, self.team))
+
+    def test_follow_refuses_non_mentor(self):
+        with self.assertRaises(ValidationError):
+            MentorAssignment.follow(self.student, self.team)
+
 
 class MentoringSessionTests(TestCase):
     def setUp(self):

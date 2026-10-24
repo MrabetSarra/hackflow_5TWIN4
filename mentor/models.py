@@ -96,21 +96,30 @@ def _validate_mentor(user, field):
 
 
 class MentorAssignment(models.Model):
-    """Affectation d'un mentor à une équipe (gérée par l'organisateur)."""
+    """Équipe suivie par un mentor.
+
+    Le mentor choisit lui-même ses équipes (« Suivre cette équipe ») ; le suivi est aussi
+    créé automatiquement quand il prend en charge un ticket ou planifie une session.
+    Le module organisateur peut réutiliser ce modèle, mais le module mentor n'en dépend pas.
+    """
+
+    class Source(models.TextChoices):
+        MENTOR = 'mentor', 'Choisie par le mentor'
+        AUTO = 'auto', 'Automatique (ticket ou session)'
+        ORGANIZER = 'organizer', "Affectée par l'organisation"
 
     mentor = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='mentor_assignments',
         limit_choices_to={'role': 'mentor'},
     )
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='mentor_assignments')
-    assigned_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='+',
-    )
+    source = models.CharField(max_length=10, choices=Source.choices, default=Source.MENTOR)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['team__name']
-        verbose_name = 'affectation mentor'
+        verbose_name = 'équipe suivie'
+        verbose_name_plural = 'équipes suivies'
         constraints = [
             models.UniqueConstraint(fields=['mentor', 'team'], name='unique_mentor_team_assignment'),
         ]
@@ -120,6 +129,17 @@ class MentorAssignment(models.Model):
 
     def clean(self):
         _validate_mentor(self.mentor if self.mentor_id else None, 'mentor')
+
+    @classmethod
+    def follow(cls, mentor, team, source=Source.MENTOR):
+        """Fait suivre l'équipe par le mentor ; sans effet si c'est déjà le cas."""
+        _validate_mentor(mentor, 'mentor')
+        assignment, _created = cls.objects.get_or_create(mentor=mentor, team=team, defaults={'source': source})
+        return assignment
+
+    @classmethod
+    def is_following(cls, mentor, team):
+        return cls.objects.filter(mentor=mentor, team=team).exists()
 
 
 class MentoringSession(models.Model):

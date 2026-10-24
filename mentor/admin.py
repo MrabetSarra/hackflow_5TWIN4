@@ -18,10 +18,9 @@ class CriterionAdmin(admin.ModelAdmin):
 
 @admin.register(MentorAssignment)
 class MentorAssignmentAdmin(admin.ModelAdmin):
-    list_display = ('mentor', 'team', 'assigned_by', 'created_at')
-    list_filter = ('mentor',)
+    list_display = ('mentor', 'team', 'source', 'created_at')
+    list_filter = ('source', 'mentor')
     search_fields = ('mentor__username', 'team__name')
-    raw_id_fields = ('assigned_by',)
 
 
 @admin.register(MentoringSession)
