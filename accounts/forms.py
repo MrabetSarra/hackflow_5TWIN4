@@ -8,7 +8,22 @@ from django.core.validators import FileExtensionValidator
 from .models import validate_cv_size, validate_profile_photo_size
 
 
-class EmailOrUsernameAuthenticationForm(AuthenticationForm):
+class AccessibleFormMixin:
+    """Expose required state consistently to assistive technology."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs['aria-required'] = 'true' if field.required else 'false'
+
+    def full_clean(self):
+        super().full_clean()
+        for name, field in self.fields.items():
+            if self.errors.get(name):
+                field.widget.attrs['aria-invalid'] = 'true'
+                field.widget.attrs['aria-describedby'] = f'{field.widget.attrs.get("id", f"id_{name}")}_errors'
+
+
+class EmailOrUsernameAuthenticationForm(AccessibleFormMixin, AuthenticationForm):
     """Authenticate with either the account username or its unique email."""
 
     def __init__(self, *args, **kwargs):
@@ -41,7 +56,7 @@ class EmailOrUsernameAuthenticationForm(AuthenticationForm):
         return super().clean()
 
 
-class AccountRegistrationForm(forms.Form):
+class AccountRegistrationForm(AccessibleFormMixin, forms.Form):
     first_name = forms.CharField(max_length=150, label='Prénom')
     last_name = forms.CharField(max_length=150, label='Nom')
     username = forms.CharField(max_length=150, label="Nom d'utilisateur")
@@ -175,7 +190,7 @@ class AccountRegistrationForm(forms.Form):
         return user
 
 
-class PasswordResetRequestForm(forms.Form):
+class PasswordResetRequestForm(AccessibleFormMixin, forms.Form):
     email = forms.EmailField(label='Email address', max_length=254)
 
     def __init__(self, *args, **kwargs):
@@ -187,7 +202,7 @@ class PasswordResetRequestForm(forms.Form):
         })
 
 
-class PasswordResetVerifyForm(forms.Form):
+class PasswordResetVerifyForm(AccessibleFormMixin, forms.Form):
     email = forms.EmailField(label='Email address', max_length=254)
     code = forms.RegexField(regex=r'^\d{6}$', label='Verification code', error_messages={
         'invalid': 'Enter the 6-digit code sent to your email.',
@@ -216,7 +231,7 @@ class PasswordResetVerifyForm(forms.Form):
         return cleaned
 
 
-class ProfileAssetsForm(forms.ModelForm):
+class ProfileAssetsForm(AccessibleFormMixin, forms.ModelForm):
     profile_photo = forms.ImageField(
         required=False,
         validators=[FileExtensionValidator(['jpg', 'jpeg', 'png', 'webp']), validate_profile_photo_size],
@@ -253,7 +268,7 @@ class ProfileAssetsForm(forms.ModelForm):
         return uploaded_file
 
 
-class ProfileDetailsForm(forms.ModelForm):
+class ProfileDetailsForm(AccessibleFormMixin, forms.ModelForm):
     """Editable account details with uniqueness and role-specific validation."""
 
     study_level = forms.ChoiceField(

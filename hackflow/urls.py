@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from repositories.views import mentor_repository_list
 
 urlpatterns = [
     # Espace Public / Landing
@@ -28,6 +29,8 @@ urlpatterns = [
 
     # Espace Étudiant (Participant)
     path('student/', include('student.urls')),
+    path('student/repositories/', include('repositories.urls')),
+    path('mentor/repositories/', mentor_repository_list, name='mentor_repositories'),
 
     # Espace Mentor (Accompagnement)
     path('mentor/', include('mentor.urls')),
@@ -38,6 +41,10 @@ urlpatterns = [
     # Django Admin Technique (Standard)
     path('admin/', admin.site.urls),
 ]
+
+handler403 = 'core.views.error_403'
+handler404 = 'core.views.error_404'
+handler500 = 'core.views.error_500'
 
 # Servir les fichiers médias en développement
 if settings.DEBUG:

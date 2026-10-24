@@ -2,18 +2,45 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.core.validators import FileExtensionValidator
 
-from .models import DirectMessage, MentorRequest, Resource, Submission, Task, Team, TeamInvitation
+from .models import AITaskJob, DirectMessage, MentorRequest, Resource, Sprint, Submission, Task, Team, TeamInvitation
 
 User = get_user_model()
 
 
-class StyledModelForm(forms.ModelForm):
+class AccessibleFormMixin:
+    """Expose required state consistently to assistive technology."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs['aria-required'] = 'true' if field.required else 'false'
+
+    def full_clean(self):
+        super().full_clean()
+        for name, field in self.fields.items():
+            if self.errors.get(name):
+                field.widget.attrs['aria-invalid'] = 'true'
+                field.widget.attrs['aria-describedby'] = f'{field.widget.attrs.get("id", f"id_{name}")}_errors'
+
+
+class StyledModelForm(AccessibleFormMixin, forms.ModelForm):
     """Apply the field classes used by the templates."""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             css = 'form-select' if isinstance(field.widget, (forms.Select, forms.SelectMultiple)) else 'form-control'
-            field.widget.attrs.setdefault('class', css)
+            classes = field.widget.attrs.get('class', '').split()
+            if css not in classes:
+                classes.append(css)
+            field.widget.attrs['class'] = ' '.join(classes)
+
+    def full_clean(self):
+        super().full_clean()
+        for name, field in self.fields.items():
+            if self.errors.get(name):
+                classes = field.widget.attrs.get('class', '').split()
+                if 'is-invalid' not in classes:
+                    classes.append('is-invalid')
+                field.widget.attrs['class'] = ' '.join(classes)
 
 
 class TeamForm(StyledModelForm):
@@ -53,7 +80,7 @@ class ResourceForm(StyledModelForm):
     def clean(self):
         cleaned_data = super().clean()
         if not cleaned_data.get('url') and not cleaned_data.get('document'):
-            raise forms.ValidationError('Add a valid link or upload a document.')
+            self.add_error('url', 'Add a valid link or upload a document.')
         return cleaned_data
 
 
@@ -73,7 +100,29 @@ class TaskForm(StyledModelForm):
         self.fields['assignee'].queryset = User.objects.filter(team_memberships__team=team).distinct() if team else User.objects.none()
 
 
+class AITaskJobForm(AccessibleFormMixin, forms.Form):
+    prompt = forms.CharField(max_length=1000, widget=forms.Textarea(attrs={
+        'rows': 4, 'maxlength': 1000, 'class': 'form-control w-100',
+        'placeholder': 'Describe a feature or goal for your team...',
+    }))
+    sprint = forms.ModelChoiceField(queryset=Sprint.objects.none(), required=False, empty_label='No sprint selected',
+                                      widget=forms.Select(attrs={'class': 'form-select w-100'}))
+
+    def __init__(self, *args, team=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['sprint'].queryset = Sprint.objects.filter(team=team) if team else Sprint.objects.none()
+
+
 class MentorRequestForm(StyledModelForm):
+    category = forms.ChoiceField(choices=[
+        ('Back-End Development & Databases', 'Back-End Development & Databases'),
+        ('Front-End Development & Frameworks', 'Front-End Development & Frameworks'),
+        ('AI, LLMs & Machine Learning', 'AI, LLMs & Machine Learning'),
+        ('DevOps, Docker & Cloud Deployment', 'DevOps, Docker & Cloud Deployment'),
+        ('UI/UX Design & User Experience', 'UI/UX Design & User Experience'),
+        ('Pitch & Presentation Structure', 'Pitch & Presentation Structure'),
+    ])
+
     class Meta:
         model = MentorRequest
         fields = ['subject', 'category', 'urgency', 'meeting_url', 'description']
@@ -82,6 +131,8 @@ class MentorRequestForm(StyledModelForm):
 
 
 class SubmissionForm(StyledModelForm):
+    repository_branch = forms.CharField(required=False, max_length=100, label='Repository branch',
+        widget=forms.TextInput(attrs={'placeholder': 'main'}))
     file = forms.FileField(
         required=False,
         validators=[FileExtensionValidator(['zip'])],
@@ -90,18 +141,36 @@ class SubmissionForm(StyledModelForm):
 
     class Meta:
         model = Submission
-        fields = ['project_name', 'category', 'description', 'github_url', 'demo_url', 'video_url', 'file']
+        fields = ['project_name', 'category', 'description', 'project_summary', 'github_url', 'demo_url', 'video_url', 'file', 'repository']
         labels = {'project_name': 'Project name', 'category': 'Challenge', 'description': 'Project pitch',
                   'github_url': 'GitHub / GitLab repository URL', 'demo_url': 'Online demo URL',
-                  'video_url': 'Demo video URL', 'file': 'Pitch deck PDF'}
+                  'video_url': 'Demo video URL', 'file': 'Pitch deck PDF', 'repository': 'HackFlow repository',
+                  'project_summary': 'Project summary'}
+
+    def __init__(self, *args, team=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        from repositories.models import Repository
+        self.fields['repository'].required = False
+        self.fields['repository'].queryset = Repository.objects.filter(team=team) if team else Repository.objects.none()
+        self.fields['project_summary'].widget.attrs.setdefault('rows', 5)
+        if self.instance and self.instance.pk and self.instance.repository_id:
+            self.fields['repository_branch'].initial = self.instance.repository.default_branch
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get('repository') and not cleaned.get('repository_branch'):
+            self.add_error('repository_branch', 'Choose a branch to freeze for this submission.')
+        if not cleaned.get('repository'):
+            cleaned['repository_branch'] = ''
+        return cleaned
 
 
-class MatchingFilterForm(forms.Form):
+class MatchingFilterForm(AccessibleFormMixin, forms.Form):
     skill = forms.CharField(required=False)
     role = forms.CharField(required=False)
 
 
-class DirectMessageForm(forms.ModelForm):
+class DirectMessageForm(AccessibleFormMixin, forms.ModelForm):
     class Meta:
         model = DirectMessage
         fields = ['body']
