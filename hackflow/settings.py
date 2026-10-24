@@ -151,6 +151,9 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media' / 'uploads'
 PRIVATE_MEDIA_ROOT = BASE_DIR / 'private_media'
 
+# Absolute base URL used in generated documents (QR codes of certificates).
+SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 

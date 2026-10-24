@@ -45,6 +45,10 @@
                 <i class="bi bi-file-earmark-zip-fill"></i>
                 <span>Project Submissions</span>
             </a>
+            <a href="{% url 'workshops:dashboard' %}" class="nav-link-item {% if request.resolver_match.url_name == 'dashboard' and request.resolver_match.namespace == 'workshops' %}active{% endif %}">
+                <i class="bi bi-easel2-fill"></i>
+                <span>Ateliers & Formations</span>
+            </a>
 
             <div class="sidebar-heading mt-3">Paramètres</div>
             <a href="{% url 'accounts:profile' %}" class="nav-link-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">

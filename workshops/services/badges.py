@@ -63,9 +63,12 @@ BADGE_DEFINITIONS = [
 
 
 def ensure_badges_exist():
-    """Crée les badges en base s'ils n'existent pas (idempotent)."""
+    """Crée les badges manquants en base (idempotent, 1 requête si tout existe)."""
     from workshops.models import Badge
+    existing = set(Badge.objects.values_list('slug', flat=True))
     for defn in BADGE_DEFINITIONS:
+        if defn['slug'] in existing:
+            continue
         Badge.objects.get_or_create(
             slug=defn['slug'],
             defaults={

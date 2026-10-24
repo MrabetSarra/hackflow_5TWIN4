@@ -35,11 +35,13 @@ Dashboard & calendrier
 import io
 import secrets
 from datetime import timedelta
+from datetime import timezone as dt_timezone
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError, transaction
+from django.db.models import Avg, Count, Q
 from django.http import (FileResponse, HttpResponse, HttpResponseBadRequest,
                           JsonResponse)
 from django.shortcuts import get_object_or_404, redirect, render
@@ -113,6 +115,17 @@ def _can_manage(user, workshop):
     return user.role == 'admin' or workshop.created_by == user
 
 
+def _ics_escape(value: str) -> str:
+    """Échappe une valeur texte pour le format iCalendar (RFC 5545)."""
+    return (
+        str(value)
+        .replace('\\', '\\\\')
+        .replace(';', '\\;')
+        .replace(',', '\\,')
+        .replace('\n', '\\n')
+    )
+
+
 # ---------------------------------------------------------------------------
 # P2 — Catalogue
 # ---------------------------------------------------------------------------
@@ -133,7 +146,6 @@ def workshop_list(request):
         sort     = form.cleaned_data.get('sort', 'date')
 
         if q:
-            from django.db.models import Q
             qs = qs.filter(
                 Q(title__icontains=q)
                 | Q(speaker_name__icontains=q)
@@ -148,14 +160,28 @@ def workshop_list(request):
 
         if sort == '-date':
             qs = qs.order_by('-starts_at')
-        elif sort == 'rating':
-            qs = qs.order_by('-starts_at')   # classement par note géré plus bas
         else:
             qs = qs.order_by('starts_at')
     else:
         qs = qs.order_by('starts_at')
 
     workshops = list(qs)
+
+    # Les tris par note et par places restantes portent sur des propriétés
+    # calculées : ils sont donc appliqués en Python, pas en SQL.
+    sort_key = form.cleaned_data.get('sort') if form.is_valid() else 'date'
+    if sort_key == 'rating':
+        workshops.sort(
+            key=lambda w: (w.average_rating is not None, w.average_rating or 0),
+            reverse=True,
+        )
+    elif sort_key == 'fill':
+        workshops.sort(
+            key=lambda w: (
+                w.seats_left is None,
+                w.seats_left if w.seats_left is not None else 999,
+            )
+        )
 
     # Recommandation IA pour les étudiants
     recommended = []
@@ -405,6 +431,14 @@ def cancel(request, pk):
         messages.error(request, 'Vous avez déjà participé, impossible d\'annuler.')
         return redirect('workshops:my_bookings')
 
+    if booking.status == Booking.Status.CANCELLED:
+        messages.info(request, 'Cette réservation est déjà annulée.')
+        return redirect('workshops:my_bookings')
+
+    # Seule une réservation confirmée libère réellement une place.
+    # Annuler une place "en attente" ne doit jamais promouvoir quelqu'un.
+    freed_a_seat = booking.status == Booking.Status.CONFIRMED
+
     with transaction.atomic():
         booking.status = Booking.Status.CANCELLED
         booking.cancelled_at = timezone.now()
@@ -413,7 +447,7 @@ def cancel(request, pk):
         _log_activity(ws, request.user, 'cancelled')
 
         # Promouvoir le premier en attente
-        if ws.seats_left is not None and ws.seats_left > 0:
+        if freed_a_seat and ws.seats_left is not None and ws.seats_left > 0:
             first_wait = (
                 Booking.objects.select_for_update()
                 .filter(workshop=ws, status=Booking.Status.WAITING)
@@ -471,12 +505,14 @@ def rate(request, pk):
 def checkin(request, pk, token):
     """
     Valide la présence d'un étudiant via son token QR.
-    Accessible à l'organisateur (qui scanne) ou à l'étudiant lui-même.
+
+    Réservée aux organisateurs / mentors : un étudiant ne peut pas valider
+    sa propre présence (intégrité du certificat).
     """
     ws = get_object_or_404(Workshop, pk=pk)
     booking = get_object_or_404(Booking, workshop=ws, checkin_token=token)
 
-    if request.user.role not in ('admin', 'mentor') and request.user != booking.user:
+    if request.user.role not in ('admin', 'mentor'):
         raise PermissionDenied
 
     if booking.status == Booking.Status.ATTENDED:
@@ -667,17 +703,12 @@ def revoke_certificate(request, pk):
 
 @role_required('admin', 'mentor')
 def organizer_dashboard(request):
-    from django.db.models import Avg, Count
-
     workshops = (
         Workshop.objects.filter(created_by=request.user)
         .annotate(
             nb_confirmed=Count(
                 'bookings',
-                filter=__import__('django.db.models',
-                                  fromlist=['Q']).Q(
-                    bookings__status__in=['confirmed', 'attended']
-                )
+                filter=Q(bookings__status__in=['confirmed', 'attended']),
             ),
             avg_rating=Avg('bookings__rating'),
         )
@@ -690,10 +721,7 @@ def organizer_dashboard(request):
             Workshop.objects.annotate(
                 nb_confirmed=Count(
                     'bookings',
-                    filter=__import__('django.db.models',
-                                      fromlist=['Q']).Q(
-                        bookings__status__in=['confirmed', 'attended']
-                    )
+                    filter=Q(bookings__status__in=['confirmed', 'attended']),
                 ),
                 avg_rating=Avg('bookings__rating'),
             ).order_by('-starts_at')
@@ -758,13 +786,14 @@ def export_ics(request):
 
     for ws in workshops:
         uid = f'workshop-{ws.pk}@hackflow.app'
-        dtstart = ws.starts_at.strftime('%Y%m%dT%H%M%SZ')
-        dtend   = ws.ends_at.strftime('%Y%m%dT%H%M%SZ')
-        now_str = timezone.now().strftime('%Y%m%dT%H%M%SZ')
+        # iCalendar attend de l'UTC explicite (suffixe Z)
+        dtstart = ws.starts_at.astimezone(dt_timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+        dtend   = ws.ends_at.astimezone(dt_timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+        now_str = timezone.now().astimezone(dt_timezone.utc).strftime('%Y%m%dT%H%M%SZ')
         location = ws.room if ws.mode == 'onsite' else (
             ws.meeting_url if ws.mode == 'online' else 'En ligne (replay)')
-        summary = ws.title.replace(',', '\\,').replace('\n', '\\n')
-        desc = (ws.description[:200] + '…').replace('\n', '\\n')
+        summary = _ics_escape(ws.title)
+        desc = _ics_escape(ws.description[:200] + '…')
 
         lines += [
             'BEGIN:VEVENT',
@@ -774,7 +803,7 @@ def export_ics(request):
             f'DTEND:{dtend}',
             f'SUMMARY:{summary}',
             f'DESCRIPTION:{desc}',
-            f'LOCATION:{location}',
+            f'LOCATION:{_ics_escape(location)}',
             'END:VEVENT',
         ]
 

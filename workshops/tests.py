@@ -18,6 +18,9 @@ workshops/tests.py
 13.  Code inexistant → context cert=None
 14.  recommend() retourne un score décroissant
 15.  Badge débloqué au 1er certificat
+ 16.  Double annulation → pas de double promotion
+ 17.  Tri du catalogue par note
+ 18.  Un étudiant ne peut pas valider sa propre présence
 """
 
 from datetime import timedelta
@@ -75,6 +78,7 @@ def _make_workshop(created_by, mode='onsite', capacity=5,
 # ---------------------------------------------------------------------------
 
 class WorkshopCrudTests(TestCase):
+
 
     def setUp(self):
         self.admin   = _make_user('admin_user',   role='admin')
@@ -424,4 +428,81 @@ class WorkshopCrudTests(TestCase):
                 user=self.student,
                 badge__slug='first-workshop',
             ).exists()
+        )
+
+    # ------------------------------------------------------------------
+    # Test 16 — Double annulation → pas de double promotion
+    # ------------------------------------------------------------------
+    def test_16_cancel_twice_does_not_double_promote(self):
+        ws = _make_workshop(self.admin, capacity=1)
+        waiter_a = _make_user('waiter_a', role='student')
+        waiter_b = _make_user('waiter_b', role='student')
+
+        Booking.objects.create(
+            workshop=ws, user=self.student,
+            status=Booking.Status.CONFIRMED, seat_number=1,
+        )
+        booking_a = Booking.objects.create(
+            workshop=ws, user=waiter_a, status=Booking.Status.WAITING,
+        )
+        booking_b = Booking.objects.create(
+            workshop=ws, user=waiter_b, status=Booking.Status.WAITING,
+        )
+
+        self.client.login(username='student_user', password='Test1234!')
+        url = reverse('workshops:cancel', kwargs={'pk': ws.pk})
+
+        self.client.post(url)  # annulation réelle → waiter_a promu
+        booking_a.refresh_from_db()
+        self.assertEqual(booking_a.status, Booking.Status.CONFIRMED)
+
+        self.client.post(url)  # 2e clic → ne doit rien promouvoir
+        booking_b.refresh_from_db()
+        self.assertEqual(booking_b.status, Booking.Status.WAITING)
+
+    # ------------------------------------------------------------------
+    # Test 17 — Tri du catalogue par note
+    # ------------------------------------------------------------------
+    def test_17_list_sorts_by_rating(self):
+        good = _make_workshop(self.admin, title='Excellent atelier')
+        bad = _make_workshop(self.admin, title='Atelier moyen')
+
+        rater = _make_user('rater_student', role='student')
+        Booking.objects.create(
+            workshop=good, user=rater,
+            status=Booking.Status.ATTENDED, rating=5,
+        )
+        Booking.objects.create(
+            workshop=bad, user=self.student,
+            status=Booking.Status.ATTENDED, rating=2,
+        )
+
+        # Client anonyme : la recommandation IA n'entre pas en jeu
+        response = self.client.get(
+            reverse('workshops:list'), {'sort': 'rating'})
+        self.assertEqual(response.status_code, 200)
+        ids = [w.pk for w in response.context['workshops']]
+        self.assertLess(ids.index(good.pk), ids.index(bad.pk))
+
+    # ------------------------------------------------------------------
+    # Test 18 — Un étudiant ne peut pas valider sa propre présence
+    # ------------------------------------------------------------------
+    def test_18_student_cannot_self_checkin(self):
+        ws = _make_workshop(self.admin, capacity=10)
+        booking = Booking.objects.create(
+            workshop=ws, user=self.student,
+            status=Booking.Status.CONFIRMED, seat_number=1,
+        )
+
+        self.client.login(username='student_user', password='Test1234!')
+        response = self.client.get(
+            reverse('workshops:checkin',
+                    kwargs={'pk': ws.pk, 'token': booking.checkin_token})
+        )
+
+        self.assertEqual(response.status_code, 403)
+        booking.refresh_from_db()
+        self.assertEqual(booking.status, Booking.Status.CONFIRMED)
+        self.assertFalse(
+            Certificate.objects.filter(workshop=ws, user=self.student).exists()
         )

@@ -37,6 +37,16 @@
                 <span>Project Submissions</span>
             </a>
 
+            <div class="sidebar-heading mt-3">Ateliers</div>
+            <a href="{% url 'workshops:list' %}" class="nav-link-item {% if request.resolver_match.namespace == 'workshops' and request.resolver_match.url_name == 'list' %}active{% endif %}">
+                <i class="bi bi-easel2-fill"></i>
+                <span>Catalogue Ateliers</span>
+            </a>
+            <a href="{% url 'workshops:dashboard' %}" class="nav-link-item {% if request.resolver_match.namespace == 'workshops' and request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <i class="bi bi-qr-code-scan"></i>
+                <span>Mes Animations</span>
+            </a>
+
             <div class="sidebar-heading mt-3">Suivi & Feedbacks</div>
             <a href="{% url 'mentor:evaluations' %}" class="nav-link-item {% if request.resolver_match.url_name == 'evaluations' %}active{% endif %}">
                 <i class="bi bi-pencil-square"></i>

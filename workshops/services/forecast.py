@@ -36,23 +36,26 @@ _MODE_ENC  = {'onsite': 0, 'online': 1, 'recorded': 2}
 _LEVEL_ENC = {'beginner': 0, 'intermediate': 1, 'advanced': 2}
 
 
-def _extract_features(workshop) -> list[float]:
-    """Extrait le vecteur de features d'un atelier."""
-    now = timezone.now()
-    delta = workshop.starts_at - now
-    hours_remaining = max(0.0, delta.total_seconds() / 3600)
+def _static_features(workshop) -> list[float]:
+    """
+    Vecteur de features indépendantes du moment présent.
 
-    if workshop.capacity and workshop.capacity > 0:
-        fill_now = workshop.confirmed_count / workshop.capacity
-    else:
-        fill_now = 0.0
+    Important : ces features sont identiques pour un atelier passé et pour
+    un atelier futur, ce qui rend l'entraînement cohérent avec la prédiction
+    (les anciennes features « heures restantes » valaient toujours 0 pour
+    les ateliers passés, ce qui rendait le modèle inexploitable).
+    """
+    duration = workshop.ends_at - workshop.starts_at
+    duration_h = max(0.0, duration.total_seconds() / 3600)
 
-    weekday     = workshop.starts_at.weekday()
-    hour_of_day = workshop.starts_at.hour
-    mode_enc    = _MODE_ENC.get(workshop.mode, 0)
-    level_enc   = _LEVEL_ENC.get(workshop.level, 0)
-
-    return [hours_remaining, fill_now, weekday, hour_of_day, mode_enc, level_enc]
+    return [
+        float(workshop.capacity or 0),
+        float(workshop.starts_at.weekday()),
+        float(workshop.starts_at.hour),
+        float(_MODE_ENC.get(workshop.mode, 0)),
+        float(_LEVEL_ENC.get(workshop.level, 0)),
+        duration_h,
+    ]
 
 
 def _heuristic_forecast(workshop) -> dict:
@@ -112,7 +115,7 @@ def _ml_forecast(workshop, past_workshops) -> dict:
     for pw in past_workshops:
         if pw.capacity == 0:
             continue
-        feat = _extract_features(pw)
+        feat = _static_features(pw)
         actual_fill = pw.attendee_count / pw.capacity
         noshow_rate = 1 - (pw.attendee_count / max(1, pw.confirmed_count))
         X_train.append(feat)
@@ -133,7 +136,7 @@ def _ml_forecast(workshop, past_workshops) -> dict:
         model_fill.fit(X_scaled, y_fill)
         model_noshow.fit(X_scaled, y_noshow)
 
-        x_pred = scaler.transform([_extract_features(workshop)])
+        x_pred = scaler.transform([_static_features(workshop)])
         fill_proba   = float(np.clip(model_fill.predict(x_pred)[0], 0, 1))
         noshow_proba = float(np.clip(model_noshow.predict(x_pred)[0], 0, 1))
 
