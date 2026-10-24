@@ -1,56 +1,64 @@
 {% extends "layouts/base_admin.html" %}
 
-{% block title %}Gestion des Participants - HackFlow Admin{% endblock %}
+{% block title %}Gestion des participants - HackFlow{% endblock %}
 
 {% block admin_content %}
 <div class="container-fluid px-0">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-1">Répertoire des Participants</h2>
-            <p class="text-muted small mb-0">Gestion, affectation d'équipe et suivi des compétences de chaque participant et mentor.</p>
+            <h2 class="fw-bold text-dark mb-1">Gestion des participants</h2>
+            <p class="text-muted small mb-0">{{ participants_count }} compte(s) étudiant ou mentor.</p>
         </div>
         <div class="d-flex gap-2">
-            <button class="btn btn-outline-primary btn-sm rounded-pill px-3" data-demo-toast="Lancement de l'algorithme d'affectation automatique des 31 orphelins...">
-                <i class="bi bi-magic me-1"></i>Affectation auto
-            </button>
-            <button class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" data-demo-toast="Export CSV généré !">
+            <form method="post" action="{% url 'dashboard_admin:participants_auto_assign' %}" onsubmit="return confirm('Affecter automatiquement les étudiants sans équipe aux places disponibles ?');">
+                {% csrf_token %}
+                <button class="btn btn-outline-primary btn-sm rounded-pill px-3" type="submit">
+                    <i class="bi bi-magic me-1"></i>Affectation auto
+                </button>
+            </form>
+            <a class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" href="{% url 'dashboard_admin:participants_export' %}?q={{ filters.q|urlencode }}&amp;role={{ filters.role|urlencode }}&amp;status={{ filters.status|urlencode }}">
                 <i class="bi bi-file-earmark-spreadsheet me-1"></i>Exporter CSV
-            </button>
+            </a>
         </div>
     </div>
 
-    <!-- Filtres et Recherche -->
+    {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %} alert-dismissible fade show" role="status">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+    </div>
+    {% endfor %}
+
     <div class="card-modern p-3 mb-4">
-        <div class="row g-3 align-items-center">
+        <form method="get" class="row g-3 align-items-center">
             <div class="col-md-5">
                 <div class="input-group">
                     <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
-                    <input type="text" class="form-control border-start-0" placeholder="Rechercher par nom, email ou compétence...">
+                    <input type="search" name="q" value="{{ filters.q }}" class="form-control border-start-0" placeholder="Nom, e-mail, établissement ou compétence...">
                 </div>
             </div>
             <div class="col-md-3">
-                <select class="form-select">
-                    <option selected>Tous les rôles</option>
-                    <option>Étudiants</option>
-                    <option>Mentors</option>
+                <select class="form-select" name="role">
+                    <option value="">Tous les rôles</option>
+                    <option value="student" {% if role_filter == 'student' %}selected{% endif %}>Étudiants</option>
+                    <option value="mentor" {% if role_filter == 'mentor' %}selected{% endif %}>Mentors</option>
                 </select>
             </div>
             <div class="col-md-2">
-                <select class="form-select">
-                    <option selected>Tous statuts</option>
-                    <option>En équipe</option>
-                    <option>Sans équipe</option>
+                <select class="form-select" name="status">
+                    <option value="">Tous les statuts</option>
+                    <option value="assigned" {% if status_filter == 'assigned' %}selected{% endif %}>En équipe</option>
+                    <option value="unassigned" {% if status_filter == 'unassigned' %}selected{% endif %}>Sans équipe</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Actifs</option>
+                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactifs</option>
                 </select>
             </div>
             <div class="col-md-2">
-                <button class="btn btn-primary w-100" data-demo-toast="Filtres appliqués !">
-                    <i class="bi bi-funnel-fill me-1"></i>Filtrer
-                </button>
+                <button class="btn btn-primary w-100" type="submit"><i class="bi bi-funnel-fill me-1"></i>Filtrer</button>
             </div>
-        </div>
+        </form>
     </div>
 
-    <!-- Table des Participants -->
     <div class="card-modern overflow-hidden">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -70,59 +78,59 @@
                     <tr>
                         <td class="ps-4">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 38px; height: 38px;">
-                                    {{ p.name|slice:":1" }}
-                                </div>
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 38px; height: 38px;">{{ p.name|slice:":1"|upper }}</div>
                                 <div>
-                                    <div class="fw-bold text-dark">{{ p.name }}</div>
-                                    <div class="small text-muted font-mono" style="font-size: 0.75rem;">{{ p.email }}</div>
+                                    <a class="fw-bold text-dark text-decoration-none" href="{% url 'dashboard_admin:participant_detail' p.id %}">{{ p.name }}</a>
+                                    <div class="small text-muted font-mono" style="font-size: 0.75rem;">{{ p.email|default:"Aucun e-mail" }}</div>
                                 </div>
                             </div>
                         </td>
+                        <td><span class="small text-dark">{{ p.school|default:"—" }}</span></td>
+                        <td><span class="badge {% if p.role_key == 'mentor' %}bg-purple bg-opacity-10 text-secondary border border-secondary border-opacity-25{% else %}bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25{% endif %} rounded-pill">{{ p.role }}</span></td>
                         <td>
-                            <span class="small text-dark">{{ p.school }}</span>
+                            {% for team_name in p.team_names %}<div><strong class="text-primary small">{{ team_name }}</strong></div>{% empty %}<span class="text-muted small">Aucune</span>{% endfor %}
                         </td>
-                        <td>
-                            <span class="badge {% if p.role == 'Mentor' %}bg-purple bg-opacity-10 text-secondary border border-secondary border-opacity-25{% else %}bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25{% endif %} rounded-pill">
-                                {{ p.role }}
-                            </span>
-                        </td>
-                        <td>
-                            {% if p.team != 'Aucune' %}
-                            <strong class="text-primary small">{{ p.team }}</strong>
-                            {% else %}
-                            <span class="badge bg-danger-subtle text-danger font-mono small">Orphelin</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div class="d-flex flex-wrap gap-1">
-                                {% for s in p.skills %}
-                                <span class="badge-tag py-0 px-2" style="font-size: 0.68rem;">{{ s }}</span>
-                                {% endfor %}
-                            </div>
-                        </td>
-                        <td>
-                            <span class="badge bg-{{ p.status_color }}-subtle text-{{ p.status_color }} border border-{{ p.status_color }}-subtle rounded-pill">
-                                {{ p.status }}
-                            </span>
-                        </td>
+                        <td><div class="d-flex flex-wrap gap-1">{% for skill in p.skills %}<span class="badge-tag py-0 px-2" style="font-size: 0.68rem;">{{ skill }}</span>{% empty %}<span class="text-muted small">—</span>{% endfor %}</div></td>
+                        <td><span class="badge bg-{{ p.status_color }}-subtle text-{{ p.status_color }} border border-{{ p.status_color }}-subtle rounded-pill">{{ p.status }}</span></td>
                         <td class="pe-4 text-end">
-                            <div class="dropdown">
-                                <button class="btn btn-sm btn-light border rounded-pill" type="button" data-bs-toggle="dropdown">
-                                    <i class="bi bi-three-dots"></i>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 small">
-                                    <li><a class="dropdown-item" href="#" data-demo-toast="Profil de {{ p.name }} ouvert !"><i class="bi bi-person me-2"></i>Voir la fiche</a></li>
-                                    <li><a class="dropdown-item" href="#" data-demo-toast="Formulaire d'affectation d'équipe ouvert pour {{ p.name }} !"><i class="bi bi-diagram-3 me-2"></i>Affecter une équipe</a></li>
-                                    <li><a class="dropdown-item text-danger" href="#" data-demo-toast="Email de notification envoyé à {{ p.name }} !"><i class="bi bi-envelope me-2"></i>Envoyer un rappel</a></li>
-                                </ul>
+                            <div class="d-flex justify-content-end align-items-center gap-2">
+                                {% if p.role_key == 'student' %}
+                                <form method="post" action="{% url 'dashboard_admin:participant_set_team' p.id %}" class="d-flex gap-1">
+                                    {% csrf_token %}
+                                    <select name="team_id" class="form-select form-select-sm" aria-label="Équipe pour {{ p.name }}" style="max-width: 150px;">
+                                        <option value="">Aucune équipe</option>
+                                        {% for team in teams %}<option value="{{ team.id }}" {% if p.team_id == team.id %}selected{% endif %}>{{ team.name }}</option>{% endfor %}
+                                    </select>
+                                    <button class="btn btn-sm btn-outline-primary" type="submit" title="Enregistrer l'affectation"><i class="bi bi-check-lg"></i></button>
+                                </form>
+                                {% endif %}
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light border rounded-pill" type="button" data-bs-toggle="dropdown" aria-label="Actions pour {{ p.name }}"><i class="bi bi-three-dots"></i></button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 small">
+                                        <li><a class="dropdown-item" href="{% url 'dashboard_admin:participant_detail' p.id %}"><i class="bi bi-person me-2"></i>Voir la fiche</a></li>
+                                        {% if p.email %}<li><a class="dropdown-item" href="mailto:{{ p.email }}"><i class="bi bi-envelope me-2"></i>Contacter</a></li>{% endif %}
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><form method="post" action="{% url 'dashboard_admin:participant_toggle_active' p.id %}">{% csrf_token %}<button class="dropdown-item {% if p.user.is_active %}text-danger{% else %}text-success{% endif %}" type="submit"><i class="bi bi-person-slash me-2"></i>{% if p.user.is_active %}Désactiver le compte{% else %}Réactiver le compte{% endif %}</button></form></li>
+                                    </ul>
+                                </div>
                             </div>
                         </td>
                     </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center py-5"><i class="bi bi-people text-muted fs-2 d-block mb-2"></i><span class="text-muted">Aucun participant ne correspond à ces filtres.</span></td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        {% if page_obj.paginator.num_pages > 1 %}
+        <div class="d-flex justify-content-between align-items-center p-3 border-top">
+            <span class="small text-muted">Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }} · {{ page_obj.paginator.count }} résultat(s)</span>
+            <div class="btn-group">
+                {% if page_obj.has_previous %}<a class="btn btn-sm btn-outline-secondary" href="?q={{ filters.q|urlencode }}&amp;role={{ filters.role|urlencode }}&amp;status={{ filters.status|urlencode }}&amp;page={{ page_obj.previous_page_number }}">Précédent</a>{% endif %}
+                {% if page_obj.has_next %}<a class="btn btn-sm btn-outline-secondary" href="?q={{ filters.q|urlencode }}&amp;role={{ filters.role|urlencode }}&amp;status={{ filters.status|urlencode }}&amp;page={{ page_obj.next_page_number }}">Suivant</a>{% endif %}
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

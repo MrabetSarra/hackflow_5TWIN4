@@ -1,13 +1,46 @@
 {% extends "layouts/base_student.html" %}
+{% load static %}
 
-{% block title %}Mon Équipe - {{ team.name }} - HackFlow{% endblock %}
+{% block title %}My Team - {{ team.name }} - HackFlow{% endblock %}
 
 {% block student_content %}
 <div class="container-fluid px-0">
-    <!-- Header Équipe avec Couverture Visuelle -->
+    {% if not team %}
+    <section class="card-modern team-empty-state overflow-hidden position-relative p-4 p-lg-5">
+        <div class="team-empty-state__glow team-empty-state__glow--one"></div>
+        <div class="team-empty-state__glow team-empty-state__glow--two"></div>
+        <div class="row align-items-center g-4 position-relative">
+            <div class="col-lg-5 text-center">
+                <div class="team-empty-state__art mx-auto" aria-hidden="true">
+                    <span class="team-empty-state__orbit team-empty-state__orbit--one"></span>
+                    <span class="team-empty-state__orbit team-empty-state__orbit--two"></span>
+                    <span class="team-empty-state__person team-empty-state__person--left"><i class="bi bi-person-fill"></i></span>
+                    <span class="team-empty-state__person team-empty-state__person--right"><i class="bi bi-person-fill"></i></span>
+                    <span class="team-empty-state__person team-empty-state__person--main"><i class="bi bi-people-fill"></i></span>
+                    <span class="team-empty-state__plus"><i class="bi bi-plus-lg"></i></span>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 mb-3"><i class="bi bi-stars me-1"></i>Your workspace starts here</span>
+                <h2 class="display-6 fw-bold text-body mb-3">You are not on a team yet</h2>
+                <p class="text-body-secondary fs-5 mb-4">Create a team to organize your project, invite students, manage tasks, and chat with your teammates in one place.</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-primary btn-lg rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#createTeamModal"><i class="bi bi-plus-circle me-2"></i>Create a new team</button>
+                    <a href="{% url 'student:skills_matching' %}" class="btn btn-outline-secondary btn-lg rounded-pill px-4"><i class="bi bi-search me-2"></i>Find a team</a>
+                </div>
+                <div class="d-flex flex-wrap gap-4 mt-4 pt-4 border-top text-body-secondary small">
+                    <span><i class="bi bi-kanban text-primary me-2"></i>Plan tasks</span>
+                    <span><i class="bi bi-chat-dots text-primary me-2"></i>Chat together</span>
+                    <span><i class="bi bi-person-plus text-primary me-2"></i>Invite members</span>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% else %}
+    <!-- Team Header and Cover -->
     <div class="card-modern overflow-hidden mb-4 position-relative">
         <div class="position-relative" style="height: 160px;">
-            <img src="https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?w=1200&auto=format&fit=crop&q=80" alt="EcoTrack Cover" class="w-100 h-100" style="object-fit: cover;">
+            <img src="https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?w=1200&auto=format&fit=crop&q=80" alt="{{ team.name }} Cover" class="w-100 h-100" style="object-fit: cover;">
             <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(180deg, rgba(15,23,42,0.2) 0%, rgba(15,23,42,0.8) 100%);"></div>
         </div>
         <div class="p-4 p-md-5 pt-3">
@@ -26,11 +59,11 @@
                 </div>
 
                 <div class="d-flex flex-wrap gap-2">
-                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#inviteModal">
-                        <i class="bi bi-person-plus-fill me-1"></i>Inviter un membre
-                    </button>
+                        {% if can_manage %}<button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#inviteModal">
+                        <i class="bi bi-person-plus-fill me-1"></i>Invite a member
+                        </button>{% endif %}
                     <a href="{% url 'student:tasks_kanban' %}" class="btn btn-primary shadow-sm">
-                        <i class="bi bi-kanban-fill me-1"></i>Ouvrir le Kanban
+                        <i class="bi bi-kanban-fill me-1"></i>Open Kanban
                     </a>
                 </div>
             </div>
@@ -38,16 +71,16 @@
     </div>
 
     <div class="row g-4">
-        <!-- Colonne Gauche : Membres de l'Équipe -->
+        <!-- Left Column: Team Members -->
         <div class="col-lg-8">
             <div class="card-modern p-4 mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
                     <div>
-                        <h5 class="fw-bold text-dark mb-1">Membres du Collectif ({{ team.members|length }}/5)</h5>
-                        <p class="text-muted small mb-0">Rôles, responsabilités et expertises de l'équipe.</p>
+                        <h5 class="fw-bold text-dark mb-1">Team Members ({{ team.member_count }}/{{ team.max_members }})</h5>
+                        <p class="text-muted small mb-0">Team roles, responsibilities, and skills.</p>
                     </div>
                     <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">
-                        1 place disponible
+                        {{ team.places_left }} spot(s) available
                     </span>
                 </div>
 
@@ -55,13 +88,13 @@
                     {% for member in team.members %}
                     <div class="p-3 rounded-3 border d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 bg-white card-modern-hoverable">
                         <div class="d-flex align-items-center gap-3">
-                            <img src="{{ member.avatar }}" alt="{{ member.name }}" class="rounded-circle border" width="48" height="48" style="object-fit: cover;">
+                            {% if member.avatar %}<img src="{{ member.avatar }}" alt="{{ member.name }}" class="rounded-circle border" width="48" height="48" style="object-fit: cover;">{% else %}<span class="rounded-circle border bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center fw-bold flex-shrink-0" style="width: 48px; height: 48px;">{{ member.initials }}</span>{% endif %}
                             <div>
                                 <div class="d-flex align-items-center gap-2">
                                     <h6 class="fw-bold mb-0 text-dark">{{ member.name }}</h6>
                                     {% if member.is_leader %}
                                     <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill small py-0 px-2" style="font-size: 0.68rem;">
-                                        <i class="bi bi-star-fill me-1"></i>Capitaine
+                                        <i class="bi bi-star-fill me-1"></i>Captain
                                     </span>
                                     {% endif %}
                                 </div>
@@ -75,124 +108,227 @@
                         </div>
 
                         <div class="d-flex align-items-center gap-2 ms-auto ms-sm-0">
-                            <button class="btn btn-sm btn-light border" title="Contacter sur Discord" data-demo-toast="Messagerie directe avec {{ member.name }} simulée.">
+                            {% if member.id != request.user.id %}<a href="{% url 'student:conversation' member.id %}" class="btn btn-sm btn-light border js-open-team-conversation" data-conversation-url="{% url 'student:conversation' member.id %}?partial=1" data-recipient-name="{{ member.name }}" title="Message {{ member.name }}" aria-label="Message {{ member.name }}">
                                 <i class="bi bi-chat-text"></i>
-                            </button>
+                            </a>{% endif %}
                         </div>
                     </div>
                     {% endfor %}
 
-                    <!-- Slot recrutement disponible -->
+                    <!-- Open recruitment slot -->
                     <div class="p-4 rounded-3 border border-2 border-dashed border-primary border-opacity-50 bg-primary bg-opacity-10 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
                         <div>
                             <div class="d-flex align-items-center gap-2 mb-1">
-                                <span class="badge bg-primary text-white rounded-pill">Slot #5 Ouvert</span>
-                                <strong class="text-primary">Profil recherché :</strong>
+                                <span class="badge bg-primary text-white rounded-pill">Open Slot #{{ team.slot_number }}</span>
+                                <strong class="text-primary">Looking for:</strong>
                             </div>
                             <p class="small text-muted mb-0">{{ team.seeking_skill }}</p>
                         </div>
                         <a href="{% url 'student:skills_matching' %}" class="btn btn-primary btn-sm rounded-pill px-3 flex-shrink-0">
-                            <i class="bi bi-search me-1"></i>Chercher dans la bourse aux talents
+                            <i class="bi bi-search me-1"></i>Browse the talent pool
                         </a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Colonne Droite : Liens & Ressources Projet -->
+        <!-- Right column: project links and resources -->
         <div class="col-lg-4">
             <div class="card-modern p-4 mb-4">
-                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-link-45deg text-primary me-2"></i>Ressources & Dépôts</h5>
+                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-link-45deg text-primary me-2"></i>Project Links & Resources</h5>
                 <div class="d-flex flex-column gap-3">
-                    <a href="{{ team.repo_url }}" target="_blank" class="p-3 rounded-3 border text-decoration-none text-dark d-flex align-items-center justify-content-between hover-bg-light">
+                    {% for link in team.project_links %}<a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" class="p-3 rounded-3 border text-decoration-none text-dark d-flex align-items-center justify-content-between hover-bg-light">
+                        <div class="d-flex align-items-center gap-3"><i class="bi {% if link.kind == 'github' %}bi-github{% elif link.kind == 'demo' %}bi-globe{% else %}bi-camera-video{% endif %} fs-4 text-dark"></i><div><div class="fw-bold small">{{ link.title }}</div><div class="text-muted small text-truncate" style="font-size: 0.75rem;">{{ link.url }}</div><div class="text-body-secondary" style="font-size: 0.68rem;">Shared from latest submission · updated by {{ link.updated_by }}</div></div></div>
+                        <i class="bi bi-box-arrow-up-right text-muted"></i>
+                    </a>{% endfor %}
+                    {% for resource in resources %}<a href="{% if resource.url %}{{ resource.url }}{% else %}{{ resource.document.url }}{% endif %}" target="_blank" rel="noopener noreferrer" class="p-3 rounded-3 border text-decoration-none text-dark d-flex align-items-center justify-content-between hover-bg-light">
                         <div class="d-flex align-items-center gap-3">
-                            <i class="bi bi-github fs-4 text-dark"></i>
+                                <i class="bi {% if resource.kind == 'github' %}bi-github{% elif resource.kind == 'figma' %}bi-palette-fill{% elif resource.kind == 'demo' %}bi-globe{% else %}bi-file-earmark-text{% endif %} fs-4 text-dark"></i>
                             <div>
-                                <div class="fw-bold small">Dépôt GitHub</div>
-                                <div class="text-muted small text-truncate" style="font-size: 0.75rem;">hackflow-teams/ecotrack-app</div>
+                                    <div class="fw-bold small">{{ resource.title }}</div>
+                                    <div class="text-muted small text-truncate" style="font-size: 0.75rem;">{{ resource.url|default:resource.document.name }}</div>
+                                    {% if resource.created_by %}<div class="text-body-secondary" style="font-size: 0.68rem;">Updated by {{ resource.created_by.get_full_name|default:resource.created_by.username }}</div>{% endif %}
                             </div>
                         </div>
                         <i class="bi bi-box-arrow-up-right text-muted"></i>
-                    </a>
-
-                    <a href="{{ team.figma_url }}" target="_blank" class="p-3 rounded-3 border text-decoration-none text-dark d-flex align-items-center justify-content-between hover-bg-light">
-                        <div class="d-flex align-items-center gap-3">
-                            <i class="bi bi-palette-fill fs-4 text-danger"></i>
-                            <div>
-                                <div class="fw-bold small">Maquettes Figma</div>
-                                <div class="text-muted small text-truncate" style="font-size: 0.75rem;">ecotrack-wireframes</div>
-                            </div>
-                        </div>
-                        <i class="bi bi-box-arrow-up-right text-muted"></i>
-                    </a>
-
-                    <a href="{{ team.demo_url }}" target="_blank" class="p-3 rounded-3 border text-decoration-none text-dark d-flex align-items-center justify-content-between hover-bg-light">
-                        <div class="d-flex align-items-center gap-3">
-                            <i class="bi bi-globe fs-4 text-primary"></i>
-                            <div>
-                                <div class="fw-bold small">Environnement Démo</div>
-                                <div class="text-muted small text-truncate" style="font-size: 0.75rem;">ecotrack.demo.hackflow.fr</div>
-                            </div>
-                        </div>
-                        <i class="bi bi-box-arrow-up-right text-muted"></i>
-                    </a>
+                    </a>{% if can_edit_resources %}<div class="d-flex justify-content-end gap-2"><a href="?edit_resource={{ resource.pk }}#resourceModal" class="btn btn-sm btn-outline-secondary">Edit</a><form method="post">{% csrf_token %}<input type="hidden" name="action" value="delete_resource"><input type="hidden" name="resource_id" value="{{ resource.pk }}"><button class="btn btn-sm btn-outline-danger" type="submit">Delete</button></form></div>{% endif %}{% empty %}{% if not team.project_links %}<span class="small text-body-secondary">No project links yet. Add the team's real repository, prototype, or demo link.</span>{% endif %}{% endfor %}
                 </div>
 
                 <div class="pt-3 border-top mt-3 text-center">
-                    <button class="btn btn-sm btn-outline-secondary w-100 rounded-pill" data-demo-toast="Ajout de lien externe simulé.">
-                        <i class="bi bi-plus-lg me-1"></i>Ajouter un lien ou un document
-                    </button>
+                    {% if can_edit_resources %}<button class="btn btn-sm btn-outline-secondary w-100 rounded-pill" data-bs-toggle="modal" data-bs-target="#resourceModal">
+                        <i class="bi bi-plus-lg me-1"></i>Add or update a team link/document
+                    </button>{% endif %}
                 </div>
             </div>
 
-            <!-- Paramètres d'équipe -->
+            <!-- Team Settings -->
             <div class="card-modern p-4">
-                <h6 class="fw-bold text-dark mb-3">Informations Organisation</h6>
+                <h6 class="fw-bold text-dark mb-3">Team Information</h6>
                 <ul class="list-unstyled small text-muted d-flex flex-column gap-2 mb-0">
                     <li class="d-flex justify-content-between">
-                        <span>Emplacement physique :</span>
+                        <span>Location:</span>
                         <strong class="text-dark">{{ team.table_number }}</strong>
                     </li>
                     <li class="d-flex justify-content-between">
-                        <span>Mentor référent assigné :</span>
-                        <strong class="text-primary">Dr. Marc Dubois</strong>
+                        <span>Assigned mentor:</span>
+                        <strong class="text-primary">{{ team.mentor_name }}</strong>
                     </li>
                     <li class="d-flex justify-content-between">
-                        <span>Statut du rendu final :</span>
-                        <span class="badge bg-warning text-dark">Brouillon</span>
+                        <span>Final submission status:</span>
+                        <span class="badge bg-warning text-dark">{{ team.submission_status }}</span>
                     </li>
                 </ul>
             </div>
         </div>
     </div>
 </div>
+    {% endif %}
 
-<!-- Modal Visuelle d'Invitation -->
+{% if not team %}
+<div class="modal fade{% if show_create_modal %} show d-block{% endif %}" id="createTeamModal" tabindex="-1" aria-labelledby="createTeamModalLabel" aria-hidden="{% if show_create_modal %}false{% else %}true{% endif %}" {% if show_create_modal %}aria-modal="true" role="dialog"{% endif %}>
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+        <div class="modal-content card-modern border-0">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold" id="createTeamModalLabel"><i class="bi bi-people-fill text-primary me-2"></i>Create your team</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}<input type="hidden" name="action" value="create_team">
+                <div class="modal-body p-4">
+                    {% for error in create_form.non_field_errors %}<div class="alert alert-danger">{{ error }}</div>{% endfor %}
+                    <p class="text-body-secondary small mb-4">Set up your project workspace. You can invite teammates after creating it.</p>
+                    {% for field in create_form %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}" class="form-label small fw-semibold">{{ field.label }}</label>
+                        {{ field }}
+                        {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-circle me-1"></i>Create team</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% if show_create_modal %}<div class="modal-backdrop fade show"></div>{% endif %}
+{% endif %}
+
+<!-- Invitation modal -->
 <div class="modal fade" id="inviteModal" tabindex="-1" aria-labelledby="inviteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content card-modern border-0">
             <div class="modal-header border-bottom">
-                <h5 class="modal-title fw-bold" id="inviteModalLabel"><i class="bi bi-person-plus-fill text-primary me-2"></i>Inviter un participant</h5>
+                <h5 class="modal-title fw-bold" id="inviteModalLabel"><i class="bi bi-person-plus-fill text-primary me-2"></i>Invite a participant</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4">
-                <label class="form-label small fw-semibold">Lien d'invitation direct pour rejoindre EcoTrack :</label>
+                <form method="post">{% csrf_token %}<input type="hidden" name="action" value="invite"><label class="form-label small fw-semibold">Direct invitation link to join {{ team.name }} :</label>
                 <div class="input-group mb-4">
-                    <input type="text" class="form-control font-mono small" value="https://hackflow.fr/join/team-ecotrack-x89f" readonly>
-                    <button class="btn btn-primary" type="button" data-demo-toast="Lien d'invitation copié dans le presse-papier !">
-                        <i class="bi bi-clipboard me-1"></i>Copier
+                    <input type="text" class="form-control font-mono small" value="{{ invitation_link }}" readonly>
+                    <button class="btn btn-primary" type="button" data-demo-toast="Invitation link copied to clipboard!">
+                        <i class="bi bi-clipboard me-1"></i>Copy
                     </button>
                 </div>
 
-                <label class="form-label small fw-semibold">Ou inviter par email universitaire :</label>
+                <label class="form-label small fw-semibold">Or invite by university email:</label>
                 <div class="input-group">
-                    <input type="email" class="form-control" placeholder="etudiant@universite.fr">
-                    <button class="btn btn-outline-primary" type="button" data-demo-toast="Invitation envoyée avec succès !">
-                        Envoyer
+                    <input type="email" name="email" class="form-control" placeholder="student@university.edu" required>
+                    <button class="btn btn-outline-primary" type="submit">
+                        Send
                     </button>
                 </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
+<div class="modal fade" id="teamConversationModal" tabindex="-1" aria-labelledby="teamConversationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+        <div class="modal-content card-modern border-0">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold" id="teamConversationModalLabel"><i class="bi bi-chat-dots-fill text-primary me-2"></i>Conversation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4" id="teamConversationModalBody">
+                <div class="text-center text-body-secondary py-5" role="status"><span class="spinner-border spinner-border-sm me-2"></span>Loading conversation…</div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+const initTeamConversationPopup = () => {
+    const modalElement = document.getElementById('teamConversationModal');
+    const modalBody = document.getElementById('teamConversationModalBody');
+    const modalTitle = document.getElementById('teamConversationModalLabel');
+    if (!modalElement || !modalBody || !window.bootstrap) return;
+
+    const modal = window.bootstrap.Modal.getOrCreateInstance(modalElement);
+    const loadConversation = async (url) => {
+        modalBody.innerHTML = '<div class="text-center text-body-secondary py-5" role="status"><span class="spinner-border spinner-border-sm me-2"></span>Loading conversation…</div>';
+        try {
+            const response = await fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}, credentials: 'same-origin'});
+            if (!response.ok) throw new Error('Unable to load conversation');
+            modalBody.innerHTML = await response.text();
+            scrollToLatestMessage();
+        } catch (error) {
+            modalBody.innerHTML = '<p class="alert alert-danger mb-0">Could not load this conversation. Please try again.</p>';
+        }
+    };
+    const scrollToLatestMessage = () => {
+        const list = modalBody.querySelector('[data-message-list]');
+        if (list) list.scrollTop = list.scrollHeight;
+    };
+
+    document.querySelectorAll('.js-open-team-conversation').forEach((link) => {
+        link.addEventListener('click', (event) => {
+            event.preventDefault();
+            modalTitle.innerHTML = '<i class="bi bi-chat-dots-fill text-primary me-2"></i>';
+            modalTitle.append(document.createTextNode(link.dataset.recipientName));
+            modal.show();
+            loadConversation(link.dataset.conversationUrl);
+        });
+    });
+
+    modalBody.addEventListener('submit', async (event) => {
+        const form = event.target.closest('[data-message-form]');
+        if (!form) return;
+        event.preventDefault();
+        const submitButton = form.querySelector('button[type="submit"]');
+        if (submitButton) submitButton.disabled = true;
+        const url = new URL(form.action, window.location.origin);
+        url.searchParams.set('partial', '1');
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: {'X-Requested-With': 'XMLHttpRequest'},
+                credentials: 'same-origin',
+            });
+            if (!response.ok) throw new Error('Unable to send message');
+            modalBody.innerHTML = await response.text();
+            scrollToLatestMessage();
+            modalBody.querySelector('textarea')?.focus();
+        } catch (error) {
+            if (submitButton) submitButton.disabled = false;
+            const notice = document.createElement('div');
+            notice.className = 'alert alert-danger mt-2';
+            notice.textContent = 'Your message could not be sent. Please try again.';
+            form.appendChild(notice);
+        }
+    });
+};
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTeamConversationPopup);
+} else {
+    initTeamConversationPopup();
+}
+</script>
+{% if team and can_edit_resources %}<div class="modal fade{% if show_resource_modal %} show d-block{% endif %}" id="resourceModal" tabindex="-1" aria-hidden="{% if show_resource_modal %}false{% else %}true{% endif %}" {% if show_resource_modal %}aria-modal="true" role="dialog"{% endif %}><div class="modal-dialog modal-dialog-centered"><div class="modal-content card-modern border-0"><form method="post" enctype="multipart/form-data">{% csrf_token %}<input type="hidden" name="action" value="{% if resource_form.instance.pk %}resource_edit{% else %}resource{% endif %}"><input type="hidden" name="resource_id" value="{{ resource_form.instance.pk|default:'' }}"><div class="modal-header border-bottom"><h5 class="modal-title fw-bold">{% if resource_form.instance.pk %}Update team link/document{% else %}Add a team link/document{% endif %}</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body p-4">{% for field in resource_form %}<div class="mb-3"><label for="{{ field.id_for_label }}" class="form-label small fw-semibold">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}</div>{% endfor %}{% for error in resource_form.non_field_errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div><div class="modal-footer border-top"><button class="btn btn-primary" type="submit">Save for the team</button></div></form></div></div></div>{% if show_resource_modal %}<div class="modal-backdrop fade show"></div>{% endif %}{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/emoji_picker.js' %}"></script>
 {% endblock %}

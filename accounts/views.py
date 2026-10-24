@@ -10,6 +10,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.contrib import messages
+from django.db import transaction
 from django.http import FileResponse, Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -24,6 +25,30 @@ from .forms import (
     ProfileDetailsForm,
 )
 from .models import PasswordResetCode
+from student.models import Hackathon, HackathonRegistration
+
+
+def _sync_student_skills_from_cv(user, analysis):
+    """Merge CV-detected skills into the profile's existing skill categories."""
+    if analysis.get('status') != 'ready':
+        return []
+    extracted = {item.get('name', '').casefold() for item in analysis.get('data', {}).get('skills', [])}
+    skill_groups = {
+        'Python / Django': {'python', 'django'},
+        'React / TypeScript': {'react', 'javascript', 'typescript'},
+        'Vue.js': {'vue.js'}, 'FastAPI': {'fastapi'},
+        'UI/UX & Figma': {'figma'},
+        'IA & Machine Learning': {'machine learning', 'tensorflow', 'pytorch'},
+        'DevOps & Docker': {'docker', 'kubernetes', 'aws', 'azure', 'linux'},
+        'Flutter / Mobile': {'flutter'}, 'PostgreSQL': {'postgresql'},
+    }
+    detected = [label for label, names in skill_groups.items() if names & extracted]
+    existing = user.skills or []
+    additions = [skill for skill in detected if skill not in existing]
+    if additions:
+        user.skills = existing + additions
+        user.save(update_fields=['skills'])
+    return additions
 
 
 logger = logging.getLogger(__name__)
@@ -33,6 +58,7 @@ ROLE_DESTINATIONS = {
     'student': 'student:dashboard',
     'mentor': 'mentor:dashboard',
     'admin': 'dashboard_admin:dashboard',
+    'organization': 'dashboard_admin:dashboard',
 }
 
 
@@ -41,12 +67,8 @@ def _default_destination(user):
 
 
 def login_view(request):
-    """Authenticate users and send them to the workspace for their role."""
+    """Show the login form and send successful logins to the user's workspace."""
     next_url = request.POST.get('next') or request.GET.get('next')
-    if request.user.is_authenticated:
-        if next_url and url_has_allowed_host_and_scheme(next_url, {request.get_host()}, require_https=request.is_secure()):
-            return redirect(next_url)
-        return redirect(_default_destination(request.user))
 
     form = EmailOrUsernameAuthenticationForm(request, data=request.POST or None)
     if request.method == 'POST' and form.is_valid():
@@ -89,12 +111,12 @@ def password_reset_request_view(request):
                 )
                 try:
                     send_mail(
-                        subject='Votre code de vérification HackFlow',
+                        subject='Your HackFlow verification code',
                         message=(
                             f'Bonjour {user.first_name or user.username},\n\n'
-                            f'Votre code de réinitialisation HackFlow est : {code}\n\n'
-                            'Ce code est valable pendant 10 minutes et ne peut être utilisé qu’une seule fois. '
-                            'Si vous n’avez pas demandé cette réinitialisation, ignorez ce message.'
+                            f'Your HackFlow password reset code is: {code}\n\n'
+                            'This code is valid for 10 minutes and can only be used once. '
+                            'If you did not request this reset, you can ignore this message.'
                         ),
                         from_email=None,
                         recipient_list=[user.email],
@@ -129,7 +151,7 @@ def password_reset_verify_view(request):
             if reset_code:
                 reset_code.attempts += 1
                 reset_code.save(update_fields=['attempts'])
-            form.add_error('code', 'Code invalide ou expiré. Demandez un nouveau code et réessayez.')
+            form.add_error('code', 'Invalid or expired code. Request a new code and try again.')
         else:
             try:
                 validate_password(form.cleaned_data['new_password1'], user=user)
@@ -161,11 +183,18 @@ def register_role_view(request, role):
     from .forms import AccountRegistrationForm
     form = AccountRegistrationForm(request.POST or None, role=role)
     if request.method == 'POST' and form.is_valid():
-        user = form.save()
+        with transaction.atomic():
+            user = form.save()
+            active_hackathon = Hackathon.objects.filter(
+                is_active=True,
+                ends_at__gte=timezone.now(),
+            ).order_by('starts_at').first()
+            if active_hackathon:
+                HackathonRegistration.objects.get_or_create(hackathon=active_hackathon, user=user)
         auth_login(request, user)
         return redirect(_default_destination(user))
 
-    role_labels = {'student': 'Étudiant', 'mentor': 'Mentor'}
+    role_labels = {'student': 'Student', 'mentor': 'Mentor'}
     return render(request, 'accounts/register_form.html', {
         'form': form,
         'role': role,
@@ -174,6 +203,13 @@ def register_role_view(request, role):
 
 @login_required
 def profile_view(request):
+    cv_skill_additions = []
+    cv_detected_skills = []
+    if request.user.role == 'student' and request.user.cv:
+        from career_opportunities.services.cv_analysis import analyze_student_cv
+        cv_analysis = analyze_student_cv(request.user)
+        cv_detected_skills = cv_analysis.get('data', {}).get('skills', [])
+        cv_skill_additions = _sync_student_skills_from_cv(request.user, cv_analysis)
     details_form = ProfileDetailsForm(
         request.POST if request.method == 'POST' and request.POST.get('form_type') == 'details' else None,
         instance=request.user,
@@ -182,23 +218,36 @@ def profile_view(request):
     if request.method == 'POST' and request.POST.get('form_type') == 'details':
         if details_form.is_valid():
             details_form.save()
-            messages.success(request, 'Les informations de votre profil ont été mises à jour.')
+            messages.success(request, 'Your profile information has been updated.' if request.user.role == 'student' else 'Les informations de votre profil ont été mises à jour.')
             return redirect('accounts:profile')
         return render(request, 'accounts/profile.html', {
             'profile_user': request.user,
             'assets_form': form,
             'details_form': details_form,
             'editing_details': True,
+            'cv_detected_skills': cv_detected_skills,
         })
     if request.method == 'POST' and form.is_valid():
         old_photo = request.user.profile_photo
         old_cv = request.user.cv
         profile_user = form.save()
+        cv_changed = bool(profile_user.cv and (not old_cv or old_cv.name != profile_user.cv.name))
         if old_photo and old_photo.name != profile_user.profile_photo.name:
             old_photo.delete(save=False)
         if old_cv and old_cv.name != profile_user.cv.name:
-            old_cv.delete(save=False)
-        messages.success(request, 'Votre photo et votre CV ont été mis à jour.')
+            from career_opportunities.models import CareerApplication
+            if not CareerApplication.objects.filter(cv=old_cv.name).exists():
+                old_cv.delete(save=False)
+        if cv_changed and profile_user.role == 'student':
+            from career_opportunities.services.cv_analysis import analyze_student_cv
+            analysis = analyze_student_cv(profile_user)
+            if analysis['status'] != 'ready':
+                messages.warning(request, 'The CV was saved privately, but no readable text could be extracted. Upload a text-based PDF to enable matching.')
+            else:
+                cv_skill_additions = _sync_student_skills_from_cv(profile_user, analysis)
+                if cv_skill_additions:
+                    messages.success(request, f"Skills added from your CV: {', '.join(cv_skill_additions)}.")
+        messages.success(request, 'Your profile photo and CV have been updated.' if request.user.role == 'student' else 'Votre photo et votre CV ont été mis à jour.')
         return redirect('accounts:profile')
 
     return render(request, 'accounts/profile.html', {
@@ -206,6 +255,7 @@ def profile_view(request):
         'assets_form': form,
         'details_form': details_form,
         'editing_details': request.GET.get('edit') == '1',
+        'cv_detected_skills': cv_detected_skills,
     })
 
 

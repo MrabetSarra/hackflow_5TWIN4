@@ -1,0 +1,28 @@
+{% extends "layouts/base_student.html" %}
+
+{% block title %}Messages - HackFlow{% endblock %}
+
+{% block student_content %}
+<div class="container-fluid px-0">
+    <div class="mb-4">
+        <h2 class="fw-bold text-body mb-1">Messages</h2>
+        <p class="text-body-secondary small mb-0">Your private conversations with other students.</p>
+    </div>
+
+    <div class="card-modern p-4">
+        <div class="d-flex flex-column gap-3">
+            {% for conversation in conversations %}
+            <a href="{% url 'student:conversation' conversation.user.pk %}" class="p-3 rounded-3 border text-decoration-none text-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="fw-bold mb-1">{{ conversation.user.get_full_name|default:conversation.user.username }}</h6>
+                    <p class="small text-body-secondary mb-0">{% if conversation.last_message %}{{ conversation.last_message.body|truncatechars:100 }}{% else %}Start a conversation{% endif %}</p>
+                </div>
+                <i class="bi bi-chevron-right text-primary"></i>
+            </a>
+            {% empty %}
+            <p class="text-body-secondary mb-0">No conversations yet. Open your team page to message a member.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

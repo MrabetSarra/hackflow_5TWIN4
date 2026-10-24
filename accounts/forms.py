@@ -14,16 +14,16 @@ class EmailOrUsernameAuthenticationForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['username'].max_length = 254
-        self.fields['username'].label = "Nom d'utilisateur ou adresse e-mail"
+        self.fields['username'].label = 'Username or email address'
         self.fields['username'].widget.attrs.update({
             'class': 'form-control border-start-0 ps-0',
-            'placeholder': 'nom@etudiant.univ.fr',
+            'placeholder': 'name@university.edu',
             'autocomplete': 'username',
             'autofocus': True,
         })
         self.fields['password'].widget.attrs.update({
             'class': 'form-control border-start-0 ps-0',
-            'placeholder': 'Votre mot de passe',
+            'placeholder': 'Your password',
             'autocomplete': 'current-password',
         })
 
@@ -81,9 +81,36 @@ class AccountRegistrationForm(forms.Form):
         self.role = role
         super().__init__(*args, **kwargs)
         if role == 'student':
+            labels = {
+                'first_name': 'First name', 'last_name': 'Last name', 'username': 'Username',
+                'email': 'Email address', 'school': 'School / organization', 'study_level': 'Study level',
+                'skills': 'Skills', 'bio': 'About me', 'github_url': 'GitHub profile',
+                'linkedin_url': 'LinkedIn profile', 'password1': 'Password', 'password2': 'Confirm password',
+            }
+            for name, label in labels.items():
+                if name in self.fields:
+                    self.fields[name].label = label
+            level_labels = {
+                '': 'Choose a study level', 'Licence 1 ou 2': 'Bachelor 1 or 2',
+                'Licence 3 / BUT': 'Bachelor 3 / University Bachelor of Technology',
+                'Master 1': 'Master 1', 'Master 2 / Cycle Ingénieur': 'Master 2 / Engineering degree',
+                'Autre cursus': 'Other',
+            }
+            self.fields['study_level'].choices = [
+                (value, level_labels.get(value, label))
+                for value, label in self.fields['study_level'].choices
+            ]
+            self.fields['study_level'].choices = [
+                ('', 'Choose a study level'), *self.fields['study_level'].choices[1:]
+            ]
+            self.fields['skills'].choices = [
+                (value, value.replace('IA &', 'AI &')) for value, _label in self.SKILL_CHOICES
+            ]
             self.fields.pop('specialty')
             self.fields['study_level'].required = True
-            self.fields['skills'].choices = self.SKILL_CHOICES
+            self.fields['skills'].choices = [
+                (value, value.replace('IA &', 'AI &')) for value, _label in self.SKILL_CHOICES
+            ]
             self.fields['skills'].required = True
         else:
             self.fields.pop('study_level')
@@ -100,13 +127,13 @@ class AccountRegistrationForm(forms.Form):
     def clean_username(self):
         username = self.cleaned_data['username']
         if get_user_model().objects.filter(username__iexact=username).exists():
-            raise forms.ValidationError("Ce nom d'utilisateur est déjà utilisé.")
+            raise forms.ValidationError('This username is already taken.' if self.role == 'student' else "Ce nom d'utilisateur est déjà utilisé.")
         return username
 
     def clean_email(self):
         email = self.cleaned_data['email'].strip()
         if get_user_model().objects.filter(email__iexact=email).exists():
-            raise forms.ValidationError('Un compte utilise déjà cette adresse e-mail.')
+            raise forms.ValidationError('An account already uses this email address.' if self.role == 'student' else 'Un compte utilise déjà cette adresse e-mail.')
         return email
 
     def clean(self):
@@ -114,7 +141,7 @@ class AccountRegistrationForm(forms.Form):
         password1 = cleaned.get('password1')
         password2 = cleaned.get('password2')
         if password1 and password2 and password1 != password2:
-            self.add_error('password2', 'Les deux mots de passe ne correspondent pas.')
+            self.add_error('password2', 'The passwords do not match.' if self.role == 'student' else 'Les deux mots de passe ne correspondent pas.')
         elif password1:
             user = get_user_model()(
                 username=cleaned.get('username', ''),
@@ -149,24 +176,24 @@ class AccountRegistrationForm(forms.Form):
 
 
 class PasswordResetRequestForm(forms.Form):
-    email = forms.EmailField(label='Adresse e-mail', max_length=254)
+    email = forms.EmailField(label='Email address', max_length=254)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['email'].widget.attrs.update({
             'class': 'form-control',
-            'placeholder': 'nom@exemple.com',
+            'placeholder': 'name@example.com',
             'autocomplete': 'email',
         })
 
 
 class PasswordResetVerifyForm(forms.Form):
-    email = forms.EmailField(label='Adresse e-mail', max_length=254)
-    code = forms.RegexField(regex=r'^\d{6}$', label='Code de vérification', error_messages={
-        'invalid': 'Saisissez le code à 6 chiffres reçu par e-mail.',
+    email = forms.EmailField(label='Email address', max_length=254)
+    code = forms.RegexField(regex=r'^\d{6}$', label='Verification code', error_messages={
+        'invalid': 'Enter the 6-digit code sent to your email.',
     })
-    new_password1 = forms.CharField(label='Nouveau mot de passe', strip=False, widget=forms.PasswordInput)
-    new_password2 = forms.CharField(label='Confirmer le mot de passe', strip=False, widget=forms.PasswordInput)
+    new_password1 = forms.CharField(label='New password', strip=False, widget=forms.PasswordInput)
+    new_password2 = forms.CharField(label='Confirm password', strip=False, widget=forms.PasswordInput)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -209,13 +236,20 @@ class ProfileAssetsForm(forms.ModelForm):
             'cv': 'Curriculum vitæ (PDF)',
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.role == 'student':
+            self.fields['profile_photo'].label = 'Profile photo'
+            self.fields['cv'].label = 'CV (PDF)'
+
     def clean_cv(self):
         uploaded_file = self.cleaned_data.get('cv')
         if uploaded_file:
             signature = uploaded_file.read(5)
             uploaded_file.seek(0)
             if signature != b'%PDF-':
-                raise forms.ValidationError('Le fichier sélectionné ne semble pas être un PDF valide.')
+                message = 'The selected file does not appear to be a valid PDF.' if self.instance.role == 'student' else 'Le fichier sélectionné ne semble pas être un PDF valide.'
+                raise forms.ValidationError(message)
         return uploaded_file
 
 
@@ -271,6 +305,27 @@ class ProfileDetailsForm(forms.ModelForm):
         self.fields['username'].widget.attrs.update({'minlength': 3, 'autocomplete': 'username'})
         self.fields['email'].widget.attrs.update({'autocomplete': 'email'})
         if self.instance.role == 'student':
+            student_labels = {
+                'first_name': 'First name', 'last_name': 'Last name', 'username': 'Username',
+                'email': 'Email address', 'school': 'School / organization',
+                'study_level': 'Study level', 'skills': 'Skills', 'bio': 'About me',
+                'github_url': 'GitHub profile', 'linkedin_url': 'LinkedIn profile',
+            }
+            for name, label in student_labels.items():
+                if name in self.fields:
+                    self.fields[name].label = label
+            level_labels = {
+                'Licence 1 ou 2': 'Bachelor 1 or 2', 'Licence 3 / BUT': 'Bachelor 3 / University Bachelor of Technology',
+                'Master 1': 'Master 1', 'Master 2 / Cycle Ingénieur': 'Master 2 / Engineering degree',
+                'Autre cursus': 'Other',
+            }
+            self.fields['study_level'].choices = [
+                (value, level_labels.get(value, label))
+                for value, label in self.fields['study_level'].choices
+            ]
+            self.fields['study_level'].choices = [
+                ('', 'Choose a study level'), *self.fields['study_level'].choices[1:]
+            ]
             self.fields['study_level'].required = True
             self.fields.pop('specialty')
         elif self.instance.role == 'mentor':
@@ -295,14 +350,16 @@ class ProfileDetailsForm(forms.ModelForm):
         username = self.cleaned_data['username'].strip()
         users = get_user_model().objects.filter(username__iexact=username).exclude(pk=self.instance.pk)
         if users.exists():
-            raise forms.ValidationError("Ce nom d'utilisateur est déjà utilisé.")
+            message = 'This username is already taken.' if self.instance.role == 'student' else "Ce nom d'utilisateur est déjà utilisé."
+            raise forms.ValidationError(message)
         return username
 
     def clean_email(self):
         email = self.cleaned_data['email'].strip()
         users = get_user_model().objects.filter(email__iexact=email).exclude(pk=self.instance.pk)
         if users.exists():
-            raise forms.ValidationError('Cette adresse e-mail est déjà utilisée.')
+            message = 'This email address is already in use.' if self.instance.role == 'student' else 'Cette adresse e-mail est déjà utilisée.'
+            raise forms.ValidationError(message)
         return email
 
     def clean_skills(self):
@@ -310,5 +367,6 @@ class ProfileDetailsForm(forms.ModelForm):
         allowed = {value for value, _label in self.SKILL_CHOICES}
         invalid = set(skills) - allowed
         if invalid:
-            raise forms.ValidationError('Sélectionnez des compétences proposées dans la liste.')
+            message = 'Select skills from the available list.' if self.instance.role == 'student' else 'Sélectionnez des compétences proposées dans la liste.'
+            raise forms.ValidationError(message)
         return skills
