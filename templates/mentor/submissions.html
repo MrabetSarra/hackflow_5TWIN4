@@ -3,31 +3,89 @@
 {% block title %}Project Submissions - HackFlow{% endblock %}
 
 {% block mentor_content %}
+<style>
+    .submission-hero { background: linear-gradient(120deg, #eef4ff 0%, #f7f8ff 60%, #f2f7ff 100%); border: 1px solid #e4eaff; border-radius: 1.25rem; }
+    .submission-card { border: 1px solid var(--bs-border-color, #e7eaf0); border-radius: 1rem; transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease; }
+    .submission-card:hover { border-color: #b8c9ff; transform: translateY(-2px); box-shadow: 0 .65rem 1.5rem rgba(27, 48, 94, .08); }
+    .submission-icon { width: 2.75rem; height: 2.75rem; display: grid; place-items: center; border-radius: .85rem; background: #edf2ff; color: #4f67df; font-size: 1.25rem; flex: 0 0 auto; }
+    .submission-search { max-width: 25rem; }
+    .submission-file { overflow-wrap: anywhere; }
+    @media (max-width: 575.98px) { .submission-card .btn { width: 100%; } }
+</style>
 <div class="container-fluid px-0">
-    <div class="mb-4">
-        <h2 class="fw-bold text-body mb-1">Project ZIP Submissions</h2>
-        <p class="text-body-secondary small mb-0">Download the teams' uploaded project archives for review.</p>
-    </div>
-    <div class="card-modern overflow-hidden">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead><tr><th class="ps-4">Team</th><th>Project</th><th>Milestone</th><th>Status</th><th>Uploaded file</th><th class="text-end pe-4">Action</th></tr></thead>
-                <tbody>
-                    {% for submission in submissions %}
-                    <tr>
-                        <td class="ps-4 fw-semibold">{{ submission.team.name }}</td>
-                        <td>{{ submission.project_name|default:submission.team.project_name|default:"—" }}</td>
-                        <td>{{ submission.milestone.title }}</td>
-                        <td>{{ submission.get_status_display }}</td>
-                        <td>{{ submission.file.name|cut:"submissions/" }} <span class="text-body-secondary small">({{ submission.file.size|filesizeformat }})</span></td>
-                        <td class="text-end pe-4"><a class="btn btn-primary btn-sm" href="{% url 'student:download_submission' submission.id %}"><i class="bi bi-download me-1"></i>Download ZIP</a></td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="6" class="text-center text-body-secondary py-5">No project ZIP files have been uploaded yet.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <section class="submission-hero p-4 p-lg-5 mb-4">
+        <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-4">
+            <div>
+                <div class="text-primary fw-semibold small text-uppercase mb-2"><i class="bi bi-folder2-open me-1"></i> Jury workspace</div>
+                <h1 class="h2 fw-bold text-body mb-2">Project submissions</h1>
+                <p class="text-body-secondary mb-0">Review the teams’ latest project archives and download a submission when you’re ready.</p>
+            </div>
+            <div class="d-flex align-items-center gap-3 bg-white rounded-4 px-4 py-3 shadow-sm">
+                <span class="submission-icon"><i class="bi bi-archive"></i></span>
+                <div><div class="h3 fw-bold mb-0">{{ submissions|length }}</div><div class="small text-body-secondary">uploaded archives</div></div>
+            </div>
         </div>
+    </section>
+
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-3">
+        <div><h2 class="h5 fw-bold mb-1">Submitted projects</h2><p class="small text-body-secondary mb-0"><span data-result-count>{{ submissions|length }}</span> submission{{ submissions|length|pluralize }} available</p></div>
+        <label class="submission-search position-relative w-100">
+            <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-body-secondary"></i>
+            <input class="form-control ps-5 rounded-3" type="search" placeholder="Search team, project or milestone…" aria-label="Search submissions" data-submission-search>
+        </label>
     </div>
+
+    <div class="row g-3" data-submission-list>
+        {% for submission in submissions %}
+        <div class="col-12 col-xl-6" data-submission-item>
+            <article class="submission-card bg-body p-3 p-md-4 h-100">
+                <div class="d-flex align-items-start gap-3">
+                    <span class="submission-icon"><i class="bi bi-file-earmark-zip"></i></span>
+                    <div class="flex-grow-1 min-w-0">
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                            <h3 class="h5 fw-bold mb-0">{{ submission.team.name }}</h3>
+                            <span class="badge rounded-pill text-bg-light border">{{ submission.get_status_display }}</span>
+                        </div>
+                        <p class="text-body-secondary mb-3">{{ submission.project_name|default:submission.team.project_name|default:"Project title not provided" }}</p>
+                        <div class="d-flex flex-wrap gap-x-4 gap-3 small text-body-secondary mb-3">
+                            <span><i class="bi bi-flag me-1 text-primary"></i>{{ submission.milestone.title }}</span>
+                            {% if submission.submitted_at %}<span><i class="bi bi-clock me-1"></i>{{ submission.submitted_at|date:"M j, Y · H:i" }}</span>{% endif %}
+                        </div>
+                        <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 border-top pt-3">
+                            <div class="d-flex align-items-start gap-2 min-w-0">
+                                <i class="bi bi-file-earmark-zip text-primary mt-1"></i>
+                                <div class="min-w-0"><div class="submission-file small fw-semibold">{{ submission.file.name|cut:"submissions/" }}</div><div class="small text-body-secondary">ZIP archive · {{ submission.file.size|filesizeformat }}</div></div>
+                            </div>
+                            <a class="btn btn-primary rounded-3 flex-shrink-0" href="{% url 'student:download_submission' submission.id %}"><i class="bi bi-download me-2"></i>Download ZIP</a>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+        {% empty %}
+        <div class="col-12"><div class="card-modern text-center py-5 px-3"><span class="submission-icon mx-auto mb-3"><i class="bi bi-inbox"></i></span><h3 class="h5 fw-bold">No project archives yet</h3><p class="text-body-secondary mb-0">Uploaded team submissions will appear here for jury review.</p></div></div>
+        {% endfor %}
+    </div>
+    <div class="card-modern text-center py-5 px-3 d-none" data-submission-empty><span class="submission-icon mx-auto mb-3"><i class="bi bi-search"></i></span><h3 class="h5 fw-bold">No matching submissions</h3><p class="text-body-secondary mb-0">Try another team, project or milestone name.</p></div>
 </div>
+<script>
+    (() => {
+        const input = document.querySelector('[data-submission-search]');
+        if (!input) return;
+        const cards = [...document.querySelectorAll('[data-submission-item]')];
+        const count = document.querySelector('[data-result-count]');
+        const empty = document.querySelector('[data-submission-empty]');
+        input.addEventListener('input', () => {
+            const query = input.value.trim().toLocaleLowerCase();
+            let visible = 0;
+            cards.forEach(card => {
+                const match = card.textContent.toLocaleLowerCase().includes(query);
+                card.classList.toggle('d-none', !match);
+                if (match) visible++;
+            });
+            if (count) count.textContent = visible;
+            if (empty) empty.classList.toggle('d-none', visible !== 0 || cards.length === 0);
+        });
+    })();
+</script>
 {% endblock %}

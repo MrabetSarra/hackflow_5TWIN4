@@ -29,10 +29,26 @@ class Hackathon(models.Model):
     edition = models.CharField(max_length=80, blank=True)
     starts_at = models.DateTimeField()
     ends_at = models.DateTimeField()
+    location = models.CharField(max_length=180, blank=True)
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return f'{self.name} — {self.edition}'
+
+
+class HackathonRegistration(models.Model):
+    hackathon = models.ForeignKey(Hackathon, on_delete=models.CASCADE, related_name='registrations')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='hackathon_registrations')
+    registered_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['registered_at', 'pk']
+        constraints = [
+            models.UniqueConstraint(fields=['hackathon', 'user'], name='unique_hackathon_registration'),
+        ]
+
+    def __str__(self):
+        return f'{self.user} — {self.hackathon}'
 
 
 class Milestone(models.Model):
@@ -56,11 +72,39 @@ class Milestone(models.Model):
 
 
 class Announcement(models.Model):
+    class Audience(models.TextChoices):
+        ALL = 'all', 'Everyone'
+        STUDENTS = 'students', 'Students'
+        MENTORS = 'mentors', 'Mentors'
+        CAPTAINS = 'captains', 'Team captains'
+
+    class Priority(models.TextChoices):
+        INFO = 'info', 'Info'
+        IMPORTANT = 'important', 'Important'
+        URGENT = 'urgent', 'Urgent'
+
     hackathon = models.ForeignKey(Hackathon, on_delete=models.CASCADE, related_name='announcements')
     title = models.CharField(max_length=220)
+    body = models.TextField(blank=True)
     author = models.CharField(max_length=120)
     category = models.CharField(max_length=80, blank=True)
+    audience = models.CharField(max_length=12, choices=Audience.choices, default=Audience.ALL)
+    priority = models.CharField(max_length=9, choices=Priority.choices, default=Priority.INFO)
     published_at = models.DateTimeField(default=timezone.now)
+    scheduled_at = models.DateTimeField(null=True, blank=True)
+    is_draft = models.BooleanField(default=False)
+
+    @property
+    def is_scheduled(self):
+        return not self.is_draft and bool(self.scheduled_at and self.scheduled_at > timezone.now())
+
+    @property
+    def status(self):
+        if self.is_draft:
+            return 'draft'
+        if self.is_scheduled:
+            return 'scheduled'
+        return 'published'
 
     class Meta:
         ordering = ['-published_at']
@@ -78,6 +122,7 @@ class Team(models.Model):
     room = models.CharField(max_length=120, blank=True)
     max_members = models.PositiveSmallIntegerField(default=5)
     captain = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='captained_teams')
+    is_archived = models.BooleanField(default=False)
     seeking_skill = models.CharField(max_length=180, blank=True)
     project_name = models.CharField(max_length=180, blank=True)
     project_pitch = models.TextField(blank=True)
@@ -107,6 +152,26 @@ class TeamMembership(models.Model):
 
     def __str__(self):
         return f'{self.user} — {self.team}'
+
+
+class TeamLeaveRequest(models.Model):
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'Pending'
+        APPROVED = 'approved', 'Approved'
+        DECLINED = 'declined', 'Declined'
+
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='leave_requests')
+    member = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='team_leave_requests')
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    decided_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name='decided_team_leave_requests')
+    created_at = models.DateTimeField(auto_now_add=True)
+    decided_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(
+            fields=['team', 'member'], condition=models.Q(status='pending'), name='unique_pending_team_leave_request',
+        )]
 
 
 class Sprint(models.Model):
@@ -180,7 +245,30 @@ class Task(models.Model):
     priority = models.CharField(max_length=8, choices=Priority.choices, default=Priority.NORMAL)
     assignee = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_student_tasks')
     deadline = models.DateTimeField(null=True, blank=True)
+    repository = models.ForeignKey('repositories.Repository', on_delete=models.SET_NULL, null=True, blank=True, related_name='linked_tasks')
+    repository_branch = models.CharField(max_length=100, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class AITaskJob(models.Model):
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'Pending'
+        RUNNING = 'running', 'Running'
+        DONE = 'done', 'Done'
+        FAILED = 'failed', 'Failed'
+
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='ai_task_jobs')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='ai_task_jobs')
+    sprint = models.ForeignKey(Sprint, on_delete=models.SET_NULL, null=True, blank=True, related_name='ai_task_jobs')
+    prompt = models.CharField(max_length=1000)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    result = models.JSONField(default=list, blank=True)
+    error_message = models.CharField(max_length=500, blank=True)
+    latency_ms = models.PositiveIntegerField(default=0)
+    proposed_count = models.PositiveSmallIntegerField(default=0)
+    accepted_count = models.PositiveSmallIntegerField(default=0)
+    accepted_task_ids = models.JSONField(default=list, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
 
 class Submission(models.Model):
@@ -195,9 +283,12 @@ class Submission(models.Model):
     project_name = models.CharField(max_length=180, blank=True)
     category = models.CharField(max_length=180, blank=True)
     description = models.TextField(blank=True)
+    project_summary = models.TextField(blank=True, max_length=5000)
     github_url = models.URLField(blank=True)
     demo_url = models.URLField(blank=True)
     video_url = models.URLField(blank=True)
+    repository = models.ForeignKey('repositories.Repository', on_delete=models.SET_NULL, null=True, blank=True, related_name='submissions')
+    repository_commit = models.CharField(max_length=40, blank=True)
     file = models.FileField(
         upload_to='submissions/',
         blank=True,

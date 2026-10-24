@@ -1,107 +1,436 @@
 {% extends "layouts/base_admin.html" %}
+{% load static %}
+{% load announcement_format %}
 
-{% block title %}Diffusion d'Annonces - HackFlow Admin{% endblock %}
+{% block title %}Annonces - HackFlow{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/announcements.css' %}">
+{% endblock %}
 
 {% block admin_content %}
-<div class="container-fluid px-0">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-        <div>
-            <h2 class="fw-bold text-dark mb-1">Centre de Diffusion & Annonces Push</h2>
-            <p class="text-muted small mb-0">Communiquez instantanément avec l'ensemble des participants, les mentors ou des groupes ciblés.</p>
-        </div>
+<div class="container-fluid px-0 announce-page">
+    {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %} alert-dismissible fade show" role="status">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+    </div>
+    {% endfor %}
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-4 col-xxl-2"><div class="announce-stat d-flex align-items-center gap-3"><span class="announce-stat-icon bg-primary-subtle text-primary"><i class="bi bi-megaphone"></i></span><div><div class="small text-muted">Total</div><div class="fs-4 fw-bold">{{ announcement_stats.total }}</div></div></div></div>
+        <div class="col-6 col-lg-4 col-xxl-2"><div class="announce-stat d-flex align-items-center gap-3"><span class="announce-stat-icon bg-success-subtle text-success"><i class="bi bi-send-check"></i></span><div><div class="small text-muted">Publiées</div><div class="fs-4 fw-bold">{{ announcement_stats.published }}</div></div></div></div>
+        <div class="col-6 col-lg-4 col-xxl-2"><div class="announce-stat d-flex align-items-center gap-3"><span class="announce-stat-icon bg-danger-subtle text-danger"><i class="bi bi-exclamation-triangle"></i></span><div><div class="small text-muted">Urgentes</div><div class="fs-4 fw-bold">{{ announcement_stats.urgent }}</div></div></div></div>
+        <div class="col-6 col-lg-4 col-xxl-2"><div class="announce-stat d-flex align-items-center gap-3"><span class="announce-stat-icon bg-info-subtle text-info"><i class="bi bi-calendar2-check"></i></span><div><div class="small text-muted">Programmées</div><div class="fs-4 fw-bold">{{ announcement_stats.scheduled }}</div></div></div></div>
+        <div class="col-6 col-lg-4 col-xxl-2"><div class="announce-stat d-flex align-items-center gap-3"><span class="announce-stat-icon bg-secondary-subtle text-secondary"><i class="bi bi-file-earmark-text"></i></span><div><div class="small text-muted">Brouillons</div><div class="fs-4 fw-bold">{{ announcement_stats.drafts }}</div></div></div></div>
+        <div class="col-6 col-lg-4 col-xxl-2"><div class="announce-stat d-flex align-items-center gap-3"><span class="announce-stat-icon bg-warning-subtle text-warning-emphasis"><i class="bi bi-graph-up-arrow"></i></span><div><div class="small text-muted">Cette semaine</div><div class="fs-4 fw-bold">{{ announcement_stats.week }}</div></div></div></div>
     </div>
 
     <div class="row g-4">
-        <!-- Formulaire de Nouvelle Annonce -->
         <div class="col-lg-5">
-            <div class="card-modern p-4 mb-4">
-                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-broadcast text-primary me-2"></i>Diffuser un Message</h5>
-
-                <form>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Titre de l'annonce</label>
-                        <input type="text" class="form-control" placeholder="ex: Le buffet du dîner est ouvert au Bâtiment B">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Audience cible</label>
-                        <select class="form-select">
-                            <option selected>Tous les participants (Général)</option>
-                            <option>Étudiants participants uniquement</option>
-                            <option>Mentors et experts uniquement</option>
-                            <option>Capitaines d'équipes uniquement</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Niveau d'importance</label>
-                        <div class="row g-2">
-                            <div class="col-4">
-                                <label class="card-modern p-2 text-center cursor-pointer border-primary bg-primary bg-opacity-10 w-100">
-                                    <input type="radio" name="prio_ann" class="form-check-input d-none" checked>
-                                    <span class="small fw-semibold text-primary">Info</span>
-                                </label>
-                            </div>
-                            <div class="col-4">
-                                <label class="card-modern p-2 text-center cursor-pointer w-100">
-                                    <input type="radio" name="prio_ann" class="form-check-input d-none">
-                                    <span class="small fw-semibold text-warning-emphasis">Important</span>
-                                </label>
-                            </div>
-                            <div class="col-4">
-                                <label class="card-modern p-2 text-center cursor-pointer w-100">
-                                    <input type="radio" name="prio_ann" class="form-check-input d-none">
-                                    <span class="small fw-semibold text-danger">Urgent</span>
-                                </label>
-                            </div>
+            <div class="announce-panel p-4">
+                <div class="announce-panel-heading d-flex align-items-center gap-3">
+                    <span class="announce-stat-icon bg-primary-subtle text-primary"><i class="bi bi-pencil-square"></i></span>
+                    <div><h2 class="h5 fw-bold mb-1">{% if editing_announcement %}Modifier l'annonce{% else %}Rédiger une annonce{% endif %}</h2>
+                    <p class="small text-muted mb-0">{% if editing_announcement %}Mettez à jour votre message{% else %}Un message clair aide tout le monde à avancer{% endif %}</p></div>
+                </div>
+                {% if active_hackathon %}
+                <p class="small text-muted">{% if editing_announcement %}Événement associé{% else %}Événement actif{% endif %} : <strong>{{ active_hackathon.name }}</strong></p>
+                <form method="post" class="announce-form" novalidate>
+                    {% csrf_token %}
+                    <input type="hidden" name="submit_action" value="publish" data-submit-action>
+                    <section class="border rounded-4 bg-body-tertiary p-3 mb-4" data-ai-generator data-endpoint="{% url 'dashboard_admin:announcement_generate' %}">
+                        <div class="d-flex align-items-start gap-3 mb-3">
+                            <span class="announce-stat-icon bg-primary-subtle text-primary"><i class="bi bi-stars"></i></span>
+                            <div><h3 class="h6 fw-bold mb-1">Assistant de rédaction</h3><p class="small text-body-secondary mb-0">Le brouillon ne sera pas publié automatiquement : utilisez « Insérer dans l’annonce », relisez-le, puis cliquez sur « Publier ».</p></div>
                         </div>
+                        <div class="row g-2">
+                            <div class="col-12"><label class="form-label small fw-semibold" for="ai-audience">Public cible</label>
+                                <select class="form-select" id="ai-audience" data-ai-audience>
+                                    {% for value, label in form.fields.audience.choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+                                    <option value="teams_without_submission">Équipes sans dépôt pour le dernier jalon</option>
+                                </select>
+                            </div>
+                            <div class="col-12"><label class="form-label small fw-semibold" for="ai-topic">Sujet et informations à inclure</label>
+                                <textarea class="form-control" id="ai-topic" rows="2" maxlength="500" placeholder="Ex. : rappeler la date limite et demander de déposer le ZIP" data-ai-topic aria-describedby="ai-topic-help"></textarea>
+                                <div class="form-text" id="ai-topic-help">Précisez le sujet et les informations à communiquer.</div>
+                            </div>
+                            <div class="col-6"><label class="form-label small fw-semibold" for="ai-tone">Ton</label>
+                                <select class="form-select" id="ai-tone" data-ai-tone><option value="professionnel">Professionnel</option><option value="chaleureux">Chaleureux</option><option value="direct">Direct</option><option value="enthousiaste">Enthousiaste</option></select>
+                            </div>
+                            <div class="col-6"><label class="form-label small fw-semibold" for="ai-type">Format</label>
+                                <select class="form-select" id="ai-type" data-ai-type><option value="annonce">Annonce</option><option value="rappel">Rappel</option><option value="email">Email</option></select>
+                            </div>
+                            <div class="col-12"><button class="btn btn-outline-primary w-100" type="button" data-ai-generate><i class="bi bi-stars me-2"></i>Générer un brouillon</button></div>
+                        </div>
+                        <div class="alert alert-danger py-2 small mt-3 mb-0 d-none" role="alert" data-ai-error></div>
+                        <div class="mt-3 d-none" data-ai-result>
+                            <div class="alert alert-info py-2 small" data-ai-target-note></div>
+                            <div class="mb-2"><label class="form-label small fw-semibold" for="ai-result-title">Objet / titre — vérifiez et modifiez</label><input class="form-control" id="ai-result-title" maxlength="220" data-ai-result-title></div>
+                            <div class="mb-2"><label class="form-label small fw-semibold" for="ai-result-body">Message — vérifiez et modifiez</label><textarea class="form-control" id="ai-result-body" rows="7" maxlength="5000" data-ai-result-body></textarea></div>
+                            <div class="d-flex flex-wrap gap-2"><button class="btn btn-primary btn-sm" type="button" data-ai-apply><i class="bi bi-pencil-square me-1"></i>Insérer dans l’annonce</button><button class="btn btn-outline-secondary btn-sm" type="button" data-ai-copy><i class="bi bi-clipboard me-1"></i>Copier le texte</button></div>
+                            <ul class="small mt-3 mb-0 d-none" data-ai-teams></ul>
+                        </div>
+                    </section>
+                    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+                        {{ form.title }}
+                        {% for error in form.title.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
-
-                    <div class="mb-4">
-                        <label class="form-label small fw-semibold">Contenu du message</label>
-                        <textarea class="form-control" rows="4" placeholder="Détaillez les informations pratiques, consignes ou liens utiles..."></textarea>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="{{ form.category.id_for_label }}">{{ form.category.label }}</label>
+                        {{ form.category }}
+                        {% for error in form.category.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
-
-                    <div class="form-check mb-4">
-                        <input class="form-check-input" type="checkbox" id="sendDiscord" checked>
-                        <label class="form-check-label small text-muted" for="sendDiscord">
-                            Diffuser également sur le serveur Discord officiel (#annonces)
-                        </label>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="{{ form.audience.id_for_label }}">{{ form.audience.label }}</label>
+                        {{ form.audience }}
+                        {% for error in form.audience.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
-
-                    <button type="button" class="btn btn-primary w-100 py-2 shadow-sm fw-semibold" data-demo-toast="Annonce push diffusée à l'ensemble des participants !">
-                        <i class="bi bi-send-fill me-2"></i>Diffuser immédiatement
-                    </button>
+                    <fieldset class="mb-3">
+                        <legend class="form-label small fw-semibold">{{ form.priority.label }}</legend>
+                        <div class="row g-2">
+                            {% for value, label in form.priority.field.choices %}
+                            <div class="col-4">
+                        <label class="priority-card {% if value == 'info' %}priority-card-info{% elif value == 'important' %}priority-card-important{% else %}priority-card-urgent{% endif %}">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input type="radio" name="priority" value="{{ value }}" {% if form.priority.value == value %}checked{% endif %}>
+                                        <i class="priority-icon bi {% if value == 'info' %}bi-info-circle{% elif value == 'important' %}bi-star-fill{% else %}bi-exclamation-octagon-fill{% endif %}"></i>
+                                        <span class="small fw-bold">{{ label }}</span>
+                                    </div>
+                                    <span class="d-block small text-muted mt-2">{% if value == 'info' %}Information générale{% elif value == 'important' %}À ne pas manquer{% else %}Action immédiate{% endif %}</span>
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% for error in form.priority.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                    </fieldset>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="{{ form.body.id_for_label }}">{{ form.body.label }}</label>
+                        <div class="btn-toolbar mb-2" role="toolbar" aria-label="Mise en forme du message">
+                            <div class="btn-group btn-group-sm me-2 announce-toolbar" role="group">
+                                <button class="btn btn-outline-secondary" type="button" data-wrap="**" aria-label="Gras"><strong>G</strong></button>
+                                <button class="btn btn-outline-secondary" type="button" data-link aria-label="Insérer un lien"><i class="bi bi-link-45deg"></i></button>
+                                <button class="btn btn-outline-secondary" type="button" data-prefix="• " aria-label="Créer une liste"><i class="bi bi-list-ul"></i></button>
+                            </div>
+                            <span class="small text-muted align-self-center"><span data-char-count>0</span>/5000 caractères</span>
+                        </div>
+                        {{ form.body }}
+                        {% for error in form.body.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="{{ form.scheduled_at.id_for_label }}">{{ form.scheduled_at.label }}</label>
+                        {{ form.scheduled_at }}
+                        {% for error in form.scheduled_at.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="announce-preview p-3 mb-3" aria-live="polite">
+                        <div class="small fw-bold text-primary mb-3"><i class="bi bi-eye me-1"></i>APERÇU DU MESSAGE</div>
+                        <div class="fw-bold fs-6" data-preview-title>Votre titre apparaîtra ici</div>
+                        <div class="small text-muted mb-2" data-preview-meta></div>
+                        <div class="small" data-preview-body>Votre message apparaîtra ici.</div>
+                    </div>
+                    <p class="small text-muted"><i class="bi bi-info-circle me-1"></i>L'annonce apparaîtra sur le tableau de bord des destinataires. Aucune diffusion Discord n'est configurée.</p>
+                    <div class="announce-actions">
+                        <button type="submit" name="submit_action" value="draft" class="btn btn-outline-secondary py-2 fw-semibold" data-draft-button><i class="bi bi-file-earmark-text me-1"></i>Brouillon</button>
+                        <button type="submit" name="submit_action" value="publish" class="btn btn-primary py-2 shadow-sm fw-semibold" data-publish-button><i class="bi {% if editing_announcement %}bi-check-lg{% else %}bi-send-fill{% endif %} me-2"></i>{% if editing_announcement %}Enregistrer{% else %}Publier{% endif %}</button>
+                    </div>
+                    {% if editing_announcement %}<a href="{% url 'dashboard_admin:announcements' %}" class="btn btn-link w-100 mt-2">Annuler</a>{% endif %}
                 </form>
+                {% else %}
+                <div class="alert alert-warning mb-0">Aucun hackathon actif. Activez un événement dans la gestion des hackathons avant de publier une annonce.</div>
+                {% endif %}
             </div>
         </div>
 
-        <!-- Historique des Annonces -->
         <div class="col-lg-7">
-            <div class="card-modern p-4">
-                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-clock-history text-secondary me-2"></i>Historique des Annonces Publiées</h5>
-
-                <div class="d-flex flex-column gap-3">
-                    {% for ann in past_announcements %}
-                    <div class="p-3 rounded-3 border bg-white card-modern-hoverable">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <div>
-                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill me-1 font-mono">{{ ann.category }}</span>
-                                <span class="badge bg-secondary-subtle text-secondary rounded-pill font-mono small">{{ ann.audience }}</span>
+            <div class="announce-panel p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark mb-0"><i class="bi bi-clock-history text-secondary me-2"></i>Historique</h5>
+                    <span class="small text-muted">{{ page_obj.paginator.count }} annonce(s)</span>
+                </div>
+                <form method="get" action="{% url 'dashboard_admin:announcements' %}" class="row g-2 mb-3">
+                    <div class="col-12"><input class="form-control" type="search" name="q" value="{{ filter_values.q }}" placeholder="Rechercher un titre ou un contenu"></div>
+                    <div class="col-sm-6"><select class="form-select" name="category"><option value="">Toutes les catégories</option>{% for category in announcement_categories %}<option value="{{ category }}" {% if filter_values.category == category %}selected{% endif %}>{{ category }}</option>{% endfor %}</select></div>
+                    <div class="col-sm-6"><select class="form-select" name="audience"><option value="">Toutes les audiences</option>{% for value,label in form.fields.audience.choices %}<option value="{{ value }}" {% if filter_values.audience == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+                    <div class="col-sm-6"><select class="form-select" name="priority"><option value="">Toutes les importances</option>{% for value,label in form.fields.priority.choices %}<option value="{{ value }}" {% if filter_values.priority == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+                    <div class="col-sm-6"><select class="form-select" name="status"><option value="">Tous les statuts</option><option value="published" {% if filter_values.status == 'published' %}selected{% endif %}>Publiées</option><option value="scheduled" {% if filter_values.status == 'scheduled' %}selected{% endif %}>Programmées</option><option value="draft" {% if filter_values.status == 'draft' %}selected{% endif %}>Brouillons</option></select></div>
+                    <div class="col-sm-3"><input class="form-control" type="date" name="date_from" value="{{ filter_values.date_from }}" aria-label="À partir du"></div>
+                    <div class="col-sm-3"><input class="form-control" type="date" name="date_to" value="{{ filter_values.date_to }}" aria-label="Jusqu’au"></div>
+                    <div class="col-12 d-flex gap-2"><button class="btn btn-sm btn-primary" type="submit">Filtrer</button><a class="btn btn-sm btn-outline-secondary" href="{% url 'dashboard_admin:announcements' %}">Effacer</a></div>
+                </form>
+                <div class="d-flex flex-column gap-3 announce-scroll">
+                    {% for announcement in past_announcements %}
+                    <article class="announce-item p-3 bg-body">
+                        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                            <div class="d-flex flex-wrap gap-1">
+                                {% if announcement.category %}<span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill">{{ announcement.category }}</span>{% endif %}
+                                <span class="badge bg-secondary-subtle text-secondary rounded-pill">{{ announcement.get_audience_display }}</span>
+                                {% if announcement.status == 'draft' %}<span class="badge bg-secondary-subtle text-secondary rounded-pill"><i class="bi bi-file-earmark-text me-1"></i>Brouillon</span>{% elif announcement.status == 'scheduled' %}<span class="badge bg-primary-subtle text-primary rounded-pill"><i class="bi bi-clock me-1"></i>Programmée</span>{% else %}<span class="badge bg-success-subtle text-success rounded-pill"><i class="bi bi-check2-circle me-1"></i>Publiée</span>{% endif %}
+                                <span class="badge {% if announcement.priority == 'urgent' %}bg-danger-subtle text-danger{% elif announcement.priority == 'important' %}bg-warning-subtle text-warning-emphasis{% else %}bg-info-subtle text-info-emphasis{% endif %} rounded-pill">{{ announcement.get_priority_display }}</span>
                             </div>
-                            <span class="small text-muted font-mono">{{ ann.date }}</span>
+                            {% if announcement.status == 'scheduled' %}<time class="small text-muted text-nowrap" datetime="{{ announcement.scheduled_at|date:'c' }}">{{ announcement.scheduled_at|date:"d/m/Y H:i" }}</time>{% else %}<time class="small text-muted text-nowrap" datetime="{{ announcement.published_at|date:'c' }}">{{ announcement.published_at|date:"d/m/Y H:i" }}</time>{% endif %}
                         </div>
-
-                        <h6 class="fw-bold text-dark mb-1">{{ ann.title }}</h6>
-                        <div class="d-flex justify-content-between align-items-center small text-muted pt-2 border-top mt-2">
-                            <span><i class="bi bi-person me-1"></i>Publié par {{ ann.author }}</span>
-                            <span class="badge bg-success-subtle text-success border border-success-subtle">{{ ann.badge }}</span>
+                        <h6 class="fw-bold text-dark mb-1">{{ announcement.title }}</h6>
+                        <div class="text-body-secondary small mb-2">{{ announcement.body|announcement_markdown|default:"Aucun contenu détaillé." }}</div>
+                        <div class="d-flex justify-content-between align-items-center small text-muted pt-2 border-top">
+                            <span><i class="bi bi-person me-1"></i>Publiée par {{ announcement.author }} · {{ announcement.hackathon.name }}</span>
+                            <div class="d-flex gap-2">
+                                <a class="btn btn-sm btn-outline-primary" href="{% url 'dashboard_admin:announcement_edit' announcement.pk %}" aria-label="Modifier {{ announcement.title }}" title="Modifier"><i class="bi bi-pencil"></i></a>
+                                <form method="post" action="{% url 'dashboard_admin:announcement_delete' announcement.pk %}" onsubmit="return confirm('Supprimer cette annonce ?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Supprimer {{ announcement.title }}" title="Supprimer"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </div>
                         </div>
-                    </div>
+                    </article>
+                    {% empty %}
+                    <div class="text-center text-muted py-5"><i class="bi bi-search fs-2 d-block mb-2"></i>Aucun résultat pour ces critères.</div>
                     {% endfor %}
                 </div>
+                {% if page_obj.paginator.num_pages > 1 %}
+                <nav class="mt-3" aria-label="Pagination des annonces"><ul class="pagination pagination-sm justify-content-center mb-0">
+                    {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="{% url 'dashboard_admin:announcements' %}?q={{ filter_values.q|urlencode }}&category={{ filter_values.category|urlencode }}&audience={{ filter_values.audience|urlencode }}&priority={{ filter_values.priority|urlencode }}&status={{ filter_values.status|urlencode }}&date_from={{ filter_values.date_from }}&date_to={{ filter_values.date_to }}&page={{ page_obj.previous_page_number }}">Précédent</a></li>{% endif %}
+                    <li class="page-item disabled"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+                    {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="{% url 'dashboard_admin:announcements' %}?q={{ filter_values.q|urlencode }}&category={{ filter_values.category|urlencode }}&audience={{ filter_values.audience|urlencode }}&priority={{ filter_values.priority|urlencode }}&status={{ filter_values.status|urlencode }}&date_from={{ filter_values.date_from }}&date_to={{ filter_values.date_to }}&page={{ page_obj.next_page_number }}">Suivant</a></li>{% endif %}
+                </ul></nav>{% endif %}
             </div>
         </div>
     </div>
 </div>
+<script>
+(() => {
+  const body = document.getElementById('{{ form.body.id_for_label }}');
+  const title = document.getElementById('{{ form.title.id_for_label }}');
+  const category = document.getElementById('{{ form.category.id_for_label }}');
+  const audience = document.getElementById('{{ form.audience.id_for_label }}');
+  const schedule = document.getElementById('{{ form.scheduled_at.id_for_label }}');
+  const count = document.querySelector('[data-char-count]');
+  const form = body?.closest('form');
+  if (!body) return;
+  const errorFor = (input) => {
+    let error = input.parentElement.querySelector('[data-client-error]');
+    if (!error) {
+      error = document.createElement('div');
+      error.className = 'invalid-feedback d-block';
+      error.dataset.clientError = '';
+      error.id = `${input.id}-client-error`;
+      input.insertAdjacentElement('afterend', error);
+    }
+    return error;
+  };
+  const clearError = (input) => {
+    const error = input.parentElement.querySelector('[data-client-error]');
+    if (error) {
+      error.remove();
+      if (input.getAttribute('aria-describedby') === error.id) input.removeAttribute('aria-describedby');
+    }
+    if (!input.parentElement.querySelector('.invalid-feedback:not([data-client-error])')) {
+      input.classList.remove('is-invalid');
+      input.removeAttribute('aria-invalid');
+    }
+  };
+  const setError = (input, message) => {
+    const error = errorFor(input);
+    error.textContent = message;
+    input.classList.add('is-invalid');
+    input.setAttribute('aria-invalid', 'true');
+    input.setAttribute('aria-describedby', error.id);
+  };
+  if (form) {
+    const draftButton = form.querySelector('[data-draft-button]');
+    const publishButton = form.querySelector('[data-publish-button]');
+    const validate = (action) => {
+      [title, category, audience, body, schedule].filter(Boolean).forEach(clearError);
+      const errors = [];
+      if (!title.value.trim()) { setError(title, 'Le titre est obligatoire.'); errors.push(title); }
+      if (title.value.trim().length > 220) { setError(title, 'Le titre ne peut pas dépasser 220 caractères.'); errors.push(title); }
+      if (category.value.trim().length > 80) { setError(category, 'La catégorie ne peut pas dépasser 80 caractères.'); errors.push(category); }
+      if (!audience.value) { setError(audience, 'Sélectionnez une audience.'); errors.push(audience); }
+      if (action !== 'draft' && !body.value.trim()) { setError(body, 'Ajoutez le contenu de votre annonce avant de la publier.'); errors.push(body); }
+      if (body.value.length > 5000) { setError(body, 'Le message ne peut pas dépasser 5 000 caractères.'); errors.push(body); }
+      if (schedule.value && new Date(schedule.value).getTime() <= Date.now()) { setError(schedule, 'Choisissez une date et une heure dans le futur.'); errors.push(schedule); }
+      return errors;
+    };
+    form.addEventListener('submit', (event) => {
+      const action = event.submitter?.value || (event.submitter === draftButton ? 'draft' : 'publish');
+      const errors = validate(action);
+      if (errors.length) {
+        event.preventDefault();
+        errors[0].focus();
+        errors[0].scrollIntoView({behavior: 'smooth', block: 'center'});
+      }
+    });
+    [title, category, audience, body, schedule].filter(Boolean).forEach((input) => {
+      input.addEventListener('input', () => clearError(input));
+      input.addEventListener('change', () => clearError(input));
+    });
+  }
+  const generator = document.querySelector('[data-ai-generator]');
+  if (generator && form) {
+    const generateButton = generator.querySelector('[data-ai-generate]');
+    const resultPanel = generator.querySelector('[data-ai-result]');
+    const errorBox = generator.querySelector('[data-ai-error]');
+    const topicInput = generator.querySelector('[data-ai-topic]');
+    const resultTitle = generator.querySelector('[data-ai-result-title]');
+    const resultBody = generator.querySelector('[data-ai-result-body]');
+    const applyButton = generator.querySelector('[data-ai-apply]');
+    const copyButton = generator.querySelector('[data-ai-copy]');
+    const teamsList = generator.querySelector('[data-ai-teams]');
+    const targetNote = generator.querySelector('[data-ai-target-note]');
+    let targetedEmail = false;
+    const clearTopicError = () => {
+      generator.querySelector('[data-topic-error]')?.remove();
+      topicInput.classList.remove('is-invalid');
+      topicInput.removeAttribute('aria-invalid');
+      topicInput.setAttribute('aria-describedby', 'ai-topic-help');
+    };
+    topicInput?.addEventListener('input', clearTopicError);
+    generateButton?.addEventListener('click', async () => {
+      errorBox.classList.add('d-none');
+      resultPanel.classList.add('d-none');
+      clearTopicError();
+      if (!topicInput.value.trim()) {
+        const topicError = document.createElement('div');
+        topicError.className = 'invalid-feedback d-block';
+        topicError.dataset.topicError = '';
+        topicError.id = 'ai-topic-error';
+        topicError.textContent = 'Indiquez le sujet et les informations à transmettre.';
+        topicInput.classList.add('is-invalid');
+        topicInput.setAttribute('aria-invalid', 'true');
+        topicInput.setAttribute('aria-describedby', 'ai-topic-help ai-topic-error');
+        topicInput.insertAdjacentElement('afterend', topicError);
+        topicInput.focus();
+        return;
+      }
+      const originalLabel = generateButton.innerHTML;
+      generateButton.disabled = true;
+      generateButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Génération du brouillon…';
+      const data = new URLSearchParams({
+        audience: generator.querySelector('[data-ai-audience]').value,
+        topic: generator.querySelector('[data-ai-topic]').value,
+        tone: generator.querySelector('[data-ai-tone]').value,
+        message_type: generator.querySelector('[data-ai-type]').value,
+        csrfmiddlewaretoken: form.querySelector('[name="csrfmiddlewaretoken"]').value,
+      });
+      try {
+        const response = await fetch(generator.dataset.endpoint, {
+          method: 'POST', headers: {'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}, body: data,
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || 'La génération a échoué.');
+        resultTitle.value = payload.title;
+        resultBody.value = payload.body;
+        targetedEmail = payload.is_targeted_email;
+        applyButton.disabled = targetedEmail;
+        teamsList.replaceChildren();
+        if (targetedEmail) {
+          targetNote.textContent = `${payload.target_team_count} équipe(s) sans dépôt pour « ${payload.milestone} »${payload.deadline ? ` · échéance ${payload.deadline}` : ''}. Ce modèle contient {{team_name}}. La publication HackFlow ne cible pas précisément ce sous-groupe : vérifiez les destinataires et utilisez ce texte pour un envoi individuel.`;
+          payload.target_teams.forEach(team => { const item = document.createElement('li'); item.textContent = team; teamsList.append(item); });
+          if (payload.target_team_count > payload.target_teams.length) {
+            const rest = document.createElement('li'); rest.textContent = `Liste limitée aux ${payload.target_teams.length} premières équipes.`; teamsList.append(rest);
+          }
+          teamsList.classList.remove('d-none');
+        } else {
+          targetNote.textContent = 'Brouillon généré. Relisez-le et modifiez-le avant de le publier.';
+          teamsList.classList.add('d-none');
+        }
+        resultPanel.classList.remove('d-none');
+      } catch (error) {
+        errorBox.textContent = error.message || 'Impossible de générer le brouillon. Réessayez.';
+        errorBox.classList.remove('d-none');
+      } finally {
+        generateButton.disabled = false;
+        generateButton.innerHTML = originalLabel;
+      }
+    });
+    applyButton?.addEventListener('click', () => {
+      if (targetedEmail) return;
+      title.value = resultTitle.value;
+      body.value = resultBody.value;
+      body.dispatchEvent(new Event('input', {bubbles: true}));
+      title.dispatchEvent(new Event('input', {bubbles: true}));
+      document.querySelector('[data-preview-title]')?.scrollIntoView({behavior: 'smooth', block: 'center'});
+    });
+    copyButton?.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(`Objet : ${resultTitle.value}\n\n${resultBody.value}`);
+        copyButton.innerHTML = '<i class="bi bi-check2 me-1"></i>Copié';
+      } catch (_) { resultBody.select(); document.execCommand('copy'); }
+    });
+  }
+  const escapeHtml = value => value.replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  const renderPreview = value => {
+    const safe = escapeHtml(value).replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+      '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    const output = [];
+    let items = [];
+    const flush = () => { if (items.length) { output.push('<ul class="mb-2">' + items.map(item => '<li>' + item + '</li>').join('') + '</ul>'); items = []; } };
+    safe.split('\n').forEach(line => {
+      if (/^\s*(•|-) /.test(line)) items.push(line.replace(/^\s*(•|-) /, ''));
+      else { flush(); output.push(line); }
+    });
+    flush();
+    return output.join('<br>');
+  };
+  const update = () => {
+    if (count) {
+      count.textContent = body.value.length;
+      count.classList.toggle('text-danger', body.value.length >= 4800);
+      count.classList.toggle('fw-bold', body.value.length >= 4800);
+    }
+    title.classList.toggle('is-invalid', !title.value.trim());
+    body.classList.toggle('is-invalid', body.value.length > 5000);
+    document.querySelector('[data-preview-title]').textContent = title.value || 'Votre titre apparaîtra ici';
+    document.querySelector('[data-preview-body]').innerHTML = body.value ? renderPreview(body.value) : 'Votre message apparaîtra ici.';
+    const selectedPriority = document.querySelector('input[name="priority"]:checked');
+    const priorityLabel = selectedPriority?.closest('label')?.querySelector('.small.fw-bold')?.textContent;
+    const scheduledLabel = schedule?.value ? 'Programmé le ' + new Date(schedule.value).toLocaleString() : '';
+    document.querySelector('[data-preview-meta]').textContent = [category.value, audience.options[audience.selectedIndex]?.text, priorityLabel, scheduledLabel].filter(Boolean).join(' · ');
+  };
+  document.querySelectorAll('[data-wrap]').forEach(button => button.addEventListener('click', () => {
+    const start = body.selectionStart, end = body.selectionEnd, mark = button.dataset.wrap;
+    const selected = body.value.slice(start, end) || 'texte';
+    body.setRangeText(mark + selected + mark, start, end, 'select'); body.focus(); body.dispatchEvent(new Event('input'));
+  }));
+  document.querySelector('[data-link]')?.addEventListener('click', () => {
+    const start = body.selectionStart, end = body.selectionEnd, label = body.value.slice(start, end) || 'texte du lien';
+    body.setRangeText('[' + label + '](https://)', start, end, 'select'); body.focus(); body.dispatchEvent(new Event('input'));
+  });
+  document.querySelector('[data-prefix]')?.addEventListener('click', () => {
+    const start = body.selectionStart, end = body.selectionEnd;
+    const text = body.value.slice(start, end) || 'Élément de liste';
+    body.setRangeText('• ' + text.replace(/\n/g, '\n• '), start, end, 'select'); body.focus(); body.dispatchEvent(new Event('input'));
+  });
+  [body, title, category, audience, schedule].forEach(field => field?.addEventListener('input', update));
+  document.querySelectorAll('input[name="priority"]').forEach(field => field.addEventListener('change', update));
+  form?.addEventListener('submit', event => {
+    update();
+    const action = event.submitter?.value || 'publish';
+    const draft = action === 'draft';
+    const actionField = form.querySelector('[data-submit-action]');
+    if (actionField) actionField.value = action;
+    if (!title.value.trim() || (!draft && !body.value.trim()) || body.value.length > 5000) {
+      event.preventDefault();
+      form.classList.add('was-validated');
+      title.classList.toggle('is-invalid', !title.value.trim());
+      body.classList.toggle('is-invalid', (!draft && !body.value.trim()) || body.value.length > 5000);
+      (!title.value.trim() ? title : body).focus();
+      return;
+    }
+    const urgent = document.querySelector('input[name="priority"]:checked')?.value === 'urgent';
+    if (!draft && urgent && !window.confirm('Cette annonce sera marquée comme urgente. Confirmer sa publication ?')) {
+      event.preventDefault();
+      return;
+    }
+    if (event.submitter) {
+      event.submitter.disabled = true;
+      event.submitter.dataset.originalLabel = event.submitter.innerHTML;
+      event.submitter.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Enregistrement…';
+    }
+  });
+  update();
+})();
+</script>
 {% endblock %}

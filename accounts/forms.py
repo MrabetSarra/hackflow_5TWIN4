@@ -8,7 +8,22 @@ from django.core.validators import FileExtensionValidator
 from .models import validate_cv_size, validate_profile_photo_size
 
 
-class EmailOrUsernameAuthenticationForm(AuthenticationForm):
+class AccessibleFormMixin:
+    """Expose required state consistently to assistive technology."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs['aria-required'] = 'true' if field.required else 'false'
+
+    def full_clean(self):
+        super().full_clean()
+        for name, field in self.fields.items():
+            if self.errors.get(name):
+                field.widget.attrs['aria-invalid'] = 'true'
+                field.widget.attrs['aria-describedby'] = f'{field.widget.attrs.get("id", f"id_{name}")}_errors'
+
+
+class EmailOrUsernameAuthenticationForm(AccessibleFormMixin, AuthenticationForm):
     """Authenticate with either the account username or its unique email."""
 
     def __init__(self, *args, **kwargs):
@@ -41,7 +56,7 @@ class EmailOrUsernameAuthenticationForm(AuthenticationForm):
         return super().clean()
 
 
-class AccountRegistrationForm(forms.Form):
+class AccountRegistrationForm(AccessibleFormMixin, forms.Form):
     first_name = forms.CharField(max_length=150, label='Prénom')
     last_name = forms.CharField(max_length=150, label='Nom')
     username = forms.CharField(max_length=150, label="Nom d'utilisateur")
@@ -175,7 +190,7 @@ class AccountRegistrationForm(forms.Form):
         return user
 
 
-class PasswordResetRequestForm(forms.Form):
+class PasswordResetRequestForm(AccessibleFormMixin, forms.Form):
     email = forms.EmailField(label='Email address', max_length=254)
 
     def __init__(self, *args, **kwargs):
@@ -187,7 +202,7 @@ class PasswordResetRequestForm(forms.Form):
         })
 
 
-class PasswordResetVerifyForm(forms.Form):
+class PasswordResetVerifyForm(AccessibleFormMixin, forms.Form):
     email = forms.EmailField(label='Email address', max_length=254)
     code = forms.RegexField(regex=r'^\d{6}$', label='Verification code', error_messages={
         'invalid': 'Enter the 6-digit code sent to your email.',
@@ -216,7 +231,7 @@ class PasswordResetVerifyForm(forms.Form):
         return cleaned
 
 
-class ProfileAssetsForm(forms.ModelForm):
+class ProfileAssetsForm(AccessibleFormMixin, forms.ModelForm):
     profile_photo = forms.ImageField(
         required=False,
         validators=[FileExtensionValidator(['jpg', 'jpeg', 'png', 'webp']), validate_profile_photo_size],
@@ -253,7 +268,7 @@ class ProfileAssetsForm(forms.ModelForm):
         return uploaded_file
 
 
-class ProfileDetailsForm(forms.ModelForm):
+class ProfileDetailsForm(AccessibleFormMixin, forms.ModelForm):
     """Editable account details with uniqueness and role-specific validation."""
 
     study_level = forms.ChoiceField(
@@ -264,12 +279,21 @@ class ProfileDetailsForm(forms.ModelForm):
         choices=[], required=False, label='Compétences',
         widget=forms.CheckboxSelectMultiple,
     )
+    preferred_roles = forms.MultipleChoiceField(
+        choices=[('developer', 'Développement'), ('designer', 'Design / UX'), ('business', 'Business / Pitch'), ('product', 'Produit'), ('data_ai', 'Data / IA')],
+        required=False, label='Rôles préférés', widget=forms.CheckboxSelectMultiple,
+    )
+    availability_windows = forms.MultipleChoiceField(
+        choices=[('weekday_day', 'Journées en semaine'), ('weekday_evening', 'Soirs en semaine'), ('weekend', 'Week-end'), ('flexible', 'Flexible')],
+        required=False, label='Disponibilités pendant le hackathon', widget=forms.CheckboxSelectMultiple,
+    )
 
     class Meta:
         model = get_user_model()
         fields = (
             'first_name', 'last_name', 'username', 'email', 'school', 'study_level',
-            'specialty', 'skills', 'bio', 'github_url', 'linkedin_url',
+            'specialty', 'skills', 'preferred_roles', 'preferred_categories', 'availability_windows',
+            'bio', 'github_url', 'linkedin_url',
         )
         labels = {
             'first_name': 'Prénom', 'last_name': 'Nom', 'username': "Nom d'utilisateur",
@@ -277,6 +301,8 @@ class ProfileDetailsForm(forms.ModelForm):
             'study_level': "Niveau d'études", 'specialty': 'Spécialité',
             'skills': 'Compétences', 'bio': 'Présentation',
             'github_url': 'Profil GitHub', 'linkedin_url': 'Profil LinkedIn',
+            'preferred_roles': 'Rôles préférés', 'preferred_categories': 'Thématiques de projet préférées',
+            'availability_windows': 'Disponibilités pendant le hackathon',
         }
         widgets = {
             'bio': forms.Textarea(attrs={'rows': 4}),
@@ -291,12 +317,16 @@ class ProfileDetailsForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['preferred_categories'].help_text = 'Séparez plusieurs thèmes par une virgule (ex. santé, climat, éducation).'
+        self.fields['availability_windows'].help_text = 'Les disponibilités non renseignées sont traitées comme inconnues.'
         self.fields['skills'].choices = self.SKILL_CHOICES
         self.fields['study_level'].choices = [('', 'Choisir un niveau'), *self.STUDY_LEVEL_CHOICES]
         self.initial['skills'] = self.instance.skills or []
+        self.initial['preferred_roles'] = self.instance.preferred_roles or []
+        self.initial['availability_windows'] = self.instance.availability_windows or []
         self.fields['skills'].required = False
         for name, field in self.fields.items():
-            if name == 'skills':
+            if name in ('skills', 'preferred_roles', 'availability_windows'):
                 continue
             field.widget.attrs.setdefault('class', 'form-select' if isinstance(field.widget, forms.Select) else 'form-control')
         self.fields['first_name'].required = True
@@ -310,6 +340,8 @@ class ProfileDetailsForm(forms.ModelForm):
                 'email': 'Email address', 'school': 'School / organization',
                 'study_level': 'Study level', 'skills': 'Skills', 'bio': 'About me',
                 'github_url': 'GitHub profile', 'linkedin_url': 'LinkedIn profile',
+                'preferred_roles': 'Preferred roles', 'preferred_categories': 'Preferred project themes',
+                'availability_windows': 'Availability during the hackathon',
             }
             for name, label in student_labels.items():
                 if name in self.fields:
@@ -329,10 +361,16 @@ class ProfileDetailsForm(forms.ModelForm):
             self.fields['study_level'].required = True
             self.fields.pop('specialty')
         elif self.instance.role == 'mentor':
+            self.fields.pop('preferred_roles')
+            self.fields.pop('preferred_categories')
+            self.fields.pop('availability_windows')
             self.fields['specialty'].required = True
             self.fields.pop('study_level')
             self.fields.pop('skills')
         else:
+            self.fields.pop('preferred_roles')
+            self.fields.pop('preferred_categories')
+            self.fields.pop('availability_windows')
             self.fields.pop('study_level')
             self.fields.pop('specialty')
             self.fields.pop('skills')
@@ -341,6 +379,10 @@ class ProfileDetailsForm(forms.ModelForm):
         user = super().save(commit=False)
         if 'skills' in self.cleaned_data:
             user.skills = self.cleaned_data['skills']
+        if 'preferred_roles' in self.cleaned_data:
+            user.preferred_roles = self.cleaned_data['preferred_roles']
+        if 'availability_windows' in self.cleaned_data:
+            user.availability_windows = self.cleaned_data['availability_windows']
         if commit:
             user.save()
             self.save_m2m()

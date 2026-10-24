@@ -1,0 +1,86 @@
+{% extends "layouts/base_student.html" %}
+{% load static %}
+{% block title %}{{ commit.short_hash }} · {{ repository.name }} - HackFlow{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'repositories/repositories.css' %}?v={{ repositories_css_version }}">{% endblock %}
+{% block student_content %}
+<h1 class="visually-hidden">Commit {{ commit.short_hash }} in {{ repository.name }}</h1>
+<div class="container-fluid px-0 repository-page">
+
+    <!-- Header -->
+    <div class="repo-header">
+        <div class="repo-header__breadcrumb">            <a href="{% url 'repositories:list' %}">Repositories</a>
+            <span class="text-body-secondary">/</span>
+            <a href="{% url 'repositories:detail' repository.slug %}">{{ repository.name }}</a>
+            <span class="text-body-secondary">/</span>
+            <a href="{% url 'repositories:history' repository.slug %}">Commits</a>
+            <span class="text-body-secondary">/</span>
+            <span class="fw-semibold font-mono text-body">{{ commit.short_hash }}</span>
+        </div>
+
+        <!-- Commit title bar (like GitHub's commit header) -->
+        <div class="card-modern p-3 mt-3">
+            <h2 class="fw-bold text-body mb-2" style="font-size:1.15rem;">{{ commit.message }}</h2>
+            <div class="d-flex flex-wrap align-items-center gap-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="repo-commit-row__avatar">{{ commit.author.0|upper|default:'?' }}</span>
+                    <span class="small fw-semibold text-body">{{ commit.author }}</span>
+                </div>
+                {% if commit.date %}
+                <span class="small text-body-secondary"><i aria-hidden="true" class="bi bi-calendar3 me-1"></i>{{ commit.date }}</span>
+                {% endif %}
+                <code class="repo-commit-hash">{{ commit.hash }}</code>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats bar (added/removed lines summary) -->
+    <div class="d-flex align-items-center gap-3 my-3 px-1 flex-wrap">
+        <span class="small text-body-secondary">
+            <i aria-hidden="true" class="bi bi-file-diff text-primary me-1"></i>
+            <strong class="text-body">{{ commit.diff_files|length }}</strong> file{{ commit.diff_files|length|pluralize }} changed
+        </span>
+    </div>
+
+    <!-- Diff section -->
+    <div class="mb-4">
+        <div class="card-modern overflow-hidden">
+            <div class="repo-toolbar" style="border-radius:.75rem .75rem 0 0;">
+                <div class="repo-toolbar__left">
+                    <i aria-hidden="true" class="bi bi-file-diff text-primary"></i>
+                    <span class="fw-semibold text-body small">Diff</span>
+                </div>
+            </div>
+            <div class="p-3">
+                {% include "repositories/_diff_files.html" with diff_files=commit.diff_files %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Restore version -->
+    <div class="card-modern p-4">
+        <h6 class="fw-semibold text-body mb-1"><i aria-hidden="true" class="bi bi-arrow-counterclockwise text-warning me-2"></i>Restore this version</h6>
+        <p class="text-body-secondary small mb-3">Creates a new commit on your chosen branch that restores the project to this snapshot.</p>
+        <form method="post" action="{% url 'repositories:restore' repository.slug commit.hash %}">
+            {% csrf_token %}
+            <div class="row g-3 align-items-end">
+                <div class="col-sm-4">
+                    <label class="form-label fw-semibold small" for="restore-branch">Target branch</label>
+                    <select class="form-select form-select-sm" id="restore-branch" name="branch">
+                        {% for branch in branches %}<option value="{{ branch }}">{{ branch }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-sm-5">
+                    <label class="form-label fw-semibold small" for="restore-message">Commit message</label>
+                    <input class="form-control form-control-sm" id="restore-message" name="commit_message"
+                           maxlength="200" placeholder="Restore to {{ commit.short_hash }}">
+                </div>
+                <div class="col-sm-3">
+                    <button class="btn btn-sm btn-outline-warning rounded-pill px-3 w-100" type="submit">
+                        <i aria-hidden="true" class="bi bi-arrow-counterclockwise me-1"></i>Restore
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

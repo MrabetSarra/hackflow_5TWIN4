@@ -1,0 +1,92 @@
+{% extends 'layouts/base_student.html' %}
+{% block student_content %}
+<style>
+.application-board{--ink:var(--bs-body-color);--muted:#68758a;--line:var(--bs-border-color);color:var(--ink)}
+.application-hero{background:radial-gradient(circle at 84% 8%,rgba(255,255,255,.2),transparent 31%),linear-gradient(118deg,#3e5fc3 0%,#4e70d2 58%,#6685df 100%);border-radius:1.5rem;color:#fff;overflow:hidden;position:relative}
+.application-hero:after{content:"";position:absolute;width:220px;height:220px;border:1px solid rgba(255,255,255,.13);border-radius:50%;right:-60px;bottom:-130px;box-shadow:0 0 0 28px rgba(255,255,255,.035),0 0 0 58px rgba(255,255,255,.025)}
+.application-hero-content{display:flex;justify-content:space-between;align-items:center;gap:2rem;position:relative;z-index:1}
+.application-hero-copy{max-width:660px}.application-hero h1{color:#fff !important;letter-spacing:-.045em}.application-hero-copy p{color:rgba(255,255,255,.9)!important}.application-hero-summary{min-width:220px;padding:1rem 1.15rem;border:1px solid rgba(255,255,255,.3);border-radius:1rem;background:rgba(28,48,112,.2);backdrop-filter:blur(8px)}
+.application-hero-summary .summary-number{font-size:2rem;line-height:1;font-weight:750;letter-spacing:-.05em}.application-hero-summary .summary-track{height:5px;border-radius:99px;background:rgba(255,255,255,.18);overflow:hidden}.application-hero-summary .summary-track span{display:block;height:100%;background:#9ce7c3;border-radius:inherit}
+.application-stat{border:1px solid var(--line);border-radius:1rem;background:var(--bs-body-bg);transition:transform .18s ease,box-shadow .18s ease}.application-stat:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(25,39,68,.07)}
+.application-row{border:1px solid var(--line);border-radius:1.15rem;background:var(--bs-body-bg);transition:box-shadow .18s ease,transform .18s ease}.application-row:hover{box-shadow:0 12px 30px rgba(25,39,68,.07);transform:translateY(-1px)}
+.application-mark{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:#eef2ff;color:#4458cf;font-size:1.15rem;flex:0 0 auto}
+.application-board .form-control,.application-board .form-select{border-color:#e2e8f0;min-height:42px}.application-board .form-control:focus,.application-board .form-select:focus{border-color:#8998f4;box-shadow:0 0 0 .2rem rgba(79,95,210,.12)}
+@media(max-width:767.98px){.application-hero-content{align-items:stretch;flex-direction:column;gap:1.25rem}.application-hero-summary{max-width:320px}.application-actions{width:100%}.application-actions form{flex:1}.application-actions .form-select{min-width:0}}
+</style>
+<div class="container-fluid application-board py-2">
+  <section class="application-hero p-4 p-lg-5 mb-4">
+    <div class="application-hero-content">
+      <div class="application-hero-copy">
+        <span class="badge rounded-pill text-bg-light bg-opacity-10 text-white border border-light border-opacity-25 px-3 py-2 mb-3"><i class="bi bi-kanban me-1"></i> CAREER TRACKER <span class="opacity-50 mx-1">/</span> OVERVIEW</span>
+        <h1 class="display-6 fw-bold mb-2">My applications</h1>
+        <p class="mb-4 text-white-50">Keep every opportunity moving. Review your progress and update your next step in one place.</p>
+        <a href="{% url 'career_opportunities:list' %}" class="btn btn-light rounded-pill fw-semibold px-4"><i class="bi bi-search me-2"></i>Explore opportunities</a>
+      </div>
+      <div class="application-hero-summary" aria-label="Application pipeline summary">
+        <div class="d-flex justify-content-between align-items-center mb-2"><span class="small text-white-50">Your pipeline</span><i class="bi bi-arrow-up-right text-white-50" aria-hidden="true"></i></div>
+        <div class="d-flex align-items-end gap-2 mb-3"><span class="summary-number">{{ total_count }}</span><span class="small text-white-50 mb-1">tracked</span></div>
+        <div class="d-flex flex-wrap gap-2 small"><span class="badge rounded-pill border border-light border-opacity-25 bg-white bg-opacity-10 text-white">{{ counts.submitted }} submitted</span><span class="badge rounded-pill border border-light border-opacity-25 bg-white bg-opacity-10 text-white">{{ counts.interview }} interview{{ counts.interview|pluralize }}</span><span class="badge rounded-pill border border-light border-opacity-25 bg-white bg-opacity-10 text-white">{{ counts.accepted }} offer{{ counts.accepted|pluralize }}</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3"><div class="application-stat p-3 p-lg-4 h-100"><div class="d-flex justify-content-between align-items-start"><span class="small text-secondary">All tracked</span><i class="bi bi-briefcase text-primary"></i></div><div class="fs-3 fw-bold mt-2">{{ total_count }}</div><div class="small text-secondary">career opportunities</div></div></div>
+    <div class="col-6 col-xl-3"><div class="application-stat p-3 p-lg-4 h-100"><div class="d-flex justify-content-between align-items-start"><span class="small text-secondary">In progress</span><i class="bi bi-hourglass-split text-info"></i></div><div class="fs-3 fw-bold mt-2">{{ counts.intended|add:counts.submitted|add:counts.review }}</div><div class="small text-secondary">intended, submitted or in review</div></div></div>
+    <div class="col-6 col-xl-3"><div class="application-stat p-3 p-lg-4 h-100"><div class="d-flex justify-content-between align-items-start"><span class="small text-secondary">Interviews</span><i class="bi bi-chat-square-text text-warning"></i></div><div class="fs-3 fw-bold mt-2">{{ counts.interview }}</div><div class="small text-secondary">next conversations</div></div></div>
+    <div class="col-6 col-xl-3"><div class="application-stat p-3 p-lg-4 h-100"><div class="d-flex justify-content-between align-items-start"><span class="small text-secondary">Accepted</span><i class="bi bi-check2-circle text-success"></i></div><div class="fs-3 fw-bold mt-2">{{ counts.accepted }}</div><div class="small text-secondary">offers received</div></div></div>
+  </div>
+
+  <form method="get" class="card border-0 shadow-sm rounded-4 p-3 mb-3">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-7"><label for="application-search" class="form-label small fw-semibold">Find an opportunity</label><div class="input-group"><span class="input-group-text bg-body border-end-0"><i class="bi bi-search text-secondary"></i></span><input id="application-search" class="form-control border-start-0" name="q" value="{{ query }}" placeholder="Search title or company"></div></div>
+      <div class="col-md-3"><label for="application-status" class="form-label small fw-semibold">Application status</label><select id="application-status" class="form-select" name="status"><option value="">All statuses</option>{% for value,label in statuses %}<option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+      <div class="col-md-2 d-flex gap-2"><a href="{% url 'career_opportunities:applications' %}" class="btn btn-light flex-fill">Reset</a><button class="btn btn-primary flex-fill">Filter</button></div>
+    </div>
+  </form>
+
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"><div class="fw-semibold">Your pipeline <span class="text-secondary fw-normal">· {{ page_obj.paginator.count }} result{{ page_obj.paginator.count|pluralize }}</span></div><span class="small text-secondary">Updated most recently first</span></div>
+  <div class="d-grid gap-3">
+    {% for app in applications %}
+      <article class="application-row p-3 p-lg-4">
+        <div class="d-flex flex-wrap align-items-center gap-3">
+          <div class="application-mark"><i class="bi bi-building"></i></div>
+          <div class="flex-grow-1 min-w-0">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-1"><a class="h5 fw-bold text-decoration-none text-body mb-0" href="{% url 'career_opportunities:detail' app.opportunity_id %}">{{ app.opportunity.title }}</a>
+              {% if app.status == 'accepted' %}<span class="badge rounded-pill text-bg-success-subtle text-success">{{ app.get_status_display }}</span>
+              {% elif app.status == 'rejected' or app.status == 'withdrawn' %}<span class="badge rounded-pill text-bg-secondary-subtle text-secondary">{{ app.get_status_display }}</span>
+              {% elif app.status == 'interview' %}<span class="badge rounded-pill text-bg-warning-subtle text-warning-emphasis"><i class="bi bi-calendar2-check me-1"></i>{{ app.get_status_display }}</span>
+              {% elif app.status == 'submitted' or app.status == 'review' %}<span class="badge rounded-pill text-bg-primary-subtle text-primary">{{ app.get_status_display }}</span>
+              {% else %}<span class="badge rounded-pill text-bg-light text-secondary">{{ app.get_status_display }}</span>{% endif %}
+            </div>
+            <div class="text-secondary">{{ app.opportunity.company }}{% if app.opportunity.location %}<span class="mx-1">·</span><i class="bi bi-geo-alt me-1"></i>{{ app.opportunity.location }}{% endif %}</div>
+            <div class="small text-secondary mt-2"><i class="bi bi-clock me-1"></i>Updated {{ app.updated_at|date:'M j, Y' }} <span class="mx-1">·</span>Added {{ app.created_at|date:'M j, Y' }}</div>
+            <div class="mt-3">
+              {% if app.match_score != None %}
+                {% if app.match_eligible %}<span class="badge rounded-pill text-bg-success-subtle text-success"><i class="bi bi-check-circle me-1"></i>Eligible for interview review · {{ app.match_score }}%</span><p class="small text-secondary mt-1 mb-0">The organizer will post the interview date and updates here.</p>
+                {% else %}<span class="badge rounded-pill text-bg-secondary-subtle text-secondary"><i class="bi bi-dash-circle me-1"></i>Below the 50% consideration threshold · {{ app.match_score }}%</span><p class="small text-secondary mt-1 mb-0">This application is not selected for interview consideration based on the current match.</p>{% endif %}
+              {% else %}<span class="badge rounded-pill text-bg-warning-subtle text-warning-emphasis"><i class="bi bi-info-circle me-1"></i>Eligibility not yet determined</span><p class="small text-secondary mt-1 mb-0">There is not enough readable CV or profile evidence to calculate a reliable match.</p>{% endif %}
+            </div>
+            {% if app.status == 'interview' %}
+              <div class="alert alert-warning border-0 rounded-3 py-2 px-3 mt-3 mb-0 small">
+                <strong><i class="bi bi-calendar2-check me-1"></i>Interview</strong>
+                {% if app.interview_at %}<span>scheduled for <time datetime="{{ app.interview_at|date:'c' }}">{{ app.interview_at|date:'M j, Y · H:i' }}</time></span>
+                {% else %}<span>date to be confirmed by the organizer.</span>{% endif %}
+                {% if app.organizer_update %}<div class="mt-1">{{ app.organizer_update }}</div>{% endif %}
+              </div>
+            {% elif app.organizer_update %}<div class="alert alert-light border rounded-3 py-2 px-3 mt-3 mb-0 small"><strong>Organizer update:</strong> {{ app.organizer_update }}</div>{% endif %}
+          </div>
+          <div class="application-actions d-flex align-items-center gap-2">
+            {% if app.status != 'accepted' and app.status != 'rejected' and app.status != 'withdrawn' %}<form method="post" action="{% url 'career_opportunities:application_status' app.pk %}" onsubmit="return confirm('Withdraw this application?');">{% csrf_token %}<input type="hidden" name="status" value="withdrawn"><button class="btn btn-sm btn-outline-secondary rounded-pill px-3">Withdraw</button></form>{% endif %}
+            <a href="{% url 'career_opportunities:detail' app.opportunity_id %}" class="btn btn-sm btn-light rounded-pill" aria-label="View opportunity"><i class="bi bi-arrow-up-right"></i></a>
+          </div>
+        </div>
+      </article>
+    {% empty %}
+      <div class="card border-0 shadow-sm rounded-4 text-center p-5"><div class="application-mark mx-auto mb-3"><i class="bi bi-inbox"></i></div><h2 class="h5 fw-bold">{% if query or status_filter %}No applications match these filters{% else %}Your tracker is ready{% endif %}</h2><p class="text-secondary mb-4">{% if query or status_filter %}Try another search or clear the filters.{% else %}Save an opportunity or start an application to see your progress here.{% endif %}</p><div class="d-flex justify-content-center gap-2"><a href="{% url 'career_opportunities:list' %}" class="btn btn-primary rounded-pill px-4">Browse opportunities</a>{% if query or status_filter %}<a href="{% url 'career_opportunities:applications' %}" class="btn btn-light rounded-pill px-4">Clear filters</a>{% endif %}</div></div>
+    {% endfor %}
+  </div>
+
+  {% if page_obj.has_other_pages %}<nav class="d-flex justify-content-center mt-4" aria-label="Application pages"><ul class="pagination"><li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}"><a class="page-link" {% if page_obj.has_previous %}href="?{% if filter_query %}{{ filter_query }}&amp;{% endif %}page={{ page_obj.previous_page_number }}"{% endif %}>Previous</a></li><li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li><li class="page-item {% if not page_obj.has_next %}disabled{% endif %}"><a class="page-link" {% if page_obj.has_next %}href="?{% if filter_query %}{{ filter_query }}&amp;{% endif %}page={{ page_obj.next_page_number }}"{% endif %}>Next</a></li></ul></nav>{% endif %}
+</div>
+{% endblock %}

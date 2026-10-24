@@ -10,16 +10,16 @@
         <div class="row align-items-center g-5 py-4">
             <div class="col-lg-7 text-center text-lg-start">
                 <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill glass-card mb-3">
-                    <span class="badge bg-primary rounded-pill px-2 py-1 font-mono">Édition 2026</span>
-                    <span class="small text-body-secondary">48h pour imaginer le futur du Web & de l'IA</span>
+                    <span class="badge bg-primary rounded-pill px-2 py-1 font-mono">{% if hackathon %}{{ hackathon.edition|default:hackathon.name }}{% else %}HackFlow{% endif %}</span>
+                    <span class="small text-body-secondary">{% if event_state == 'upcoming' %}Inscriptions et préparation en cours{% elif event_state == 'live' %}Événement en cours{% elif event_state == 'ended' %}Événement terminé{% else %}Plateforme de gestion de hackathons{% endif %}</span>
                 </div>
                 <h1 class="display-3 fw-extrabold tracking-tight mb-3 text-body">
-                    Créez votre équipe. <br>
+                    {% if hackathon %}{{ hackathon.name }}.<br>{% else %}Créez votre équipe.<br>{% endif %}
                     <span class="text-gradient-primary">Codez votre vision.</span> <br>
-                    Gagnez le Hackathon.
+                    Partagez votre projet.
                 </h1>
                 <p class="lead text-body-secondary mb-4 pe-lg-4">
-                    {{ tagline }} Matching intelligent par compétences, suivi en temps réel de votre avancement, mentorat expert et remise des prix.
+                    {{ tagline }}
                 </p>
 
                 <!-- Boutons CTA -->
@@ -32,25 +32,12 @@
                     </a>
                 </div>
 
-                <!-- Compte à rebours Hackathon Adaptatif -->
+                <!-- Dates synchronisées avec l'événement -->
                 <div class="d-inline-flex flex-column align-items-start p-3 rounded-4 glass-card border">
                     <span class="small fw-bold text-body-secondary mb-2 font-mono text-uppercase">
-                        <i class="bi bi-clock-history text-primary me-1"></i>Temps avant le coup d'envoi :
+                        <i class="bi bi-calendar-event text-primary me-1"></i>{% if hackathon %}Dates de l’événement{% else %}Événement à venir{% endif %}
                     </span>
-                    <div class="d-flex gap-2">
-                        <div class="countdown-box">
-                            <div class="countdown-num font-mono" id="cd-hours">34</div>
-                            <div class="text-body-secondary small" style="font-size: 0.7rem;">HEURES</div>
-                        </div>
-                        <div class="countdown-box">
-                            <div class="countdown-num font-mono" id="cd-minutes">42</div>
-                            <div class="text-body-secondary small" style="font-size: 0.7rem;">MINUTES</div>
-                        </div>
-                        <div class="countdown-box">
-                            <div class="countdown-num font-mono" id="cd-seconds">15</div>
-                            <div class="text-body-secondary small" style="font-size: 0.7rem;">SECONDES</div>
-                        </div>
-                    </div>
+                    {% if hackathon %}<div class="fw-semibold text-body">{{ hackathon.starts_at|date:"d/m/Y H:i" }} — {{ hackathon.ends_at|date:"d/m/Y H:i" }}</div><div class="small text-body-secondary">{{ hackathon.location|default:"Lieu à confirmer" }}</div>{% else %}<div class="small text-body-secondary">Les informations seront publiées ici par l’organisateur.</div>{% endif %}
                 </div>
             </div>
 
@@ -62,57 +49,44 @@
                             <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&auto=format&fit=crop&q=80" alt="Équipe Hackathon" class="w-100" style="height: 180px; object-fit: cover;">
                             <div class="position-absolute bottom-0 start-0 w-100 p-2 px-3 d-flex justify-content-between align-items-center" style="background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.75) 100%);">
                                 <span class="badge bg-success rounded-pill px-2 py-1 small">
-                                    <i class="bi bi-circle-fill me-1" style="font-size: 0.45rem;"></i>Sprint en direct
+                                    <i class="bi bi-circle-fill me-1" style="font-size: 0.45rem;"></i>{% if event_state == 'live' %}Événement en cours{% elif event_state == 'upcoming' %}Prochaine édition{% elif event_state == 'ended' %}Événement terminé{% else %}HackFlow{% endif %}
                                 </span>
-                                <span class="badge bg-dark bg-opacity-75 text-white font-mono">Table 14</span>
+                                {% if featured_team.table %}<span class="badge bg-dark bg-opacity-75 text-white font-mono">{{ featured_team.table }}</span>{% endif %}
                             </div>
                         </div>
 
                         <div class="p-4">
                             <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
                                 <div>
-                                    <h5 class="fw-bold mb-0 text-body">Équipe EcoTrack</h5>
-                                    <span class="small text-body-secondary">Impact Écologique & Smart Campus</span>
+                                    {% if featured_team %}<h5 class="fw-bold mb-0 text-body">{{ featured_team.name }}</h5>
+                                    <span class="small text-body-secondary">{{ featured_team.project_name|default:featured_team.category }}</span>{% else %}<h5 class="fw-bold mb-0 text-body">Équipes HackFlow</h5><span class="small text-body-secondary">Les équipes apparaîtront ici après leur création.</span>{% endif %}
                                 </div>
-                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">MVP 68%</span>
+                                {% if featured_team %}<span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">{{ featured_team.member_count }}/{{ featured_team.max_members }} membres</span>{% endif %}
                             </div>
 
                             <!-- Progress Bar Hackathon -->
                             <div class="mb-3">
                                 <div class="d-flex justify-content-between small text-body-secondary mb-1">
-                                    <span>Progression globale</span>
-                                    <span class="fw-bold text-body font-mono">68%</span>
+                                    <span>Capacité de l’équipe</span>
+                                    <span class="fw-bold text-body font-mono">{{ featured_team.occupancy_percent|default:0 }}%</span>
                                 </div>
                                 <div class="progress" style="height: 8px;">
-                                    <div class="progress-bar bg-primary" role="progressbar" style="width: 68%;"></div>
+                                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ featured_team.occupancy_percent|default:0 }}%;"></div>
                                 </div>
                             </div>
 
-                            <!-- Mini checklist -->
+                            <!-- Compétences réellement renseignées -->
                             <div class="d-flex flex-column gap-2 mb-3">
-                                <div class="d-flex align-items-center justify-content-between p-2 rounded-3 bg-body-tertiary border small">
-                                    <span class="text-body"><i class="bi bi-check-circle-fill text-success me-2"></i>Idéation & Wireframes</span>
-                                    <span class="badge bg-success-subtle text-success">Validé</span>
-                                </div>
-                                <div class="d-flex align-items-center justify-content-between p-2 rounded-3 bg-body-tertiary border small">
-                                    <span class="text-body"><i class="bi bi-arrow-repeat text-primary me-2"></i>Développement MVP API</span>
-                                    <span class="badge bg-primary-subtle text-primary">En cours</span>
-                                </div>
+                                {% if featured_team.seeking_skill %}<div class="small text-body-secondary"><i class="bi bi-search text-primary me-1"></i>Recherche : {{ featured_team.seeking_skill }}</div>{% else %}<div class="small text-body-secondary">Consultez les besoins déclarés par les équipes.</div>{% endif %}
                             </div>
 
-                            <!-- Membres de l'équipe démo avec avatars réels -->
+                            <!-- Capacité réelle de l'équipe -->
                             <div class="d-flex align-items-center justify-content-between pt-2 border-top">
                                 <div class="d-flex align-items-center">
-                                    <div class="d-flex -space-x-2 me-2">
-                                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=60&auto=format&fit=crop&q=80" class="rounded-circle border border-2" width="28" height="28" alt="M1">
-                                        <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=60&auto=format&fit=crop&q=80" class="rounded-circle border border-2" width="28" height="28" alt="M2" style="margin-left: -8px;">
-                                        <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=60&auto=format&fit=crop&q=80" class="rounded-circle border border-2" width="28" height="28" alt="M3" style="margin-left: -8px;">
-                                        <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=60&auto=format&fit=crop&q=80" class="rounded-circle border border-2" width="28" height="28" alt="M4" style="margin-left: -8px;">
-                                    </div>
-                                    <span class="small text-body-secondary">4/5 membres</span>
+                                    {% if featured_team %}<span class="small text-body-secondary">{{ featured_team.places_left }} place{{ featured_team.places_left|pluralize }} disponible{{ featured_team.places_left|pluralize }}</span>{% else %}<span class="small text-body-secondary">{{ teams_count }} équipe{{ teams_count|pluralize }} créée{{ teams_count|pluralize }}</span>{% endif %}
                                 </div>
-                                <a href="{% url 'student:dashboard' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
-                                    Explorer <i class="bi bi-arrow-right ms-1"></i>
+                                <a href="{% url 'accounts:register' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                    Participer <i class="bi bi-arrow-right ms-1"></i>
                                 </a>
                             </div>
                         </div>
@@ -151,7 +125,7 @@
             <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 rounded-pill px-3 py-1 mb-2">
                 Parcours Structuré
             </span>
-            <h2 class="display-5 fw-bold text-body">4 Étapes vers la Victoire</h2>
+            <h2 class="display-5 fw-bold text-body">4 Étapes pour participer</h2>
             <p class="text-body-secondary lead">Une organisation fluide pour que vous puissiez vous concentrer à 100% sur l'impact de votre projet.</p>
         </div>
 
@@ -185,7 +159,7 @@
                 </span>
                 <h2 class="display-5 fw-bold mb-3 text-body">Trouvez vos alter-ego techniques en quelques clics</h2>
                 <p class="text-body-secondary lead mb-4">
-                    Plus besoin de chercher au hasard sur Discord : HackFlow analyse les compétences techniques, le niveau et les préférences de projet pour suggérer des équipes équilibrées.
+                    Les recommandations s’appuient sur les compétences, rôles préférés, thématiques, disponibilités renseignées et places restantes dans les équipes de l’événement.
                 </p>
 
                 <div class="d-flex flex-column gap-3 mb-4">
@@ -194,8 +168,8 @@
                             <i class="bi bi-stars"></i>
                         </div>
                         <div>
-                            <h6 class="fw-bold mb-1 text-body">Équilibre des compétences garanti</h6>
-                            <p class="text-body-secondary small mb-0">Chaque équipe intègre harmonieusement développeurs back, front, designers UI/UX et spécialistes Data/IA.</p>
+                            <h6 class="fw-bold mb-1 text-body">Des recommandations expliquées</h6>
+                            <p class="text-body-secondary small mb-0">L’organisateur examine les compétences manquantes et valide lui-même les affectations proposées.</p>
                         </div>
                     </div>
                     <div class="d-flex gap-3 align-items-start">
@@ -203,8 +177,8 @@
                             <i class="bi bi-shuffle"></i>
                         </div>
                         <div>
-                            <h6 class="fw-bold mb-1 text-body">Bourse aux talents en direct</h6>
-                            <p class="text-body-secondary small mb-0">Postulez aux équipes incomplètes ou invitez des profils ciblés en fonction de vos besoins précis.</p>
+                            <h6 class="fw-bold mb-1 text-body">Données actuelles de l’événement</h6>
+                            <p class="text-body-secondary small mb-0">{{ profiled_count }} profil{{ profiled_count|pluralize }} avec compétences ou préférences · {{ unassigned_count }} participant{{ unassigned_count|pluralize }} sans équipe.</p>
                         </div>
                     </div>
                 </div>
@@ -218,52 +192,23 @@
                 <!-- Carte visuelle du matching -->
                 <div class="card-modern p-4 bg-body-tertiary">
                     <div class="d-flex align-items-center justify-content-between mb-3">
-                        <h6 class="fw-bold mb-0 text-body"><i class="bi bi-diagram-2-fill text-primary me-2"></i>Suggestions de complémentarité</h6>
-                        <span class="badge bg-success">Score 94%</span>
+                        <h6 class="fw-bold mb-0 text-body"><i class="bi bi-diagram-2-fill text-primary me-2"></i>Équipes de l’événement</h6>
+                        <span class="badge bg-primary-subtle text-primary">{{ available_places }} place{{ available_places|pluralize }} libre{{ available_places|pluralize }}</span>
                     </div>
 
                     <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <div class="p-3 bg-body rounded-3 border">
-                                <div class="fw-bold small text-body">Développeur Back-End</div>
-                                <div class="d-flex gap-1 flex-wrap mt-1">
-                                    <span class="badge-tag badge-tag-primary">Django</span>
-                                    <span class="badge-tag">PostgreSQL</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="p-3 bg-body rounded-3 border">
-                                <div class="fw-bold small text-body">Développeur Front-End</div>
-                                <div class="d-flex gap-1 flex-wrap mt-1">
-                                    <span class="badge-tag badge-tag-primary">React</span>
-                                    <span class="badge-tag">Bootstrap</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="p-3 bg-body rounded-3 border">
-                                <div class="fw-bold small text-body">Designer UI/UX</div>
-                                <div class="d-flex gap-1 flex-wrap mt-1">
-                                    <span class="badge-tag badge-tag-primary">Figma</span>
-                                    <span class="badge-tag">Prototypage</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="p-3 bg-body rounded-3 border">
-                                <div class="fw-bold small text-body">Data / IA Engineer</div>
-                                <div class="d-flex gap-1 flex-wrap mt-1">
-                                    <span class="badge-tag badge-tag-primary">PyTorch</span>
-                                    <span class="badge-tag">FastAPI</span>
-                                </div>
-                            </div>
-                        </div>
+                        {% for team in matching_teams %}
+                        <div class="col-12"><div class="p-3 bg-body rounded-3 border">
+                            <div class="d-flex justify-content-between align-items-start gap-2"><div><div class="fw-bold small text-body">{{ team.name }}</div><div class="small text-body-secondary">{{ team.project_name|default:team.category }}</div></div><span class="badge {% if team.places_left %}bg-success-subtle text-success{% else %}bg-secondary-subtle text-secondary{% endif %}">{{ team.member_count }}/{{ team.max_members }}</span></div>
+                            {% if team.seeking_skill %}<div class="small text-primary mt-2"><i class="bi bi-search me-1"></i>Recherche : {{ team.seeking_skill }}</div>{% endif %}
+
+                        </div></div>
+                        {% empty %}<div class="col-12"><div class="p-4 bg-body rounded-3 border text-center text-body-secondary">Aucune équipe n’est encore enregistrée pour cet événement.</div></div>{% endfor %}
                     </div>
 
                     <div class="alert alert-info py-2 px-3 small mb-0 d-flex align-items-center gap-2">
                         <i class="bi bi-info-circle-fill"></i>
-                        <span>Équipe prête pour le démarrage du sprint !</span>
+                        <span>{{ teams_count }} équipe{{ teams_count|pluralize }} · {{ unassigned_count }} participant{{ unassigned_count|pluralize }} sans équipe dans les données actuelles.</span>
                     </div>
                 </div>
             </div>
@@ -276,32 +221,17 @@
     <div class="container">
         <div class="text-center max-w-2xl mx-auto mb-5">
             <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 rounded-pill px-3 py-1 mb-2">
-                Accompagnement d'Élite
+                Accompagnement HackFlow
             </span>
-            <h2 class="display-5 fw-bold text-body">Des Mentors Dédiés pour Débloquer vos Sprints</h2>
-            <p class="text-body-secondary lead">Ingénieurs, chercheurs et designers issus des meilleures entreprises de la tech.</p>
+            <h2 class="display-5 fw-bold text-body">Un espace de mentorat relié à vos équipes</h2>
+            <p class="text-body-secondary lead">Les participants peuvent décrire leur besoin et suivre les échanges depuis leur espace.</p>
         </div>
 
-        <div class="row g-4">
-            {% for mentor in mentors %}
-            <div class="col-md-6 col-lg-3">
-                <div class="card-modern card-modern-hoverable p-4 h-100 text-center d-flex flex-column">
-                    <img src="{{ mentor.photo }}" alt="{{ mentor.name }}" class="rounded-circle mx-auto mb-3 border border-3 border-light-subtle shadow-sm" width="90" height="90" style="object-fit: cover;">
-                    <h5 class="fw-bold mb-1 text-body">{{ mentor.name }}</h5>
-                    <p class="text-body-secondary small mb-3">{{ mentor.role }}</p>
-                    
-                    <div class="d-flex flex-wrap justify-content-center gap-1 mb-4 flex-grow-1">
-                        {% for skill in mentor.skills %}
-                        <span class="badge-tag">{{ skill }}</span>
-                        {% endfor %}
-                    </div>
-
-                    <button class="btn btn-sm btn-outline-primary rounded-pill w-100" data-demo-toast="Demande de session programmée avec {{ mentor.name }} !">
-                        <i class="bi bi-chat-dots-fill me-1"></i>Solliciter ce mentor
-                    </button>
-                </div>
-            </div>
-            {% endfor %}
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-8 col-xl-6"><div class="card-modern p-4 d-flex align-items-center gap-4">
+                <span class="stat-icon stat-icon-success flex-shrink-0"><i class="bi bi-person-workspace"></i></span>
+                <div><div class="h3 fw-bold mb-1">{{ mentors_count }}</div><div class="fw-semibold text-body">Mentor{{ mentors_count|pluralize }} actif{{ mentors_count|pluralize }} sur HackFlow</div><p class="small text-body-secondary mb-0">Les demandes sont adressées aux mentors depuis l’espace participant. Les profils restent privés sur cette page publique.</p></div>
+            </div></div>
         </div>
     </div>
 </section>
@@ -313,7 +243,7 @@
             <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 rounded-pill px-3 py-1 mb-2">
                 Ambiance & Esprit Hackathon
             </span>
-            <h2 class="display-5 fw-bold text-body">48h d'Énergie, de Code et de Partage</h2>
+            <h2 class="display-5 fw-bold text-body">Créez, collaborez et présentez votre projet</h2>
             <p class="text-body-secondary lead">Rejoignez un écosystème bienveillant conçu pour faire décoller vos compétences.</p>
         </div>
 
@@ -322,9 +252,9 @@
                 <div class="card-modern overflow-hidden h-100 shadow-sm">
                     <img src="https://images.unsplash.com/photo-1531482615713-2afd69097998?w=700&auto=format&fit=crop&q=80" alt="Brainstorming d'équipe" class="w-100" style="height: 220px; object-fit: cover;">
                     <div class="p-4">
-                        <span class="badge bg-primary-subtle text-primary mb-2 font-mono">Vendredi 19h</span>
-                        <h5 class="fw-bold mb-2 text-body">Idéation & Design Thinking</h5>
-                        <p class="text-body-secondary small mb-0">Définition de la proposition de valeur, personas utilisateurs et architecture MVP avec les mentors.</p>
+                        <span class="badge bg-primary-subtle text-primary mb-2 font-mono">Profil & équipe</span>
+                        <h5 class="fw-bold mb-2 text-body">Trouvez vos coéquipiers</h5>
+                        <p class="text-body-secondary small mb-0">Renseignez vos compétences et rejoignez une équipe selon ses places et besoins affichés.</p>
                     </div>
                 </div>
             </div>
@@ -333,9 +263,9 @@
                 <div class="card-modern overflow-hidden h-100 shadow-sm">
                     <img src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=700&auto=format&fit=crop&q=80" alt="Sprint de code nocturne" class="w-100" style="height: 220px; object-fit: cover;">
                     <div class="p-4">
-                        <span class="badge bg-purple bg-opacity-10 text-secondary mb-2 font-mono" style="background-color: rgba(139, 92, 246, 0.1) !important; color: #7c3aed !important;">Samedi 14h - 03h</span>
-                        <h5 class="fw-bold mb-2 text-body">Sprint Technique Non-Stop</h5>
-                        <p class="text-body-secondary small mb-0">Développement intensif en équipe, commits réguliers, pizzas nocturnes et tests utilisateurs.</p>
+                        <span class="badge bg-purple bg-opacity-10 text-secondary mb-2 font-mono" style="background-color: rgba(139, 92, 246, 0.1) !important; color: #7c3aed !important;">Espace équipe</span>
+                        <h5 class="fw-bold mb-2 text-body">Suivez le travail</h5>
+                        <p class="text-body-secondary small mb-0">Organisez les tâches, échangez avec l’équipe et suivez les jalons liés au hackathon.</p>
                     </div>
                 </div>
             </div>
@@ -344,9 +274,9 @@
                 <div class="card-modern overflow-hidden h-100 shadow-sm">
                     <img src="https://images.unsplash.com/photo-1511578314322-379afb476865?w=700&auto=format&fit=crop&q=80" alt="Pitch final devant le jury" class="w-100" style="height: 220px; object-fit: cover;">
                     <div class="p-4">
-                        <span class="badge bg-success-subtle text-success mb-2 font-mono">Dimanche 15h</span>
-                        <h5 class="fw-bold mb-2 text-body">Pitchs en Amphi & Trophées</h5>
-                        <p class="text-body-secondary small mb-0">3 minutes pour convaincre le jury d'investisseurs et d'experts tech, avec 10 000 € de dotations à la clé.</p>
+                        <span class="badge bg-success-subtle text-success mb-2 font-mono">Dépôt projet</span>
+                        <h5 class="fw-bold mb-2 text-body">Préparez le jury</h5>
+                        <p class="text-body-secondary small mb-0">Déposez votre archive, ajoutez les liens utiles et consultez les retours de l’équipe organisatrice.</p>
                     </div>
                 </div>
             </div>
@@ -383,33 +313,19 @@
     </div>
 </section>
 
-<!-- SECTION SPONSORS & PARTENAIRES -->
-<section class="py-4 bg-body border-top border-bottom">
-    <div class="container text-center">
-        <p class="text-uppercase text-body-secondary small fw-bold tracking-wider mb-3 font-mono">Partenaires Officiels de l'Édition 2026</p>
-        <div class="d-flex flex-wrap justify-content-center align-items-center gap-4 gap-md-5">
-            {% for sponsor in sponsors %}
-            <span class="fw-bold fs-5 text-body opacity-75 font-mono">
-                <i class="bi bi-star-fill text-warning me-1 small"></i>{{ sponsor }}
-            </span>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-
 <!-- BANNIÈRE CTA FINAL ADAPTATIVE -->
 <section class="py-5 py-lg-6 hero-section text-center position-relative overflow-hidden border-top">
     <div class="container position-relative">
-        <h2 class="display-4 fw-bold mb-3 text-body">Prêt à relever le défi des 48h ?</h2>
+        <h2 class="display-4 fw-bold mb-3 text-body">{% if hackathon %}Rejoignez {{ hackathon.name }}{% else %}Prêt à rejoindre HackFlow ?{% endif %}</h2>
         <p class="lead text-body-secondary mb-4 max-w-xl mx-auto">
-            Rejoignez plus de 500 étudiants passionnés, construisez un produit marquant et remportez jusqu'à 10 000 € de dotations.
+            {% if hackathon %}{{ participants_count }} participant{{ participants_count|pluralize }} inscrit{{ participants_count|pluralize }} et {{ teams_count }} équipe{{ teams_count|pluralize }} sont actuellement renseignés dans HackFlow.{% else %}Créez votre compte pour découvrir les hackathons gérés sur HackFlow.{% endif %}
         </p>
         <div class="d-flex flex-wrap gap-3 justify-content-center">
             <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg px-5 py-3 shadow-lg">
                 <i class="bi bi-person-plus-fill me-2"></i>Créer mon compte maintenant
             </a>
-            <a href="{% url 'student:dashboard' %}" class="btn btn-glass btn-lg px-4 py-3">
-                <i class="bi bi-speedometer2 me-2"></i>Explorer la démo
+            <a href="{% url 'accounts:login' %}" class="btn btn-glass btn-lg px-4 py-3">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Se connecter
             </a>
         </div>
     </div>

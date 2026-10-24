@@ -1,0 +1,90 @@
+{% extends "layouts/base_student.html" %}
+{% load static %}
+{% block title %}Commits · {{ repository.name }} - HackFlow{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'repositories/repositories.css' %}?v={{ repositories_css_version }}">{% endblock %}
+{% block student_content %}
+<h1 class="visually-hidden">Commit history for {{ repository.name }}</h1>
+<div class="container-fluid px-0 repository-page">
+    {% include "repositories/_messages.html" %}
+
+    <!-- Header -->
+    <div class="repo-header">
+        <div class="repo-header__breadcrumb">            <a href="{% url 'repositories:list' %}">Repositories</a>
+            <span class="text-body-secondary">/</span>
+            <a href="{% url 'repositories:detail' repository.slug %}">{{ repository.name }}</a>
+            <span class="text-body-secondary">/</span>
+            <span class="fw-semibold text-body">Commits</span>
+        </div>
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="repo-header__name">
+                <i aria-hidden="true" class="bi bi-clock-history text-primary"></i>
+                <span>Commit history</span>
+                <span class="repo-branch-badge"><i aria-hidden="true" class="bi bi-diagram-2"></i> {{ branch }}</span>
+            </div>
+            <form method="get" class="d-flex gap-2 align-items-center">
+                <label class="visually-hidden" for="branch-history-select">Select branch</label>
+                <select class="form-select form-select-sm rounded-pill" id="branch-history-select" name="branch"
+                        onchange="this.form.submit()" style="max-width:200px;">
+                    {% for item in branches %}
+                    <option value="{{ item }}" {% if item == branch %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+    </div>
+
+    <!-- Commit list -->
+    <div class="card-modern overflow-hidden mt-3">
+        {% for commit in page_obj.object_list %}
+        <div class="repo-commit-row">
+            <div class="d-flex align-items-center gap-3 min-w-0">
+                <span class="repo-commit-row__avatar">{{ commit.author.0|upper|default:'?' }}</span>
+                <div class="min-w-0">
+                    <a class="repo-commit-row__msg d-block"
+                       href="{% url 'repositories:commit' repository.slug commit.hash %}">{{ commit.message }}</a>
+                    <div class="repo-commit-row__meta mt-1">
+                        <strong class="text-body">{{ commit.author }}</strong>
+                        {% if commit.date %}&nbsp;· {{ commit.date }}{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                <a class="repo-commit-hash" href="{% url 'repositories:commit' repository.slug commit.hash %}">{{ commit.short_hash }}</a>
+                <a class="btn btn-xs btn-outline-secondary rounded-pill px-2 py-0 d-none d-md-inline-flex align-items-center gap-1"
+                   href="{% url 'repositories:commit' repository.slug commit.hash %}" style="font-size:.75rem;">
+                    <i aria-hidden="true" class="bi bi-file-diff"></i>
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="p-5 text-center">
+            <span class="repository-empty-icon mb-3 mx-auto d-inline-flex"><i aria-hidden="true" class="bi bi-clock-history"></i></span>
+            <p class="text-body-secondary mb-0">No commits on this branch yet.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.paginator.num_pages > 1 %}
+    <nav class="d-flex justify-content-between align-items-center mt-3" aria-label="Commit pages">
+        <span>
+            {% if page_obj.has_previous %}
+            <a class="btn btn-sm btn-outline-secondary rounded-pill px-3"
+               href="?branch={{ branch|urlencode }}&page={{ page_obj.previous_page_number }}">
+                <i aria-hidden="true" class="bi bi-chevron-left me-1"></i>Newer
+            </a>
+            {% endif %}
+        </span>
+        <span class="small text-body-secondary">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        <span>
+            {% if page_obj.has_next %}
+            <a class="btn btn-sm btn-outline-secondary rounded-pill px-3"
+               href="?branch={{ branch|urlencode }}&page={{ page_obj.next_page_number }}">
+                Older <i aria-hidden="true" class="bi bi-chevron-right ms-1"></i>
+            </a>
+            {% endif %}
+        </span>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

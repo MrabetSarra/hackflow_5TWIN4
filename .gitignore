@@ -10,6 +10,10 @@ venv/
 
 # Django
 *.log
+.coverage
+.coverage.*
+.coverage-*
+htmlcov/
 local_settings.py
 .env
 .env.*
@@ -19,6 +23,7 @@ db.sqlite3-journal
 /media/uploads/*
 !/media/uploads/.gitkeep
 /private_media/
+/.repository-data/
 
 # IDE & OS
 .vscode/

@@ -1,0 +1,277 @@
+{% extends "layouts/base_student.html" %}
+{% load static %}
+{% block title %}{{ merge_request.title }} · {{ repository.name }} - HackFlow{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'repositories/repositories.css' %}?v={{ repositories_css_version }}">{% endblock %}
+{% block student_content %}
+<h1 class="visually-hidden">Merge request: {{ merge_request.title }}</h1>
+<div class="container-fluid px-0 repository-page">
+    {% include "repositories/_messages.html" %}
+
+    <!-- Header (like GitHub PR header) -->
+    <div class="repo-header">
+        <div class="repo-header__breadcrumb">            <a href="{% url 'repositories:list' %}">Repositories</a>
+            <span class="text-body-secondary">/</span>
+            <a href="{% url 'repositories:detail' repository.slug %}">{{ repository.name }}</a>
+            <span class="text-body-secondary">/</span>
+            <a href="{% url 'repositories:merge_requests' repository.slug %}">Merge requests</a>
+            <span class="text-body-secondary">/</span>
+            <span class="fw-semibold text-body">#{{ merge_request.pk }}</span>
+        </div>
+
+        <h2 class="fw-bold text-body mt-2 mb-2" style="font-size:1.3rem;">{{ merge_request.title }}</h2>
+
+        <!-- Status + branch info bar (like GitHub's PR subtitle) -->
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-0">
+            {% if merge_request.status == 'merged' %}
+            <span class="mr-badge-merged"><i aria-hidden="true" class="bi bi-diagram-2"></i>Merged</span>
+            {% elif merge_request.status == 'closed' %}
+            <span class="mr-badge-closed"><i aria-hidden="true" class="bi bi-x-circle"></i>Closed</span>
+            {% elif merge_request.status == 'approved' %}
+            <span class="mr-badge-approved"><i aria-hidden="true" class="bi bi-check-circle"></i>Approved</span>
+            {% else %}
+            <span class="mr-badge-open"><i aria-hidden="true" class="bi bi-diagram-2"></i>Open</span>
+            {% endif %}
+
+            <span class="small text-body-secondary">
+                <strong class="text-body">{{ merge_request.author|default:'a former member' }}</strong>
+                wants to merge
+                <code class="repo-branch-badge">{{ merge_request.source_branch }}</code>
+                <i aria-hidden="true" class="bi bi-arrow-right mx-1"></i>
+                <code class="repo-branch-badge">{{ merge_request.target_branch }}</code>
+            </span>
+        </div>
+
+        <div class="small text-body-secondary mt-1">
+            <i aria-hidden="true" class="bi bi-people me-1"></i>Reviewers:
+            {% for reviewer in merge_request.reviewers.all %}{{ reviewer.get_full_name|default:reviewer.username }}{% if not forloop.last %}, {% endif %}{% empty %}Team captain{% endfor %}
+        </div>
+    </div>
+
+    <!-- Main layout: timeline left, actions sidebar right -->
+    <div class="row g-4 mt-0">
+
+        <!-- Left: description + diff + discussion -->
+        <div class="col-lg-8 d-flex flex-column gap-4">
+
+            {% if merge_request.description %}
+            <div class="card-modern overflow-hidden">
+                <div class="repo-toolbar" style="border-radius:.75rem .75rem 0 0;">
+                    <div class="repo-toolbar__left">
+                        <span class="repo-commit-row__avatar">{{ merge_request.author.0|upper|default:'?' }}</span>
+                        <span class="small fw-semibold text-body">{{ merge_request.author|default:'Author' }}</span>
+                        <span class="small text-body-secondary">left a description</span>
+                    </div>
+                </div>
+                <div class="p-4 text-body" style="font-size:.9rem;">
+                    {{ merge_request.description|linebreaksbr }}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Diff -->
+            <div class="card-modern overflow-hidden">
+                <div class="repo-toolbar" style="border-radius:.75rem .75rem 0 0;">
+                    <div class="repo-toolbar__left">
+                        <i aria-hidden="true" class="bi bi-file-diff text-primary"></i>
+                        <span class="fw-semibold text-body small">Files changed</span>
+                    </div>
+                    <div class="repo-toolbar__right">
+                        <button class="btn btn-xs btn-outline-primary rounded-pill px-2 py-1" type="button"
+                                id="ai-code-review" data-url="{% url 'repositories:ai_suggestion' repository.slug %}"
+                                style="font-size:.75rem;">
+                            <i aria-hidden="true" class="bi bi-stars me-1"></i>AI review
+                        </button>
+                        <span class="small text-body-secondary" id="mr-ai-status" role="status"></span>
+                    </div>
+                </div>
+                <div class="p-3">
+                    {% include "repositories/_diff_files.html" with diff_files=diff_files %}
+                </div>
+                <div class="collapse" id="ai-review-panel">
+                    <div class="alert alert-info border-0 rounded-0 rounded-bottom m-0 px-4 py-3" id="ai-review-text"></div>
+                </div>
+            </div>
+
+            <!-- Discussion / comments -->
+            <div class="card-modern overflow-hidden">
+                <div class="repo-toolbar" style="border-radius:.75rem .75rem 0 0;">
+                    <span class="fw-semibold text-body small">
+                        <i aria-hidden="true" class="bi bi-chat-dots text-primary me-1"></i>Discussion
+                    </span>
+                </div>
+
+                {% for comment in merge_request.comments.all %}
+                <div class="d-flex gap-3 p-3 border-bottom">
+                    <span class="repo-commit-row__avatar flex-shrink-0">{{ comment.author.0|upper|default:'?' }}</span>
+                    <div class="flex-grow-1">
+                        <div class="small">
+                            <strong class="text-body">{{ comment.author|default:'Former member' }}</strong>
+                            <span class="text-body-secondary ms-1">· {{ comment.created_at }}</span>
+                        </div>
+                        <div class="mt-1 text-body" style="font-size:.9rem;">{{ comment.body|linebreaksbr }}</div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-4 text-center text-body-secondary small">
+                    No comments yet. Start the review discussion below.
+                </div>
+                {% endfor %}
+
+                {% if can_review %}
+                <div class="p-3 border-top">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="comment">
+                        <textarea class="form-control form-control-sm mb-2" id="comment-body" name="body"
+                                  rows="3" maxlength="5000" required placeholder="Leave a review comment…">{{ comment_state.body }}</textarea>
+                        {% if comment_state.error %}<div class="text-danger small mb-2" role="alert">{{ comment_state.error }}</div>{% endif %}
+                        <button class="btn btn-sm btn-outline-primary rounded-pill px-3" type="submit">
+                            <i aria-hidden="true" class="bi bi-send me-1"></i>Comment
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right sidebar: review actions -->
+        <div class="col-lg-4">
+            <div class="d-flex flex-column gap-3" style="position:sticky; top:calc(var(--hf-topbar-height) + 1rem);">
+
+                <!-- Merge status -->
+                <div class="card-modern p-3">
+                    <h6 class="fw-semibold text-body mb-3 small text-uppercase" style="letter-spacing:.05em;">Review</h6>
+
+                    {% if can_approve and merge_request.status != 'merged' and merge_request.status != 'closed' %}
+
+                    <div class="d-flex gap-2 mb-3">
+                        <form method="post" class="flex-grow-1">
+                            {% csrf_token %}
+                            <button class="btn btn-success btn-sm rounded-pill w-100" name="action" value="approve">
+                                <i aria-hidden="true" class="bi bi-check2-circle me-1"></i>Approve
+                            </button>
+                        </form>
+                        <form method="post">
+                            {% csrf_token %}
+                            <button class="btn btn-outline-danger btn-sm rounded-pill" name="action" value="reject">
+                                <i aria-hidden="true" class="bi bi-x-circle me-1"></i>Reject
+                            </button>
+                        </form>
+                    </div>
+
+                    {% if merge_request.status == 'approved' %}
+                    <form method="post" id="merge-confirm-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="preview_merge">
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold small" for="merge-message">Merge commit message</label>
+                            <input class="form-control form-control-sm" id="merge-message" name="merge_message"
+                                   maxlength="200"
+                                   value="Merge {{ merge_request.source_branch }} into {{ merge_request.target_branch }}">
+                            <div class="d-flex align-items-center gap-2 mt-1">
+                                <button class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0" type="button"
+                                        id="ai-merge-message" data-url="{% url 'repositories:ai_suggestion' repository.slug %}"
+                                        style="font-size:.72rem;">
+                                    <i aria-hidden="true" class="bi bi-stars me-1"></i>Suggest
+                                </button>
+                                <span class="small text-body-secondary" id="merge-ai-status" role="status"></span>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary btn-sm rounded-pill w-100" type="submit">
+                            <i aria-hidden="true" class="bi bi-diagram-2 me-1"></i>Merge branch
+                        </button>
+                    </form>
+                    {% elif merge_request.status == 'open' %}
+                    <p class="small text-body-secondary mb-0">
+                        <i aria-hidden="true" class="bi bi-info-circle me-1"></i>Approve this request to unlock the merge, then merge
+                        <code class="repo-branch-badge">{{ merge_request.source_branch }}</code> into
+                        <code class="repo-branch-badge">{{ merge_request.target_branch }}</code>.
+                    </p>
+                    {% endif %}
+
+                    {% if merge_request.author_id == request.user.id %}
+                    <form method="post" class="mt-2">
+                        {% csrf_token %}
+                        <button class="btn btn-outline-secondary btn-sm rounded-pill w-100" name="action" value="close">
+                            <i aria-hidden="true" class="bi bi-x-lg me-1"></i>Close request
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    {% else %}
+                    <p class="small text-body-secondary mb-0">
+                        {% if merge_request.status == 'merged' %}
+                        <i aria-hidden="true" class="bi bi-diagram-2 text-purple me-1"></i>This request was merged into
+                        <code class="repo-branch-badge">{{ merge_request.target_branch }}</code>.
+                        {% elif merge_request.status == 'closed' %}
+                        <i aria-hidden="true" class="bi bi-x-circle text-secondary me-1"></i>This request is closed.
+                        {% elif merge_request.status == 'approved' %}
+                        <i aria-hidden="true" class="bi bi-check-circle text-success me-1"></i>This request is approved. The team captain
+                        or an assigned reviewer has to run the merge.
+                        {% elif merge_request.author_id == request.user.id %}
+                        <i aria-hidden="true" class="bi bi-hourglass-split me-1"></i>This request is waiting for approval from another team
+                        member{% if merge_request.reviewers.all %} ({{ merge_request.reviewers.count }} assigned){% endif %}.
+                        Nothing was merged yet.
+                        {% else %}
+                        <i aria-hidden="true" class="bi bi-info-circle me-1"></i>Only the team captain or an assigned reviewer can review
+                        this request.
+                        {% endif %}
+                    </p>
+                    {% endif %}
+                </div>
+
+                <!-- Branches info -->
+                <div class="card-modern p-3">
+                    <h6 class="fw-semibold text-body mb-2 small text-uppercase" style="letter-spacing:.05em;">Branches</h6>
+                    <div class="d-flex flex-column gap-2">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span class="small text-body-secondary">Source</span>
+                            <code class="repo-branch-badge">{{ merge_request.source_branch }}</code>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span class="small text-body-secondary">Target</span>
+                            <code class="repo-branch-badge">{{ merge_request.target_branch }}</code>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script>
+document.getElementById('ai-code-review').addEventListener('click', async function () {
+    const status = document.getElementById('mr-ai-status');
+    status.textContent = 'Reviewing…';
+    try {
+        const response = await fetch(this.dataset.url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value},
+            body: JSON.stringify({feature: 'code_review', merge_request_id: {{ merge_request.pk }}})
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'AI review unavailable.');
+        document.getElementById('ai-review-text').textContent = data.suggestion + (data.truncated ? '\n\nDiff was shortened.' : '');
+        bootstrap.Collapse.getOrCreateInstance(document.getElementById('ai-review-panel')).show();
+        status.textContent = 'Suggestion only.';
+    } catch (e) { status.textContent = e.message; }
+});
+const mergeBtn = document.getElementById('ai-merge-message');
+if (mergeBtn) mergeBtn.addEventListener('click', async () => {
+    const status = document.getElementById('merge-ai-status');
+    status.textContent = 'Generating…';
+    const form = document.getElementById('merge-confirm-form');
+    try {
+        const response = await fetch(mergeBtn.dataset.url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value},
+            body: JSON.stringify({feature: 'merge_message', merge_request_id: {{ merge_request.pk }}})
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'AI unavailable.');
+        document.getElementById('merge-message').value = data.suggestion;
+        status.textContent = 'Ready to edit.';
+    } catch (e) { status.textContent = e.message; }
+});
+</script>{% endblock %}

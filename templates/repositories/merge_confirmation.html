@@ -1,0 +1,103 @@
+{% extends "layouts/base_student.html" %}
+{% load static %}
+{% block title %}Confirm merge · {{ repository.name }} - HackFlow{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'repositories/repositories.css' %}?v={{ repositories_css_version }}">{% endblock %}
+{% block student_content %}
+<h1 class="visually-hidden">Confirm merge in {{ repository.name }}</h1>
+<div class="container-fluid px-0 repository-page">
+    {% include "repositories/_messages.html" %}
+
+    <!-- Header -->
+    <div class="repo-header">
+        <div class="repo-header__breadcrumb">            <a href="{% url 'repositories:list' %}">Repositories</a>
+            <span class="text-body-secondary">/</span>
+            <a href="{% url 'repositories:detail' repository.slug %}">{{ repository.name }}</a>
+            <span class="text-body-secondary">/</span>
+            <a href="{% url 'repositories:merge_requests' repository.slug %}">Merge requests</a>
+            <span class="text-body-secondary">/</span>
+            <a href="{% url 'repositories:merge_request' repository.slug merge_request.pk %}">#{{ merge_request.pk }}</a>
+            <span class="text-body-secondary">/</span>
+            <span class="fw-semibold text-body">Confirm merge</span>
+        </div>
+        <div class="repo-header__name mt-1">
+            <i aria-hidden="true" class="bi bi-check2-circle text-primary"></i>
+            <span>Confirm merge</span>
+        </div>
+        <p class="text-body-secondary small mt-1 mb-0">
+            Merging <code class="repo-branch-badge">{{ merge_request.source_branch }}</code>
+            <i aria-hidden="true" class="bi bi-arrow-right mx-1"></i>
+            <code class="repo-branch-badge">{{ merge_request.target_branch }}</code>
+        </p>
+    </div>
+
+    <div class="row g-4 mt-0">
+
+        <!-- Diff summary -->
+        <div class="col-lg-8">
+            <div class="card-modern overflow-hidden">
+                <div class="repo-toolbar" style="border-radius:.75rem .75rem 0 0;">
+                    <span class="fw-semibold text-body small">
+                        <i aria-hidden="true" class="bi bi-file-diff text-primary me-1"></i>Changes to be merged
+                    </span>
+                </div>
+                <div class="p-3">
+                    {% include "repositories/_diff_files.html" with diff_files=diff_files %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Commit form -->
+        <div class="col-lg-4">
+            <div class="card-modern p-4" style="position:sticky; top:calc(var(--hf-topbar-height) + 1rem);">
+                <h6 class="fw-semibold text-body mb-3"><i aria-hidden="true" class="bi bi-diagram-2 text-primary me-1"></i>Merge commit</h6>
+                <form method="post" id="merge-confirmation-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="merge">
+                    <input type="hidden" name="source_tip" value="{{ source_tip }}">
+                    <input type="hidden" name="target_tip" value="{{ target_tip }}">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small" for="merge-message">Commit message</label>
+                        <input class="form-control form-control-sm" id="merge-message" name="merge_message"
+                               maxlength="200" value="{{ message }}">
+                        <div class="d-flex align-items-center gap-2 mt-1">
+                            <button class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0" type="button"
+                                    id="ai-merge-message" data-url="{% url 'repositories:ai_suggestion' repository.slug %}"
+                                    style="font-size:.72rem;">
+                                <i aria-hidden="true" class="bi bi-stars me-1"></i>Suggest
+                            </button>
+                            <span class="small text-body-secondary" id="merge-ai-status" role="status"></span>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-column gap-2">
+                        <button class="btn btn-primary btn-sm rounded-pill w-100" type="submit">
+                            <i aria-hidden="true" class="bi bi-check2-circle me-1"></i>Confirm and merge
+                        </button>
+                        <a href="{% url 'repositories:merge_request' repository.slug merge_request.pk %}"
+                           class="btn btn-outline-secondary btn-sm rounded-pill w-100">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script>
+document.getElementById('ai-merge-message').addEventListener('click', async function () {
+    const status = document.getElementById('merge-ai-status');
+    status.textContent = 'Generating…';
+    const form = document.getElementById('merge-confirmation-form');
+    try {
+        const response = await fetch(this.dataset.url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value},
+            body: JSON.stringify({feature: 'merge_message', merge_request_id: {{ merge_request.pk }}})
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'AI unavailable.');
+        document.getElementById('merge-message').value = data.suggestion;
+        status.textContent = data.fallback ? 'Suggested default merge title.' : 'Ready to edit.';
+    } catch (e) { status.textContent = e.message; }
+});
+</script>{% endblock %}
