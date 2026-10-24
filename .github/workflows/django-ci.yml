@@ -76,8 +76,22 @@ jobs:
       - name: Export Cobertura coverage report for SonarQube
         run: coverage xml -o coverage.xml
 
-      - name: SonarQube scan
+      - name: Validate SonarQube configuration
         if: ${{ env.SONAR_TOKEN != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${SONAR_HOST_URL:-}" ]]; then
+            echo "SONAR_HOST_URL is missing. Add it as a GitHub Actions repository variable (Settings > Secrets and variables > Actions > Variables)."
+            exit 1
+          fi
+          if [[ ! "$SONAR_HOST_URL" =~ ^https?://[^/]+ ]]; then
+            echo "SONAR_HOST_URL must be an absolute URL beginning with https:// (or http:// for a local server)."
+            exit 1
+          fi
+
+      - name: SonarQube scan
+        if: ${{ env.SONAR_TOKEN != '' && vars.SONAR_HOST_URL != '' }}
         uses: SonarSource/sonarqube-scan-action@v7
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
