@@ -1,10 +1,13 @@
+import json
 from datetime import timedelta
 
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
 from django.db.models import Case, Count, Exists, IntegerField, OuterRef, Q, Value, When
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -14,8 +17,9 @@ from accounts.decorators import role_required
 from student.models import Announcement, Hackathon, MentorRequest, Notification, Submission, Team
 
 from .forms import (EvaluationForm, MentoringSessionForm, RequestFilterForm, ResolveRequestForm, TeamFilterForm,
-                    TransferRequestForm)
-from .models import Criterion, MentorAssignment, MentorEvaluation, MentoringSession
+                    TransferRequestForm, TriageCorrectionForm)
+from .models import Criterion, MentorAssignment, MentorEvaluation, MentoringSession, RequestTriage
+from .tasks import ensure_triages, retry_triage
 
 # Bloquant d'abord, puis important, puis conseil.
 URGENCY_RANK = Case(
@@ -193,7 +197,7 @@ def help_requests(request):
         view = form.cleaned_data['view'] or 'pending'
         urgency = form.cleaned_data['urgency']
 
-    requests = MentorRequest.objects.select_related('team', 'student', 'mentor')
+    requests = MentorRequest.objects.select_related('team', 'student', 'mentor', 'triage__suggested_mentor')
     if view == 'mine':
         requests = requests.filter(mentor=request.user, status=MentorRequest.Status.ACCEPTED)
     elif view == 'resolved':
@@ -206,11 +210,13 @@ def help_requests(request):
 
     page = Paginator(requests, 10).get_page(request.GET.get('page'))
     _decorate_requests(page.object_list)
+    ensure_triages(page.object_list)  # analyse IA des tickets en attente, en arrière-plan
     params = request.GET.copy()
     params.pop('page', None)
     context = {
         'form': form,
         'view': view,
+        'correction_form': TriageCorrectionForm(),
         'page': page,
         'requests': page.object_list,
         'resolve_form': ResolveRequestForm(),
@@ -243,6 +249,98 @@ def request_take(request, request_id):
                           'bi-headset')
     messages.success(request, f'Vous avez pris en charge le ticket #T-{help_request.pk:03}.')
     return redirect(f"{reverse('mentor:help_requests')}?view=mine")
+
+
+def _visible_requests(request):
+    """Tickets dont le mentor peut voir / corriger l'analyse IA : en attente, ou les siens."""
+    return MentorRequest.objects.filter(Q(status=MentorRequest.Status.PENDING) | Q(mentor=request.user))
+
+
+@role_required('mentor')
+def triage_status(request):
+    """État des analyses IA (JSON) : la page interroge ce point d'accès tant qu'une analyse est en cours."""
+    ids = [int(value) for value in request.GET.get('ids', '').split(',') if value.isdigit()][:50]
+    triages = (RequestTriage.objects.filter(help_request__in=_visible_requests(request).filter(pk__in=ids))
+               .select_related('help_request', 'suggested_mentor'))
+    # Page à laquelle revenir après « Corriger » / « Relancer » (jamais l'URL de ce point d'accès JSON).
+    next_url = request.GET.get('next', '')
+    if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()},
+                                           require_https=request.is_secure()):
+        next_url = reverse('mentor:help_requests')
+    payload = {}
+    for triage in triages:
+        payload[triage.help_request_id] = {
+            'status': triage.status,
+            'html': render_to_string('mentor/_triage.html', {
+                'req': triage.help_request, 'triage': triage, 'correction_form': TriageCorrectionForm(),
+                'next_url': next_url,
+            }, request=request),
+        }
+    return JsonResponse({'triages': payload})
+
+
+@role_required('mentor')
+@require_POST
+def triage_correct(request, request_id):
+    help_request = get_object_or_404(_visible_requests(request), pk=request_id)
+    triage = get_object_or_404(RequestTriage, help_request=help_request, status=RequestTriage.Status.DONE)
+    form = TriageCorrectionForm(request.POST)
+    if form.is_valid():
+        triage.corrected_category = form.cleaned_data['category']
+        triage.corrected_urgency = form.cleaned_data['urgency']
+        triage.corrected_by = request.user
+        triage.save(update_fields=['corrected_category', 'corrected_urgency', 'corrected_by', 'updated_at'])
+        messages.success(request, 'Merci : votre correction améliore le suivi de la qualité de l’IA.')
+    else:
+        messages.error(request, 'Correction invalide.')
+    return redirect(_safe_next(request, 'mentor:help_requests'))
+
+
+@role_required('mentor')
+@require_POST
+def triage_retry(request, request_id):
+    help_request = get_object_or_404(_visible_requests(request), pk=request_id)
+    triage = get_object_or_404(RequestTriage, help_request=help_request, status=RequestTriage.Status.FAILED)
+    retry_triage(triage)
+    messages.info(request, 'Analyse IA relancée.')
+    return redirect(_safe_next(request, 'mentor:help_requests'))
+
+
+@role_required('mentor')
+def ai_metrics(request):
+    """Qualité et performance du tri IA : rapport d'évaluation hors ligne + indicateurs en direct."""
+    from .ai import model_name
+    from .management.commands.evaluate_triage import REPORT_JSON
+    from .metrics import latency_stats
+
+    try:
+        report = json.loads(REPORT_JSON.read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        report = None
+    if report:
+        for key in ('category', 'urgency'):
+            section = report[key]
+            section['rows'] = [
+                {'label': label, **section['per_class'][label], 'matrix': row}
+                for label, row in zip(section['labels'], section['confusion_matrix'])
+            ]
+
+    triages = RequestTriage.objects.all()
+    done = triages.filter(status=RequestTriage.Status.DONE)
+    corrected = list(done.exclude(corrected_category='').values_list(
+        'suggested_category', 'corrected_category', 'suggested_urgency', 'corrected_urgency'))
+    live = {
+        'total': triages.count(),
+        'done': done.count(),
+        'failed': triages.filter(status=RequestTriage.Status.FAILED).count(),
+        'corrected': len(corrected),
+        'category_agreement': (round(100 * sum(1 for c in corrected if c[0] == c[1]) / len(corrected))
+                               if corrected else None),
+        'urgency_agreement': (round(100 * sum(1 for c in corrected if c[2] == c[3]) / len(corrected))
+                              if corrected else None),
+        'latency': latency_stats(list(done.exclude(latency_ms=None).values_list('latency_ms', flat=True))),
+    }
+    return render(request, 'mentor/ai_metrics.html', {'report': report, 'live': live, 'model': model_name()})
 
 
 def _my_open_requests(request):

@@ -82,6 +82,17 @@ class TransferRequestForm(StyledFormMixin, forms.Form):
         )
 
 
+class TriageCorrectionForm(StyledFormMixin, forms.Form):
+    """Correction de la suggestion IA par le mentor (sert de référence pour les métriques)."""
+    category = forms.ChoiceField(label='Catégorie correcte')
+    urgency = forms.ChoiceField(label='Urgence correcte', choices=MentorRequest.Urgency.choices)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from .ai import CATEGORIES
+        self.fields['category'].choices = [(c, c) for c in CATEGORIES]
+
+
 DATETIME_FORMAT = '%Y-%m-%dT%H:%M'
 
 

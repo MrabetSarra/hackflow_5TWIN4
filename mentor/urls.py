@@ -13,6 +13,10 @@ urlpatterns = [
     path('requests/<int:request_id>/take/', views.request_take, name='request_take'),
     path('requests/<int:request_id>/resolve/', views.request_resolve, name='request_resolve'),
     path('requests/<int:request_id>/transfer/', views.request_transfer, name='request_transfer'),
+    path('requests/triage-status/', views.triage_status, name='triage_status'),
+    path('requests/<int:request_id>/triage/correct/', views.triage_correct, name='triage_correct'),
+    path('requests/<int:request_id>/triage/retry/', views.triage_retry, name='triage_retry'),
+    path('ai-metrics/', views.ai_metrics, name='ai_metrics'),
     # Étape 3 — sessions de mentorat
     path('sessions/', views.sessions_list, name='sessions_list'),
     path('sessions/new/', views.session_create, name='session_create'),
