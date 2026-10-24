@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'student.apps.StudentConfig',
     'mentor.apps.MentorConfig',
     'dashboard_admin.apps.DashboardAdminConfig',
+    'career_opportunities.apps.CareerOpportunitiesConfig',
 ]
 
 MIDDLEWARE = [
@@ -60,6 +61,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'hackflow.urls'
+CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
 
 TEMPLATES = [
     {
@@ -124,6 +126,10 @@ EMAIL_HOST_USER = os.environ.get('GMAIL_EMAIL', 'montahaguedhami@gmail.com')
 EMAIL_HOST_PASSWORD = os.environ.get('GMAIL_APP_PASSWORD', '')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
+# Local AI-assisted participant-to-team matching through Ollama.
+OLLAMA_BASE_URL = os.environ.get('OLLAMA_BASE_URL', 'http://127.0.0.1:11434').rstrip('/')
+OLLAMA_COPILOT_MODEL = os.environ.get('OLLAMA_COPILOT_MODEL', 'qwen2.5:7b')
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
@@ -154,3 +160,17 @@ PRIVATE_MEDIA_ROOT = BASE_DIR / 'private_media'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Relative weights for available career profile criteria; scoring renormalizes
+# across fields that the current student profile actually contains.
+CAREER_MATCH_WEIGHTS = {
+    'skills': 40,
+    'education': 20,
+    'experience': 15,
+    'languages': 10,
+    'location': 10,
+    'availability': 5,
+}
+
+# CV OCR is performed locally through RapidOCR; no CV content is sent to an API.
+CV_OCR_DPI = int(os.environ.get('CV_OCR_DPI', '190'))

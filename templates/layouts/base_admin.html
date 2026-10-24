@@ -24,7 +24,7 @@
             <a href="{% url 'dashboard_admin:participants' %}" class="nav-link-item {% if request.resolver_match.url_name == 'participants' %}active{% endif %}">
                 <i class="bi bi-person-lines-fill"></i>
                 <span>Participants</span>
-                <span class="badge bg-secondary ms-auto rounded-pill px-2 py-0" style="font-size: 0.7rem;">500</span>
+                {% if participants_count %}<span class="badge bg-secondary ms-auto rounded-pill px-2 py-0" style="font-size: 0.7rem;">{{ participants_count }}</span>{% endif %}
             </a>
             <a href="{% url 'dashboard_admin:teams' %}" class="nav-link-item {% if request.resolver_match.url_name == 'teams' %}active{% endif %}">
                 <i class="bi bi-diagram-3-fill"></i>
@@ -33,9 +33,17 @@
             </a>
 
             <div class="sidebar-heading mt-3">Événement & Évaluation</div>
-            <a href="{% url 'dashboard_admin:announcements' %}" class="nav-link-item {% if request.resolver_match.url_name == 'announcements' %}active{% endif %}">
+            <a href="{% url 'dashboard_admin:events_overview' %}" class="nav-link-item {% if request.resolver_match.url_name == 'events_overview' or request.resolver_match.url_name == 'event_edit' %}active{% endif %}">
+                <i class="bi bi-calendar2-week-fill"></i>
+                <span>Events Overview</span>
+            </a>
+            <a href="{% url 'dashboard_admin:announcements' %}" class="nav-link-item {% if request.resolver_match.url_name == 'announcements' or request.resolver_match.url_name == 'announcement_edit' %}active{% endif %}">
                 <i class="bi bi-megaphone-fill"></i>
                 <span>Annonces & Push</span>
+            </a>
+            <a href="{% url 'dashboard_admin:career_dashboard' %}" class="nav-link-item {% if request.resolver_match.namespace == 'dashboard_admin' and 'career_' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-briefcase-fill"></i>
+                <span>Career Opportunities</span>
             </a>
             <a href="{% url 'dashboard_admin:judging' %}" class="nav-link-item {% if request.resolver_match.url_name == 'judging' %}active{% endif %}">
                 <i class="bi bi-trophy-fill"></i>
@@ -91,7 +99,7 @@
 
                 <!-- Notifications -->
                 <div class="dropdown">
-                    <button class="btn btn-light position-relative rounded-circle p-2 border" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+                    <button class="btn btn-light position-relative rounded-circle p-2 border" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
                         <i class="bi bi-bell-fill text-secondary"></i>
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
                             5
@@ -113,7 +121,7 @@
 
                 <!-- Menu Profil -->
                 <div class="dropdown">
-                    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-expanded="false">
+                    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Menu du compte administrateur">
                         <span class="rounded-circle bg-danger bg-opacity-10 text-danger d-inline-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px;">{{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2">
@@ -129,8 +137,9 @@
 
         <!-- Main Content Body -->
         <main class="p-3 p-md-4 flex-grow-1">
-            {% block admin_content %}{% endblock %}
+            {% block admin_content %}{% block profile_content %}{% endblock %}{% endblock %}
         </main>
     </div>
 </div>
+{% include "components/admin_copilot.html" %}
 {% endblock %}

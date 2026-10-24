@@ -1,124 +1,121 @@
 {% extends "layouts/base_admin.html" %}
-
-{% block title %}Grille de Notation & Jury Final - HackFlow Admin{% endblock %}
-
+{% block title %}Jury et analyse des projets - HackFlow{% endblock %}
 {% block admin_content %}
+<style>
+.project-review-card{border:1px solid var(--bs-border-color);border-radius:1rem;background:var(--bs-body-bg);overflow:hidden}
+.project-review-result{background:var(--bs-secondary-bg);border-radius:.85rem}
+.project-review-result:empty{display:none}
+.project-review-result h4{font-size:1rem;font-weight:700}
+.project-review-criterion{border:1px solid var(--bs-border-color);border-radius:.75rem;background:var(--bs-body-bg)}
+</style>
 <div class="container-fluid px-0">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-        <div>
-            <h2 class="fw-bold text-dark mb-1">Grille de Notation & Palmarès du Jury</h2>
-            <p class="text-muted small mb-0">Consolidation en temps réel des notes attribuées par le collège des jurés.</p>
-        </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-outline-primary btn-sm rounded-pill px-3" data-demo-toast="Grille de notation exportée en PDF officiel !">
-                <i class="bi bi-file-earmark-pdf me-1"></i>Exporter le Palmarès
-            </button>
-            <button class="btn btn-success btn-sm rounded-pill px-3 shadow-sm" data-demo-toast="Les résultats ont été officiellement validés et publiés !">
-                <i class="bi bi-trophy-fill me-1"></i>Clôturer & Valider
-            </button>
-        </div>
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-2"><span class="badge rounded-pill bg-primary-subtle text-primary"><i class="bi bi-stars me-1"></i>Assistant IA pour le jury</span>{% if active_hackathon %}<span class="small text-secondary">{{ active_hackathon.name }}</span>{% endif %}</div>
+      <h1 class="h3 fw-bold mb-1">Évaluation des projets</h1>
+      <p class="text-secondary small mb-0">Résumés, objectifs, technologies, usages et éléments à vérifier selon la grille du jury.</p>
     </div>
+  </div>
+  <div class="alert alert-info border-0 rounded-4 d-flex gap-3 align-items-start mb-4"><i class="bi bi-info-circle-fill fs-5"></i><div><strong>L’IA assiste le jury ; elle ne décide pas du gagnant.</strong><div class="small mt-1">L’analyse cite les éléments soumis et les points à vérifier. Les jurés gardent la responsabilité des notes et de la décision finale.</div></div></div>
 
-    <!-- LE PODIUM PROVISOIRE -->
-    <div class="card-modern p-4 p-md-5 mb-5 bg-gradient-dark text-white border-0 shadow-lg">
-        <div class="text-center mb-4">
-            <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50 rounded-pill px-3 py-1 font-mono mb-2">
-                Classement Général en Direct
-            </span>
-            <h3 class="fw-bold mb-0">Le Podium HackFlow 2026</h3>
+  <section class="card-modern p-4 mb-4">
+    <div class="mb-3"><h2 class="h5 fw-bold mb-1">Grille de jugement</h2><p class="small text-secondary mb-0">Critères pondérés repris de la grille actuelle.</p></div>
+    <div class="row g-2">{% for criterion in judging_rubric %}<div class="col-sm-6 col-xl-3"><div class="border rounded-3 p-3 h-100 d-flex justify-content-between align-items-center gap-2"><span class="small fw-semibold">{{ criterion.label }}</span><span class="badge rounded-pill bg-primary-subtle text-primary">{{ criterion.weight }}%</span></div></div>{% endfor %}</div>
+  </section>
+
+  <div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h5 fw-bold mb-0">Projets soumis</h2><span class="small text-secondary">{{ submissions|length }} soumission(s)</span></div>
+  <div class="d-grid gap-3">
+    {% for submission in submissions %}
+    <article class="project-review-card p-3 p-lg-4" data-project-card>
+      <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+        <div class="flex-grow-1">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-2"><h3 class="h5 fw-bold mb-0">{{ submission.project_name|default:submission.team.project_name|default:submission.team.name }}</h3><span class="badge rounded-pill bg-secondary-subtle text-secondary">{{ submission.get_status_display }}</span>{% if submission.category or submission.team.category %}<span class="badge rounded-pill bg-light text-body border">{{ submission.category|default:submission.team.category }}</span>{% endif %}</div>
+          <div class="small text-secondary mb-2"><i class="bi bi-people me-1"></i>{{ submission.team.name }} <span class="mx-1">·</span>{{ submission.milestone.title }}{% if submission.submitted_at %}<span class="mx-1">·</span>Soumis le {{ submission.submitted_at|date:'d/m/Y H:i' }}{% endif %}</div>
+          <p class="mb-3">{{ submission.description|default:submission.team.project_pitch|default:'Aucune description fournie.'|truncatechars:360 }}</p>
+          <div class="d-flex flex-wrap gap-2 small">
+            {% if submission.github_url %}<a class="btn btn-sm btn-outline-secondary rounded-pill" href="{{ submission.github_url }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-github me-1"></i>Code source</a>{% endif %}
+            {% if submission.demo_url %}<a class="btn btn-sm btn-outline-secondary rounded-pill" href="{{ submission.demo_url }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right me-1"></i>Démo</a>{% endif %}
+            {% if submission.video_url %}<a class="btn btn-sm btn-outline-secondary rounded-pill" href="{{ submission.video_url }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-play-circle me-1"></i>Vidéo</a>{% endif %}
+            {% if submission.file %}<span class="badge rounded-pill bg-body-tertiary text-secondary border align-content-center"><i class="bi bi-file-earmark-zip me-1"></i>{{ submission.file.name|cut:'submissions/' }}</span>{% endif %}
+          </div>
         </div>
-
-        <div class="row g-4 justify-content-center align-items-end">
-            <!-- 2ème Place -->
-            <div class="col-md-4 order-2 order-md-1">
-                <div class="card-modern p-4 text-center text-body bg-body border-2 border-secondary shadow">
-                    <span class="d-inline-flex align-items-center justify-content-center bg-secondary bg-opacity-25 text-secondary rounded-circle fs-3 fw-bold mx-auto mb-2" style="width: 54px; height: 54px;">
-                        🥈
-                    </span>
-                    <h5 class="fw-bold mb-1">{{ podium.1.team }}</h5>
-                    <span class="badge bg-secondary-subtle text-secondary mb-2">{{ podium.1.category }}</span>
-                    <div class="h3 fw-bold text-body font-mono">{{ podium.1.score }}/20</div>
-                    <span class="badge bg-secondary rounded-pill font-mono">{{ podium.1.award }}</span>
-                </div>
-            </div>
-
-            <!-- 1ère Place (Vainqueur) -->
-            <div class="col-md-4 order-1 order-md-2">
-                <div class="card-modern p-4 text-center text-body bg-body border-3 border-warning shadow-2xl position-relative" style="transform: translateY(-15px);">
-                    <div class="position-absolute top-0 start-50 translate-middle badge bg-warning text-dark px-3 py-1 rounded-pill font-mono fw-bold shadow-sm">
-                        ⭐ GRAND VAINQUEUR
-                    </div>
-                    <span class="d-inline-flex align-items-center justify-content-center bg-warning bg-opacity-25 text-warning rounded-circle fs-2 fw-bold mx-auto mb-2" style="width: 64px; height: 64px;">
-                        🥇
-                    </span>
-                    <h4 class="fw-bold text-body mb-1">{{ podium.0.team }}</h4>
-                    <span class="badge bg-warning-subtle text-warning-emphasis mb-2">{{ podium.0.category }}</span>
-                    <div class="h2 fw-bold text-primary font-mono mb-2">{{ podium.0.score }}/20</div>
-                    <span class="badge bg-warning text-dark rounded-pill font-mono fw-bold">{{ podium.0.award }}</span>
-                </div>
-            </div>
-
-            <!-- 3ème Place -->
-            <div class="col-md-4 order-3 order-md-3">
-                <div class="card-modern p-4 text-center text-body bg-body border-2 border-info shadow">
-                    <span class="d-inline-flex align-items-center justify-content-center bg-info bg-opacity-25 text-info rounded-circle fs-3 fw-bold mx-auto mb-2" style="width: 54px; height: 54px;">
-                        🥉
-                    </span>
-                    <h5 class="fw-bold mb-1">{{ podium.2.team }}</h5>
-                    <span class="badge bg-info-subtle text-info mb-2">{{ podium.2.category }}</span>
-                    <div class="h3 fw-bold text-body font-mono">{{ podium.2.score }}/20</div>
-                    <span class="badge bg-info rounded-pill font-mono">{{ podium.2.award }}</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- TABLEAU DÉTAILLÉ DES SCORES -->
-    <div class="card-modern overflow-hidden">
-        <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
-            <div>
-                <h5 class="fw-bold text-dark mb-0">Détail des Notations par Critère</h5>
-                <span class="text-muted small">Notes sur 5 points par critère pondéré.</span>
-            </div>
-            <span class="badge bg-light text-muted border font-mono">12 Jurés connectés</span>
-        </div>
-
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="bg-light border-bottom">
-                    <tr>
-                        <th class="ps-4 py-3 small text-uppercase text-muted fw-bold">Rang</th>
-                        <th class="py-3 small text-uppercase text-muted fw-bold">Équipe</th>
-                        <th class="py-3 small text-uppercase text-muted fw-bold text-center">Innovation (25%)</th>
-                        <th class="py-3 small text-uppercase text-muted fw-bold text-center">Technique (25%)</th>
-                        <th class="py-3 small text-uppercase text-muted fw-bold text-center">Design UX (25%)</th>
-                        <th class="py-3 small text-uppercase text-muted fw-bold text-center">Pitch (25%)</th>
-                        <th class="pe-4 py-3 text-end small text-uppercase text-muted fw-bold">Total / 20</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for row in teams_ranking %}
-                    <tr {% if forloop.counter <= 3 %}class="table-light"{% endif %}>
-                        <td class="ps-4">
-                            <span class="fw-bold font-mono fs-6 text-{% if forloop.counter == 1 %}warning{% elif forloop.counter == 2 %}secondary{% elif forloop.counter == 3 %}info{% else %}dark{% endif %}">
-                                #{{ row.rank }}
-                            </span>
-                        </td>
-                        <td>
-                            <strong class="text-dark">{{ row.team }}</strong>
-                        </td>
-                        <td class="text-center font-mono small">{{ row.innovation }} / 5</td>
-                        <td class="text-center font-mono small">{{ row.tech }} / 5</td>
-                        <td class="text-center font-mono small">{{ row.design }} / 5</td>
-                        <td class="text-center font-mono small">{{ row.pitch }} / 5</td>
-                        <td class="pe-4 text-end">
-                            <span class="fw-bold font-mono fs-5 text-primary">{{ row.total }}</span>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+        <div class="flex-shrink-0"><form method="post" action="{% url 'dashboard_admin:project_evaluate' submission.pk %}" data-evaluation-form>{% csrf_token %}<button class="btn btn-primary rounded-pill px-3" type="submit" data-evaluate-button><i class="bi bi-stars me-1"></i>Analyser le projet</button></form></div>
+      </div>
+      <div class="project-review-result mt-3 p-3" data-evaluation-result aria-live="polite"></div>
+    </article>
+    {% empty %}
+    <div class="card-modern p-5 text-center"><div class="display-5 text-secondary mb-2"><i class="bi bi-inbox"></i></div><h3 class="h5 fw-bold">Aucune soumission à analyser</h3><p class="text-secondary mb-0">Les projets soumis apparaîtront ici avec leurs descriptions, liens et fichiers de livraison.</p></div>
+    {% endfor %}
+  </div>
 </div>
+<script>
+(() => {
+  const cards = document.querySelectorAll('[data-project-card]');
+  const addList = (container, title, values) => {
+    if (!values || !values.length) return;
+    const section = document.createElement('section'); section.className = 'mt-3';
+    const heading = document.createElement('h4'); heading.textContent = title;
+    const list = document.createElement('ul'); list.className = 'small mb-0 ps-3';
+    values.forEach((value) => { const li = document.createElement('li'); li.textContent = value; list.appendChild(li); });
+    section.append(heading, list); container.appendChild(section);
+  };
+  const render = (target, data) => {
+    target.replaceChildren();
+    const summary = document.createElement('section');
+    const heading = document.createElement('h4'); heading.textContent = 'Analyse préparatoire';
+    const text = document.createElement('p'); text.className = 'small mb-0'; text.textContent = data.summary;
+    summary.append(heading, text); target.appendChild(summary);
+    addList(target, 'Objectifs identifiés', data.objectives);
+    addList(target, 'Technologies mentionnées', data.technologies);
+    addList(target, 'Cas d’utilisation', data.use_cases);
+    addList(target, 'Livrables observés', data.deliverables);
+    if (data.rubric_review && data.rubric_review.length) {
+      const section = document.createElement('section'); section.className = 'mt-3';
+      const title = document.createElement('h4'); title.textContent = 'Lecture selon la grille'; section.appendChild(title);
+      const grid = document.createElement('div'); grid.className = 'd-grid gap-2';
+      data.rubric_review.forEach((review) => {
+        const item = document.createElement('div'); item.className = 'project-review-criterion p-3';
+        const label = document.createElement('div'); label.className = 'fw-semibold small';
+        label.textContent = review.criterion + (review.weight_percent ? ' · ' + review.weight_percent + '%' : '');
+        const evidence = document.createElement('p'); evidence.className = 'small mt-2 mb-1'; evidence.textContent = 'Éléments observés : ' + (review.evidence || 'Aucun élément explicite.');
+        const verify = document.createElement('p'); verify.className = 'small text-secondary mb-0'; verify.textContent = 'À vérifier par le jury : ' + (review.jury_should_verify || 'À apprécier pendant la présentation.');
+        item.append(label, evidence, verify); grid.appendChild(item);
+      });
+      section.appendChild(grid); target.appendChild(section);
+    }
+    addList(target, 'Questions possibles du jury', data.jury_questions);
+    addList(target, 'Éléments manquants ou non vérifiables', data.missing_evidence);
+    const note = document.createElement('div'); note.className = 'small text-secondary border-top mt-3 pt-2';
+    note.textContent = 'Aucune note ni décision n’est produite. Le jury vérifie les preuves et établit son évaluation.';
+    target.appendChild(note);
+  };
+  cards.forEach((card) => {
+    const form = card.querySelector('[data-evaluation-form]');
+    const button = card.querySelector('[data-evaluate-button]');
+    const target = card.querySelector('[data-evaluation-result]');
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault(); button.disabled = true;
+      button.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Analyse en cours…';
+      target.textContent = 'Ollama analyse les éléments disponibles. Cela peut prendre quelques dizaines de secondes.';
+      try {
+        const response = await fetch(form.getAttribute('action'), {
+          method: 'POST', body: new FormData(form), credentials: 'same-origin',
+          headers: {'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json'},
+        });
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) throw new Error('Réponse serveur inattendue (HTTP ' + response.status + '). Rechargez la page et reconnectez-vous si besoin.');
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Analyse indisponible.');
+        render(target, result);
+      } catch (error) {
+        target.replaceChildren();
+        const alert = document.createElement('div'); alert.className = 'alert alert-warning mb-0 small'; alert.textContent = error.message || 'Impossible de lancer l’analyse.';
+        target.appendChild(alert);
+      } finally {
+        button.disabled = false; button.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i>Relancer l’analyse';
+      }
+    });
+  });
+})();
+</script>
 {% endblock %}

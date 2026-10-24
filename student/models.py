@@ -29,10 +29,26 @@ class Hackathon(models.Model):
     edition = models.CharField(max_length=80, blank=True)
     starts_at = models.DateTimeField()
     ends_at = models.DateTimeField()
+    location = models.CharField(max_length=180, blank=True)
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return f'{self.name} — {self.edition}'
+
+
+class HackathonRegistration(models.Model):
+    hackathon = models.ForeignKey(Hackathon, on_delete=models.CASCADE, related_name='registrations')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='hackathon_registrations')
+    registered_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['registered_at', 'pk']
+        constraints = [
+            models.UniqueConstraint(fields=['hackathon', 'user'], name='unique_hackathon_registration'),
+        ]
+
+    def __str__(self):
+        return f'{self.user} — {self.hackathon}'
 
 
 class Milestone(models.Model):
@@ -56,11 +72,39 @@ class Milestone(models.Model):
 
 
 class Announcement(models.Model):
+    class Audience(models.TextChoices):
+        ALL = 'all', 'Everyone'
+        STUDENTS = 'students', 'Students'
+        MENTORS = 'mentors', 'Mentors'
+        CAPTAINS = 'captains', 'Team captains'
+
+    class Priority(models.TextChoices):
+        INFO = 'info', 'Info'
+        IMPORTANT = 'important', 'Important'
+        URGENT = 'urgent', 'Urgent'
+
     hackathon = models.ForeignKey(Hackathon, on_delete=models.CASCADE, related_name='announcements')
     title = models.CharField(max_length=220)
+    body = models.TextField(blank=True)
     author = models.CharField(max_length=120)
     category = models.CharField(max_length=80, blank=True)
+    audience = models.CharField(max_length=12, choices=Audience.choices, default=Audience.ALL)
+    priority = models.CharField(max_length=9, choices=Priority.choices, default=Priority.INFO)
     published_at = models.DateTimeField(default=timezone.now)
+    scheduled_at = models.DateTimeField(null=True, blank=True)
+    is_draft = models.BooleanField(default=False)
+
+    @property
+    def is_scheduled(self):
+        return not self.is_draft and bool(self.scheduled_at and self.scheduled_at > timezone.now())
+
+    @property
+    def status(self):
+        if self.is_draft:
+            return 'draft'
+        if self.is_scheduled:
+            return 'scheduled'
+        return 'published'
 
     class Meta:
         ordering = ['-published_at']

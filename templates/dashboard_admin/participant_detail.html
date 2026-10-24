@@ -1,0 +1,74 @@
+﻿{% extends "layouts/base_admin.html" %}
+{% block title %}Participant profile · HackFlow{% endblock %}
+{% block admin_content %}
+<style>
+.participant-workspace{--pw-ink:#18243b;--pw-muted:#78869b;--pw-line:#e8edf4;color:var(--pw-ink)}
+.pw-hero{position:relative;isolation:isolate;overflow:hidden;border-radius:1.5rem;background:radial-gradient(ellipse at 82% 8%,rgba(255,255,255,.75),transparent 30%),linear-gradient(120deg,#eef3ff 0%,#e1eaff 58%,#d5e1fb 100%);color:#1b2945;box-shadow:0 14px 34px rgba(44,68,115,.09);border:1px solid #dce5f6}
+.pw-hero:before,.pw-hero:after{content:"";position:absolute;z-index:-1;border:1px solid rgba(75,99,156,.13);border-radius:50%;width:255px;height:255px;right:-55px;bottom:-165px;box-shadow:0 0 0 30px rgba(75,99,156,.035)}.pw-hero:after{width:350px;height:350px;right:-105px;bottom:-210px;box-shadow:none}
+.pw-avatar{width:78px;height:78px;border-radius:25px;display:grid;place-items:center;background:linear-gradient(145deg,#fff,#e8efff);border:1px solid #cdd9f0;color:#344d83;font-size:1.55rem;font-weight:800;letter-spacing:.04em;box-shadow:0 10px 24px rgba(44,68,115,.11);flex:0 0 auto}
+.pw-hero h1{color:#182642!important}.pw-hero a:not(.btn){color:#536887!important}.pw-hero .participant-email{color:#536887!important}.pw-hero .badge.bg-white{background:#fff!important;color:#3c5485!important;border-color:#cbd7ed!important}
+.pw-card{height:100%;background:#fff;border:1px solid var(--pw-line);border-radius:1.2rem;box-shadow:0 8px 28px rgba(24,40,72,.045)}.pw-stat{background:rgba(255,255,255,.94);border:1px solid var(--pw-line);border-radius:1rem;height:100%}.pw-stat-icon,.pw-section-icon{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;flex:0 0 auto}.pw-stat-icon{font-size:1.05rem}.pw-section-icon{background:#eff2ff;color:#4b5fd1}
+.pw-label{font-size:.74rem;color:var(--pw-muted);font-weight:650;letter-spacing:.03em;text-transform:uppercase}.pw-value{font-weight:650;overflow-wrap:anywhere}.pw-divider{border-color:#eef1f6;opacity:1}
+.pw-timeline{position:relative;padding-left:1.45rem}.pw-timeline:before{content:"";position:absolute;left:16px;top:18px;bottom:20px;width:2px;background:linear-gradient(#dce3f5,#edf1f7)}.pw-event{position:relative;padding:0 0 1.35rem 1.15rem}.pw-event:last-child{padding-bottom:0}.pw-event-dot{position:absolute;left:-1.42rem;top:2px;width:34px;height:34px;border:4px solid #fff;border-radius:50%;display:grid;place-items:center;box-shadow:0 0 0 1px var(--pw-line);font-size:.83rem}.pw-event-card{border:1px solid #edf0f5;border-radius:1rem;padding:1rem 1.1rem;background:#fff;transition:box-shadow .18s ease,border-color .18s ease}.pw-event-card:hover{border-color:#dce3f1;box-shadow:0 8px 20px rgba(24,40,72,.055)}
+.pw-team{border:1px solid var(--pw-line);border-radius:1rem;transition:transform .18s ease,box-shadow .18s ease}.pw-team:hover{transform:translateY(-2px);box-shadow:0 9px 22px rgba(24,40,72,.06)}
+@media(max-width:575.98px){.pw-avatar{width:62px;height:62px;border-radius:20px;font-size:1.25rem}.pw-hero-actions{width:100%}.pw-hero-actions form,.pw-hero-actions a{flex:1}.pw-hero-actions button{width:100%}.pw-timeline{padding-left:1.1rem}.pw-timeline:before{left:12px}.pw-event{padding-left:.9rem}.pw-event-dot{left:-1.27rem;width:30px;height:30px}}
+</style>
+<div class="container-fluid participant-workspace py-2">
+  <div class="d-flex justify-content-between align-items-center gap-2 mb-3"><a href="{% url 'dashboard_admin:participants' %}" class="btn btn-sm btn-light rounded-pill px-3"><i class="bi bi-arrow-left me-1"></i>Participants</a><span class="small text-secondary">Profile ID {{ participant.pk }}</span></div>
+
+  <section class="pw-hero p-4 p-lg-5 mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-4">
+      <div class="d-flex align-items-center gap-3 gap-lg-4">
+        <div class="pw-avatar">{% if participant.first_name %}{{ participant.first_name|first|upper }}{% else %}{{ participant.username|first|upper }}{% endif %}{% if participant.last_name %}{{ participant.last_name|first|upper }}{% endif %}</div>
+        <div>
+          <div class="d-flex flex-wrap gap-2 mb-2"><span class="badge rounded-pill bg-white text-primary border px-3 py-2">{% if participant.role == 'mentor' %}<i class="bi bi-person-workspace me-1"></i>Mentor{% else %}<i class="bi bi-mortarboard me-1"></i>Student{% endif %}</span>{% if participant.is_active %}<span class="badge rounded-pill text-bg-success"><i class="bi bi-check2-circle me-1"></i>Active</span>{% else %}<span class="badge rounded-pill text-bg-secondary"><i class="bi bi-pause-circle me-1"></i>Inactive</span>{% endif %}</div>
+          <h1 class="display-6 fw-bold mb-1">{{ participant.get_full_name|default:participant.username }}</h1>
+          {% if participant.email %}<a class="participant-email text-decoration-none" href="mailto:{{ participant.email }}"><i class="bi bi-envelope me-1"></i>{{ participant.email }}</a>{% else %}<span class="participant-email">No email address</span>{% endif %}
+        </div>
+      </div>
+      <div class="pw-hero-actions d-flex flex-wrap gap-2"><form method="post" action="{% url 'dashboard_admin:participant_toggle_active' participant.pk %}" onsubmit="return confirm('{% if participant.is_active %}Deactivate{% else %}Reactivate{% endif %} this account?');">{% csrf_token %}<button class="btn {% if participant.is_active %}btn-outline-primary{% else %}btn-success{% endif %} rounded-pill px-4">{% if participant.is_active %}<i class="bi bi-person-slash me-1"></i>Deactivate{% else %}<i class="bi bi-person-check me-1"></i>Reactivate{% endif %}</button></form>{% if participant.email %}<a class="btn btn-primary rounded-pill px-4" href="mailto:{{ participant.email }}"><i class="bi bi-send me-1"></i>Contact</a>{% endif %}</div>
+    </div>
+  </section>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3"><div class="pw-stat p-3 p-lg-4"><div class="d-flex justify-content-between align-items-center"><span class="small text-secondary">Teams</span><span class="pw-stat-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-people"></i></span></div><div class="fs-3 fw-bold mt-2">{{ memberships|length }}</div><div class="small text-secondary">current memberships</div></div></div>
+    <div class="col-6 col-xl-3"><div class="pw-stat p-3 p-lg-4"><div class="d-flex justify-content-between align-items-center"><span class="small text-secondary">Activity</span><span class="pw-stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-activity"></i></span></div><div class="fs-3 fw-bold mt-2">{{ history_count }}</div><div class="small text-secondary">recorded events</div></div></div>
+    <div class="col-6 col-xl-3"><div class="pw-stat p-3 p-lg-4"><div class="d-flex justify-content-between align-items-center"><span class="small text-secondary">Applications</span><span class="pw-stat-icon bg-success bg-opacity-10 text-success"><i class="bi bi-briefcase"></i></span></div><div class="fs-3 fw-bold mt-2">{{ applications_count }}</div><div class="small text-secondary">career opportunities</div></div></div>
+    <div class="col-6 col-xl-3"><div class="pw-stat p-3 p-lg-4"><div class="d-flex justify-content-between align-items-center"><span class="small text-secondary">Member since</span><span class="pw-stat-icon bg-warning bg-opacity-10 text-warning"><i class="bi bi-calendar3"></i></span></div><div class="fs-5 fw-bold mt-3">{{ participant.date_joined|date:"M j, Y" }}</div><div class="small text-secondary">{% if participant.last_login %}Last seen {{ participant.last_login|date:"M j, Y" }}{% else %}No sign-in recorded{% endif %}</div></div></div>
+  </div>
+
+  <div class="row g-4 align-items-start">
+    <div class="col-xl-7">
+      <section class="pw-card p-4 p-lg-5">
+        <div class="d-flex justify-content-between align-items-start gap-3 mb-4"><div class="d-flex align-items-center gap-3"><div class="pw-section-icon"><i class="bi bi-clock-history"></i></div><div><h2 class="h4 fw-bold mb-1">Activity history</h2><p class="text-secondary small mb-0">Recorded milestones from this participant’s account</p></div></div><span class="badge rounded-pill bg-light text-secondary px-3 py-2">{{ history_count }} events</span></div>
+        <div class="pw-timeline">
+          {% for event in history %}<article class="pw-event"><div class="pw-event-dot bg-{{ event.tone }}-subtle text-{{ event.tone }}"><i class="bi {{ event.icon }}"></i></div><div class="pw-event-card"><div class="d-flex flex-wrap justify-content-between align-items-start gap-2"><div><div class="d-flex flex-wrap align-items-center gap-2"><h3 class="h6 fw-bold mb-0">{{ event.title }}</h3><span class="badge rounded-pill bg-light text-secondary">{{ event.category }}</span></div><p class="text-secondary small mb-0 mt-2">{{ event.detail }}</p></div><time class="small text-secondary text-nowrap">{{ event.at|date:"M j, Y · H:i" }}</time></div></div></article>
+          {% endfor %}
+        </div>
+        {% if history_count == 1 %}<div class="small text-secondary mt-4 pt-3 border-top"><i class="bi bi-info-circle me-1"></i>Only account creation is recorded so far. New team, project, support and career events will appear here when available.</div>{% endif %}
+      </section>
+    </div>
+
+    <aside class="col-xl-5">
+      <section class="pw-card p-4 p-lg-5 mb-4">
+        <div class="d-flex align-items-center gap-3 mb-3"><div class="pw-section-icon"><i class="bi bi-person-vcard"></i></div><div><h2 class="h5 fw-bold mb-0">Profile overview</h2><p class="small text-secondary mb-0">Core account details</p></div></div>
+        <div class="py-2 border-top"><div class="pw-label">Username</div><div class="fw-semibold">{{ participant.username }}</div></div>
+        <div class="py-2 border-top"><div class="pw-label">School / organization</div><div class="fw-semibold">{{ participant.school|default:"Not provided" }}</div></div>
+        {% if participant.role == 'student' %}<div class="py-2 border-top"><div class="pw-label">Study level</div><div class="fw-semibold">{{ participant.study_level|default:"Not provided" }}</div></div>{% endif %}
+        {% if participant.role == 'mentor' %}<div class="py-2 border-top"><div class="pw-label">Specialty</div><div class="fw-semibold">{{ participant.specialty|default:"Not provided" }}</div></div>{% endif %}
+        {% if participant.bio %}<div class="py-3 border-top"><div class="pw-label mb-2">About</div><div class="text-secondary small">{{ participant.bio|linebreaksbr }}</div></div>{% endif %}
+      </section>
+
+      {% if participant.role == 'student' %}<section class="pw-card p-4 p-lg-5 mb-4"><div class="d-flex align-items-center gap-3 mb-3"><div class="pw-section-icon"><i class="bi bi-stars"></i></div><div><h2 class="h5 fw-bold mb-0">Skills and preferences</h2><p class="small text-secondary mb-0">Used to recommend a balanced team composition</p></div></div><div class="d-flex flex-wrap gap-2 mb-3">{% for skill in participant.skills %}<span class="badge rounded-pill bg-primary bg-opacity-10 text-primary px-3 py-2">{{ skill }}</span>{% empty %}<span class="small text-secondary">No skills listed yet.</span>{% endfor %}</div><div class="small mb-2"><strong>Roles:</strong> {% for role in participant.preferred_roles %}{% if role == 'developer' %}Développement{% elif role == 'designer' %}Design / UX{% elif role == 'business' %}Business / Pitch{% elif role == 'product' %}Produit{% elif role == 'data_ai' %}Data / IA{% endif %}{% if not forloop.last %}, {% endif %}{% empty %}Not provided{% endfor %}</div><div class="small mb-2"><strong>Project themes:</strong> {{ participant.preferred_categories|default:'Not provided' }}</div><div class="small"><strong>Availability:</strong> {% for window in participant.availability_windows %}{% if window == 'weekday_day' %}Weekday daytime{% elif window == 'weekday_evening' %}Weekday evenings{% elif window == 'weekend' %}Weekends{% elif window == 'flexible' %}Flexible{% endif %}{% if not forloop.last %}, {% endif %}{% empty %}Not provided{% endfor %}</div></section>{% endif %}
+
+      <section class="pw-card p-4 p-lg-5">
+        <div class="d-flex align-items-center justify-content-between gap-3 mb-3"><div class="d-flex align-items-center gap-3"><div class="pw-section-icon"><i class="bi bi-diagram-3"></i></div><div><h2 class="h5 fw-bold mb-0">Teams</h2><p class="small text-secondary mb-0">Hackathon membership</p></div></div><span class="badge rounded-pill bg-light text-secondary">{{ memberships|length }}</span></div>
+        <div class="d-grid gap-2">
+          {% for membership in memberships %}<a href="{% url 'dashboard_admin:teams' %}" class="pw-team d-flex align-items-center gap-3 p-3 text-decoration-none text-dark"><span class="pw-section-icon"><i class="bi bi-people"></i></span><span class="flex-grow-1 min-w-0"><span class="d-block fw-bold text-truncate">{{ membership.team.name }}</span><span class="d-block small text-secondary">{{ membership.team.hackathon.name|default:"HackFlow" }} · joined {{ membership.joined_at|date:"M j, Y" }}</span></span><i class="bi bi-arrow-up-right text-secondary"></i></a>
+          {% empty %}<div class="text-center py-4"><div class="pw-section-icon mx-auto mb-3"><i class="bi bi-person-plus"></i></div><h3 class="h6 fw-bold">No team assigned</h3><p class="small text-secondary mb-3">This participant is not currently part of a team.</p><a class="btn btn-sm btn-outline-primary rounded-pill px-3" href="{% url 'dashboard_admin:participants' %}">Manage participants</a></div>{% endfor %}
+        </div>
+      </section>
+    </aside>
+  </div>
+</div>
+{% endblock %}

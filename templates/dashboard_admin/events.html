@@ -1,0 +1,119 @@
+{% extends "layouts/base_admin.html" %}
+
+{% block title %}Events Overview - HackFlow{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid px-0">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Events Overview</h2>
+            <p class="text-muted small mb-0">Événements, inscriptions, équipes et progression par jalons.</p>
+        </div>
+        <a href="#event-form" class="btn btn-primary btn-sm rounded-pill px-3"><i class="bi bi-plus-lg me-1"></i>Nouvel événement</a>
+    </div>
+
+    {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %} alert-dismissible fade show" role="status">
+        {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+    </div>
+    {% endfor %}
+
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl">
+            <div class="stat-card card-modern h-100"><div class="text-muted small fw-semibold">Événements</div><div class="h2 fw-bold text-dark mb-0 mt-2">{{ events_total }}</div><div class="small text-muted">au total</div></div>
+        </div>
+        <div class="col-sm-6 col-xl">
+            <div class="stat-card card-modern h-100"><div class="text-muted small fw-semibold">En cours</div><div class="h2 fw-bold text-success mb-0 mt-2">{{ active_events }}</div><div class="small text-muted">actifs aujourd'hui</div></div>
+        </div>
+        <div class="col-sm-6 col-xl">
+            <div class="stat-card card-modern h-100"><div class="text-muted small fw-semibold">À venir</div><div class="h2 fw-bold text-primary mb-0 mt-2">{{ upcoming_events }}</div><div class="small text-muted">inscriptions ouvertes</div></div>
+        </div>
+        <div class="col-sm-6 col-xl">
+            <div class="stat-card card-modern h-100"><div class="text-muted small fw-semibold">Inscriptions</div><div class="h2 fw-bold text-dark mb-0 mt-2">{{ registrants_total }}</div><div class="small text-muted">sur tous les événements</div></div>
+        </div>
+        <div class="col-sm-6 col-xl">
+            <div class="stat-card card-modern h-100"><div class="text-muted small fw-semibold">Équipes</div><div class="h2 fw-bold text-dark mb-0 mt-2">{{ teams_total }}</div><div class="small text-muted">au total</div></div>
+        </div>
+    </div>
+
+    <div class="card-modern p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="fw-bold text-dark mb-0">Progression globale des jalons</h5>
+            <span class="small text-muted">{{ milestones_completed }}/{{ milestones_total }} jalons terminés · {{ overall_progress }}%</span>
+        </div>
+        <div class="progress" role="progressbar" aria-label="Progression globale des événements" aria-valuenow="{{ overall_progress }}" aria-valuemin="0" aria-valuemax="100" style="height: 10px;">
+            <div class="progress-bar bg-primary" style="width: {{ overall_progress }}%;"></div>
+        </div>
+    </div>
+
+    <div class="card-modern overflow-hidden mb-4">
+        <div class="p-4 border-bottom"><h5 class="fw-bold text-dark mb-0">Événements</h5></div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4 py-3 small text-uppercase text-muted">Événement</th>
+                        <th class="py-3 small text-uppercase text-muted">Dates</th>
+                        <th class="py-3 small text-uppercase text-muted">Lieu</th>
+                        <th class="py-3 small text-uppercase text-muted">Statut</th>
+                        <th class="py-3 small text-uppercase text-muted">Inscriptions / équipes</th>
+                        <th class="pe-4 py-3 small text-uppercase text-muted">Progression</th>
+                        <th class="py-3"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in events %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark">{{ row.event.name }}</div>
+                            {% if row.event.edition %}<div class="small text-muted">{{ row.event.edition }}</div>{% endif %}
+                        </td>
+                        <td class="small text-nowrap">{{ row.event.starts_at|date:"d/m/Y H:i" }}<br><span class="text-muted">au {{ row.event.ends_at|date:"d/m/Y H:i" }}</span></td>
+                        <td class="small">{{ row.event.location|default:"Lieu à renseigner" }}</td>
+                        <td><span class="badge bg-{{ row.status_color }}-subtle text-{{ row.status_color }} rounded-pill">{{ row.status }}</span></td>
+                        <td>
+                            <div class="fw-semibold text-dark">{{ row.registrants }} inscrits · {{ row.teams }} équipes</div>
+                            <div class="small text-muted">{{ row.students }} étudiants · {{ row.mentors }} mentors</div>
+                        </td>
+                        <td style="min-width: 170px;">
+                            <div class="d-flex justify-content-between small mb-1"><span>{{ row.progress_detail }}</span><strong>{{ row.progress }}%</strong></div>
+                            <div class="progress" role="progressbar" aria-label="Progression de {{ row.event.name }}" aria-valuenow="{{ row.progress }}" aria-valuemin="0" aria-valuemax="100" style="height: 7px;">
+                                <div class="progress-bar {% if row.progress == 100 %}bg-success{% else %}bg-primary{% endif %}" style="width: {{ row.progress }}%;"></div>
+                            </div>
+                        </td>
+                        <td class="pe-4 text-end"><a href="{% url 'dashboard_admin:event_edit' row.event.pk %}" class="btn btn-sm btn-outline-secondary" aria-label="Modifier {{ row.event.name }}"><i class="bi bi-pencil"></i></a></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center text-muted py-5">Aucun événement créé pour le moment.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="event-form" class="card-modern p-4">
+        <h5 class="fw-bold text-dark mb-3">{% if editing_event %}Modifier l'événement{% else %}Créer un événement{% endif %}</h5>
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+            <div class="row g-3">
+                {% for field in form %}
+                <div class="{% if field.name == 'is_active' %}col-12{% else %}col-md-6{% endif %}">
+                    {% if field.name == 'is_active' %}
+                    <div class="form-check mt-2">{{ field }}<label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label></div>
+                    {% else %}
+                    <label class="form-label small fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% endif %}
+                    {% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+            <div class="d-flex gap-2 mt-4">
+                <button class="btn btn-primary" type="submit"><i class="bi bi-check-lg me-1"></i>{% if editing_event %}Enregistrer{% else %}Créer l'événement{% endif %}</button>
+                {% if editing_event %}<a class="btn btn-outline-secondary" href="{% url 'dashboard_admin:events_overview' %}">Annuler</a>{% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
