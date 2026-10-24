@@ -81,6 +81,9 @@
                 </form>
                 {% elif req.status == 'accepted' %}
                 <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-outline-primary btn-sm rounded-pill" href="{% url 'mentor:session_create' %}?request={{ req.pk }}">
+                        <i class="bi bi-calendar-plus me-1" aria-hidden="true"></i>Planifier une session
+                    </a>
                     <button class="btn btn-outline-secondary btn-sm rounded-pill" type="button" data-bs-toggle="collapse" data-bs-target="#transfer-{{ req.pk }}" aria-expanded="false" aria-controls="transfer-{{ req.pk }}">
                         <i class="bi bi-arrow-left-right me-1" aria-hidden="true"></i>Transférer
                     </button>

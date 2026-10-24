@@ -334,3 +334,181 @@ class HelpRequestActionTests(MentorViewsTestBase):
         self.assertContains(self.client.get(reverse('mentor:help_requests'), {'view': 'mine'}), 'Docker crash')
         filtered = self.client.get(reverse('mentor:help_requests'), {'view': 'mine', 'urgency': 'normal'})
         self.assertNotContains(filtered, 'Docker crash')
+
+
+def _dt(value):
+    return timezone.localtime(value).strftime('%Y-%m-%dT%H:%M')
+
+
+class MentoringSessionViewTests(MentorViewsTestBase):
+    def session_data(self, **overrides):
+        start = timezone.now() + timedelta(days=1)
+        data = {'team': self.team.pk, 'topic': 'Revue architecture', 'starts_at': _dt(start),
+                'ends_at': _dt(start + timedelta(minutes=30)), 'meeting_url': 'https://meet.example.com/eco',
+                'location': '', 'notes': ''}
+        data.update(overrides)
+        return data
+
+    def make_session(self, mentor=None):
+        start = timezone.now() + timedelta(days=1)
+        return MentoringSession.objects.create(mentor=mentor or self.mentor, team=self.team, topic='Point',
+                                               starts_at=start, ends_at=start + timedelta(minutes=30))
+
+    def test_create_session_notifies_team_and_follows(self):
+        response = self.client.post(reverse('mentor:session_create'), self.session_data())
+        self.assertRedirects(response, reverse('mentor:sessions_list'))
+        session = MentoringSession.objects.get()
+        self.assertEqual(session.mentor, self.mentor)
+        self.assertEqual(session.status, MentoringSession.Status.PLANNED)
+        self.assertTrue(MentorAssignment.is_following(self.mentor, self.team))
+        self.assertTrue(Notification.objects.filter(user=self.student, title='Session de mentorat planifiée').exists())
+
+    def test_create_rejects_past_start_end_before_start_and_missing_place(self):
+        past = timezone.now() - timedelta(days=1)
+        start = timezone.now() + timedelta(days=1)
+        cases = {
+            'passé': self.session_data(starts_at=_dt(past), ends_at=_dt(past + timedelta(hours=1))),
+            'fin avant début': self.session_data(ends_at=_dt(start - timedelta(hours=1))),
+            'ni visio ni lieu': self.session_data(meeting_url=''),
+        }
+        for label, data in cases.items():
+            with self.subTest(case=label):
+                response = self.client.post(reverse('mentor:session_create'), data)
+                self.assertEqual(response.status_code, 200)
+        self.assertFalse(MentoringSession.objects.exists())
+
+    def test_prefill_from_my_ticket(self):
+        self.take(self.pending)
+        response = self.client.get(reverse('mentor:session_create'), {'request': self.pending.pk})
+        self.assertEqual(response.context['form'].initial['help_request'], self.pending)
+        self.assertEqual(response.context['form'].initial['topic'], 'Docker crash')
+
+    def test_update_and_list(self):
+        session = self.make_session()
+        data = self.session_data(topic='Nouveau sujet', status=MentoringSession.Status.CONFIRMED)
+        self.client.post(reverse('mentor:session_update', args=[session.pk]), data)
+        session.refresh_from_db()
+        self.assertEqual(session.topic, 'Nouveau sujet')
+        self.assertEqual(session.status, MentoringSession.Status.CONFIRMED)
+        self.assertContains(self.client.get(reverse('mentor:sessions_list')), 'Nouveau sujet')
+
+    def test_cancel_then_listed_in_past(self):
+        session = self.make_session()
+        self.client.post(reverse('mentor:session_cancel', args=[session.pk]))
+        session.refresh_from_db()
+        self.assertEqual(session.status, MentoringSession.Status.CANCELLED)
+        self.assertNotContains(self.client.get(reverse('mentor:sessions_list')), 'Point</h2>')
+        self.assertContains(self.client.get(reverse('mentor:sessions_list'), {'view': 'past'}), 'Point')
+
+    def test_delete_requires_confirmation(self):
+        session = self.make_session()
+        self.assertEqual(self.client.get(reverse('mentor:session_delete', args=[session.pk])).status_code, 200)
+        self.assertTrue(MentoringSession.objects.filter(pk=session.pk).exists())
+        self.client.post(reverse('mentor:session_delete', args=[session.pk]))
+        self.assertFalse(MentoringSession.objects.filter(pk=session.pk).exists())
+
+    def test_other_mentor_cannot_touch_my_session(self):
+        session = self.make_session()
+        self.client.force_login(self.other_mentor)
+        for name, method in (('mentor:session_update', 'get'), ('mentor:session_cancel', 'post'),
+                             ('mentor:session_delete', 'post')):
+            with self.subTest(action=name):
+                response = getattr(self.client, method)(reverse(name, args=[session.pk]))
+                self.assertEqual(response.status_code, 404)
+        session.refresh_from_db()
+        self.assertEqual(session.status, MentoringSession.Status.PLANNED)
+
+
+class EvaluationViewTests(MentorViewsTestBase):
+    def setUp(self):
+        super().setUp()
+        self.submission.status = Submission.Status.SUBMITTED
+        self.submission.save()
+        self.criteria = list(Criterion.for_scope(Criterion.Scope.MENTOR))
+
+    def evaluation_data(self, scores=(5, 4, 3, 4), **overrides):
+        data = {'pitch_readiness': MentorEvaluation.PitchReadiness.ON_TRACK, 'general_comment': 'Bon travail'}
+        for criterion, value in zip(self.criteria, scores):
+            data[f'score_{criterion.pk}'] = value
+            data[f'comment_{criterion.pk}'] = ''
+        data.update(overrides)
+        return data
+
+    def create(self, **kwargs):
+        return self.client.post(reverse('mentor:evaluation_create', args=[self.submission.pk]),
+                                self.evaluation_data(**kwargs))
+
+    def test_submission_list_shows_note_button(self):
+        response = self.client.get(reverse('mentor:submissions'))
+        self.assertContains(response, reverse('mentor:evaluation_create', args=[self.submission.pk]))
+
+    def test_draft_submission_cannot_be_evaluated(self):
+        self.submission.status = Submission.Status.DRAFT
+        self.submission.save()
+        self.assertEqual(self.create().status_code, 404)
+
+    def test_create_evaluation_computes_total(self):
+        response = self.create()
+        evaluation = MentorEvaluation.objects.get()
+        self.assertRedirects(response, reverse('mentor:evaluation_detail', args=[evaluation.pk]))
+        self.assertEqual(evaluation.scores.count(), 4)
+        self.assertEqual(evaluation.weighted_total(), Decimal('16.00'))
+        self.assertFalse(evaluation.is_shared)
+        self.assertTrue(MentorAssignment.is_following(self.mentor, self.team))
+
+    def test_score_above_max_is_rejected(self):
+        response = self.create(scores=(6, 4, 3, 4))
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(MentorEvaluation.objects.exists())
+
+    def test_missing_score_is_rejected(self):
+        data = self.evaluation_data()
+        data[f'score_{self.criteria[0].pk}'] = ''
+        self.client.post(reverse('mentor:evaluation_create', args=[self.submission.pk]), data)
+        self.assertFalse(MentorEvaluation.objects.exists())
+
+    def test_second_create_redirects_to_edit(self):
+        self.create()
+        evaluation = MentorEvaluation.objects.get()
+        response = self.client.get(reverse('mentor:evaluation_create', args=[self.submission.pk]))
+        self.assertRedirects(response, reverse('mentor:evaluation_update', args=[evaluation.pk]))
+
+    def test_update_changes_scores(self):
+        self.create()
+        evaluation = MentorEvaluation.objects.get()
+        self.client.post(reverse('mentor:evaluation_update', args=[evaluation.pk]), self.evaluation_data(scores=(5, 5, 5, 5)))
+        self.assertEqual(evaluation.weighted_total(), Decimal('20.00'))
+        self.assertEqual(evaluation.scores.count(), 4)
+
+    def test_share_notifies_team(self):
+        self.create()
+        evaluation = MentorEvaluation.objects.get()
+        self.client.post(reverse('mentor:evaluation_share', args=[evaluation.pk]))
+        evaluation.refresh_from_db()
+        self.assertTrue(evaluation.is_shared)
+        self.assertTrue(Notification.objects.filter(user=self.student, title='Nouveau feedback mentor').exists())
+
+    def test_list_detail_and_delete(self):
+        self.create()
+        evaluation = MentorEvaluation.objects.get()
+        self.assertContains(self.client.get(reverse('mentor:evaluations')), '16.00')
+        self.assertContains(self.client.get(reverse('mentor:evaluation_detail', args=[evaluation.pk])), 'Bon travail')
+        self.client.post(reverse('mentor:evaluation_delete', args=[evaluation.pk]))
+        self.assertFalse(MentorEvaluation.objects.exists())
+
+    def test_other_mentor_cannot_access_my_evaluation(self):
+        self.create()
+        evaluation = MentorEvaluation.objects.get()
+        self.client.force_login(self.other_mentor)
+        for name, method in (('mentor:evaluation_detail', 'get'), ('mentor:evaluation_update', 'post'),
+                             ('mentor:evaluation_share', 'post'), ('mentor:evaluation_delete', 'post')):
+            with self.subTest(action=name):
+                response = getattr(self.client, method)(reverse(name, args=[evaluation.pk]))
+                self.assertEqual(response.status_code, 404)
+        self.assertTrue(MentorEvaluation.objects.filter(pk=evaluation.pk, is_shared=False).exists())
+
+    def test_each_mentor_has_own_evaluation(self):
+        self.create()
+        self.client.force_login(self.other_mentor)
+        self.create(scores=(1, 1, 1, 1))
+        self.assertEqual(MentorEvaluation.objects.count(), 2)

@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Case, Count, Exists, IntegerField, OuterRef, Q, Value, When
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -13,8 +13,9 @@ from django.views.decorators.http import require_POST
 from accounts.decorators import role_required
 from student.models import MentorRequest, Notification, Submission, Team
 
-from .forms import RequestFilterForm, ResolveRequestForm, TeamFilterForm, TransferRequestForm
-from .models import MentorAssignment, MentorEvaluation, MentoringSession
+from .forms import (EvaluationForm, MentoringSessionForm, RequestFilterForm, ResolveRequestForm, TeamFilterForm,
+                    TransferRequestForm)
+from .models import Criterion, MentorAssignment, MentorEvaluation, MentoringSession
 
 # Bloquant d'abord, puis important, puis conseil.
 URGENCY_RANK = Case(
@@ -289,31 +290,231 @@ def request_transfer(request, request_id):
     return redirect(f"{reverse('mentor:help_requests')}?view=mine")
 
 
+def _notify_team(team, title, message, icon, url):
+    """Notifie tous les membres de l'équipe (modèle Notification du module student)."""
+    Notification.objects.bulk_create([
+        Notification(user=membership.user, title=title, message=message[:240], icon=icon, url=url)
+        for membership in team.memberships.select_related('user')
+    ])
+
+
+# ---------------------------------------------------------------------------
+# Étape 3 — Sessions de mentorat
+# ---------------------------------------------------------------------------
+
+def _my_sessions(request):
+    return MentoringSession.objects.filter(mentor=request.user).select_related('team', 'help_request')
+
+
+@role_required('mentor')
+def sessions_list(request):
+    """Sessions du mentor connecté : à venir ou passées / annulées."""
+    view = request.GET.get('view') if request.GET.get('view') in ('upcoming', 'past') else 'upcoming'
+    now = timezone.now()
+    active = (MentoringSession.Status.PLANNED, MentoringSession.Status.CONFIRMED)
+    upcoming = _my_sessions(request).filter(ends_at__gte=now, status__in=active)
+    sessions = upcoming.order_by('starts_at') if view == 'upcoming' else (
+        _my_sessions(request).exclude(pk__in=upcoming.values('pk')).order_by('-starts_at'))
+    page = Paginator(sessions, 10).get_page(request.GET.get('page'))
+    context = {
+        'view': view,
+        'page': page,
+        'sessions': page.object_list,
+        'upcoming_count': upcoming.count(),
+        'query_string': f'view={view}',
+    }
+    return render(request, 'mentor/sessions_list.html', context)
+
+
+@role_required('mentor')
+def session_create(request):
+    """Planifier une session ; l'équipe et le ticket peuvent être pré-remplis (?team=…&request=…)."""
+    initial = {}
+    team_id = request.GET.get('team', '')
+    request_id = request.GET.get('request', '')
+    if request_id.isdigit():
+        help_request = MentorRequest.objects.filter(pk=request_id, mentor=request.user).first()
+        if help_request:
+            initial.update(help_request=help_request, team=help_request.team, topic=help_request.subject[:180],
+                           meeting_url=help_request.meeting_url)
+    elif team_id.isdigit():
+        initial['team'] = team_id
+
+    form = MentoringSessionForm(request.POST or None, initial=initial, mentor=request.user)
+    if request.method == 'POST' and form.is_valid():
+        session = form.save()
+        MentorAssignment.follow(request.user, session.team, MentorAssignment.Source.AUTO)
+        when = timezone.localtime(session.starts_at).strftime('%d/%m à %H:%M')
+        _notify_team(session.team, 'Session de mentorat planifiée',
+                     f'{_display_name(request.user)} vous propose « {session.topic} » le {when}.',
+                     'bi-calendar-event', reverse('student:dashboard'))
+        messages.success(request, f'Session planifiée avec {session.team.name}.')
+        return redirect('mentor:sessions_list')
+    return render(request, 'mentor/session_form.html', {'form': form, 'is_new': True})
+
+
+@role_required('mentor')
+def session_update(request, session_id):
+    session = get_object_or_404(_my_sessions(request), pk=session_id)
+    form = MentoringSessionForm(request.POST or None, instance=session, mentor=request.user)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, 'Session mise à jour.')
+        return redirect('mentor:sessions_list')
+    return render(request, 'mentor/session_form.html', {'form': form, 'is_new': False, 'session': session})
+
+
+@role_required('mentor')
+@require_POST
+def session_cancel(request, session_id):
+    session = get_object_or_404(_my_sessions(request), pk=session_id)
+    if session.status in (MentoringSession.Status.DONE, MentoringSession.Status.CANCELLED):
+        messages.warning(request, 'Cette session est déjà terminée ou annulée.')
+        return redirect('mentor:sessions_list')
+    session.status = MentoringSession.Status.CANCELLED
+    session.save(update_fields=['status', 'updated_at'])
+    _notify_team(session.team, 'Session annulée',
+                 f'La session « {session.topic} » avec {_display_name(request.user)} est annulée.',
+                 'bi-calendar-x', reverse('student:dashboard'))
+    messages.success(request, 'Session annulée, l’équipe a été prévenue.')
+    return redirect('mentor:sessions_list')
+
+
+@role_required('mentor')
+def session_delete(request, session_id):
+    session = get_object_or_404(_my_sessions(request), pk=session_id)
+    if request.method == 'POST':
+        session.delete()
+        messages.success(request, 'Session supprimée.')
+        return redirect('mentor:sessions_list')
+    return render(request, 'mentor/confirm_delete.html', {
+        'object_label': f'la session « {session.topic} » avec {session.team.name}',
+        'cancel_url': reverse('mentor:sessions_list'),
+    })
+
+
+# ---------------------------------------------------------------------------
+# Étape 4 — Feedback : évaluation multi-critères des soumissions
+# ---------------------------------------------------------------------------
+
+EVALUABLE_STATUSES = (Submission.Status.SUBMITTED, Submission.Status.APPROVED, Submission.Status.REVISION)
+
+
+def _my_evaluations(request):
+    return (MentorEvaluation.objects.filter(mentor=request.user)
+            .select_related('submission__team', 'submission__milestone')
+            .prefetch_related('scores__criterion'))
+
+
+@role_required('mentor')
+def submissions(request):
+    """Soumissions de projet à évaluer, avec l'évaluation du mentor connecté (s'il y en a une)."""
+    my_eval = MentorEvaluation.objects.filter(mentor=request.user, submission=OuterRef('pk'))
+    queryset = (Submission.objects.filter(status__in=EVALUABLE_STATUSES, team__is_archived=False)
+                .select_related('team', 'milestone')
+                .annotate(my_evaluation_id=my_eval.values('pk')[:1])
+                .order_by('-submitted_at', '-updated_at'))
+    if request.GET.get('mine') == 'on':
+        queryset = queryset.filter(team__mentor_assignments__mentor=request.user)
+    page = Paginator(queryset, 15).get_page(request.GET.get('page'))
+    evaluations_by_id = {e.pk: e for e in _my_evaluations(request).filter(
+        pk__in=[s.my_evaluation_id for s in page.object_list if s.my_evaluation_id])}
+    for submission in page.object_list:
+        submission.my_evaluation = evaluations_by_id.get(submission.my_evaluation_id)
+    context = {
+        'page': page,
+        'submissions': page.object_list,
+        'mine': request.GET.get('mine') == 'on',
+        'query_string': 'mine=on' if request.GET.get('mine') == 'on' else '',
+    }
+    return render(request, 'mentor/submission_list.html', context)
+
+
 @role_required('mentor')
 def evaluations(request):
-    """
-    Historique et saisie des retours / feedbacks mentor.
-    """
+    """Historique des évaluations rédigées par le mentor connecté."""
+    queryset = _my_evaluations(request)
+    shared = request.GET.get('shared')
+    if shared in ('yes', 'no'):
+        queryset = queryset.filter(is_shared=(shared == 'yes'))
+    page = Paginator(queryset, 10).get_page(request.GET.get('page'))
     context = {
-        'feedbacks': [
-            {
-                'team_name': 'EcoTrack',
-                'date': 'Aujourd\'hui 11h15',
-                'mentor': 'Dr. Marc Dubois',
-                'tech_rating': 4,
-                'design_rating': 5,
-                'pitch_readiness': 'En bonne voie',
-                'comment': 'Excellente vision produit. L\'équipe a bien compris les enjeux d\'éco-conception. Attention à ne pas surcharger l\'onboarding pour la démo jury.',
-            },
-            {
-                'team_name': 'StudyBuddy AI',
-                'date': 'Hier 21h30',
-                'mentor': 'Sarah Benali',
-                'tech_rating': 5,
-                'design_rating': 4,
-                'pitch_readiness': 'Prêt',
-                'comment': 'Pipeline RAG très solide et temps de réponse bluffant. Mettez en avant le benchmark comparatif lors de la présentation orale.',
-            },
-        ]
+        'page': page,
+        'evaluations': page.object_list,
+        'shared': shared,
+        'query_string': f'shared={shared}' if shared in ('yes', 'no') else '',
     }
     return render(request, 'mentor/evaluations.html', context)
+
+
+@role_required('mentor')
+def evaluation_create(request, submission_id):
+    submission = get_object_or_404(Submission.objects.select_related('team', 'milestone'),
+                                   pk=submission_id, status__in=EVALUABLE_STATUSES)
+    existing = MentorEvaluation.objects.filter(mentor=request.user, submission=submission).first()
+    if existing:
+        messages.info(request, 'Vous avez déjà évalué cette soumission : vous pouvez modifier votre évaluation.')
+        return redirect('mentor:evaluation_update', evaluation_id=existing.pk)
+
+    criteria = Criterion.for_scope(Criterion.Scope.MENTOR)
+    form = EvaluationForm(request.POST or None, criteria=criteria,
+                          instance=MentorEvaluation(mentor=request.user, submission=submission))
+    if request.method == 'POST' and form.is_valid():
+        try:
+            evaluation = form.save()
+        except IntegrityError:
+            # Double envoi du formulaire : l'évaluation existe déjà.
+            messages.info(request, 'Cette soumission a déjà été évaluée.')
+            return redirect('mentor:evaluations')
+        MentorAssignment.follow(request.user, submission.team, MentorAssignment.Source.AUTO)
+        messages.success(request, f'Évaluation enregistrée : {evaluation.weighted_total()}/20.')
+        return redirect('mentor:evaluation_detail', evaluation_id=evaluation.pk)
+    return render(request, 'mentor/evaluation_form.html',
+                  {'form': form, 'submission': submission, 'is_new': True})
+
+
+@role_required('mentor')
+def evaluation_detail(request, evaluation_id):
+    evaluation = get_object_or_404(_my_evaluations(request), pk=evaluation_id)
+    return render(request, 'mentor/evaluation_detail.html', {'evaluation': evaluation})
+
+
+@role_required('mentor')
+def evaluation_update(request, evaluation_id):
+    evaluation = get_object_or_404(_my_evaluations(request), pk=evaluation_id)
+    criteria = Criterion.for_scope(Criterion.Scope.MENTOR)
+    form = EvaluationForm(request.POST or None, criteria=criteria, instance=evaluation)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, f'Évaluation mise à jour : {evaluation.weighted_total()}/20.')
+        return redirect('mentor:evaluation_detail', evaluation_id=evaluation.pk)
+    return render(request, 'mentor/evaluation_form.html',
+                  {'form': form, 'submission': evaluation.submission, 'evaluation': evaluation, 'is_new': False})
+
+
+@role_required('mentor')
+def evaluation_delete(request, evaluation_id):
+    evaluation = get_object_or_404(_my_evaluations(request), pk=evaluation_id)
+    if request.method == 'POST':
+        evaluation.delete()
+        messages.success(request, 'Évaluation supprimée.')
+        return redirect('mentor:evaluations')
+    return render(request, 'mentor/confirm_delete.html', {
+        'object_label': f"l'évaluation de {evaluation.team.name} ({evaluation.submission.milestone.title})",
+        'cancel_url': reverse('mentor:evaluation_detail', args=[evaluation.pk]),
+    })
+
+
+@role_required('mentor')
+@require_POST
+def evaluation_share(request, evaluation_id):
+    evaluation = get_object_or_404(_my_evaluations(request), pk=evaluation_id)
+    if evaluation.is_shared:
+        messages.info(request, 'Cette évaluation est déjà partagée avec l’équipe.')
+    else:
+        evaluation.share()
+        _notify_team(evaluation.team, 'Nouveau feedback mentor',
+                     f'{_display_name(request.user)} a partagé son évaluation : {evaluation.weighted_total()}/20.',
+                     'bi-pencil-square', reverse('student:project_submission'))
+        messages.success(request, 'Évaluation partagée avec l’équipe.')
+    return redirect('mentor:evaluation_detail', evaluation_id=evaluation.pk)

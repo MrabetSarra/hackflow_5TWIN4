@@ -33,13 +33,17 @@
                 <span class="badge bg-secondary-subtle text-secondary ms-auto rounded-pill px-2 py-0" style="font-size: 0.7rem;" title="Équipes suivies">{{ mentor_nav.followed }}</span>
             </a>
 
-            <a href="{% url 'student:jury_submissions' %}" class="nav-link-item {% if request.resolver_match.url_name == 'jury_submissions' %}active{% endif %}">
-                <i class="bi bi-file-earmark-zip-fill"></i>
-                <span>Project Submissions</span>
+            <a href="{% url 'mentor:sessions_list' %}" class="nav-link-item {% if request.resolver_match.url_name in 'sessions_list session_create session_update session_delete' %}active{% endif %}">
+                <i class="bi bi-calendar-event" aria-hidden="true"></i>
+                <span>Sessions</span>
+            </a>
+            <a href="{% url 'mentor:submissions' %}" class="nav-link-item {% if request.resolver_match.url_name == 'submissions' or request.resolver_match.url_name == 'evaluation_create' %}active{% endif %}">
+                <i class="bi bi-file-earmark-zip-fill" aria-hidden="true"></i>
+                <span>Soumissions à évaluer</span>
             </a>
 
             <div class="sidebar-heading mt-3">Suivi & Feedbacks</div>
-            <a href="{% url 'mentor:evaluations' %}" class="nav-link-item {% if request.resolver_match.url_name == 'evaluations' %}active{% endif %}">
+            <a href="{% url 'mentor:evaluations' %}" class="nav-link-item {% if request.resolver_match.url_name in 'evaluations evaluation_detail evaluation_update evaluation_delete' %}active{% endif %}">
                 <i class="bi bi-pencil-square"></i>
                 <span>Retours & Conseils</span>
             </a>

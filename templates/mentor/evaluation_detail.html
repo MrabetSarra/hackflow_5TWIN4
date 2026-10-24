@@ -1,0 +1,69 @@
+{% extends "layouts/base_mentor.html" %}
+
+{% block title %}Évaluation {{ evaluation.team.name }} - Espace Mentor - HackFlow{% endblock %}
+
+{% block mentor_content %}
+<div class="container-fluid px-0" style="max-width: 980px;">
+    <nav aria-label="Fil d'Ariane" class="mb-3">
+        <ol class="breadcrumb small mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'mentor:evaluations' %}">Mes évaluations</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ evaluation.team.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h1 class="h2 fw-bold text-body mb-1">Évaluation de {{ evaluation.team.name }}</h1>
+            <p class="text-body-secondary small mb-0">Jalon : {{ evaluation.submission.milestone.title }} • Mise à jour le {{ evaluation.updated_at|date:"d/m/Y à H:i" }}</p>
+        </div>
+        <div class="text-md-end">
+            <div class="display-6 fw-bold font-mono">{{ evaluation.weighted_total|default:"—" }}<span class="fs-5 text-body-secondary">/20</span></div>
+            {% if evaluation.is_shared %}
+            <span class="badge bg-success-subtle text-success"><i class="bi bi-check2 me-1" aria-hidden="true"></i>Partagée le {{ evaluation.shared_at|date:"d/m à H:i" }}</span>
+            {% else %}
+            <span class="badge bg-secondary-subtle text-secondary">Non partagée</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <section class="card-modern overflow-hidden mb-4" aria-labelledby="scores-title">
+        <h2 id="scores-title" class="h5 fw-bold text-body p-4 pb-0 mb-3">Notes par critère</h2>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr><th scope="col" class="ps-4">Critère</th><th scope="col">Poids</th><th scope="col">Note</th><th scope="col" class="pe-4">Commentaire</th></tr>
+                </thead>
+                <tbody>
+                    {% for score in evaluation.scores.all %}
+                    <tr>
+                        <td class="ps-4 fw-semibold">{{ score.criterion.name }}</td>
+                        <td>{{ score.criterion.weight }} %</td>
+                        <td class="font-mono">{{ score.score }} / {{ score.criterion.max_score }}</td>
+                        <td class="pe-4 small text-body-secondary">{{ score.comment|default:"—" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-center text-body-secondary py-4">Aucune note.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="card-modern p-4 mb-4" aria-labelledby="general-title">
+        <h2 id="general-title" class="h5 fw-bold text-body mb-3">Appréciation générale</h2>
+        <p class="mb-2"><strong>Préparation au pitch :</strong> <span class="badge bg-primary-subtle text-primary">{{ evaluation.get_pitch_readiness_display }}</span></p>
+        <p class="text-body-secondary mb-0">{{ evaluation.general_comment|default:"Pas de commentaire général."|linebreaksbr }}</p>
+    </section>
+
+    <div class="d-flex flex-wrap justify-content-end gap-2">
+        <a href="{% url 'mentor:evaluation_delete' evaluation.pk %}" class="btn btn-outline-danger"><i class="bi bi-trash me-1" aria-hidden="true"></i>Supprimer</a>
+        <a href="{% url 'mentor:evaluation_update' evaluation.pk %}" class="btn btn-outline-primary"><i class="bi bi-pencil me-1" aria-hidden="true"></i>Modifier</a>
+        {% if not evaluation.is_shared %}
+        <form method="post" action="{% url 'mentor:evaluation_share' evaluation.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary"><i class="bi bi-share me-1" aria-hidden="true"></i>Partager avec l'équipe</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
