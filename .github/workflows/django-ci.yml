@@ -89,6 +89,10 @@ jobs:
             echo "SONAR_HOST_URL must be an absolute URL beginning with https:// (or http:// for a local server)."
             exit 1
           fi
+          if [[ "$SONAR_HOST_URL" =~ ^https?://(localhost|127\.0\.0\.1)(:|/|$) ]]; then
+            echo "SONAR_HOST_URL points to this computer's localhost, which GitHub-hosted runners cannot reach. Use SonarQube Cloud or a SonarQube server reachable from GitHub Actions."
+            exit 1
+          fi
 
       - name: SonarQube scan
         if: ${{ env.SONAR_TOKEN != '' && vars.SONAR_HOST_URL != '' }}
