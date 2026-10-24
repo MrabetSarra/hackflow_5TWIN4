@@ -1,6 +1,7 @@
 [run]
 source =
     accounts
+    career_opportunities
     core
     dashboard_admin
     hackflow

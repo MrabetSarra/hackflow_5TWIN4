@@ -175,10 +175,11 @@ Generate coverage reports with:
 ```bash
 coverage run manage.py test
 coverage report --fail-under=70
+coverage xml -o coverage.xml
 coverage html
 ```
 
-The HTML report is written to `htmlcov/`. CI enforces 70% coverage and uploads that report as an artifact.
+The HTML report is written to `htmlcov/`; `coverage.xml` is the Cobertura report imported by SonarQube. CI enforces 70% coverage and uploads both reports. To publish analysis from GitHub Actions, configure the `SONAR_TOKEN` repository secret and `SONAR_HOST_URL` repository variable for your SonarQube Server; the scan runs after tests when the token is present.
 
 ## Environment variables
 

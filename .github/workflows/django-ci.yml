@@ -25,10 +25,14 @@ jobs:
       DJANGO_SECRET_KEY: test-only-secret-key-for-ci-must-be-at-least-50-characters-long
       DJANGO_DEBUG: "True"
       DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -68,6 +72,16 @@ jobs:
 
       - name: Run Django tests
         run: coverage run manage.py test 2>&1 | tee test-output.txt
+
+      - name: Export Cobertura coverage report for SonarQube
+        run: coverage xml -o coverage.xml
+
+      - name: SonarQube scan
+        if: ${{ env.SONAR_TOKEN != '' }}
+        uses: SonarSource/sonarqube-scan-action@v7
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
 
       - name: Report coverage (minimum 70%)
         run: coverage report --fail-under=70 | tee coverage-report.txt
@@ -117,7 +131,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: hackflow-coverage-html
-          path: htmlcov/
+          path: |
+            htmlcov/
+            coverage.xml
           if-no-files-found: warn
 
   deploy:
