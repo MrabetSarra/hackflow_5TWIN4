@@ -79,6 +79,25 @@ class AIServiceTests(TestCase):
             with self.assertRaisesRegex(ai.TriageError, 'ollama pull'):
                 ai.call_ollama('ticket')
 
+    def test_proxy_token_is_sent_when_configured(self):
+        response = mock.MagicMock()
+        response.__enter__.return_value.read.return_value = json.dumps(
+            {'message': {'content': GOOD_RESPONSE}}).encode()
+        with override_settings(OLLAMA_PROXY_TOKEN='secret-token'), \
+                mock.patch('urllib.request.urlopen', return_value=response) as urlopen:
+            self.assertEqual(ai.call_ollama('ticket'), GOOD_RESPONSE)
+        self.assertEqual(urlopen.call_args.args[0].get_header('Authorization'), 'Bearer secret-token')
+        with override_settings(OLLAMA_PROXY_TOKEN=''), \
+                mock.patch('urllib.request.urlopen', return_value=response) as urlopen:
+            ai.call_ollama('ticket')
+        self.assertIsNone(urlopen.call_args.args[0].get_header('Authorization'))
+
+    def test_proxy_rejects_token(self):
+        error = urllib.error.HTTPError('http://x', 401, 'unauthorized', {}, None)
+        with mock.patch('urllib.request.urlopen', side_effect=error):
+            with self.assertRaisesRegex(ai.TriageError, 'OLLAMA_PROXY_TOKEN'):
+                ai.call_ollama('ticket')
+
     def test_classify_returns_result_and_latency(self):
         with mock.patch.object(ai, 'call_ollama', return_value=GOOD_RESPONSE) as call:
             result, latency = ai.classify('Docker', 'Le conteneur crash')
