@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'student.apps.StudentConfig',
     'mentor.apps.MentorConfig',
     'dashboard_admin.apps.DashboardAdminConfig',
+    'workshops.apps.WorkshopsConfig',
 ]
 
 MIDDLEWARE = [

@@ -1,0 +1,407 @@
+{% extends "layouts/base_student.html" %}
+{% load static %}
+
+{% block title %}{{ workshop.title }} — HackFlow{% endblock %}
+
+{% block student_content %}
+<div class="container-fluid px-4 py-4">
+
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'workshops:list' %}">Ateliers</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ workshop.title|truncatechars:40 }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+
+    <!-- ── Colonne principale ──────────────────────────────────────── -->
+    <div class="col-12 col-lg-8">
+
+      <!-- Header card -->
+      <div class="card border-0 shadow-sm mb-4">
+        {% if workshop.cover_image %}
+        <img src="{{ workshop.cover_image.url }}" class="card-img-top rounded-top-3"
+             style="max-height:260px;object-fit:cover;" alt="{{ workshop.title }}">
+        {% else %}
+        <div class="rounded-top-3 d-flex align-items-center justify-content-center"
+             style="height:160px;background:linear-gradient(135deg,#6366f1,#8b5cf6);">
+          <i class="bi bi-mortarboard-fill text-white" style="font-size:3rem;opacity:.7;"></i>
+        </div>
+        {% endif %}
+
+        <div class="card-body">
+          <!-- Badges mode/niveau -->
+          <div class="d-flex flex-wrap gap-2 mb-3">
+            {% if workshop.mode == 'onsite' %}
+              <span class="badge bg-success rounded-pill"><i class="bi bi-geo-alt-fill me-1"></i>Présentiel</span>
+            {% elif workshop.mode == 'online' %}
+              <span class="badge bg-primary rounded-pill"><i class="bi bi-camera-video-fill me-1"></i>Live / Visio</span>
+            {% else %}
+              <span class="badge bg-secondary rounded-pill"><i class="bi bi-play-circle-fill me-1"></i>Vidéo enregistrée</span>
+            {% endif %}
+
+            {% if workshop.level == 'beginner' %}
+              <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill">Débutant</span>
+            {% elif workshop.level == 'intermediate' %}
+              <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill">Intermédiaire</span>
+            {% else %}
+              <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill">Avancé</span>
+            {% endif %}
+
+            {% if not workshop.is_open %}
+            <span class="badge bg-dark rounded-pill">Inscriptions fermées</span>
+            {% endif %}
+          </div>
+
+          <h1 class="h3 fw-bold mb-2">{{ workshop.title }}</h1>
+
+          <!-- Intervenant -->
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold"
+                 style="width:44px;height:44px;">
+              {{ workshop.speaker_name|first|upper }}
+            </div>
+            <div>
+              <p class="mb-0 fw-semibold">{{ workshop.speaker_name }}</p>
+              {% if workshop.speaker_company %}
+              <p class="mb-0 small text-body-secondary">{{ workshop.speaker_company }}</p>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Tags thématiques -->
+          {% if workshop.topic_tags %}
+          <div class="mb-3 d-flex flex-wrap gap-1">
+            {% for tag in workshop.topic_tags %}
+            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 rounded-pill">{{ tag }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <!-- Description -->
+          <p class="text-body lh-lg">{{ workshop.description|linebreaksbr }}</p>
+
+          <!-- Actions organisateur -->
+          {% if can_manage %}
+          <div class="d-flex flex-wrap gap-2 mt-3 pt-3 border-top">
+            <a href="{% url 'workshops:edit' workshop.pk %}" class="btn btn-sm btn-outline-primary rounded-pill">
+              <i class="bi bi-pencil-fill me-1"></i>Modifier
+            </a>
+            <form method="post" action="{% url 'workshops:close' workshop.pk %}" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-warning rounded-pill">
+                <i class="bi bi-lock-fill me-1"></i>Fermer inscriptions
+              </button>
+            </form>
+            <a href="{% url 'workshops:delete' workshop.pk %}" class="btn btn-sm btn-outline-danger rounded-pill">
+              <i class="bi bi-trash-fill me-1"></i>Supprimer
+            </a>
+            <a href="{% url 'workshops:dashboard' %}" class="btn btn-sm btn-outline-secondary rounded-pill">
+              <i class="bi bi-speedometer me-1"></i>Dashboard
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- ── Mode spécifique ─────────────────────────────────────── -->
+
+      {# ONLINE : Lien Zoom — uniquement si réservé (contrôle serveur) #}
+      {% if workshop.mode == 'online' %}
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+          <h5 class="fw-bold mb-3"><i class="bi bi-camera-video-fill text-primary me-2"></i>Lien de connexion</h5>
+          {% if meeting_url %}
+            <div class="alert alert-primary d-flex align-items-center gap-3 mb-0">
+              <i class="bi bi-link-45deg fs-4"></i>
+              <div>
+                <p class="mb-1 fw-semibold">Vous êtes inscrit à cet atelier.</p>
+                <a href="{{ meeting_url }}" target="_blank" rel="noopener noreferrer"
+                   class="btn btn-primary rounded-pill px-4">
+                  <i class="bi bi-box-arrow-up-right me-2"></i>Rejoindre la session
+                </a>
+              </div>
+            </div>
+          {% else %}
+            <div class="alert alert-secondary d-flex align-items-center gap-2 mb-0">
+              <i class="bi bi-lock-fill"></i>
+              <span>Le lien de connexion est disponible uniquement après réservation.</span>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      {# RECORDED : Lecteur replay #}
+      {% if workshop.mode == 'recorded' %}
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+          <h5 class="fw-bold mb-3"><i class="bi bi-play-circle-fill text-secondary me-2"></i>Replay vidéo</h5>
+          {% if replay_accessible %}
+            {% if booking.replay_progress < 100 %}
+            <div class="mb-3">
+              <div class="d-flex justify-content-between small mb-1">
+                <span>Progression</span>
+                <span id="progress-label">{{ booking.replay_progress }}%</span>
+              </div>
+              <div class="progress" style="height:8px;">
+                <div class="progress-bar bg-primary" id="progress-bar"
+                     style="width:{{ booking.replay_progress }}%"></div>
+              </div>
+            </div>
+            <div class="ratio ratio-16x9 mb-3">
+              <iframe src="{{ workshop.replay_url }}"
+                      title="{{ workshop.title }}"
+                      allowfullscreen
+                      class="rounded-3"></iframe>
+            </div>
+            <form method="post" action="{% url 'workshops:replay_complete' workshop.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-success rounded-pill px-4">
+                <i class="bi bi-check-circle-fill me-2"></i>J'ai terminé la vidéo
+              </button>
+            </form>
+            {% else %}
+            <div class="alert alert-success d-flex align-items-center gap-2">
+              <i class="bi bi-patch-check-fill fs-4"></i>
+              <span>Vous avez complété ce replay. Votre certificat a été généré.</span>
+            </div>
+            {% endif %}
+            {% if workshop.available_until %}
+            <p class="small text-body-secondary mt-2">
+              <i class="bi bi-clock me-1"></i>Accès disponible jusqu'au {{ workshop.available_until|date:"d/m/Y à H\hi" }}
+            </p>
+            {% endif %}
+          {% else %}
+            <div class="alert alert-secondary d-flex align-items-center gap-2 mb-0">
+              <i class="bi bi-lock-fill"></i>
+              <span>Réservez cet atelier pour accéder au replay.</span>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      {# ONSITE : Infos salle + QR check-in #}
+      {% if workshop.mode == 'onsite' %}
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+          <h5 class="fw-bold mb-3"><i class="bi bi-geo-alt-fill text-success me-2"></i>Informations présentiel</h5>
+          {% if workshop.room %}
+          <p class="mb-2"><strong>Salle :</strong> {{ workshop.room }}</p>
+          {% endif %}
+          {% if booking and booking.status == 'confirmed' %}
+          <div class="d-flex align-items-center gap-3 p-3 bg-body-tertiary rounded-3">
+            <i class="bi bi-qr-code fs-2 text-primary"></i>
+            <div>
+              <p class="mb-1 fw-semibold small">QR Code de check-in</p>
+              <p class="mb-1 small text-body-secondary">Présentez ce QR à l'entrée pour valider votre présence.</p>
+              <code class="small">{{ booking.checkin_token|truncatechars:20 }}…</code>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- ── Avis & notes ────────────────────────────────────────── -->
+      {% if avis %}
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+          <h5 class="fw-bold mb-3">
+            <i class="bi bi-star-fill text-warning me-2"></i>Avis participants
+            {% if workshop.average_rating %}
+            <span class="fs-6 fw-normal text-body-secondary">· {{ workshop.average_rating }}/5</span>
+            {% endif %}
+          </h5>
+          {% for b in avis %}
+          <div class="d-flex gap-3 mb-3 pb-3 {% if not forloop.last %}border-bottom{% endif %}">
+            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold flex-shrink-0"
+                 style="width:36px;height:36px;font-size:.85rem;">
+              {{ b.user.first_name|first|default:b.user.username|first|upper }}
+            </div>
+            <div>
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="fw-semibold small">{{ b.user.get_full_name|default:b.user.username }}</span>
+                <span class="text-warning small">
+                  {% for i in "12345" %}{% if forloop.counter <= b.rating %}<i class="bi bi-star-fill"></i>{% else %}<i class="bi bi-star"></i>{% endif %}{% endfor %}
+                </span>
+              </div>
+              {% if b.comment %}
+              <p class="mb-0 small text-body-secondary">{{ b.comment }}</p>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- ── Colonne latérale ────────────────────────────────────────── -->
+    <div class="col-12 col-lg-4">
+
+      <!-- Carte infos rapides -->
+      <div class="card border-0 shadow-sm mb-4 sticky-top" style="top:80px;">
+        <div class="card-body">
+
+          <!-- Date -->
+          <div class="d-flex align-items-start gap-3 mb-3 pb-3 border-bottom">
+            <div class="rounded-3 bg-primary bg-opacity-10 text-primary p-2 text-center" style="min-width:48px;">
+              <div class="fw-bold" style="font-size:1.2rem;line-height:1;">{{ workshop.starts_at|date:"d" }}</div>
+              <div class="small text-uppercase" style="font-size:.65rem;">{{ workshop.starts_at|date:"M" }}</div>
+            </div>
+            <div>
+              <p class="mb-0 fw-semibold">{{ workshop.starts_at|date:"l d F Y" }}</p>
+              <p class="mb-0 small text-body-secondary">
+                {{ workshop.starts_at|date:"H\hi" }} — {{ workshop.ends_at|date:"H\hi" }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Places -->
+          <div class="mb-3 pb-3 border-bottom">
+            {% if workshop.capacity > 0 %}
+              {% if workshop.seats_left == 0 %}
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="small fw-semibold text-danger">Complet</span>
+                <span class="small text-body-secondary">{{ workshop.capacity }}/{{ workshop.capacity }}</span>
+              </div>
+              <div class="progress" style="height:6px;">
+                <div class="progress-bar bg-danger" style="width:100%"></div>
+              </div>
+              {% if workshop.waitlist_count %}
+              <p class="small text-body-secondary mt-1 mb-0">
+                <i class="bi bi-hourglass-split me-1"></i>{{ workshop.waitlist_count }} en liste d'attente
+              </p>
+              {% endif %}
+              {% else %}
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="small fw-semibold">{{ workshop.seats_left }} place{% if workshop.seats_left > 1 %}s{% endif %} disponible{% if workshop.seats_left > 1 %}s{% endif %}</span>
+                <span class="small text-body-secondary">{{ workshop.confirmed_count }}/{{ workshop.capacity }}</span>
+              </div>
+              <div class="progress" style="height:6px;">
+                <div class="progress-bar bg-primary" style="width:{{ workshop.fill_rate }}%"></div>
+              </div>
+              {% endif %}
+            {% else %}
+              <p class="small mb-0"><i class="bi bi-infinity me-1"></i>Places illimitées</p>
+            {% endif %}
+          </div>
+
+          <!-- Prédiction IA (organisateurs) -->
+          {% if forecast %}
+          <div class="alert alert-warning py-2 small mb-3">
+            <i class="bi bi-graph-up-arrow me-1"></i>
+            <strong>Prédiction IA :</strong> {{ forecast.fill_proba|floatformat:0 }}% de remplissage
+            — {{ forecast.noshow_proba|floatformat:0 }}% de no-show
+            {% if forecast.alert %}
+            <div class="mt-1 text-danger fw-semibold">{{ forecast.alert }}</div>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          <!-- Bouton d'action -->
+          {% if request.user.role == 'student' %}
+            {% if booking %}
+              {% if booking.status == 'confirmed' %}
+              <div class="alert alert-success py-2 small mb-3">
+                <i class="bi bi-check-circle-fill me-1"></i>
+                Réservé — Place n°{{ booking.seat_number }}
+              </div>
+              <div class="d-grid gap-2">
+                <form method="post" action="{% url 'workshops:cancel' workshop.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-outline-danger w-100 rounded-pill"
+                          onclick="return confirm('Annuler votre réservation ?')">
+                    <i class="bi bi-x-circle me-1"></i>Annuler
+                  </button>
+                </form>
+              </div>
+              {% elif booking.status == 'waiting' %}
+              <div class="alert alert-info py-2 small mb-3">
+                <i class="bi bi-hourglass-split me-1"></i>
+                Liste d'attente — position {{ booking.waitlist_position }}
+              </div>
+              <form method="post" action="{% url 'workshops:cancel' workshop.pk %}">
+                {% csrf_token %}
+                <button class="btn btn-outline-secondary w-100 rounded-pill">Retirer de la liste</button>
+              </form>
+              {% elif booking.status == 'attended' %}
+              <div class="alert alert-success py-2 small mb-3">
+                <i class="bi bi-patch-check-fill me-1"></i>Présence validée
+              </div>
+              {% if booking.rating is None %}
+              <a href="{% url 'workshops:rate' workshop.pk %}"
+                 class="btn btn-outline-warning w-100 rounded-pill mb-2">
+                <i class="bi bi-star me-1"></i>Donner mon avis
+              </a>
+              {% endif %}
+              {% elif booking.status == 'cancelled' %}
+              <div class="alert alert-secondary py-2 small mb-3">
+                Réservation annulée
+              </div>
+              {% endif %}
+            {% elif workshop.is_open %}
+              <form method="post" action="{% url 'workshops:book' workshop.pk %}">
+                {% csrf_token %}
+                <button class="btn btn-primary w-100 rounded-pill fw-semibold py-2">
+                  {% if workshop.seats_left == 0 %}
+                    <i class="bi bi-hourglass-split me-1"></i>Rejoindre la liste d'attente
+                  {% else %}
+                    <i class="bi bi-bookmark-plus-fill me-1"></i>Réserver ma place
+                  {% endif %}
+                </button>
+              </form>
+            {% else %}
+              <button class="btn btn-secondary w-100 rounded-pill" disabled>Inscriptions fermées</button>
+            {% endif %}
+          {% endif %}
+
+          <!-- Export .ics -->
+          <a href="{% url 'workshops:export_ics' %}"
+             class="btn btn-sm btn-outline-secondary w-100 rounded-pill mt-2">
+            <i class="bi bi-calendar-plus me-1"></i>Ajouter à mon calendrier
+          </a>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Script AJAX progression replay -->
+{% if workshop.mode == 'recorded' and replay_accessible %}
+<script>
+(function() {
+  const bar   = document.getElementById('progress-bar');
+  const label = document.getElementById('progress-label');
+  const url   = "{% url 'workshops:replay_progress' workshop.pk %}";
+  const token = "{{ csrf_token }}";
+  let progress = {{ booking.replay_progress|default:0 }};
+
+  function saveProgress(val) {
+    fetch(url, {
+      method: 'POST',
+      headers: {'X-CSRFToken': token, 'Content-Type': 'application/x-www-form-urlencoded'},
+      body: 'progress=' + val
+    });
+  }
+
+  // Sauvegarde simulée toutes les 30s (remplacer par un vrai player)
+  setInterval(function() {
+    if (progress < 100) {
+      progress = Math.min(100, progress + 2);
+      if (bar) bar.style.width = progress + '%';
+      if (label) label.textContent = progress + '%';
+      saveProgress(progress);
+    }
+  }, 30000);
+})();
+</script>
+{% endif %}
+{% endblock %}

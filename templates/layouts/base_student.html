@@ -36,6 +36,15 @@
                 <span class="badge bg-warning text-dark ms-auto rounded-pill px-2 py-0" style="font-size: 0.68rem;">Milestone</span>
             </a>
 
+            <a href="{% url 'workshops:list' %}" class="nav-link-item {% if 'workshops' in request.resolver_match.app_name %}active{% endif %}">
+                <i class="bi bi-mortarboard-fill"></i>
+                <span>Ateliers & Formations</span>
+            </a>
+            <a href="{% url 'workshops:my_bookings' %}" class="nav-link-item {% if request.resolver_match.url_name == 'my_bookings' %}active{% endif %}">
+                <i class="bi bi-bookmark-fill"></i>
+                <span>Mes ateliers</span>
+            </a>
+
             <div class="sidebar-heading mt-3">Network & Support</div>
             <a href="{% url 'student:skills_matching' %}" class="nav-link-item {% if request.resolver_match.url_name == 'skills_matching' %}active{% endif %}">
                 <i class="bi bi-search-heart-fill"></i>

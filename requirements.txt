@@ -1,2 +1,7 @@
 Django==5.2.17
 Pillow
+
+# --- Module Workshops ---
+scikit-learn==1.5.2        # IA recommandation TF-IDF + forecast Ridge/RandomForest
+fpdf2==2.8.3               # Génération PDF certificat (pur Python, pas de binaire)
+qrcode[pil]==8.0           # QR code de check-in (dépend de Pillow)

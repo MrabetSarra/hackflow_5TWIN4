@@ -1,0 +1,180 @@
+{% extends "layouts/base_student.html" %}
+{% load static %}
+
+{% block title %}{{ action }} un atelier — HackFlow{% endblock %}
+
+{% block student_content %}
+<div class="container-fluid px-4 py-4">
+
+  <div class="row justify-content-center">
+    <div class="col-12 col-xl-10">
+
+      <!-- Breadcrumb -->
+      <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{% url 'workshops:list' %}">Ateliers</a></li>
+          {% if workshop %}
+          <li class="breadcrumb-item">
+            <a href="{{ workshop.get_absolute_url }}">{{ workshop.title|truncatechars:30 }}</a>
+          </li>
+          {% endif %}
+          <li class="breadcrumb-item active">{{ action }}</li>
+        </ol>
+      </nav>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-bottom py-3">
+          <h4 class="mb-0 fw-bold">
+            {% if action == 'Créer' %}
+              <i class="bi bi-plus-circle-fill text-primary me-2"></i>Créer un atelier
+            {% else %}
+              <i class="bi bi-pencil-fill text-warning me-2"></i>Modifier l'atelier
+            {% endif %}
+          </h4>
+        </div>
+
+        <div class="card-body p-4">
+          <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+              {% for e in form.non_field_errors %}<p class="mb-0">{{ e }}</p>{% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Section 1 : Identité -->
+            <h6 class="fw-bold text-body-secondary text-uppercase small mb-3 mt-2">
+              <i class="bi bi-info-circle me-1"></i>Informations générales
+            </h6>
+            <div class="row g-3 mb-4">
+              <div class="col-12">
+                <label class="form-label fw-semibold">Titre <span class="text-danger">*</span></label>
+                {{ form.title }}
+                {% if form.title.errors %}<div class="text-danger small mt-1">{{ form.title.errors|join:", " }}</div>{% endif %}
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-semibold">Intervenant <span class="text-danger">*</span></label>
+                {{ form.speaker_name }}
+                {% if form.speaker_name.errors %}<div class="text-danger small mt-1">{{ form.speaker_name.errors|join:", " }}</div>{% endif %}
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-semibold">Entreprise</label>
+                {{ form.speaker_company }}
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">Description <span class="text-danger">*</span></label>
+                {{ form.description }}
+                {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors|join:", " }}</div>{% endif %}
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">
+                  Tags thématiques
+                  <span class="text-body-secondary fw-normal">(séparés par des virgules)</span>
+                </label>
+                {{ form.topic_tags_raw }}
+                <div class="form-text">Ex : Python, Machine Learning, API REST — utilisés par l'IA de recommandation.</div>
+                {% if form.topic_tags_raw.errors %}<div class="text-danger small mt-1">{{ form.topic_tags_raw.errors|join:", " }}</div>{% endif %}
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">Image de couverture</label>
+                {{ form.cover_image }}
+                {% if form.cover_image.errors %}<div class="text-danger small mt-1">{{ form.cover_image.errors|join:", " }}</div>{% endif %}
+              </div>
+            </div>
+
+            <!-- Section 2 : Classification & mode -->
+            <hr>
+            <h6 class="fw-bold text-body-secondary text-uppercase small mb-3">
+              <i class="bi bi-tag-fill me-1"></i>Classification &amp; mode de diffusion
+            </h6>
+            <div class="row g-3 mb-4">
+              <div class="col-6 col-md-3">
+                <label class="form-label fw-semibold">Niveau</label>
+                {{ form.level }}
+              </div>
+              <div class="col-6 col-md-3">
+                <label class="form-label fw-semibold">Mode <span class="text-danger">*</span></label>
+                {{ form.mode }}
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-semibold">Salle <small class="text-body-secondary">(présentiel)</small></label>
+                {{ form.room }}
+                {% if form.room.errors %}<div class="text-danger small mt-1">{{ form.room.errors|join:", " }}</div>{% endif %}
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">Lien Zoom / Meet <small class="text-body-secondary">(live)</small></label>
+                {{ form.meeting_url }}
+                {% if form.meeting_url.errors %}<div class="text-danger small mt-1">{{ form.meeting_url.errors|join:", " }}</div>{% endif %}
+                <div class="form-text text-warning"><i class="bi bi-lock-fill me-1"></i>Ce lien sera uniquement visible par les participants réservés.</div>
+              </div>
+              <div class="col-12 col-md-8">
+                <label class="form-label fw-semibold">URL du replay <small class="text-body-secondary">(vidéo enregistrée)</small></label>
+                {{ form.replay_url }}
+                {% if form.replay_url.errors %}<div class="text-danger small mt-1">{{ form.replay_url.errors|join:", " }}</div>{% endif %}
+              </div>
+              <div class="col-6 col-md-2">
+                <label class="form-label fw-semibold">Durée (min)</label>
+                {{ form.replay_duration }}
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-semibold">Accès replay jusqu'au</label>
+                {{ form.available_until }}
+              </div>
+            </div>
+
+            <!-- Section 3 : Créneau & capacité -->
+            <hr>
+            <h6 class="fw-bold text-body-secondary text-uppercase small mb-3">
+              <i class="bi bi-clock-fill me-1"></i>Créneau &amp; capacité
+            </h6>
+            <div class="row g-3 mb-4">
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-semibold">Début <span class="text-danger">*</span></label>
+                {{ form.starts_at }}
+                {% if form.starts_at.errors %}<div class="text-danger small mt-1">{{ form.starts_at.errors|join:", " }}</div>{% endif %}
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-semibold">Fin <span class="text-danger">*</span></label>
+                {{ form.ends_at }}
+                {% if form.ends_at.errors %}<div class="text-danger small mt-1">{{ form.ends_at.errors|join:", " }}</div>{% endif %}
+              </div>
+              <div class="col-6 col-md-3">
+                <label class="form-label fw-semibold">Capacité</label>
+                {{ form.capacity }}
+                <div class="form-text">0 = illimité (replay)</div>
+                {% if form.capacity.errors %}<div class="text-danger small mt-1">{{ form.capacity.errors|join:", " }}</div>{% endif %}
+              </div>
+              <div class="col-6 col-md-3 d-flex align-items-end pb-2">
+                <div class="form-check">
+                  {{ form.is_open }}
+                  <label class="form-check-label fw-semibold" for="{{ form.is_open.id_for_label }}">
+                    Inscriptions ouvertes
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="d-flex gap-3 pt-2">
+              <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold">
+                {% if action == 'Créer' %}
+                  <i class="bi bi-plus-circle-fill me-2"></i>Créer l'atelier
+                {% else %}
+                  <i class="bi bi-check-circle-fill me-2"></i>Enregistrer les modifications
+                {% endif %}
+              </button>
+              <a href="{% if workshop %}{{ workshop.get_absolute_url }}{% else %}{% url 'workshops:list' %}{% endif %}"
+                 class="btn btn-outline-secondary rounded-pill px-4">
+                Annuler
+              </a>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

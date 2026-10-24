@@ -1,0 +1,151 @@
+{% load static %}
+{# Carte atelier réutilisable — utilisée par workshop_list.html #}
+{# Variables : workshop, show_ai (bool), booked_ids (set) #}
+
+{% with ws=workshop %}
+<div class="col-12 col-md-6 col-xl-4">
+  <div class="card border-0 shadow-sm h-100 position-relative overflow-hidden">
+
+    {# Bandeau mode #}
+    <div class="position-absolute top-0 start-0 m-2">
+      {% if ws.mode == 'onsite' %}
+        <span class="badge bg-success rounded-pill"><i class="bi bi-geo-alt-fill me-1"></i>Présentiel</span>
+      {% elif ws.mode == 'online' %}
+        <span class="badge bg-primary rounded-pill"><i class="bi bi-camera-video-fill me-1"></i>Live</span>
+      {% else %}
+        <span class="badge bg-secondary rounded-pill"><i class="bi bi-play-circle-fill me-1"></i>Replay</span>
+      {% endif %}
+    </div>
+
+    {# Badge IA score #}
+    {% if show_ai and ws.ai_score %}
+    <div class="position-absolute top-0 end-0 m-2">
+      <span class="badge rounded-pill px-3 py-2 fw-bold"
+            style="background: linear-gradient(135deg,#6366f1,#8b5cf6); font-size:.8rem;">
+        {{ ws.ai_score }}% pour toi
+      </span>
+    </div>
+    {% endif %}
+
+    {# Image de couverture ou dégradé #}
+    {% if ws.cover_image %}
+    <img src="{{ ws.cover_image.url }}" alt="{{ ws.title }}"
+         class="card-img-top" style="height:140px;object-fit:cover;">
+    {% else %}
+    <div class="card-img-top d-flex align-items-center justify-content-center"
+         style="height:100px;background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);">
+      <i class="bi bi-mortarboard-fill text-white fs-2 opacity-75"></i>
+    </div>
+    {% endif %}
+
+    <div class="card-body d-flex flex-column pt-3">
+      <!-- Niveau -->
+      <div class="mb-2">
+        {% if ws.level == 'beginner' %}
+          <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 rounded-pill small">Débutant</span>
+        {% elif ws.level == 'intermediate' %}
+          <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-20 rounded-pill small">Intermédiaire</span>
+        {% else %}
+          <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-20 rounded-pill small">Avancé</span>
+        {% endif %}
+      </div>
+
+      <!-- Titre -->
+      <h6 class="card-title fw-bold mb-1 text-truncate" title="{{ ws.title }}">{{ ws.title }}</h6>
+
+      <!-- Intervenant -->
+      <p class="small text-body-secondary mb-2">
+        <i class="bi bi-person-fill me-1"></i>
+        {{ ws.speaker_name }}{% if ws.speaker_company %} · {{ ws.speaker_company }}{% endif %}
+      </p>
+
+      <!-- Date & lieu -->
+      <p class="small mb-1">
+        <i class="bi bi-calendar3 me-1 text-primary"></i>
+        {{ ws.starts_at|date:"d/m/Y à H\hi" }}
+        {% if ws.mode == 'onsite' and ws.room %}
+          <span class="text-body-secondary">· Salle {{ ws.room }}</span>
+        {% endif %}
+      </p>
+
+      <!-- Tags -->
+      {% if ws.topic_tags %}
+      <div class="mb-2 d-flex flex-wrap gap-1">
+        {% for tag in ws.topic_tags|slice:":3" %}
+        <span class="badge bg-body-tertiary text-body border rounded-pill" style="font-size:.7rem;">{{ tag }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Explication IA -->
+      {% if show_ai and ws.ai_reason %}
+      <p class="small text-primary mb-2 fst-italic">
+        <i class="bi bi-magic me-1"></i>{{ ws.ai_reason }}
+      </p>
+      {% endif %}
+
+      <!-- Places / waitlist -->
+      <div class="mt-auto">
+        {% if ws.capacity > 0 %}
+          {% if ws.seats_left == 0 %}
+            <div class="progress mb-1" style="height:4px;">
+              <div class="progress-bar bg-danger" style="width:100%"></div>
+            </div>
+            <p class="small text-danger mb-2 fw-semibold">
+              <i class="bi bi-people-fill me-1"></i>Complet
+              {% if ws.waitlist_count > 0 %}· {{ ws.waitlist_count }} en attente{% endif %}
+            </p>
+          {% else %}
+            <div class="progress mb-1" style="height:4px;">
+              <div class="progress-bar bg-primary" style="width:{{ ws.fill_rate }}%"></div>
+            </div>
+            <p class="small text-body-secondary mb-2">
+              <i class="bi bi-people-fill me-1"></i>
+              {{ ws.seats_left }} place{% if ws.seats_left > 1 %}s{% endif %} restante{% if ws.seats_left > 1 %}s{% endif %}
+            </p>
+          {% endif %}
+        {% else %}
+          <p class="small text-body-secondary mb-2">
+            <i class="bi bi-infinity me-1"></i>Places illimitées
+          </p>
+        {% endif %}
+
+        <!-- Note moyenne -->
+        {% if ws.average_rating %}
+        <p class="small text-warning mb-2">
+          {% for i in "12345" %}
+            {% if forloop.counter <= ws.average_rating %}
+              <i class="bi bi-star-fill"></i>
+            {% else %}
+              <i class="bi bi-star"></i>
+            {% endif %}
+          {% endfor %}
+          <span class="text-body-secondary ms-1">{{ ws.average_rating }}/5</span>
+        </p>
+        {% endif %}
+
+        <!-- Actions -->
+        <div class="d-flex gap-2">
+          <a href="{{ ws.get_absolute_url }}" class="btn btn-sm btn-outline-primary rounded-pill flex-grow-1">
+            Voir le détail
+          </a>
+          {% if request.user.role == 'student' %}
+            {% if ws.pk in booked_ids %}
+              <span class="btn btn-sm btn-success rounded-pill disabled">
+                <i class="bi bi-check-circle-fill"></i> Réservé
+              </span>
+            {% elif ws.is_open %}
+              <form method="post" action="{% url 'workshops:book' ws.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-primary rounded-pill">
+                  Réserver
+                </button>
+              </form>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endwith %}

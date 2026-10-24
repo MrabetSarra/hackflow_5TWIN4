@@ -35,6 +35,9 @@ urlpatterns = [
     # Espace Administrateur (Organisateur)
     path('cockpit/', include('dashboard_admin.urls')),
 
+    # Module Ateliers & Formations
+    path('workshops/', include('workshops.urls')),
+
     # Django Admin Technique (Standard)
     path('admin/', admin.site.urls),
 ]

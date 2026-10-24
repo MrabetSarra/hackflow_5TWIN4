@@ -1,0 +1,52 @@
+{% extends "layouts/base_student.html" %}
+{% load static %}
+
+{% block title %}Supprimer « {{ workshop.title }} » — HackFlow{% endblock %}
+
+{% block student_content %}
+<div class="container-fluid px-4 py-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-6 col-lg-5">
+
+      <div class="card border-0 shadow-sm text-center">
+        <div class="card-body p-5">
+          <div class="rounded-circle bg-danger bg-opacity-10 text-danger d-inline-flex align-items-center justify-content-center mb-4"
+               style="width:72px;height:72px;">
+            <i class="bi bi-trash-fill fs-2"></i>
+          </div>
+          <h4 class="fw-bold mb-2">Supprimer cet atelier ?</h4>
+          <p class="text-body-secondary mb-1">
+            Vous êtes sur le point de supprimer définitivement :
+          </p>
+          <p class="fw-semibold fs-5 mb-1">« {{ workshop.title }} »</p>
+          <p class="small text-body-secondary mb-4">
+            {{ workshop.starts_at|date:"d/m/Y" }} · {{ workshop.confirmed_count }} réservation{% if workshop.confirmed_count > 1 %}s{% endif %}
+          </p>
+
+          {% if workshop.confirmed_count > 0 %}
+          <div class="alert alert-warning small text-start mb-4">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Attention :</strong> {{ workshop.confirmed_count }} participant{% if workshop.confirmed_count > 1 %}s ont{% else %} a{% endif %}
+            déjà réservé cet atelier. Cette action est <strong>irréversible</strong>.
+          </div>
+          {% endif %}
+
+          <div class="d-flex gap-3 justify-content-center">
+            <form method="post">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger rounded-pill px-4 fw-semibold">
+                <i class="bi bi-trash-fill me-2"></i>Confirmer la suppression
+              </button>
+            </form>
+            <a href="{{ workshop.get_absolute_url }}"
+               class="btn btn-outline-secondary rounded-pill px-4">
+              Annuler
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

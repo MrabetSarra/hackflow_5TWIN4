@@ -1,0 +1,421 @@
+"""
+workshops/models.py
+===================
+4 entités principales :
+  Workshop    — atelier (présentiel / live / vidéo)
+  Booking     — réservation étudiant (confirmed / waiting / cancelled / attended)
+  Certificate — certificat PDF vérifiable avec code unique HF-YYYY-XXXX
+  Badge       — récompense débloquée automatiquement via signaux
+  BadgeAward  — table de jonction M2M User↔Badge avec contexte
+"""
+
+import secrets
+import string
+import uuid
+
+from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.text import slugify
+
+from accounts.storage import PrivateCVStorage
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _unique_cert_code():
+    """Génère un code de certificat au format HF-YYYY-XXXX-XXXX (alphanumérique)."""
+    year = timezone.now().year
+    chars = string.ascii_uppercase + string.digits
+    part1 = ''.join(secrets.choice(chars) for _ in range(4))
+    part2 = ''.join(secrets.choice(chars) for _ in range(4))
+    return f'HF-{year}-{part1}-{part2}'
+
+
+def _unique_checkin_token():
+    return secrets.token_urlsafe(32)
+
+
+# ---------------------------------------------------------------------------
+# Workshop
+# ---------------------------------------------------------------------------
+
+class Workshop(models.Model):
+    """Atelier : présentiel, live ou enregistré."""
+
+    class Mode(models.TextChoices):
+        ONSITE   = 'onsite',   'Présentiel'
+        ONLINE   = 'online',   'Live / Visio'
+        RECORDED = 'recorded', 'Vidéo enregistrée'
+
+    class Level(models.TextChoices):
+        BEGINNER     = 'beginner',     'Débutant'
+        INTERMEDIATE = 'intermediate', 'Intermédiaire'
+        ADVANCED     = 'advanced',     'Avancé'
+
+    # Identité
+    title          = models.CharField(max_length=160, verbose_name='Titre')
+    slug           = models.SlugField(max_length=180, unique=True, blank=True)
+    description    = models.TextField(verbose_name='Description')
+    speaker_name   = models.CharField(max_length=120, verbose_name='Intervenant')
+    speaker_company = models.CharField(max_length=120, blank=True, verbose_name='Entreprise')
+
+    # Contenu & classification
+    topic_tags     = models.JSONField(default=list, blank=True,
+                                      verbose_name='Tags thématiques',
+                                      help_text='Liste JSON ex. ["AWS","Docker"]')
+    level          = models.CharField(max_length=16, choices=Level.choices,
+                                      default=Level.BEGINNER, verbose_name='Niveau')
+    mode           = models.CharField(max_length=12, choices=Mode.choices,
+                                      default=Mode.ONSITE, verbose_name='Mode de diffusion')
+
+    # Liens selon le mode
+    room           = models.CharField(max_length=80, blank=True, verbose_name='Salle')
+    meeting_url    = models.URLField(blank=True, verbose_name='Lien Zoom / Meet')
+    replay_url     = models.URLField(blank=True, verbose_name='URL du replay')
+    replay_duration = models.PositiveSmallIntegerField(
+        null=True, blank=True, verbose_name='Durée replay (min)')
+    available_until = models.DateTimeField(
+        null=True, blank=True, verbose_name='Accès replay jusqu\'au')
+
+    # Créneau
+    starts_at      = models.DateTimeField(verbose_name='Début')
+    ends_at        = models.DateTimeField(verbose_name='Fin')
+
+    # Capacité
+    capacity       = models.PositiveSmallIntegerField(
+        default=30,
+        help_text='0 = illimité (replay)',
+        verbose_name='Capacité')
+    is_open        = models.BooleanField(default=True, verbose_name='Inscriptions ouvertes')
+
+    # Méta
+    created_by     = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL, null=True,
+        related_name='organized_workshops',
+        verbose_name='Organisateur')
+    created_at     = models.DateTimeField(auto_now_add=True)
+    cover_image    = models.ImageField(
+        upload_to='workshop_covers/', blank=True, null=True,
+        verbose_name='Image de couverture')
+
+    class Meta:
+        ordering = ['starts_at']
+        verbose_name = 'Atelier'
+        verbose_name_plural = 'Ateliers'
+
+    # ------------------------------------------------------------------
+    # Slug auto
+    # ------------------------------------------------------------------
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base = slugify(self.title)
+            slug = base
+            n = 1
+            while Workshop.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f'{base}-{n}'
+                n += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
+
+    # ------------------------------------------------------------------
+    # Propriétés calculées
+    # ------------------------------------------------------------------
+    @property
+    def confirmed_count(self):
+        return self.bookings.filter(status__in=['confirmed', 'attended']).count()
+
+    @property
+    def seats_left(self):
+        if self.capacity == 0:
+            return None  # illimité
+        return max(0, self.capacity - self.confirmed_count)
+
+    @property
+    def waitlist_count(self):
+        return self.bookings.filter(status='waiting').count()
+
+    @property
+    def attendee_count(self):
+        return self.bookings.filter(status='attended').count()
+
+    @property
+    def average_rating(self):
+        ratings = self.bookings.filter(
+            rating__isnull=False).values_list('rating', flat=True)
+        if not ratings:
+            return None
+        return round(sum(ratings) / len(ratings), 1)
+
+    @property
+    def fill_rate(self):
+        """Taux de remplissage 0-100 ou None si illimité."""
+        if self.capacity == 0:
+            return None
+        return round(self.confirmed_count / self.capacity * 100) if self.capacity else 0
+
+    @property
+    def is_past(self):
+        return self.ends_at < timezone.now()
+
+    @property
+    def is_replay_available(self):
+        if self.mode != Workshop.Mode.RECORDED:
+            return False
+        if self.available_until and self.available_until < timezone.now():
+            return False
+        return bool(self.replay_url)
+
+    def get_absolute_url(self):
+        return reverse('workshops:detail', kwargs={'slug': self.slug})
+
+    def __str__(self):
+        return self.title
+
+
+# ---------------------------------------------------------------------------
+# Booking
+# ---------------------------------------------------------------------------
+
+class Booking(models.Model):
+    """Réservation d'un étudiant à un atelier."""
+
+    class Status(models.TextChoices):
+        CONFIRMED = 'confirmed', 'Confirmé'
+        WAITING   = 'waiting',   'Liste d\'attente'
+        CANCELLED = 'cancelled', 'Annulé'
+        ATTENDED  = 'attended',  'Participé'
+
+    workshop       = models.ForeignKey(
+        Workshop, on_delete=models.CASCADE,
+        related_name='bookings', verbose_name='Atelier')
+    user           = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='workshop_bookings',
+        verbose_name='Étudiant')
+    status         = models.CharField(
+        max_length=12, choices=Status.choices,
+        default=Status.CONFIRMED, verbose_name='Statut')
+    seat_number    = models.PositiveSmallIntegerField(
+        null=True, blank=True, verbose_name='Numéro de place')
+    checkin_token  = models.CharField(
+        max_length=64, unique=True, blank=True,
+        verbose_name='Token QR check-in')
+
+    # Horodatages
+    booked_at      = models.DateTimeField(auto_now_add=True)
+    cancelled_at   = models.DateTimeField(null=True, blank=True)
+    attended_at    = models.DateTimeField(null=True, blank=True)
+
+    # Replay
+    replay_progress = models.PositiveSmallIntegerField(
+        default=0,
+        validators=[MaxValueValidator(100)],
+        verbose_name='Progression replay (%)')
+
+    # Note / avis
+    rating         = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        verbose_name='Note (1-5)')
+    comment        = models.TextField(blank=True, verbose_name='Commentaire')
+
+    class Meta:
+        verbose_name = 'Réservation'
+        verbose_name_plural = 'Réservations'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['workshop', 'user'],
+                name='unique_booking')
+        ]
+        ordering = ['booked_at']
+
+    def save(self, *args, **kwargs):
+        if not self.checkin_token:
+            self.checkin_token = _unique_checkin_token()
+        super().save(*args, **kwargs)
+
+    def get_qr_url(self):
+        return reverse('workshops:checkin',
+                       kwargs={'pk': self.workshop_id, 'token': self.checkin_token})
+
+    @property
+    def waitlist_position(self):
+        if self.status != Booking.Status.WAITING:
+            return None
+        return (
+            Booking.objects.filter(
+                workshop=self.workshop,
+                status='waiting',
+                booked_at__lt=self.booked_at,
+            ).count() + 1
+        )
+
+    def __str__(self):
+        return f'{self.user} → {self.workshop} [{self.status}]'
+
+
+# ---------------------------------------------------------------------------
+# Certificate
+# ---------------------------------------------------------------------------
+
+class Certificate(models.Model):
+    """Certificat de participation délivré après check-in ou replay 100%."""
+
+    workshop   = models.ForeignKey(
+        Workshop, on_delete=models.CASCADE,
+        related_name='certificates', verbose_name='Atelier')
+    user       = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='certificates',
+        verbose_name='Bénéficiaire')
+    code       = models.CharField(
+        max_length=32, unique=True, default=_unique_cert_code,
+        verbose_name='Code de vérification')
+    serial     = models.PositiveIntegerField(
+        null=True, blank=True, verbose_name='Numéro de série')
+    hours      = models.DecimalField(
+        max_digits=5, decimal_places=1,
+        default=1.0, verbose_name='Heures de formation')
+    pdf        = models.FileField(
+        upload_to='certificates/',
+        storage=PrivateCVStorage(),
+        blank=True, null=True,
+        verbose_name='Fichier PDF')
+    issued_at  = models.DateTimeField(auto_now_add=True)
+    is_revoked = models.BooleanField(default=False, verbose_name='Révoqué')
+
+    class Meta:
+        verbose_name = 'Certificat'
+        verbose_name_plural = 'Certificats'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['workshop', 'user'],
+                name='unique_certificate')
+        ]
+        ordering = ['-issued_at']
+
+    def save(self, *args, **kwargs):
+        # Auto-incrément du numéro de série
+        if not self.serial:
+            last = Certificate.objects.order_by('-serial').first()
+            self.serial = (last.serial + 1) if (last and last.serial) else 1
+        super().save(*args, **kwargs)
+
+    @property
+    def hours_display(self):
+        h = int(self.hours)
+        m = int((self.hours - h) * 60)
+        return f'{h}h{m:02d}' if m else f'{h}h'
+
+    def get_verify_url(self):
+        return reverse('workshops:verify', kwargs={'code': self.code})
+
+    def __str__(self):
+        return f'[{self.code}] {self.user} — {self.workshop}'
+
+
+# ---------------------------------------------------------------------------
+# Badge
+# ---------------------------------------------------------------------------
+
+class Badge(models.Model):
+    """Badge débloquable par un étudiant selon des critères."""
+
+    slug        = models.SlugField(max_length=80, unique=True)
+    name        = models.CharField(max_length=120)
+    icon        = models.CharField(
+        max_length=80, default='bi-award-fill',
+        help_text='Classe Bootstrap Icon ex. bi-star-fill')
+    description = models.TextField(blank=True)
+    criteria    = models.TextField(
+        blank=True,
+        help_text='Description textuelle du critère de débloquage')
+    awarded_to  = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        through='BadgeAward',
+        related_name='workshop_badges',
+        blank=True)
+
+    class Meta:
+        verbose_name = 'Badge'
+        verbose_name_plural = 'Badges'
+
+    def __str__(self):
+        return self.name
+
+
+class BadgeAward(models.Model):
+    """Table de jonction Badge ↔ User avec contexte."""
+
+    user       = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='badge_awards')
+    badge      = models.ForeignKey(
+        Badge, on_delete=models.CASCADE,
+        related_name='awards')
+    awarded_at = models.DateTimeField(auto_now_add=True)
+    reason     = models.CharField(max_length=240, blank=True)
+    workshop   = models.ForeignKey(
+        Workshop, on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='badge_awards')
+
+    class Meta:
+        verbose_name = 'Attribution de badge'
+        verbose_name_plural = 'Attributions de badges'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'badge'],
+                name='unique_badge_award')
+        ]
+        ordering = ['-awarded_at']
+
+    def __str__(self):
+        return f'{self.user} — {self.badge}'
+
+
+# ---------------------------------------------------------------------------
+# WorkshopActivity  (journal d'activité bonus)
+# ---------------------------------------------------------------------------
+
+class WorkshopActivity(models.Model):
+    """Journal d'audit des actions importantes sur les ateliers."""
+
+    class Kind(models.TextChoices):
+        CREATED   = 'created',   'Créé'
+        UPDATED   = 'updated',   'Modifié'
+        CLOSED    = 'closed',    'Fermé'
+        BOOKED    = 'booked',    'Réservé'
+        CANCELLED = 'cancelled', 'Annulé'
+        CHECKIN   = 'checkin',   'Check-in'
+        CERT      = 'cert',      'Certificat émis'
+        REVOKED   = 'revoked',   'Certificat révoqué'
+        BADGE     = 'badge',     'Badge décerné'
+
+    workshop   = models.ForeignKey(
+        Workshop, on_delete=models.CASCADE,
+        related_name='activities')
+    user       = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL, null=True,
+        related_name='workshop_activities')
+    kind       = models.CharField(max_length=12, choices=Kind.choices)
+    detail     = models.CharField(max_length=240, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Activité atelier'
+        verbose_name_plural = 'Activités ateliers'
+
+    def __str__(self):
+        return f'[{self.kind}] {self.workshop} — {self.user}'

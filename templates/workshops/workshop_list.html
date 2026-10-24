@@ -1,0 +1,139 @@
+{% extends "layouts/base_student.html" %}
+{% load static %}
+
+{% block title %}Ateliers & Formations — HackFlow{% endblock %}
+
+{% block student_content %}
+<div class="container-fluid px-4 py-4">
+
+  <!-- ── En-tête ─────────────────────────────────────────────────── -->
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <div>
+      <h1 class="h3 fw-bold mb-1">Ateliers &amp; Formations</h1>
+      <p class="text-body-secondary mb-0">Développez vos compétences avec nos experts.</p>
+    </div>
+    {% if request.user.role in 'admin mentor' %}
+    <a href="{% url 'workshops:create' %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+      <i class="bi bi-plus-circle-fill me-2"></i>Créer un atelier
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- ── Filtres ──────────────────────────────────────────────────── -->
+  <form method="get" class="card border-0 shadow-sm mb-4">
+    <div class="card-body row g-3 align-items-end">
+      <div class="col-12 col-md-4">
+        <label class="form-label small fw-semibold">Recherche</label>
+        {{ filter_form.q }}
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small fw-semibold">Mode</label>
+        {{ filter_form.mode }}
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small fw-semibold">Niveau</label>
+        {{ filter_form.level }}
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small fw-semibold">Trier par</label>
+        {{ filter_form.sort }}
+      </div>
+      <div class="col-6 col-md-1 d-flex align-items-end gap-2">
+        <div class="form-check mb-1">
+          {{ filter_form.only_open }}
+          <label class="form-check-label small" for="{{ filter_form.only_open.id_for_label }}">
+            Ouvert
+          </label>
+        </div>
+      </div>
+      <div class="col-12 col-md-1 d-flex gap-2">
+        <button type="submit" class="btn btn-primary w-100 rounded-pill">
+          <i class="bi bi-search"></i>
+        </button>
+        <a href="{% url 'workshops:list' %}" class="btn btn-outline-secondary rounded-pill">
+          <i class="bi bi-x"></i>
+        </a>
+      </div>
+    </div>
+  </form>
+
+  <!-- ── Plan idéal IA (optimiseur d'emploi du temps) ────────────── -->
+  {% if schedule_plan %}
+  <div class="card border-0 shadow-sm mb-4 border-start border-4 border-primary">
+    <div class="card-body py-3">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <i class="bi bi-calendar2-check-fill text-primary fs-5"></i>
+        <h6 class="mb-0 fw-bold">Plan idéal pour toi</h6>
+        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill ms-1">IA</span>
+      </div>
+      <div class="row g-2">
+        {% for ws in schedule_plan %}
+        <div class="col-12 col-md-4">
+          <div class="p-3 rounded-3 bg-body-tertiary border h-100">
+            <div class="d-flex align-items-start gap-2">
+              <span class="badge bg-success rounded-pill mt-1">{{ forloop.counter }}</span>
+              <div>
+                <p class="mb-1 fw-semibold small">{{ ws.title }}</p>
+                <p class="mb-1 text-body-secondary" style="font-size:.75rem;">
+                  <i class="bi bi-clock me-1"></i>{{ ws.starts_at|date:"d/m à H\hi" }}
+                </p>
+                {% if ws.schedule_reason %}
+                <p class="mb-0 text-success" style="font-size:.72rem;">
+                  {{ ws.schedule_reason }}
+                </p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── Recommandations IA ───────────────────────────────────────── -->
+  {% if recommended %}
+  <div class="mb-4">
+    <div class="d-flex align-items-center gap-2 mb-3">
+      <i class="bi bi-stars text-warning fs-5"></i>
+      <h5 class="mb-0 fw-bold">Recommandés pour toi</h5>
+      <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill">IA · TF-IDF</span>
+    </div>
+    <div class="row g-3">
+      {% for ws in recommended %}
+      {% include "workshops/_workshop_card.html" with workshop=ws show_ai=True %}
+      {% endfor %}
+    </div>
+  </div>
+  <hr class="my-4">
+  {% endif %}
+
+  <!-- ── Tous les ateliers ────────────────────────────────────────── -->
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h5 class="mb-0 fw-bold">Tous les ateliers
+      <span class="text-body-secondary fw-normal fs-6">({{ workshops|length }})</span>
+    </h5>
+    <a href="{% url 'workshops:export_ics' %}" class="btn btn-sm btn-outline-secondary rounded-pill">
+      <i class="bi bi-calendar-plus me-1"></i>Exporter .ics
+    </a>
+  </div>
+
+  {% if workshops %}
+  <div class="row g-3">
+    {% for ws in workshops %}
+    {% include "workshops/_workshop_card.html" with workshop=ws show_ai=False %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-5 text-body-secondary">
+    <i class="bi bi-search fs-1 opacity-25 d-block mb-3"></i>
+    <p class="mb-0">Aucun atelier ne correspond à vos critères.</p>
+    <a href="{% url 'workshops:list' %}" class="btn btn-outline-primary rounded-pill mt-3">
+      Voir tous les ateliers
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,230 @@
+{% extends "layouts/base_student.html" %}
+{% load static %}
+
+{% block title %}Mes ateliers — HackFlow{% endblock %}
+
+{% block student_content %}
+<div class="container-fluid px-4 py-4">
+
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <div>
+      <h1 class="h3 fw-bold mb-1">Mes ateliers</h1>
+      <p class="text-body-secondary mb-0">Réservations, certificats et badges.</p>
+    </div>
+    <a href="{% url 'workshops:export_ics' %}" class="btn btn-outline-secondary rounded-pill">
+      <i class="bi bi-calendar-plus me-2"></i>Exporter .ics
+    </a>
+  </div>
+
+  <!-- Badges débloqués -->
+  {% if badges %}
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <h5 class="fw-bold mb-3">
+        <i class="bi bi-award-fill text-warning me-2"></i>Mes badges
+      </h5>
+      <div class="d-flex flex-wrap gap-3">
+        {% for award in badges %}
+        <div class="d-flex align-items-center gap-2 p-3 rounded-3 bg-body-tertiary border"
+             title="{{ award.badge.criteria }}">
+          <i class="{{ award.badge.icon }} fs-4 text-warning"></i>
+          <div>
+            <p class="mb-0 fw-semibold small">{{ award.badge.name }}</p>
+            <p class="mb-0 text-body-secondary" style="font-size:.72rem;">
+              {{ award.awarded_at|date:"d/m/Y" }}
+              {% if award.workshop %}· {{ award.workshop.title|truncatechars:20 }}{% endif %}
+            </p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Onglets -->
+  <ul class="nav nav-tabs mb-4" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-bookings" type="button">
+        <i class="bi bi-bookmark-fill me-1"></i>Réservations
+        <span class="badge bg-primary rounded-pill ms-1">{{ bookings|length }}</span>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-certs" type="button">
+        <i class="bi bi-patch-check-fill me-1"></i>Certificats
+        <span class="badge bg-success rounded-pill ms-1">{{ certificates|length }}</span>
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+
+    <!-- ── Réservations ────────────────────────────────────────────── -->
+    <div class="tab-pane fade show active" id="tab-bookings" role="tabpanel">
+      {% if bookings %}
+      <div class="row g-3">
+        {% for booking in bookings %}
+        <div class="col-12 col-md-6 col-xl-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+
+              <!-- Statut -->
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                {% if booking.status == 'confirmed' %}
+                  <span class="badge bg-success rounded-pill"><i class="bi bi-check-circle-fill me-1"></i>Confirmé</span>
+                {% elif booking.status == 'waiting' %}
+                  <span class="badge bg-warning text-dark rounded-pill"><i class="bi bi-hourglass-split me-1"></i>Attente #{{ booking.waitlist_position }}</span>
+                {% elif booking.status == 'attended' %}
+                  <span class="badge bg-primary rounded-pill"><i class="bi bi-patch-check-fill me-1"></i>Participé</span>
+                {% elif booking.status == 'cancelled' %}
+                  <span class="badge bg-secondary rounded-pill"><i class="bi bi-x-circle-fill me-1"></i>Annulé</span>
+                {% endif %}
+
+                {% if booking.workshop.mode == 'onsite' %}
+                  <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 rounded-pill small">Présentiel</span>
+                {% elif booking.workshop.mode == 'online' %}
+                  <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 rounded-pill small">Live</span>
+                {% else %}
+                  <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-20 rounded-pill small">Replay</span>
+                {% endif %}
+              </div>
+
+              <!-- Titre -->
+              <h6 class="fw-bold mb-1">
+                <a href="{{ booking.workshop.get_absolute_url }}" class="text-decoration-none text-body">
+                  {{ booking.workshop.title }}
+                </a>
+              </h6>
+
+              <!-- Date -->
+              <p class="small text-body-secondary mb-2">
+                <i class="bi bi-calendar3 me-1"></i>
+                {{ booking.workshop.starts_at|date:"d/m/Y à H\hi" }}
+              </p>
+
+              <!-- Place / progression replay -->
+              {% if booking.status == 'confirmed' and booking.seat_number %}
+              <p class="small mb-2">
+                <i class="bi bi-ticket-perforated me-1 text-primary"></i>Place n°{{ booking.seat_number }}
+              </p>
+              {% endif %}
+
+              {% if booking.workshop.mode == 'recorded' and booking.status in 'confirmed attended' %}
+              <div class="mb-2">
+                <div class="d-flex justify-content-between small mb-1">
+                  <span>Progression</span><span>{{ booking.replay_progress }}%</span>
+                </div>
+                <div class="progress" style="height:4px;">
+                  <div class="progress-bar bg-primary" style="width:{{ booking.replay_progress }}%"></div>
+                </div>
+              </div>
+              {% endif %}
+
+              <!-- Note donnée -->
+              {% if booking.rating %}
+              <p class="small text-warning mb-2">
+                {% for i in "12345" %}
+                  {% if forloop.counter <= booking.rating %}<i class="bi bi-star-fill"></i>{% else %}<i class="bi bi-star"></i>{% endif %}
+                {% endfor %}
+                <span class="text-body-secondary ms-1">{{ booking.rating }}/5</span>
+              </p>
+              {% endif %}
+
+              <!-- Actions -->
+              <div class="d-flex gap-2 mt-auto pt-2">
+                <a href="{{ booking.workshop.get_absolute_url }}"
+                   class="btn btn-sm btn-outline-primary rounded-pill flex-grow-1">
+                  Détail
+                </a>
+                {% if booking.status == 'attended' and not booking.rating %}
+                <a href="{% url 'workshops:rate' booking.workshop.pk %}"
+                   class="btn btn-sm btn-outline-warning rounded-pill">
+                  <i class="bi bi-star me-1"></i>Noter
+                </a>
+                {% endif %}
+                {% if booking.status in 'confirmed waiting' %}
+                <form method="post" action="{% url 'workshops:cancel' booking.workshop.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill"
+                          onclick="return confirm('Annuler cette réservation ?')">
+                    <i class="bi bi-x"></i>
+                  </button>
+                </form>
+                {% endif %}
+              </div>
+
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center py-5 text-body-secondary">
+        <i class="bi bi-bookmark fs-1 opacity-25 d-block mb-3"></i>
+        <p class="mb-0">Vous n'avez aucune réservation pour l'instant.</p>
+        <a href="{% url 'workshops:list' %}" class="btn btn-primary rounded-pill mt-3">
+          Explorer les ateliers
+        </a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- ── Certificats ─────────────────────────────────────────────── -->
+    <div class="tab-pane fade" id="tab-certs" role="tabpanel">
+      {% if certificates %}
+      <div class="row g-3">
+        {% for cert in certificates %}
+        <div class="col-12 col-md-6 col-xl-4">
+          <div class="card border-0 shadow-sm h-100 {% if cert.is_revoked %}opacity-50{% endif %}">
+            <div class="card-body">
+              <div class="d-flex align-items-start justify-content-between mb-3">
+                <div class="rounded-3 bg-primary bg-opacity-10 text-primary p-3">
+                  <i class="bi bi-patch-check-fill fs-4"></i>
+                </div>
+                {% if cert.is_revoked %}
+                <span class="badge bg-danger rounded-pill">Révoqué</span>
+                {% else %}
+                <span class="badge bg-success rounded-pill">Valide</span>
+                {% endif %}
+              </div>
+
+              <h6 class="fw-bold mb-1">{{ cert.workshop.title }}</h6>
+              <p class="small text-body-secondary mb-1">
+                <i class="bi bi-calendar3 me-1"></i>{{ cert.issued_at|date:"d/m/Y" }}
+              </p>
+              <p class="small text-body-secondary mb-2">
+                <i class="bi bi-clock me-1"></i>{{ cert.hours_display }} de formation
+              </p>
+              <code class="small text-body-secondary d-block mb-3" style="font-size:.72rem;">{{ cert.code }}</code>
+
+              <div class="d-flex gap-2">
+                {% if not cert.is_revoked %}
+                <a href="{% url 'workshops:download_certificate' cert.pk %}"
+                   class="btn btn-sm btn-primary rounded-pill flex-grow-1">
+                  <i class="bi bi-download me-1"></i>PDF
+                </a>
+                {% endif %}
+                <a href="{% url 'workshops:verify' cert.code %}"
+                   class="btn btn-sm btn-outline-secondary rounded-pill"
+                   target="_blank" rel="noopener noreferrer">
+                  <i class="bi bi-shield-check me-1"></i>Vérifier
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center py-5 text-body-secondary">
+        <i class="bi bi-patch-check fs-1 opacity-25 d-block mb-3"></i>
+        <p class="mb-0">Aucun certificat pour le moment.</p>
+        <p class="small">Participez à un atelier pour obtenir votre certificat.</p>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}
