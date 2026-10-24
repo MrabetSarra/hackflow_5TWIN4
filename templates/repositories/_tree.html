@@ -1,0 +1,19 @@
+<ul class="list-unstyled mb-0">
+    {% for node in nodes %}
+    <li class="repository-tree-item">
+        {% if node.is_dir %}
+        <div class="repository-tree-label text-body-secondary">
+            <i aria-hidden="true" class="bi bi-folder-fill" style="color: var(--hf-warning, #f59e0b);"></i>
+            <span>{{ node.name }}</span>
+        </div>
+        {% include "repositories/_tree.html" with nodes=node.children %}
+        {% else %}
+        <a class="repository-tree-label {% if selected_file == node.path %}is-selected{% endif %}"
+           href="?branch={{ branch|urlencode }}&amp;file={{ node.path|urlencode }}">
+            <i aria-hidden="true" class="bi bi-file-earmark-code text-body-secondary"></i>
+            <span>{{ node.name }}</span>
+        </a>
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>

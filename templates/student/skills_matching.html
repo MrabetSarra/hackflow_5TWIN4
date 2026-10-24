@@ -9,7 +9,7 @@
         {% for message in messages %}
         <div class="toast text-bg-success border-0 shadow" data-flash-toast role="status" aria-live="polite" aria-atomic="true">
             <div class="d-flex align-items-center">
-                <div class="toast-body"><i class="bi bi-check-circle-fill me-2"></i>{{ message }}</div>
+                <div class="toast-body"><i aria-hidden="true" class="bi bi-check-circle-fill me-2"></i>{{ message }}</div>
                 <button type="button" class="btn-close btn-close-white me-2" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         </div>
@@ -25,12 +25,12 @@
     {% endif %}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-1">Talent Matching</h2>
+            <h1 class="fw-bold text-dark mb-1">Talent Matching</h1>
             <p class="text-muted small mb-0">Find the skills your team needs or discover projects looking for teammates.</p>
         </div>
         <div class="d-flex gap-2">
             <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill font-mono">
-                <i class="bi bi-people-fill me-1"></i>{{ available_count }} participants available
+                <i aria-hidden="true" class="bi bi-people-fill me-1"></i>{{ available_count }} participants available
             </span>
         </div>
     </div>
@@ -40,7 +40,7 @@
         <div class="row g-3 align-items-center">
             <div class="col-md-5">
                 <div class="input-group">
-                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                    <span class="input-group-text bg-white border-end-0 text-muted"><i aria-hidden="true" class="bi bi-search"></i></span>
                     <input type="text" name="skill" value="{{ request.GET.skill }}" class="form-control border-start-0" placeholder="Search by skill (Python, React, AI, Figma...)">
                 </div>
             </div>
@@ -56,7 +56,7 @@
             </div>
             <div class="col-md-3">
                 <button class="btn btn-primary w-100" type="submit">
-                    <i class="bi bi-funnel-fill me-1"></i>Filter profiles
+                    <i aria-hidden="true" class="bi bi-funnel-fill me-1"></i>Filter profiles
                 </button>
             </div>
         </div>
@@ -66,12 +66,12 @@
     <ul class="nav nav-pills mb-4 gap-2" id="matchingTabs" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active px-4 rounded-pill fw-semibold" id="students-tab" data-bs-toggle="pill" data-bs-target="#students-pane" type="button" role="tab">
-                <i class="bi bi-person-heart me-1"></i>Available Participants ({{ students_looking|length }})
+                <i aria-hidden="true" class="bi bi-person-heart me-1"></i>Available Participants ({{ students_looking|length }})
             </button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link px-4 rounded-pill fw-semibold" id="teams-tab" data-bs-toggle="pill" data-bs-target="#teams-pane" type="button" role="tab">
-                <i class="bi bi-collection-fill me-1"></i>Teams Looking for Members ({{ teams_looking|length }})
+                <i aria-hidden="true" class="bi bi-collection-fill me-1"></i>Teams Looking for Members ({{ teams_looking|length }})
             </button>
         </li>
     </ul>
@@ -102,12 +102,12 @@
                         </div>
 
                         {% if can_invite %}<form method="post">{% csrf_token %}<input type="hidden" name="user_id" value="{{ student.id }}"><button class="btn btn-primary btn-sm rounded-pill w-100" type="submit">
-                            <i class="bi bi-person-plus-fill me-1"></i>Invite to team
+                            <i aria-hidden="true" class="bi bi-person-plus-fill me-1"></i>Invite to team
                         </button></form>{% endif %}
                     </div>
                 </div>
                 {% empty %}
-                <div class="col-12"><div class="card-modern p-5 text-center"><i class="bi bi-people fs-1 text-body-secondary mb-3"></i><h5 class="fw-bold text-body">No unassigned students found</h5><p class="text-body-secondary mb-0">Try another skill filter, or check back when more students are looking for a team.</p></div></div>
+                <div class="col-12"><div class="card-modern p-5 text-center"><i aria-hidden="true" class="bi bi-people fs-1 text-body-secondary mb-3"></i><h5 class="fw-bold text-body">No unassigned students found</h5><p class="text-body-secondary mb-0">Try another skill filter, or check back when more students are looking for a team.</p></div></div>
                 {% endfor %}
             </div>
         </div>
@@ -136,7 +136,7 @@
                             <p class="text-muted small mb-3 flex-grow-1">{{ t.pitch }}</p>
 
                         <div class="p-3 rounded-3 bg-light border mb-3">
-                            <div class="small fw-bold text-danger mb-1"><i class="bi bi-search me-1"></i>Urgently needed skills:</div>
+                            <div class="small fw-bold text-danger mb-1"><i aria-hidden="true" class="bi bi-search me-1"></i>Urgently needed skills:</div>
                             <div class="d-flex flex-wrap gap-1">
                                 {% for skill in t.missing_skills %}
                                 <span class="badge-tag badge-tag-urgent">{{ skill }}</span>
@@ -145,7 +145,7 @@
                         </div>
 
                         <button class="btn btn-outline-primary btn-sm rounded-pill w-100" data-demo-toast="Application sent to team {{ t.name }} !">
-                            <i class="bi bi-send-fill me-1"></i>Apply to join this team
+                            <i aria-hidden="true" class="bi bi-send-fill me-1"></i>Apply to join this team
                         </button>
                     </div>
                 </div>

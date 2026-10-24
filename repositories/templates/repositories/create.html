@@ -1,0 +1,15 @@
+{% extends "layouts/base_student.html" %}
+{% block title %}New Repository - HackFlow{% endblock %}
+{% block student_content %}
+<div class="container-fluid px-0 repository-page">
+    {% include "repositories/_messages.html" %}
+    <div class="mb-4"><a href="{% url 'repositories:list' %}" class="small text-decoration-none"><i class="bi bi-arrow-left me-1"></i>All repositories</a><h2 class="fw-bold text-body mt-3 mb-1">New repository</h2><p class="text-body-secondary small">Create a shared Git repository for {{ team.name }}.</p></div>
+    <div class="card-modern p-4 p-lg-5" style="max-width: 720px;">
+        <form method="post" action="{% url 'repositories:list' %}">{% csrf_token %}
+            {% for field in form %}<div class="mb-3"><label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}{% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}</div>{% endfor %}
+            {% for error in form.non_field_errors %}<div class="alert alert-danger">{{ error }}</div>{% endfor %}
+            <div class="d-flex gap-2 mt-4"><button class="btn btn-primary rounded-pill px-4" type="submit"><i class="bi bi-git me-2"></i>Create repository</button><a class="btn btn-outline-secondary rounded-pill px-4" href="{% url 'repositories:list' %}">Cancel</a></div>
+        </form>
+    </div>
+</div>
+{% endblock %}

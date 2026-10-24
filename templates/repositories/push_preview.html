@@ -1,0 +1,353 @@
+{% extends "layouts/base_student.html" %}
+{% load static %}
+{% block title %}Review changes · {{ repository.name }} - HackFlow{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'repositories/repositories.css' %}">{% endblock %}
+{% block student_content %}
+<h1 class="visually-hidden">Review changes to {{ repository.name }}</h1>
+<div class="container-fluid px-0 repository-page">
+    {% include "repositories/_messages.html" %}
+
+    <!-- Header -->
+    <div class="repo-header">
+        <div class="repo-header__breadcrumb">
+            <a href="{% url 'repositories:list' %}">Repositories</a>
+            <span class="text-body-secondary">/</span>
+            <a href="{% url 'repositories:detail' repository.slug %}?branch={{ branch|urlencode }}">{{ repository.name }}</a>
+            <span class="text-body-secondary">/</span>
+            <span class="fw-semibold text-body">Review changes</span>
+        </div>
+        <div class="repo-header__name mt-1">
+            <i aria-hidden="true" class="bi bi-eye text-primary"></i>
+            <span>Review changes before committing to</span>
+            <span class="repo-branch-badge">{{ branch }}</span>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-0">
+
+        <!-- ── Left: diff summary ── -->
+        <div class="col-lg-8">
+
+            <!-- Stats bar -->
+            <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+                <span class="badge bg-success-subtle text-success px-3 py-2 d-flex align-items-center gap-1">
+                    <i aria-hidden="true" class="bi bi-plus-lg"></i>{{ preview.added|length }} added
+                </span>
+                <span class="badge bg-warning-subtle text-warning-emphasis px-3 py-2 d-flex align-items-center gap-1">
+                    <i aria-hidden="true" class="bi bi-pencil"></i>{{ preview.modified|length }} modified
+                </span>
+                <span class="badge bg-danger-subtle text-danger px-3 py-2 d-flex align-items-center gap-1">
+                    <i aria-hidden="true" class="bi bi-dash-lg"></i>{{ preview.deleted|length }} deleted
+                </span>
+            </div>
+
+            <!-- Changed files card -->
+            <div class="card-modern overflow-hidden mb-3">
+                <div class="repo-toolbar" style="border-radius:.75rem .75rem 0 0;">
+                    <span class="fw-semibold text-body small">
+                        <i aria-hidden="true" class="bi bi-file-diff text-primary me-1"></i>Changed files
+                    </span>
+                </div>
+                <div class="p-3">
+                    {% if preview.added %}
+                    <h6 class="fw-semibold text-success small d-flex align-items-center gap-1 mb-2">
+                        <i aria-hidden="true" class="bi bi-plus-circle-fill"></i>Added
+                    </h6>
+                    <ul class="repository-change-list mb-3">
+                        {% for path in preview.added %}<li><i aria-hidden="true" class="bi bi-plus text-success"></i><code>{{ path }}</code></li>{% endfor %}
+                    </ul>
+                    {% endif %}
+
+                    {% if preview.modified %}
+                    <h6 class="fw-semibold text-warning-emphasis small d-flex align-items-center gap-1 mb-2">
+                        <i aria-hidden="true" class="bi bi-pencil-fill"></i>Modified
+                    </h6>
+                    <ul class="repository-change-list mb-3">
+                        {% for path in preview.modified %}<li><i aria-hidden="true" class="bi bi-pencil text-warning"></i><code>{{ path }}</code></li>{% endfor %}
+                    </ul>
+                    {% endif %}
+
+                    {% if preview.deleted %}
+                    <h6 class="fw-semibold text-danger small d-flex align-items-center gap-1 mb-2">
+                        <i aria-hidden="true" class="bi bi-dash-circle-fill"></i>Deleted
+                    </h6>
+                    <ul class="repository-change-list mb-3">
+                        {% for path in preview.deleted %}<li><i aria-hidden="true" class="bi bi-dash text-danger"></i><code>{{ path }}</code></li>{% endfor %}
+                    </ul>
+                    {% endif %}
+
+                    {% if not preview.added and not preview.modified and not preview.deleted %}
+                    <p class="text-body-secondary small mb-0">No tracked changes were found in this upload.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Warnings -->
+            {% if ignored_files %}
+            <div class="alert alert-warning border-0 rounded-3 mb-3">
+                <strong><i aria-hidden="true" class="bi bi-eye-slash me-1"></i>Ignored files</strong>
+                <p class="small mb-2 mt-1">These files match repository ignore rules and will not be added:</p>
+                <ul class="repository-change-list mb-0">
+                    {% for path in ignored_files %}<li><code>{{ path }}</code></li>{% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {% if secret_findings %}
+            <div class="alert alert-warning border-0 rounded-3 mb-3">
+                <strong><i aria-hidden="true" class="bi bi-shield-exclamation me-1"></i>Pre-push safety scan</strong>
+                <p class="small mb-2 mt-1">Review these locations before committing. Private keys are blocked automatically.</p>
+                <ul class="repository-change-list mb-0">
+                    {% for finding in secret_findings %}
+                    <li>
+                        <code>{{ finding.path }}{% if finding.line %}:{{ finding.line }}{% endif %}</code>
+                        <span class="text-body-secondary">· {{ finding.kind }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- ── AI: Describe project ── -->
+            <div class="card-modern p-4">
+                <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+                    <div>
+                        <h6 class="fw-semibold text-body mb-1">
+                            <i aria-hidden="true" class="bi bi-stars text-primary me-1"></i>AI project description
+                        </h6>
+                        <p class="text-body-secondary small mb-0">
+                            Ollama analyzes your uploaded files — languages, frameworks, folder structure, README — and writes a plain-language description of what your project does.
+                        </p>
+                    </div>
+                    <button class="btn btn-sm btn-primary rounded-pill px-3 flex-shrink-0"
+                            type="button" id="ai-describe-project"
+                            data-url="{% url 'repositories:ai_suggestion' repository.slug %}">
+                        <i aria-hidden="true" class="bi bi-stars me-1"></i>Analyze project
+                    </button>
+                </div>
+
+                <!-- Loading state -->
+                <div id="ai-describe-loading" class="d-none">
+                    <div class="d-flex align-items-center gap-2 text-body-secondary small">
+                        <span class="spinner-border spinner-border-sm text-primary"></span>
+                        <span id="ai-describe-status">Analyzing your project files with Ollama…</span>
+                    </div>
+                </div>
+
+                <!-- Result -->
+                <div id="ai-describe-result" class="d-none">
+                    <label class="form-label fw-semibold small" for="ai-describe-output">
+                        Generated description — click to edit:
+                    </label>
+                    <textarea class="form-control" id="ai-describe-output" rows="4"
+                              placeholder="The AI description will appear here…"></textarea>
+                    <div class="d-flex gap-2 mt-2">
+                        <button class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                type="button" id="ai-copy-description">
+                            <i aria-hidden="true" class="bi bi-clipboard me-1"></i>Copy
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill px-3"
+                                type="button" id="ai-describe-again">
+                            <i aria-hidden="true" class="bi bi-arrow-clockwise me-1"></i>Regenerate
+                        </button>
+                        <span class="small text-body-secondary align-self-center ms-1"
+                              id="ai-truncated-note"></span>
+                    </div>
+                </div>
+
+                <!-- Error -->
+                <div id="ai-describe-error" class="d-none">
+                    <div class="alert alert-danger border-0 rounded-3 mb-0 small" id="ai-describe-error-msg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Right: commit form ── -->
+        <div class="col-lg-4">
+            <div class="card-modern p-4" style="position: sticky; top: calc(var(--hf-topbar-height) + 1rem);">
+                <h6 class="fw-semibold text-body mb-3">
+                    <i aria-hidden="true" class="bi bi-check2-circle text-primary me-1"></i>Commit changes
+                </h6>
+
+                {% for error in commit_form.non_field_errors %}
+                <div class="alert alert-danger rounded-3 border-0 mb-3">{{ error }}</div>
+                {% endfor %}
+
+                <form id="repository-commit-form" method="post"
+                      action="{% url 'repositories:push' repository.slug %}?branch={{ branch|urlencode }}">
+                    {% csrf_token %}
+                    <input type="hidden" name="confirm_commit" value="1">
+                    <input type="hidden" name="branch" value="{{ branch }}">
+                    <input type="hidden" name="stage_token" value="{{ stage_token }}">
+                    <input type="hidden" name="upload_mode" value="{{ upload_mode }}">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small" for="id_commit_message">
+                            Commit message
+                        </label>
+                        {{ commit_form.commit_message }}
+                        {% for error in commit_form.commit_message.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                        <div class="d-flex align-items-center gap-2 mt-2">
+                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                    type="button" id="ai-commit-message"
+                                    data-url="{% url 'repositories:ai_suggestion' repository.slug %}">
+                                <i aria-hidden="true" class="bi bi-stars me-1"></i>Suggest message
+                            </button>
+                            <span class="small text-body-secondary" id="ai-status" role="status"></span>
+                        </div>
+                    </div>
+
+                    {% if secret_findings %}
+                    <div class="form-check mb-3">
+                        {{ commit_form.secret_ack }}
+                        <label class="form-check-label small" for="id_secret_ack">
+                            {{ commit_form.secret_ack.label }}
+                        </label>
+                        {% for error in commit_form.secret_ack.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </form>
+
+                <div class="d-flex flex-column gap-2 mt-3">
+                    <button class="btn btn-primary rounded-pill w-100 d-flex align-items-center justify-content-center gap-2"
+                            type="submit" form="repository-commit-form"
+                            {% if not preview.added and not preview.modified and not preview.deleted %}disabled{% endif %}>
+                        <i aria-hidden="true" class="bi bi-check2-circle"></i>Commit to {{ branch }}
+                    </button>
+                    <form method="post"
+                          action="{% url 'repositories:push' repository.slug %}?branch={{ branch|urlencode }}">
+                        {% csrf_token %}
+                        <input type="hidden" name="cancel_preview" value="1">
+                        <input type="hidden" name="branch" value="{{ branch }}">
+                        <input type="hidden" name="stage_token" value="{{ stage_token }}">
+                        <button class="btn btn-outline-secondary rounded-pill w-100" type="submit">
+                            Cancel
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}<script>
+// ── Shared helpers ──
+function getCSRF() {
+    return document.querySelector('[name=csrfmiddlewaretoken]').value;
+}
+function getStageToken() {
+    return document.querySelector('[name=stage_token]').value;
+}
+function getBranch() {
+    return document.querySelector('[name=branch]').value;
+}
+function getUploadMode() {
+    return document.querySelector('[name=upload_mode]').value;
+}
+const AI_URL = '{% url "repositories:ai_suggestion" repository.slug %}';
+
+// ── Suggest commit message ──
+document.getElementById('ai-commit-message').addEventListener('click', async function () {
+    const status = document.getElementById('ai-status');
+    this.disabled = true;
+    status.textContent = 'Generating…';
+    try {
+        const res = await fetch(AI_URL, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCSRF()},
+            body: JSON.stringify({
+                feature: 'commit_message',
+                stage_token: getStageToken(),
+                branch: getBranch(),
+                upload_mode: getUploadMode()
+            })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'AI suggestion unavailable.');
+        document.getElementById('id_commit_message').value = data.suggestion;
+        status.textContent = data.truncated ? 'Used shortened diff.' : '✓ Ready to edit.';
+    } catch (e) {
+        status.textContent = '✗ ' + e.message;
+    } finally {
+        this.disabled = false;
+    }
+});
+
+// ── Analyze project & generate description ──
+async function runProjectDescription() {
+    const btn        = document.getElementById('ai-describe-project');
+    const loading    = document.getElementById('ai-describe-loading');
+    const result     = document.getElementById('ai-describe-result');
+    const errorBox   = document.getElementById('ai-describe-error');
+    const errorMsg   = document.getElementById('ai-describe-error-msg');
+    const status     = document.getElementById('ai-describe-status');
+    const output     = document.getElementById('ai-describe-output');
+    const truncNote  = document.getElementById('ai-truncated-note');
+
+    // Reset UI
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Analyzing…';
+    loading.classList.remove('d-none');
+    result.classList.add('d-none');
+    errorBox.classList.add('d-none');
+
+    const steps = [
+        'Reading file structure…',
+        'Detecting languages and frameworks…',
+        'Checking manifest files…',
+        'Asking Ollama to describe your project…'
+    ];
+    let stepIdx = 0;
+    const stepInterval = setInterval(() => {
+        if (stepIdx < steps.length - 1) {
+            status.textContent = steps[++stepIdx];
+        }
+    }, 1800);
+
+    try {
+        const res = await fetch(AI_URL, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCSRF()},
+            body: JSON.stringify({
+                feature: 'project_description',
+                stage_token: getStageToken(),
+                branch: getBranch(),
+                upload_mode: getUploadMode()
+            })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'AI description unavailable.');
+
+        clearInterval(stepInterval);
+        output.value = data.suggestion;
+        truncNote.textContent = data.truncated ? '(Large project — analysis was truncated)' : '';
+        loading.classList.add('d-none');
+        result.classList.remove('d-none');
+    } catch (e) {
+        clearInterval(stepInterval);
+        loading.classList.add('d-none');
+        errorMsg.textContent = e.message;
+        errorBox.classList.remove('d-none');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i aria-hidden="true" class="bi bi-stars me-1"></i>Analyze project';
+    }
+}
+
+document.getElementById('ai-describe-project').addEventListener('click', runProjectDescription);
+document.getElementById('ai-describe-again').addEventListener('click', runProjectDescription);
+
+// ── Copy description ──
+document.getElementById('ai-copy-description').addEventListener('click', function () {
+    const output = document.getElementById('ai-describe-output');
+    navigator.clipboard.writeText(output.value).then(() => {
+        this.innerHTML = '<i aria-hidden="true" class="bi bi-check2 me-1"></i>Copied!';
+        setTimeout(() => { this.innerHTML = '<i aria-hidden="true" class="bi bi-clipboard me-1"></i>Copy'; }, 2000);
+    });
+});
+</script>{% endblock %}

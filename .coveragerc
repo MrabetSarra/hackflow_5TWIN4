@@ -1,0 +1,25 @@
+[run]
+source =
+    accounts
+    core
+    dashboard_admin
+    hackflow
+    mentor
+    repositories
+    student
+omit =
+    */migrations/*
+    */management/commands/*
+    */tests.py
+    */tests_*.py
+    */test_*.py
+
+[report]
+show_missing = True
+skip_covered = True
+omit =
+    */migrations/*
+    */management/commands/*
+    */tests.py
+    */tests_*.py
+    */test_*.py

@@ -7,15 +7,15 @@
     <!-- Welcome Header -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
-            <h2 class="fw-bold text-body mb-1">Welcome to your workspace, {{ request.user.first_name|default:request.user.username }} 👋</h2>
+            <h1 class="fw-bold text-body mb-1">Welcome to your workspace, {{ request.user.first_name|default:request.user.username }} 👋</h1>
             <p class="text-body-secondary small mb-0">Hackathon {{ hackathon.edition }} • You are on team <strong class="text-primary">{{ team.name }}</strong>.</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
             <a href="{% url 'student:mentor_request' %}" class="btn btn-outline-danger btn-sm rounded-pill px-3 d-flex align-items-center gap-2">
-                <i class="bi bi-headset"></i> Get help
+                <i aria-hidden="true" class="bi bi-headset"></i> Get help
             </a>
             <a href="{% url 'student:tasks_kanban' %}" class="btn btn-primary btn-sm rounded-pill px-3 d-flex align-items-center gap-2 shadow-sm">
-                <i class="bi bi-kanban"></i> View Tasks
+                <i aria-hidden="true" class="bi bi-kanban"></i> View Tasks
             </a>
         </div>
     </div>
@@ -52,7 +52,7 @@
         <div class="col-sm-6 col-xl-3">
             <div class="stat-card card-modern h-100 d-flex align-items-center gap-3">
                 <div class="stat-icon stat-icon-{{ stat.color }}">
-                    <i class="bi {{ stat.icon }}"></i>
+                    <i aria-hidden="true" class="bi {{ stat.icon }}"></i>
                 </div>
                 <div>
                     <div class="h3 fw-bold text-body mb-0 font-mono">{{ stat.value }}</div>
@@ -69,7 +69,7 @@
             <div class="card-modern p-4 mb-4">
                 <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
                     <div>
-                        <h5 class="fw-bold text-body mb-1"><i class="bi bi-signpost-split-fill text-primary me-2"></i>Hackathon Milestones & Schedule</h5>
+                        <h5 class="fw-bold text-body mb-1"><i aria-hidden="true" class="bi bi-signpost-split-fill text-primary me-2"></i>Hackathon Milestones & Schedule</h5>
                         <p class="text-body-secondary small mb-0">Follow the key stages set by the organizers.</p>
                     </div>
                     <span class="badge bg-body-tertiary text-body-secondary border font-mono">48-hour Sprint</span>
@@ -80,11 +80,11 @@
                     <div class="p-3 rounded-3 border d-flex align-items-center justify-content-between {% if item.status == 'done' %}bg-body-tertiary{% elif item.status == 'active' %}border-primary bg-primary bg-opacity-10{% else %}bg-body{% endif %}">
                         <div class="d-flex align-items-center gap-3">
                             <span class="fs-4 {% if item.status == 'done' %}text-success{% elif item.status == 'active' %}text-primary{% else %}text-body-secondary{% endif %}">
-                                <i class="bi {{ item.icon }}"></i>
+                                <i aria-hidden="true" class="bi {{ item.icon }}"></i>
                             </span>
                             <div>
                                 <h6 class="fw-bold mb-1 {% if item.status == 'active' %}text-primary{% else %}text-body{% endif %}">{{ item.title }}</h6>
-                                <span class="small text-body-secondary font-mono"><i class="bi bi-clock me-1"></i>{{ item.time|date:"l H:i" }}</span>
+                                <span class="small text-body-secondary font-mono"><i aria-hidden="true" class="bi bi-clock me-1"></i>{{ item.time|date:"l H:i" }}</span>
                             </div>
                         </div>
                         <div>
@@ -103,7 +103,7 @@
 
             <!-- Carte Annonces Organisateur -->
             <div class="card-modern p-4">
-                <h5 class="fw-bold text-body mb-3"><i class="bi bi-megaphone-fill text-warning me-2"></i>Latest Staff Announcements</h5>
+                <h5 class="fw-bold text-body mb-3"><i aria-hidden="true" class="bi bi-megaphone-fill text-warning me-2"></i>Latest Staff Announcements</h5>
                 <div class="d-flex flex-column gap-3">
                     {% for ann in recent_announcements %}
                     <div class="p-3 rounded-3 bg-body-tertiary border-start border-4 border-warning">
@@ -112,7 +112,7 @@
                             <span class="badge bg-warning-subtle text-warning-emphasis">{{ ann.badge }}</span>
                         </div>
                         <div class="d-flex justify-content-between align-items-center small text-body-secondary">
-                            <span><i class="bi bi-person me-1"></i>{{ ann.author }}</span>
+                            <span><i aria-hidden="true" class="bi bi-person me-1"></i>{{ ann.author }}</span>
                             <span class="font-mono">{{ ann.time|timesince }} ago</span>
                         </div>
                     </div>
@@ -125,7 +125,7 @@
         <div class="col-lg-4">
             <!-- Alertes & Deadlines Proches -->
             <div class="card-modern p-4 mb-4">
-                <h5 class="fw-bold text-body mb-3"><i class="bi bi-alarm-fill text-danger me-2"></i>Upcoming Deadlines</h5>
+                <h5 class="fw-bold text-body mb-3"><i aria-hidden="true" class="bi bi-alarm-fill text-danger me-2"></i>Upcoming Deadlines</h5>
                 <div class="d-flex flex-column gap-3">
                     {% for dl in upcoming_deadlines %}
                     <div class="p-3 rounded-3 border {% if dl.urgent %}border-danger-subtle bg-danger bg-opacity-10{% else %}bg-body-tertiary{% endif %}">
@@ -134,7 +134,7 @@
                             <span class="badge {% if dl.urgent %}bg-danger{% else %}bg-secondary{% endif %} rounded-pill font-mono">{{ dl.deadline|date:"l H:i" }}</span>
                         </div>
                         <div class="small {% if dl.urgent %}text-danger fw-semibold{% else %}text-body-secondary{% endif %} font-mono">
-                            <i class="bi bi-hourglass-split me-1"></i><span data-live-countdown="{{ dl.deadline|date:'c' }}" data-countdown-prefix="In " data-countdown-expired="Deadline passed">In {{ dl.deadline|timeuntil }}</span>
+                            <i aria-hidden="true" class="bi bi-hourglass-split me-1"></i><span data-live-countdown="{{ dl.deadline|date:'c' }}" data-countdown-prefix="In " data-countdown-expired="Deadline passed">In {{ dl.deadline|timeuntil }}</span>
                         </div>
                     </div>
                     {% endfor %}
@@ -145,7 +145,7 @@
             <div class="card-modern p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="fw-bold text-body mb-0">My Team</h5>
-                    <a href="{% url 'student:team_detail' %}" class="small text-primary text-decoration-none fw-semibold">Manage <i class="bi bi-arrow-right"></i></a>
+                    <a href="{% url 'student:team_detail' %}" class="small text-primary text-decoration-none fw-semibold">Manage <i aria-hidden="true" class="bi bi-arrow-right"></i></a>
                 </div>
                 <div class="p-3 rounded-3 bg-body-tertiary mb-3">
                     <div class="d-flex align-items-center justify-content-between mb-2">
@@ -156,12 +156,12 @@
                 </div>
 
                 <div class="alert alert-warning py-2 px-3 small d-flex align-items-center gap-2 mb-3">
-                    <i class="bi bi-exclamation-circle-fill flex-shrink-0"></i>
+                    <i aria-hidden="true" class="bi bi-exclamation-circle-fill flex-shrink-0"></i>
                     <div>There are <strong>{{ team.places_left }} spot(s)</strong> left to complete your team.</div>
                 </div>
 
                 <a href="{% url 'student:skills_matching' %}" class="btn btn-outline-primary btn-sm w-100 rounded-pill">
-                    <i class="bi bi-search me-1"></i>Find a teammate
+                    <i aria-hidden="true" class="bi bi-search me-1"></i>Find a teammate
                 </a>
             </div>
         </div>
