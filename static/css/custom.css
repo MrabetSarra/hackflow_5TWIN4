@@ -1113,3 +1113,161 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
     grid-template-columns: repeat(4, 2.5rem);
   }
 }
+
+/* Announcement cards: editorial hierarchy with a distinct importance treatment. */
+.announcement-list { display: grid; gap: 0.9rem; }
+
+.announcement-notice {
+  --notice-accent: #4c9ac4;
+  padding: 1.05rem 1.2rem 0.9rem;
+  border: 1px solid #2a3545;
+  border-left: 4px solid var(--notice-accent);
+  border-radius: 0.85rem;
+  background: #151d2a;
+  color: #e7edf5;
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.12);
+}
+
+.announcement-notice--important {
+  --notice-accent: #f2b632;
+  border-color: #493d25;
+  background: linear-gradient(110deg, rgba(242, 182, 50, 0.12), rgba(242, 182, 50, 0.035) 48%, #151d2a 100%);
+}
+
+.announcement-notice--urgent {
+  --notice-accent: #f06469;
+  border-color: #4b2b35;
+  border-left-width: 5px;
+  background: linear-gradient(110deg, rgba(240, 100, 105, 0.15), rgba(240, 100, 105, 0.035) 48%, #151d2a 100%);
+}
+
+.announcement-notice-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.8rem;
+  margin-bottom: 0.45rem;
+}
+
+.announcement-priority {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  color: var(--notice-accent);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.announcement-priority::before {
+  width: 0.48rem;
+  height: 0.48rem;
+  border-radius: 50%;
+  background: var(--notice-accent);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06);
+  content: "";
+}
+
+.announcement-category {
+  padding-left: 0.75rem;
+  border-left: 1px solid rgba(218, 228, 240, 0.2);
+  color: #aab8ca;
+  font-size: 0.73rem;
+  font-weight: 600;
+}
+
+.announcement-notice-title {
+  margin: 0 0 0.65rem;
+  color: #f7f9fc;
+  font-size: 1.08rem;
+  font-weight: 750;
+  letter-spacing: -0.015em;
+  line-height: 1.4;
+}
+
+.announcement-notice--urgent .announcement-notice-title { font-size: 1.14rem; }
+
+.announcement-notice-body {
+  max-width: 72ch;
+  color: #c1ccda;
+  font-size: 0.87rem;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+.announcement-notice-body a {
+  color: #8dcaff;
+  font-weight: 650;
+  text-underline-offset: 2px;
+}
+
+.announcement-notice-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+  margin-top: 0.9rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid rgba(218, 228, 240, 0.11);
+  color: #9eacc0;
+  font-size: 0.73rem;
+}
+
+.announcement-notice-footer strong { color: #dbe5f1; font-weight: 650; }
+.announcement-notice-footer time { font-variant-numeric: tabular-nums; }
+.announcement-feed-empty { padding: 0.85rem 1rem; border-left: 3px solid #465366; }
+
+[data-bs-theme="light"] .announcement-notice {
+  border-color: #d7e0eb;
+  background: #fff;
+  color: #1f2937;
+  box-shadow: 0 4px 14px rgba(24, 39, 56, 0.06);
+}
+[data-bs-theme="light"] .announcement-notice--important {
+  border-color: #ecd69c;
+  background: linear-gradient(110deg, #fff8e7, #fffdf8 68%);
+}
+[data-bs-theme="light"] .announcement-notice--urgent {
+  border-color: #f0c3c5;
+  background: linear-gradient(110deg, #fff0ef, #fffafa 68%);
+}
+[data-bs-theme="light"] .announcement-notice-title { color: #172033; }
+[data-bs-theme="light"] .announcement-notice-body { color: #526174; }
+[data-bs-theme="light"] .announcement-category,
+[data-bs-theme="light"] .announcement-notice-footer { color: #68778a; }
+[data-bs-theme="light"] .announcement-notice-footer strong { color: #29364a; }
+[data-bs-theme="light"] .announcement-notice-footer { border-top-color: rgba(45, 62, 82, 0.13); }
+
+@media (max-width: 575.98px) {
+  .announcement-notice { padding: 0.9rem 1rem 0.8rem; }
+  .announcement-notice-footer { flex-direction: column; }
+}
+
+/* Persistent, keyboard accessible reading controls */
+html[data-a11y-size="-1"] { font-size: 15px; }
+html[data-a11y-size="0"] { font-size: 16px; }
+html[data-a11y-size="1"] { font-size: 18px; }
+html[data-a11y-size="2"] { font-size: 20px; }
+html.a11y-high-contrast body { filter: contrast(1.25); }
+html.a11y-more-spacing body { line-height: 1.8; }
+html.a11y-more-spacing p, html.a11y-more-spacing li { line-height: 1.9; }
+html.a11y-underline-links a:not(.btn) { text-decoration: underline !important; text-underline-offset: .16em; }
+html.a11y-simple-font body { font-family: Arial, Verdana, sans-serif !important; }
+html.a11y-simple-font :not(i):not(code):not(pre) { font-family: Arial, Verdana, sans-serif !important; }
+html.a11y-reduced-motion *, html.a11y-reduced-motion *::before, html.a11y-reduced-motion *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+html.a11y-strong-focus :focus-visible { outline: 3px solid #ffbf47 !important; outline-offset: 3px !important; box-shadow: 0 0 0 5px rgba(20, 35, 65, .55) !important; }
+html.a11y-align-left main p, html.a11y-align-left main li, html.a11y-align-left main blockquote { text-align: left !important; }
+html.a11y-highlight-headings main h1, html.a11y-highlight-headings main h2, html.a11y-highlight-headings main h3 { background: rgba(255, 191, 71, .18); border-left: 4px solid #d39200; border-radius: .2rem; padding: .15rem .55rem; }
+.a11y-widget { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 1080; display: grid; justify-items: end; gap: .65rem; }
+.a11y-trigger { width: 50px; height: 50px; display: inline-flex; align-items: center; justify-content: center; padding: 0; border-radius: 50%; box-shadow: 0 5px 20px rgba(20, 35, 65, .22); }
+.a11y-trigger i { font-size: 1.55rem; line-height: 1; }
+.a11y-panel { width: min(300px, calc(100vw - 2rem)); padding: 1rem; color: var(--bs-body-color); background: var(--bs-body-bg); border: 1px solid var(--bs-border-color); border-radius: 1rem; box-shadow: 0 12px 36px rgba(20, 35, 65, .2); }
+.a11y-panel[hidden] { display: none; }
+.a11y-widget button:focus-visible { outline: 3px solid #ffbf47; outline-offset: 3px; }
+@media (max-width: 575.98px) {
+  .a11y-widget { right: .75rem; bottom: .75rem; }
+  .a11y-trigger span { display: none; }
+  .a11y-trigger { width: 48px; height: 48px; justify-content: center; padding: 0; }
+}

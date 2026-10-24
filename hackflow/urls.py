@@ -39,6 +39,7 @@ urlpatterns = [
 
     # Espace Administrateur (Organisateur)
     path('cockpit/', include('dashboard_admin.urls')),
+    path('careers/', include('career_opportunities.urls')),
 
     # Django Admin Technique (Standard)
     path('admin/', admin.site.urls),

@@ -24,6 +24,7 @@ class User(AbstractUser):
         STUDENT = "student", "Étudiant"
         MENTOR = "mentor", "Mentor"
         ADMIN = "admin", "Administrateur"
+        ORGANIZATION = "organization", "Organization"
 
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.STUDENT)
     bio = models.TextField(blank=True)
@@ -31,6 +32,9 @@ class User(AbstractUser):
     study_level = models.CharField(max_length=100, blank=True)
     skills = models.JSONField(default=list, blank=True)
     specialty = models.CharField(max_length=150, blank=True)
+    preferred_roles = models.JSONField(default=list, blank=True)
+    preferred_categories = models.CharField(max_length=200, blank=True)
+    availability_windows = models.JSONField(default=list, blank=True)
     profile_photo = models.ImageField(
         upload_to='profile_photos/',
         blank=True,
@@ -47,6 +51,16 @@ class User(AbstractUser):
     github_url = models.URLField(max_length=200, blank=True)
     linkedin_url = models.URLField(max_length=200, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        # Django's createsuperuser command does not know about HackFlow roles.
+        # A new superuser gets the model's default role (student), so promote
+        # that default to the matching HackFlow administrator role.
+        if self.is_superuser and self.role == self.Role.STUDENT:
+            self.role = self.Role.ADMIN
+            if kwargs.get('update_fields') is not None:
+                kwargs['update_fields'] = set(kwargs['update_fields']) | {'role'}
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.username
