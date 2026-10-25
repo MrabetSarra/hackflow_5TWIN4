@@ -8,6 +8,7 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 """
 
 import os
+import secrets
 import tempfile
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
@@ -77,7 +78,7 @@ if CLOUDINARY_URL:
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '')
 if not SECRET_KEY:
     if DEBUG:
-        SECRET_KEY = 'django-insecure-hackflow-local-development-only'
+        SECRET_KEY = secrets.token_urlsafe(50)
     else:
         raise RuntimeError(
             'DJANGO_SECRET_KEY must be set when DJANGO_DEBUG is false.'
