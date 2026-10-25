@@ -1,5 +1,4 @@
 import json
-import shutil
 from pathlib import Path
 from urllib.parse import urlencode
 
@@ -82,7 +81,10 @@ def repository_list(request):
             try:
                 git_service.initialize_repository(repository, request.user)
             except Exception as error:
-                repository.delete()
+                # If the provider already created the remote, retain its
+                # metadata so the user can retry without creating a duplicate.
+                if not repository.remote_id:
+                    repository.delete()
                 messages.error(request, f'Could not create the repository: {_git_error_message(error)}')
             else:
                 messages.success(request, 'Repository created successfully.')
@@ -142,17 +144,8 @@ def repository_delete(request, slug):
     if not repository:
         raise Http404
 
-    # Remove only this repository's bare Git directory, after verifying the
-    # resolved target is directly inside the configured team repository folder.
-    repository_path = repository.path.resolve()
-    expected_parent = (settings.REPOS_ROOT / str(repository.team_id)).resolve()
-    if repository_path.parent != expected_parent or repository_path.name != f'{repository.slug}.git':
-        messages.error(request, 'The repository files could not be safely located; nothing was deleted.')
-        return redirect('repositories:list')
-    if repository_path.exists():
-        shutil.rmtree(repository_path)
     repository.delete()
-    messages.success(request, 'Repository and its stored Git history were deleted.')
+    messages.success(request, 'The HackFlow record was removed. The GitHub repository and its history were kept.')
     return redirect('repositories:list')
 
 

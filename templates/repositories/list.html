@@ -40,6 +40,7 @@
                     <span class="repo-branch-badge"><i aria-hidden="true" class="bi bi-diagram-2"></i>{{ repository.default_branch }}</span>
                 </div>
                 <p class="text-body-secondary small mb-1 mt-1">{{ repository.description|default:'No description yet.'|truncatechars:160 }}</p>
+                {% if repository.remote_url %}<span class="small text-body-secondary">GitHub: {{ repository.remote_owner }}/{{ repository.remote_name }}</span>{% else %}<span class="small text-warning">GitHub connection required</span>{% endif %}
                 <span class="small text-body-secondary"><i aria-hidden="true" class="bi bi-clock me-1"></i>Updated {{ repository.created_at|date:"M j, Y" }}</span>
             </a>
             <div class="d-flex align-items-center gap-2 flex-shrink-0">
@@ -49,7 +50,7 @@
                     <i aria-hidden="true" class="bi bi-pencil-square me-1"></i>Modify
                 </a>
                 <form method="post" action="{% url 'repositories:delete' repository.slug %}"
-                      onsubmit="return confirm('Delete {{ repository.name|escapejs }} and its Git history? This cannot be undone.');">
+                      onsubmit="return confirm('Remove {{ repository.name|escapejs }} from HackFlow? Its GitHub repository and history will remain.');">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3"
                             aria-label="Delete {{ repository.name }}">

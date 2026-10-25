@@ -5,6 +5,9 @@ from django.utils import timezone
 
 
 class Repository(models.Model):
+    class Provider(models.TextChoices):
+        GITHUB = 'github', 'GitHub'
+
     team = models.ForeignKey('student.Team', on_delete=models.CASCADE, related_name='repositories')
     name = models.CharField(max_length=100)
     slug = models.SlugField(max_length=110)
@@ -12,6 +15,13 @@ class Repository(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='created_repositories')
     default_branch = models.CharField(max_length=100, default='main')
     protected_branches = models.JSONField(default=list, blank=True)
+    remote_provider = models.CharField(max_length=20, choices=Provider.choices, blank=True)
+    remote_id = models.PositiveBigIntegerField(null=True, blank=True, unique=True)
+    remote_node_id = models.CharField(max_length=100, blank=True)
+    remote_owner = models.CharField(max_length=100, blank=True)
+    remote_name = models.CharField(max_length=100, blank=True)
+    remote_url = models.URLField(max_length=500, blank=True)
+    clone_url = models.URLField(max_length=500, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

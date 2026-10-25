@@ -357,6 +357,14 @@ REPOS_ROOT = Path(
     os.environ.get('HACKFLOW_REPOS_ROOT', _EPHEMERAL_ROOT / '.repository-data')
 )
 
+# GitHub owns durable repository objects and history. REPOS_ROOT is only a
+# disposable bare clone cache that can be rebuilt from the remote.
+GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN', '').strip()
+GITHUB_OWNER = os.environ.get('GITHUB_OWNER', '').strip()
+GITHUB_PRIVATE_REPOSITORIES = _env_bool('GITHUB_PRIVATE_REPOSITORIES', True)
+GITHUB_API_URL = os.environ.get('GITHUB_API_URL', 'https://api.github.com').rstrip('/')
+GITHUB_API_TIMEOUT = int(os.environ.get('GITHUB_API_TIMEOUT', '15'))
+
 # Create a parent directory for SQLite only. PostgreSQL's NAME is not a path.
 if DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
     DATABASES['default']['NAME'] = Path(DATABASES['default']['NAME'])
