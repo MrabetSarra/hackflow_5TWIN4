@@ -72,7 +72,13 @@ jobs:
         run: coverage run manage.py test 2>&1 | tee test-output.txt
 
       - name: Export Cobertura coverage report
-        run: coverage xml -o coverage.xml
+        if: always()
+        run: |
+          if [ -f .coverage ]; then
+            coverage xml -o coverage.xml
+          else
+            echo "Coverage data is unavailable."
+          fi
 
       - name: Report coverage (minimum 80%)
         run: coverage report --fail-under=80 | tee coverage-report.txt
