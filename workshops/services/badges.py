@@ -80,9 +80,17 @@ def ensure_badges_exist():
         )
 
 
+def _has_award(user, slug: str) -> bool:
+    """Vrai si le badge est déjà possédé (évite les requêtes de calcul)."""
+    from workshops.models import BadgeAward
+    return BadgeAward.objects.filter(user=user, badge__slug=slug).exists()
+
+
 def _award(user, slug: str, reason: str, workshop=None):
     """Décerne un badge à un utilisateur (idempotent)."""
     from workshops.models import Badge, BadgeAward
+    if _has_award(user, slug):
+        return
     try:
         badge = Badge.objects.get(slug=slug)
         _, created = BadgeAward.objects.get_or_create(
@@ -118,29 +126,29 @@ def check_badges_for_certificate(cert):
 
     user = cert.user
 
-    # Nombre total de certificats non-révoqués
-    cert_count = Certificate.objects.filter(
-        user=user, is_revoked=False
-    ).count()
-
     # Badge : premier atelier
-    if cert_count >= 1:
+    if not _has_award(user, 'first-workshop'):
         _award(user, 'first-workshop',
                'Premier atelier complété !', workshop=cert.workshop)
 
-    # Badge : marathon (5 ateliers)
-    if cert_count >= 5:
-        _award(user, 'workshop-marathon',
-               f'{cert_count} ateliers complétés !', workshop=cert.workshop)
+    # Badge : marathon (5 ateliers) — le comptage n'est fait qu'une fois.
+    if not _has_award(user, 'workshop-marathon'):
+        cert_count = Certificate.objects.filter(
+            user=user, is_revoked=False
+        ).count()
+        if cert_count >= 5:
+            _award(user, 'workshop-marathon',
+                   f'{cert_count} ateliers complétés !', workshop=cert.workshop)
 
     # Badge : mode explorer (3 modes différents)
-    modes_attended = set(
-        Certificate.objects.filter(user=user, is_revoked=False)
-        .values_list('workshop__mode', flat=True)
-    )
-    if {'onsite', 'online', 'recorded'}.issubset(modes_attended):
-        _award(user, 'mode-explorer',
-               'Participé aux 3 formats d\'atelier.', workshop=cert.workshop)
+    if not _has_award(user, 'mode-explorer'):
+        modes_attended = set(
+            Certificate.objects.filter(user=user, is_revoked=False)
+            .values_list('workshop__mode', flat=True)
+        )
+        if {'onsite', 'online', 'recorded'}.issubset(modes_attended):
+            _award(user, 'mode-explorer',
+                   'Participé aux 3 formats d\'atelier.', workshop=cert.workshop)
 
 
 def check_badges_for_booking(booking):
@@ -150,20 +158,25 @@ def check_badges_for_booking(booking):
     """
     from workshops.models import Booking
 
+    # Une réservation annulée ne doit pas rapporter de badge.
+    if booking.status == Booking.Status.CANCELLED:
+        return
+
     user = booking.user
 
     # Badge : early-bird (réservé dans les 24h après création du workshop)
     ws = booking.workshop
-    if ws.created_at and booking.booked_at:
+    if not _has_award(user, 'early-bird') and ws.created_at and booking.booked_at:
         delta = booking.booked_at - ws.created_at
-        if delta <= timezone.timedelta(hours=24):
+        if timezone.timedelta(0) <= delta <= timezone.timedelta(hours=24):
             _award(user, 'early-bird',
                    f'Réservé tôt pour «{ws.title}»', workshop=ws)
 
     # Badge : top-reviewer (3 ratings)
-    rating_count = Booking.objects.filter(
-        user=user, rating__isnull=False
-    ).count()
-    if rating_count >= 3:
-        _award(user, 'top-reviewer',
-               '3 ateliers notés.', workshop=ws)
+    if not _has_award(user, 'top-reviewer'):
+        rating_count = Booking.objects.filter(
+            user=user, rating__isnull=False
+        ).count()
+        if rating_count >= 3:
+            _award(user, 'top-reviewer',
+                   '3 ateliers notés.', workshop=ws)

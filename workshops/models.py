@@ -15,7 +15,7 @@ import uuid
 
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db import models
+from django.db import IntegrityError, models, transaction
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
@@ -126,8 +126,23 @@ class Workshop(models.Model):
     # ------------------------------------------------------------------
     # Propriétés calculées
     # ------------------------------------------------------------------
+    def _prefetched_bookings(self):
+        """Retourne les réservations préchargées, ou None si absentes.
+
+        Évite les N+1 requêtes sur le catalogue : les vues qui affichent
+        plusieurs ateliers utilisent ``prefetch_related('bookings')``.
+        """
+        cache = getattr(self, '_prefetched_objects_cache', None) or {}
+        return cache.get('bookings')
+
     @property
     def confirmed_count(self):
+        # Annotation disponible (dashboard) → aucune requête supplémentaire.
+        if hasattr(self, 'nb_confirmed'):
+            return self.nb_confirmed
+        prefetched = self._prefetched_bookings()
+        if prefetched is not None:
+            return sum(1 for b in prefetched if b.status in ('confirmed', 'attended'))
         return self.bookings.filter(status__in=['confirmed', 'attended']).count()
 
     @property
@@ -138,26 +153,50 @@ class Workshop(models.Model):
 
     @property
     def waitlist_count(self):
+        if hasattr(self, 'nb_waiting'):
+            return self.nb_waiting
+        prefetched = self._prefetched_bookings()
+        if prefetched is not None:
+            return sum(1 for b in prefetched if b.status == 'waiting')
         return self.bookings.filter(status='waiting').count()
 
     @property
     def attendee_count(self):
+        if hasattr(self, 'nb_attended'):
+            return self.nb_attended
+        prefetched = self._prefetched_bookings()
+        if prefetched is not None:
+            return sum(1 for b in prefetched if b.status == 'attended')
         return self.bookings.filter(status='attended').count()
 
     @property
     def average_rating(self):
-        ratings = self.bookings.filter(
-            rating__isnull=False).values_list('rating', flat=True)
+        if hasattr(self, 'avg_rating'):
+            return round(self.avg_rating, 1) if self.avg_rating is not None else None
+        prefetched = self._prefetched_bookings()
+        if prefetched is not None:
+            ratings = [b.rating for b in prefetched if b.rating is not None]
+        else:
+            ratings = list(
+                self.bookings.filter(rating__isnull=False)
+                .values_list('rating', flat=True)
+            )
         if not ratings:
             return None
         return round(sum(ratings) / len(ratings), 1)
+
+    @property
+    def rating_stars(self):
+        """Note arrondie pour l'affichage (évite 3.7 → 3 étoiles)."""
+        rating = self.average_rating
+        return int(rating + 0.5) if rating is not None else 0
 
     @property
     def fill_rate(self):
         """Taux de remplissage 0-100 ou None si illimité."""
         if self.capacity == 0:
             return None
-        return round(self.confirmed_count / self.capacity * 100) if self.capacity else 0
+        return round(self.confirmed_count / self.capacity * 100)
 
     @property
     def is_past(self):
@@ -284,6 +323,15 @@ class Booking(models.Model):
     def waitlist_position(self):
         if self.status != Booking.Status.WAITING:
             return None
+        cache = getattr(self.workshop, '_prefetched_objects_cache', None) or {}
+        prefetched = cache.get('bookings')
+        if prefetched is not None:
+            earlier = sum(
+                1 for b in prefetched
+                if b.status == Booking.Status.WAITING
+                and b.booked_at < self.booked_at
+            )
+            return earlier + 1
         return (
             Booking.objects.filter(
                 workshop=self.workshop,
@@ -315,7 +363,7 @@ class Certificate(models.Model):
         max_length=32, unique=True, default=_unique_cert_code,
         verbose_name='Code de vérification')
     serial     = models.PositiveIntegerField(
-        null=True, blank=True, verbose_name='Numéro de série')
+        null=True, blank=True, unique=True, verbose_name='Numéro de série')
     hours      = models.DecimalField(
         max_digits=5, decimal_places=1,
         default=1.0, verbose_name='Heures de formation')
@@ -338,11 +386,27 @@ class Certificate(models.Model):
         ordering = ['-issued_at']
 
     def save(self, *args, **kwargs):
-        # Auto-incrément du numéro de série
-        if not self.serial:
+        # Auto-incrément atomique du numéro de série.
+        # ``serial`` est unique : en cas de course entre deux créations,
+        # l'une des deux transactions échoue puis retente avec le numéro
+        # suivant. Le savepoint interne permet de continuer la transaction.
+        if self.serial:
+            return super().save(*args, **kwargs)
+
+        for _attempt in range(10):
             last = Certificate.objects.order_by('-serial').first()
             self.serial = (last.serial + 1) if (last and last.serial) else 1
-        super().save(*args, **kwargs)
+            try:
+                with transaction.atomic():
+                    return super().save(*args, **kwargs)
+            except IntegrityError as exc:
+                if 'serial' not in str(exc).lower():
+                    raise
+                self.serial = None
+                continue
+        raise IntegrityError(
+            'Impossible d\'attribuer un numéro de série unique au certificat.'
+        )
 
     @property
     def hours_display(self):

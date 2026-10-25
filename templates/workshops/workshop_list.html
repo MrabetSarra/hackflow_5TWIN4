@@ -112,7 +112,7 @@
   <!-- ── Tous les ateliers ────────────────────────────────────────── -->
   <div class="d-flex align-items-center justify-content-between mb-3">
     <h5 class="mb-0 fw-bold">Tous les ateliers
-      <span class="text-body-secondary fw-normal fs-6">({{ workshops|length }})</span>
+      <span class="text-body-secondary fw-normal fs-6">({{ total_count }})</span>
     </h5>
     <a href="{% url 'workshops:export_ics' %}" class="btn btn-sm btn-outline-secondary rounded-pill">
       <i class="bi bi-calendar-plus me-1"></i>Exporter .ics
@@ -125,6 +125,38 @@
     {% include "workshops/_workshop_card.html" with workshop=ws show_ai=False %}
     {% endfor %}
   </div>
+
+  {% if page_obj.has_other_pages %}
+  <nav aria-label="Pagination des ateliers" class="mt-4">
+    <ul class="pagination justify-content-center">
+      <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+        <a class="page-link rounded-start-pill"
+           href="{% if page_obj.has_previous %}?{% if filter_query %}{{ filter_query }}&{% endif %}page={{ page_obj.previous_page_number }}{% else %}#{% endif %}"
+           aria-label="Page précédente">
+          <i class="bi bi-chevron-left"></i>
+        </a>
+      </li>
+      {% for num in page_obj.paginator.page_range %}
+        {% if num == page_obj.number %}
+        <li class="page-item active" aria-current="page">
+          <span class="page-link">{{ num }}</span>
+        </li>
+        {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+        <li class="page-item">
+          <a class="page-link" href="?{% if filter_query %}{{ filter_query }}&{% endif %}page={{ num }}">{{ num }}</a>
+        </li>
+        {% endif %}
+      {% endfor %}
+      <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+        <a class="page-link rounded-end-pill"
+           href="{% if page_obj.has_next %}?{% if filter_query %}{{ filter_query }}&{% endif %}page={{ page_obj.next_page_number }}{% else %}#{% endif %}"
+           aria-label="Page suivante">
+          <i class="bi bi-chevron-right"></i>
+        </a>
+      </li>
+    </ul>
+  </nav>
+  {% endif %}
   {% else %}
   <div class="text-center py-5 text-body-secondary">
     <i class="bi bi-search fs-1 opacity-25 d-block mb-3"></i>

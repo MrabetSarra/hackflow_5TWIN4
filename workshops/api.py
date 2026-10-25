@@ -12,12 +12,16 @@ GET /workshops/api/<pk>/seats/
     Retourne : {id, capacity, confirmed, seats_left, waitlist}
 """
 
+import logging
+
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_GET
 
 from .models import Workshop
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -31,7 +35,10 @@ def api_recommend(request):
             .select_related('created_by')
             .order_by('starts_at')
         )
-        recommended = recommend(request.user, workshops, top_n=6)
+        recommended = [
+            w for w in recommend(request.user, workshops, top_n=6)
+            if getattr(w, 'ai_score', 0) > 0
+        ]
         data = [
             {
                 'id':       w.pk,
@@ -50,9 +57,13 @@ def api_recommend(request):
         ]
         return JsonResponse({'recommendations': data, 'count': len(data)})
 
-    except Exception as exc:
-        return JsonResponse({'error': str(exc), 'recommendations': []},
-                            status=500)
+    except Exception:
+        # Ne jamais exposer un message d'exception interne au client.
+        logger.exception('Erreur API recommandations ateliers')
+        return JsonResponse({
+            'error': 'Recommandations temporairement indisponibles.',
+            'recommendations': [],
+        }, status=503)
 
 
 @require_GET
@@ -68,4 +79,6 @@ def api_seats(request, pk):
         'waitlist':   ws.waitlist_count,
         'is_open':    ws.is_open,
         'fill_rate':  ws.fill_rate,
+        'has_started': ws.has_started,
+        'booking_closed_reason': ws.booking_closed_reason,
     })

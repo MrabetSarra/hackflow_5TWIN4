@@ -74,10 +74,7 @@
   </div>
 
   <!-- Alertes prédictions IA -->
-  {% for ws in workshops %}
-    {% with fc=forecasts|default:'' %}{% endwith %}
-  {% endfor %}
-  {% if forecasts %}
+  {% if forecast_rows %}
   <div class="card border-0 shadow-sm mb-4 border-start border-4 border-warning">
     <div class="card-body py-3">
       <div class="d-flex align-items-center gap-2 mb-3">
@@ -85,22 +82,17 @@
         <h6 class="mb-0 fw-bold">Alertes IA — Prédictions de remplissage</h6>
         <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill ms-1">IA</span>
       </div>
-      {% for ws in workshops %}
-        {% if ws.pk in forecasts %}
-          {% with fc=forecasts|dictsort:"pk" %}{% endwith %}
-        {% endif %}
-      {% endfor %}
       <div class="row g-2">
-        {% for ws_pk, fc in forecasts.items %}
-        {% if fc.alert %}
+        {% for row in forecast_rows %}
+        {% if row.forecast.alert %}
         <div class="col-12">
           <div class="alert alert-warning py-2 small mb-0">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ fc.alert }}
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ row.forecast.alert }}
           </div>
         </div>
         {% endif %}
         {% endfor %}
-        {% if not forecasts.values|dictsortreversed:"fill_proba" %}
+        {% if not has_forecast_alert %}
         <div class="col-12">
           <p class="text-body-secondary small mb-0">Aucune alerte pour le moment.</p>
         </div>
@@ -168,7 +160,7 @@
             <td class="text-center">
               {% if ws.average_rating %}
               <span class="text-warning small">
-                {% for i in "12345" %}{% if forloop.counter <= ws.average_rating %}<i class="bi bi-star-fill"></i>{% else %}<i class="bi bi-star"></i>{% endif %}{% endfor %}
+                {% for i in "12345" %}{% if forloop.counter <= ws.rating_stars %}<i class="bi bi-star-fill"></i>{% else %}<i class="bi bi-star"></i>{% endif %}{% endfor %}
               </span><br>
               <span class="small text-body-secondary">{{ ws.average_rating }}/5</span>
               {% else %}
@@ -177,11 +169,6 @@
             </td>
             <td>
               {% if ws.pk in forecasts %}
-                {% with fc=forecasts|default:'' %}
-                  <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-20 rounded-pill small">
-                    {{ forecasts|dictsort:"pk" }}
-                  </span>
-                {% endwith %}
                 <span class="small text-body-secondary" title="Prédiction IA">
                   {% for pk, fc in forecasts.items %}
                     {% if pk == ws.pk %}

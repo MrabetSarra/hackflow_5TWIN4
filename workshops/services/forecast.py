@@ -84,9 +84,9 @@ def _heuristic_forecast(workshop) -> dict:
     noshow_proba = 0.10 if workshop.mode == 'onsite' else 0.05
 
     alert = None
-    if fill_proba > 0.75 and hours_remaining < 24:
+    if fill_proba > 0.75 and 0 <= hours_remaining < 24:
         alert = (
-            f'⚽ {round(fill_proba * 100)}% de risque que '
+            f'⚠️ {round(fill_proba * 100)}% de risque que '
             f'«{workshop.title}» soit complet dans '
             f'{int(hours_remaining)}h — envisagez une session 2.'
         )
@@ -116,8 +116,9 @@ def _ml_forecast(workshop, past_workshops) -> dict:
         if pw.capacity == 0:
             continue
         feat = _static_features(pw)
-        actual_fill = pw.attendee_count / pw.capacity
+        actual_fill = min(1.0, max(0.0, pw.attendee_count / pw.capacity))
         noshow_rate = 1 - (pw.attendee_count / max(1, pw.confirmed_count))
+        noshow_rate = min(1.0, max(0.0, noshow_rate))
         X_train.append(feat)
         y_fill.append(actual_fill)
         y_noshow.append(noshow_rate)
@@ -143,9 +144,9 @@ def _ml_forecast(workshop, past_workshops) -> dict:
         alert = None
         delta = workshop.starts_at - timezone.now()
         hours_remaining = delta.total_seconds() / 3600
-        if fill_proba > 0.75 and hours_remaining < 48:
+        if fill_proba > 0.75 and 0 <= hours_remaining < 48:
             alert = (
-                f'⚽ {round(fill_proba * 100)}% de risque que '
+                f'⚠️ {round(fill_proba * 100)}% de risque que '
                 f'«{workshop.title}» soit complet dans '
                 f'{int(hours_remaining)}h.'
             )

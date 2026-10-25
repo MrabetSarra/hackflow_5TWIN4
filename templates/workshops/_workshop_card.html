@@ -131,7 +131,7 @@
         {% if ws.average_rating %}
         <p class="small text-warning mb-2">
           {% for i in "12345" %}
-            {% if forloop.counter <= ws.average_rating %}
+            {% if forloop.counter <= ws.rating_stars %}
               <i class="bi bi-star-fill"></i>
             {% else %}
               <i class="bi bi-star"></i>

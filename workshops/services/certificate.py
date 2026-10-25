@@ -20,8 +20,66 @@ from __future__ import annotations
 
 import io
 import logging
+import os
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+# Polices Unicode candidates : DejaVu (Linux), Arial (Windows/macOS).
+# Si aucune n'est disponible, on retombe sur Helvetica + translittération.
+_FONT_CANDIDATES = [
+    (
+        Path(os.environ.get('WINDIR', r'C:\Windows')) / 'Fonts' / 'DejaVuSans.ttf',
+        Path(os.environ.get('WINDIR', r'C:\Windows')) / 'Fonts' / 'DejaVuSans-Bold.ttf',
+        Path(os.environ.get('WINDIR', r'C:\Windows')) / 'Fonts' / 'DejaVuSans-Oblique.ttf',
+    ),
+    (
+        Path(os.environ.get('WINDIR', r'C:\Windows')) / 'Fonts' / 'arial.ttf',
+        Path(os.environ.get('WINDIR', r'C:\Windows')) / 'Fonts' / 'arialbd.ttf',
+        Path(os.environ.get('WINDIR', r'C:\Windows')) / 'Fonts' / 'ariali.ttf',
+    ),
+    (
+        Path('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'),
+        Path('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'),
+        Path('/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf'),
+    ),
+    (
+        Path('/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf'),
+        Path('/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf'),
+        Path('/usr/share/fonts/truetype/liberation/LiberationSans-Italic.ttf'),
+    ),
+    (
+        Path('/System/Library/Fonts/Supplemental/Arial.ttf'),
+        Path('/System/Library/Fonts/Supplemental/Arial Bold.ttf'),
+        Path('/System/Library/Fonts/Supplemental/Arial Italic.ttf'),
+    ),
+]
+
+
+def _register_unicode_font(pdf):
+    """Enregistre une police Unicode si disponible.
+
+    Retourne ``(famille, styles_disponibles)``. ``(None, set())`` signifie
+    qu'il faut utiliser Helvetica (Latin-1 uniquement).
+    """
+    for regular, bold, italic in _FONT_CANDIDATES:
+        if not regular.exists():
+            continue
+        try:
+            pdf.add_font('CertFont', '', str(regular))
+            styles = {''}
+            if bold.exists():
+                pdf.add_font('CertFont', 'B', str(bold))
+                styles.add('B')
+            if italic.exists():
+                pdf.add_font('CertFont', 'I', str(italic))
+                styles.add('I')
+            logger.info('Police certificat : %s', regular)
+            return 'CertFont', styles
+        except Exception as exc:
+            logger.info('Police %s inutilisable : %s', regular, exc)
+    logger.info('Aucune police Unicode trouvée : certificat en Latin-1.')
+    return None, set()
 
 
 def _draw_border(pdf):
@@ -95,6 +153,18 @@ def generate_certificate_pdf(cert) -> bytes | None:
     pdf.add_page()
     pdf.set_auto_page_break(auto=False)
 
+    family, styles = _register_unicode_font(pdf)
+
+    def set_font(style, size):
+        if family:
+            pdf.set_font(family, style if style in styles else '', size)
+        else:
+            pdf.set_font('Helvetica', style, size)
+
+    def text(value):
+        """Conserve les accents si une police Unicode est disponible."""
+        return str(value) if family else _safe(str(value))
+
     # Fond blanc
     pdf.set_fill_color(255, 255, 255)
     pdf.rect(0, 0, pdf.w, pdf.h, 'F')
@@ -103,7 +173,7 @@ def generate_certificate_pdf(cert) -> bytes | None:
     _draw_border(pdf)
 
     # -- En-tete : logo HackFlow -----------------------------------
-    pdf.set_font('Helvetica', 'B', 32)
+    set_font('B', 32)
     pdf.set_text_color(30, 30, 30)
     pdf.set_xy(0, 22)
     pdf.cell(pdf.w / 2 - 22, 12, 'Hack', align='R')
@@ -114,10 +184,10 @@ def generate_certificate_pdf(cert) -> bytes | None:
     pdf.cell(pdf.w / 2, 12, 'Flow', align='L')
 
     # Sous-titre
-    pdf.set_font('Helvetica', '', 11)
+    set_font('', 11)
     pdf.set_text_color(120, 120, 120)
     pdf.set_xy(0, 36)
-    pdf.cell(pdf.w, 7, 'Plateforme d\'ateliers & de formation', align='C',
+    pdf.cell(pdf.w, 7, text('Plateforme d\'ateliers & de formation'), align='C',
              new_x='LMARGIN', new_y='NEXT')
 
     # -- Ligne de separation or -----------------------------------
@@ -126,44 +196,44 @@ def generate_certificate_pdf(cert) -> bytes | None:
     pdf.line(30, 46, pdf.w - 30, 46)
 
     # -- Corps principal ------------------------------------------
-    pdf.set_font('Helvetica', '', 13)
+    set_font('', 13)
     pdf.set_text_color(80, 80, 80)
     pdf.set_xy(0, 52)
-    pdf.cell(pdf.w, 8, 'Ce certificat est decerne a', align='C',
+    pdf.cell(pdf.w, 8, text('Ce certificat est décerné à'), align='C',
              new_x='LMARGIN', new_y='NEXT')
 
     # Nom du beneficiaire
-    full_name = _safe(cert.user.get_full_name() or cert.user.username)
-    pdf.set_font('Helvetica', 'B', 28)
+    full_name = text(cert.user.get_full_name() or cert.user.username)
+    set_font('B', 28)
     pdf.set_text_color(30, 30, 30)
     pdf.set_xy(0, 62)
     pdf.cell(pdf.w, 14, full_name, align='C',
              new_x='LMARGIN', new_y='NEXT')
 
     # Pour avoir participe a
-    pdf.set_font('Helvetica', '', 12)
+    set_font('', 12)
     pdf.set_text_color(80, 80, 80)
     pdf.set_xy(0, 78)
-    pdf.cell(pdf.w, 7, 'pour avoir participe a l\'atelier', align='C',
+    pdf.cell(pdf.w, 7, text('pour avoir participé à l\'atelier'), align='C',
              new_x='LMARGIN', new_y='NEXT')
 
     # Titre de l'atelier
-    pdf.set_font('Helvetica', 'B', 20)
+    set_font('B', 20)
     pdf.set_text_color(99, 102, 241)
     pdf.set_xy(0, 87)
-    title = _safe(cert.workshop.title)
+    title = text(cert.workshop.title)
     if len(title) > 60:
         title = title[:57] + '...'
     pdf.cell(pdf.w, 10, title, align='C',
              new_x='LMARGIN', new_y='NEXT')
 
     # Intervenant
-    pdf.set_font('Helvetica', 'I', 12)
+    set_font('I', 12)
     pdf.set_text_color(100, 100, 100)
     pdf.set_xy(0, 99)
-    speaker_line = _safe(f'Par {cert.workshop.speaker_name}')
+    speaker_line = text(f'Par {cert.workshop.speaker_name}')
     if cert.workshop.speaker_company:
-        speaker_line += _safe(f' - {cert.workshop.speaker_company}')
+        speaker_line += text(f' - {cert.workshop.speaker_company}')
     pdf.cell(pdf.w, 7, speaker_line, align='C',
              new_x='LMARGIN', new_y='NEXT')
 
@@ -172,20 +242,20 @@ def generate_certificate_pdf(cert) -> bytes | None:
     pdf.set_draw_color(220, 220, 220)
     pdf.line(30, 111, pdf.w - 30, 111)
 
-    pdf.set_font('Helvetica', '', 10)
+    set_font('', 10)
     pdf.set_text_color(100, 100, 100)
     pdf.set_xy(30, 114)
     pdf.cell(60, 6, f'Date : {issued_str}', align='L')
     pdf.set_xy(pdf.w / 2 - 30, 114)
-    pdf.cell(60, 6, f'Duree : {duration_str}', align='C')
+    pdf.cell(60, 6, f'Durée : {duration_str}', align='C')
     pdf.set_xy(pdf.w - 90, 114)
-    pdf.cell(60, 6, f'No de serie : {cert.serial or "-"}', align='R')
+    pdf.cell(60, 6, f'No de série : {cert.serial or "-"}', align='R')
 
     # -- Code de verification ------------------------------------
-    pdf.set_font('Helvetica', 'B', 9)
+    set_font('B', 9)
     pdf.set_text_color(150, 150, 150)
     pdf.set_xy(30, 122)
-    pdf.cell(pdf.w - 60, 5, f'Code de verification : {cert.code}', align='C')
+    pdf.cell(pdf.w - 60, 5, f'Code de vérification : {cert.code}', align='C')
 
     # -- QR code (optionnel) ------------------------------------
     try:
@@ -215,24 +285,23 @@ def generate_certificate_pdf(cert) -> bytes | None:
         qr_y = pdf.h - 45
         pdf.image(buf, x=qr_x, y=qr_y, w=32, h=32)
 
-        pdf.set_font('Helvetica', '', 6)
+        set_font('', 6)
         pdf.set_text_color(150, 150, 150)
         pdf.set_xy(qr_x - 2, qr_y + 33)
-        pdf.cell(36, 4, 'Verifier en ligne', align='C')
+        pdf.cell(36, 4, text('Vérifier en ligne'), align='C')
 
     except Exception as exc:
         logger.info('QR code non genere : %s', exc)
 
     # -- Pied de page --------------------------------------------
-    # Note: Helvetica (Latin-1 only) — ASCII uniquement
-    pdf.set_font('Helvetica', '', 8)
+    set_font('', 8)
     pdf.set_text_color(180, 180, 180)
     pdf.set_xy(0, pdf.h - 14)
     pdf.cell(pdf.w, 6,
              f'HackFlow | hackflow.app/workshops/verify/{cert.code}',
              align='C')
 
-    return pdf.output()
+    return bytes(pdf.output())
 
 
 def attach_pdf_to_certificate(cert) -> bool:

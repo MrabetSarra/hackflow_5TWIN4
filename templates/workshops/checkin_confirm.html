@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Confirmer le check-in — HackFlow{% endblock %}
+
+{% block layout %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center bg-body-tertiary px-3 py-5">
+  <div class="card border-0 shadow-sm" style="max-width:520px;width:100%;">
+    <div class="card-body p-4 p-md-5 text-center">
+
+      <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center mb-3"
+           style="width:64px;height:64px;">
+        <i class="bi bi-qr-code-scan fs-2"></i>
+      </div>
+
+      <h1 class="h4 fw-bold mb-2">Confirmer la présence</h1>
+      <p class="text-body-secondary mb-4">
+        Vérifiez l'identité du participant avant de valider son check-in.
+      </p>
+
+      <div class="text-start bg-body-tertiary border rounded-3 p-3 mb-4">
+        <p class="mb-2">
+          <i class="bi bi-person-fill text-primary me-2"></i>
+          <strong>{{ booking.user.get_full_name|default:booking.user.username }}</strong>
+        </p>
+        <p class="mb-2 small text-body-secondary">
+          <i class="bi bi-envelope me-2"></i>{{ booking.user.email|default:"—" }}
+        </p>
+        <p class="mb-2 small text-body-secondary">
+          <i class="bi bi-calendar-event me-2"></i>{{ workshop.title }}
+        </p>
+        <p class="mb-0 small text-body-secondary">
+          <i class="bi bi-clock me-2"></i>{{ workshop.starts_at|date:"d/m/Y à H\hi" }}
+        </p>
+      </div>
+
+      <form method="post" action="">
+        {% csrf_token %}
+        <div class="d-grid gap-2">
+          <button type="submit" class="btn btn-success rounded-pill py-2 fw-semibold">
+            <i class="bi bi-check-circle-fill me-2"></i>Valider le check-in
+          </button>
+          <a href="{% url 'workshops:detail' workshop.slug %}"
+             class="btn btn-outline-secondary rounded-pill">
+            Annuler
+          </a>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

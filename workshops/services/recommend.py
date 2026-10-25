@@ -24,8 +24,31 @@ if TYPE_CHECKING:
     User = get_user_model()
 
 import logging
+from functools import lru_cache
 
 logger = logging.getLogger(__name__)
+
+# Le fit TF-IDF est la partie coûteuse : on le mutualise pour un même corpus
+# d'ateliers. La clé est la tuple des documents, donc le cache s'invalide
+# automatiquement dès qu'un titre/description/tag change.
+@lru_cache(maxsize=16)
+def _fit_corpus(documents: tuple[str, ...]):
+    from sklearn.feature_extraction.text import TfidfVectorizer
+
+    vectorizer = TfidfVectorizer(
+        stop_words='english',
+        ngram_range=(1, 2),
+        max_features=5000,
+        sublinear_tf=True,
+    )
+    matrix = vectorizer.fit_transform(documents)
+    return vectorizer, matrix
+
+
+def _reset_scores(workshops):
+    for workshop in workshops:
+        workshop.ai_score = 0
+        workshop.ai_reason = ''
 
 
 def _build_user_profile(user) -> str:
@@ -79,54 +102,47 @@ def recommend(user, workshops, top_n: int = 6) -> list:
         return []
 
     try:
-        from sklearn.feature_extraction.text import TfidfVectorizer
         from sklearn.metrics.pairwise import cosine_similarity
     except ImportError:
         logger.warning('scikit-learn non installé : recommandations désactivées.')
-        for w in workshop_list:
-            w.ai_score = 0
-            w.ai_reason = ''
+        _reset_scores(workshop_list)
         return workshop_list
 
     profile_text = _build_user_profile(user)
-    corpus = [profile_text] + [_workshop_document(w) for w in workshop_list]
+    documents = tuple(_workshop_document(w) for w in workshop_list)
 
     try:
-        tfidf = TfidfVectorizer(
-            stop_words='english',
-            ngram_range=(1, 2),
-            max_features=5000,
-            sublinear_tf=True,
-        )
-        X = tfidf.fit_transform(corpus)
-        scores = cosine_similarity(X[0:1], X[1:])[0]
+        tfidf, matrix = _fit_corpus(documents)
+        profile_vector = tfidf.transform([profile_text])
+        scores = cosine_similarity(profile_vector, matrix)[0]
         terms = tfidf.get_feature_names_out()
 
         # Indices présents dans le profil
-        profile_indices = set(X[0].nonzero()[1])
+        profile_indices = set(profile_vector.nonzero()[1])
 
         for i, workshop in enumerate(workshop_list):
             raw_score = float(scores[i])
 
             # Termes croisés → explication
-            ws_indices = set(X[i + 1].nonzero()[1])
+            ws_indices = set(matrix[i].nonzero()[1])
             matched_terms = [
                 terms[j] for j in ws_indices & profile_indices
             ][:3]
 
-            workshop.ai_score = min(99, round(raw_score * 100 + 5))
-            if matched_terms:
+            # Pas de bonus artificiel : 0 % signifie réellement 0 %.
+            workshop.ai_score = min(99, round(raw_score * 100))
+            if workshop.ai_score and matched_terms:
                 workshop.ai_reason = (
                     f'Parce que tu maîtrises {", ".join(matched_terms)}'
                 )
-            else:
+            elif workshop.ai_score:
                 workshop.ai_reason = 'Recommandé selon ton profil'
+            else:
+                workshop.ai_reason = ''
 
     except Exception as exc:
         logger.error('Erreur recommandation TF-IDF : %s', exc)
-        for w in workshop_list:
-            w.ai_score = 0
-            w.ai_reason = ''
+        _reset_scores(workshop_list)
 
     # Tri décroissant par score
     workshop_list.sort(key=lambda w: getattr(w, 'ai_score', 0), reverse=True)

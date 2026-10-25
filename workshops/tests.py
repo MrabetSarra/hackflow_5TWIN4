@@ -56,6 +56,19 @@ def _make_user(username, role='student', **kwargs):
     return u
 
 
+def _form_datetime(days=7, hour=10):
+    """Date future stable pour les formulaires.
+
+    On évite volontairement les heures proches de 02:00-03:00 : lors du
+    changement d'heure, une heure locale peut être ambiguë ou inexistante,
+    ce qui rendrait le test dépendant de la date d'exécution.
+    """
+    value = timezone.localtime(timezone.now()) + timedelta(days=days)
+    return value.replace(
+        hour=hour, minute=0, second=0, microsecond=0,
+    ).strftime('%Y-%m-%dT%H:%M')
+
+
 def _make_workshop(created_by, mode='onsite', capacity=5,
                    starts_offset_h=2, duration_h=2, **kwargs):
     now = timezone.now()
@@ -95,7 +108,6 @@ class WorkshopCrudTests(TestCase):
     # ------------------------------------------------------------------
     def test_01_admin_can_create_workshop(self):
         self.client.login(username='admin_user', password='Test1234!')
-        now = timezone.now()
         response = self.client.post(reverse('workshops:create'), {
             'title':       'Workshop Django',
             'description': 'Learn Django',
@@ -103,8 +115,8 @@ class WorkshopCrudTests(TestCase):
             'mode':        'onsite',
             'room':        'A01',
             'level':       'beginner',
-            'starts_at':   (now + timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M'),
-            'ends_at':     (now + timedelta(hours=3)).strftime('%Y-%m-%dT%H:%M'),
+            'starts_at':   _form_datetime(hour=10),
+            'ends_at':     _form_datetime(hour=12),
             'capacity':    20,
             'is_open':     'on',
         })
@@ -118,7 +130,6 @@ class WorkshopCrudTests(TestCase):
     # ------------------------------------------------------------------
     def test_02_student_cannot_create_workshop(self):
         self.client.login(username='student_user', password='Test1234!')
-        now = timezone.now()
         response = self.client.post(reverse('workshops:create'), {
             'title':       'Atelier pirate',
             'description': 'desc',
@@ -126,8 +137,8 @@ class WorkshopCrudTests(TestCase):
             'mode':        'onsite',
             'room':        'A01',
             'level':       'beginner',
-            'starts_at':   (now + timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M'),
-            'ends_at':     (now + timedelta(hours=3)).strftime('%Y-%m-%dT%H:%M'),
+            'starts_at':   _form_datetime(hour=10),
+            'ends_at':     _form_datetime(hour=12),
             'capacity':    10,
             'is_open':     'on',
         })
@@ -139,7 +150,6 @@ class WorkshopCrudTests(TestCase):
     # ------------------------------------------------------------------
     def test_03_ends_before_starts_invalid(self):
         from .forms import WorkshopForm
-        now = timezone.now()
         form = WorkshopForm(data={
             'title':       'Bad dates',
             'description': 'desc',
@@ -147,8 +157,8 @@ class WorkshopCrudTests(TestCase):
             'mode':        'onsite',
             'room':        'A01',
             'level':       'beginner',
-            'starts_at':   (now + timedelta(hours=3)).strftime('%Y-%m-%dT%H:%M'),
-            'ends_at':     (now + timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M'),
+            'starts_at':   _form_datetime(hour=12),
+            'ends_at':     _form_datetime(hour=10),
             'capacity':    10,
         })
         self.assertFalse(form.is_valid())
@@ -159,7 +169,6 @@ class WorkshopCrudTests(TestCase):
     # ------------------------------------------------------------------
     def test_04_onsite_requires_room(self):
         from .forms import WorkshopForm
-        now = timezone.now()
         form = WorkshopForm(data={
             'title':       'Sans salle',
             'description': 'desc',
@@ -167,8 +176,8 @@ class WorkshopCrudTests(TestCase):
             'mode':        'onsite',
             'room':        '',          # manquant
             'level':       'beginner',
-            'starts_at':   (now + timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M'),
-            'ends_at':     (now + timedelta(hours=3)).strftime('%Y-%m-%dT%H:%M'),
+            'starts_at':   _form_datetime(hour=10),
+            'ends_at':     _form_datetime(hour=12),
             'capacity':    10,
         })
         self.assertFalse(form.is_valid())
@@ -325,11 +334,18 @@ class WorkshopCrudTests(TestCase):
             status=Booking.Status.CONFIRMED, seat_number=1,
         )
         self.client.login(username='admin_user', password='Test1234!')
-        response = self.client.get(
-            reverse('workshops:checkin',
-                    kwargs={'pk': ws.pk, 'token': booking.checkin_token}),
-            follow=True,
-        )
+        url = reverse('workshops:checkin',
+                      kwargs={'pk': ws.pk, 'token': booking.checkin_token})
+
+        # GET = page de confirmation, aucun changement d'état.
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Confirmer la présence')
+        booking.refresh_from_db()
+        self.assertEqual(booking.status, Booking.Status.CONFIRMED)
+
+        # POST = validation réelle.
+        response = self.client.post(url, follow=True)
         booking.refresh_from_db()
         self.assertEqual(booking.status, Booking.Status.ATTENDED)
         self.assertIsNotNone(booking.attended_at)
@@ -554,3 +570,132 @@ class WorkshopCrudTests(TestCase):
         self.assertFalse(
             Booking.objects.filter(workshop=ws, user=self.student).exists()
         )
+
+    # ------------------------------------------------------------------
+    # Test 22 — Numéros de série uniques et croissants
+    # ------------------------------------------------------------------
+    def test_22_certificate_serial_numbers_are_unique(self):
+        ws1 = _make_workshop(self.admin, title='Série A')
+        ws2 = _make_workshop(self.admin, title='Série B')
+        cert1 = Certificate.objects.create(workshop=ws1, user=self.student)
+        cert2 = Certificate.objects.create(workshop=ws2, user=self.student)
+
+        self.assertIsNotNone(cert1.serial)
+        self.assertIsNotNone(cert2.serial)
+        self.assertNotEqual(cert1.serial, cert2.serial)
+        self.assertEqual(cert2.serial, cert1.serial + 1)
+
+    # ------------------------------------------------------------------
+    # Test 23 — PDF généré avec un nom accentué / non Latin-1
+    # ------------------------------------------------------------------
+    def test_23_certificate_pdf_supports_unicode_names(self):
+        from .services.certificate import generate_certificate_pdf
+
+        self.student.first_name = 'Zoé'
+        self.student.last_name = 'Müller'
+        self.student.save(update_fields=['first_name', 'last_name'])
+
+        ws = _make_workshop(self.admin, title='Atelier Élégant')
+        cert = Certificate.objects.create(workshop=ws, user=self.student)
+
+        pdf = generate_certificate_pdf(cert)
+        self.assertIsNotNone(pdf)
+        self.assertTrue(pdf.startswith(b'%PDF'))
+
+    # ------------------------------------------------------------------
+    # Test 24 — API places publique, API recommandations protégée
+    # ------------------------------------------------------------------
+    def test_24_api_endpoints(self):
+        ws = _make_workshop(self.admin, capacity=10)
+
+        # /seats/ est public
+        response = self.client.get(
+            reverse('workshops:api_seats', kwargs={'pk': ws.pk}))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['id'], ws.pk)
+
+        # /recommend/ exige une authentification
+        response = self.client.get(reverse('workshops:api_recommend'))
+        self.assertEqual(response.status_code, 302)
+
+        self.client.login(username='student_user', password='Test1234!')
+        response = self.client.get(reverse('workshops:api_recommend'))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('recommendations', response.json())
+
+    # ------------------------------------------------------------------
+    # Test 25 — Export .ics limité à un atelier depuis le détail
+    # ------------------------------------------------------------------
+    def test_25_export_ics_single_workshop(self):
+        ws1 = _make_workshop(self.admin, title='Atelier Un')
+        ws2 = _make_workshop(self.admin, title='Atelier Deux')
+        Booking.objects.create(
+            workshop=ws1, user=self.student,
+            status=Booking.Status.CONFIRMED, seat_number=1)
+        Booking.objects.create(
+            workshop=ws2, user=self.student,
+            status=Booking.Status.CONFIRMED, seat_number=1)
+
+        self.client.login(username='student_user', password='Test1234!')
+        response = self.client.get(
+            reverse('workshops:export_ics'), {'workshop': ws1.pk})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('text/calendar', response['Content-Type'])
+        body = response.content.decode('utf-8')
+        self.assertIn('Atelier Un', body)
+        self.assertNotIn('Atelier Deux', body)
+
+    # ------------------------------------------------------------------
+    # Test 26 — Prévision heuristique : valeurs bornées
+    # ------------------------------------------------------------------
+    def test_26_forecast_heuristic_is_bounded(self):
+        from .services.forecast import forecast
+
+        ws = _make_workshop(self.admin, capacity=10, starts_offset_h=2)
+        result = forecast(ws)
+        self.assertGreaterEqual(result['fill_proba'], 0)
+        self.assertLessEqual(result['fill_proba'], 1)
+        self.assertGreaterEqual(result['noshow_proba'], 0)
+        self.assertLessEqual(result['noshow_proba'], 1)
+
+        unlimited = _make_workshop(self.admin, capacity=0, title='Illimité')
+        result = forecast(unlimited)
+        self.assertEqual(result['fill_proba'], 0.0)
+
+    # ------------------------------------------------------------------
+    # Test 27 — Pagination du catalogue
+    # ------------------------------------------------------------------
+    def test_27_catalog_is_paginated(self):
+        for index in range(13):
+            _make_workshop(
+                self.admin, title=f'Atelier pagination {index}',
+                starts_offset_h=index + 1,
+            )
+
+        response = self.client.get(reverse('workshops:list'))
+        self.assertEqual(len(response.context['workshops']), 12)
+        self.assertEqual(response.context['total_count'], 13)
+
+        response = self.client.get(reverse('workshops:list'), {'page': 2})
+        self.assertEqual(len(response.context['workshops']), 1)
+
+    # ------------------------------------------------------------------
+    # Test 28 — Pas de bonus artificiel de 5 % dans la recommandation
+    # ------------------------------------------------------------------
+    def test_28_recommendation_has_no_artificial_bonus(self):
+        from .services.recommend import recommend
+
+        user = _make_user('rust_student', role='student',
+                          skills=['Rust'], specialty='Systems')
+        unrelated = Workshop.objects.create(
+            title='Figma UX', description='Design with Figma',
+            speaker_name='Designer', mode='online',
+            meeting_url='https://zoom.us/j/design',
+            starts_at=timezone.now() + timedelta(hours=2),
+            ends_at=timezone.now() + timedelta(hours=4),
+            capacity=20, is_open=True, created_by=self.admin,
+            topic_tags=['Figma', 'Design'],
+        )
+
+        result = recommend(user, [unrelated])
+        self.assertEqual(result[0].ai_score, 0)

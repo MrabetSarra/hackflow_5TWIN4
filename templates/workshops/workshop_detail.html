@@ -152,11 +152,26 @@
               </div>
             </div>
             <div class="ratio ratio-16x9 mb-3">
+              {% if replay_is_direct %}
+              <video id="replay-video" controls preload="metadata"
+                     class="rounded-3 w-100 h-100"
+                     src="{{ workshop.replay_url }}">
+                Votre navigateur ne supporte pas la lecture vidéo.
+              </video>
+              {% else %}
               <iframe src="{{ workshop.replay_url }}"
                       title="{{ workshop.title }}"
                       allowfullscreen
                       class="rounded-3"></iframe>
+              {% endif %}
             </div>
+            {% if not replay_is_direct %}
+            <p class="small text-body-secondary">
+              <i class="bi bi-info-circle me-1"></i>
+              La progression est enregistrée lorsque vous cliquez sur
+              « J'ai terminé la vidéo ».
+            </p>
+            {% endif %}
             <form method="post" action="{% url 'workshops:replay_complete' workshop.pk %}">
               {% csrf_token %}
               <button type="submit" class="btn btn-success rounded-pill px-4">
@@ -166,7 +181,7 @@
             {% else %}
             <div class="alert alert-success d-flex align-items-center gap-2">
               <i class="bi bi-patch-check-fill fs-4"></i>
-              <span>Vous avez complété ce replay. Votre certificat a été généré.</span>
+              <span>Vous avez complété ce replay. Votre certificat est disponible dans « Mes ateliers ».</span>
             </div>
             {% endif %}
             {% if workshop.available_until %}
@@ -399,9 +414,9 @@
           {% endif %}
 
           <!-- Export .ics -->
-          <a href="{% url 'workshops:export_ics' %}"
+          <a href="{% url 'workshops:export_ics' %}?workshop={{ workshop.pk }}"
              class="btn btn-sm btn-outline-secondary w-100 rounded-pill mt-2">
-            <i class="bi bi-calendar-plus me-1"></i>Ajouter à mon calendrier
+            <i class="bi bi-calendar-plus me-1"></i>Ajouter cet atelier à mon calendrier
           </a>
 
         </div>
@@ -411,33 +426,41 @@
   </div>
 </div>
 
-<!-- Script AJAX progression replay -->
-{% if workshop.mode == 'recorded' and replay_accessible %}
+<!-- Progression replay : uniquement pour un lecteur vidéo direct.
+     La progression est calculée à partir de la durée réelle de la vidéo,
+     plus aucune simulation artificielle. -->
+{% if workshop.mode == 'recorded' and replay_accessible and replay_is_direct %}
 <script>
 (function() {
+  const video = document.getElementById('replay-video');
   const bar   = document.getElementById('progress-bar');
   const label = document.getElementById('progress-label');
   const url   = "{% url 'workshops:replay_progress' workshop.pk %}";
   const token = "{{ csrf_token }}";
-  let progress = {{ booking.replay_progress|default:0 }};
+  let lastSaved = {{ booking.replay_progress|default:0 }};
 
   function saveProgress(val) {
-    fetch(url, {
+    return fetch(url, {
       method: 'POST',
       headers: {'X-CSRFToken': token, 'Content-Type': 'application/x-www-form-urlencoded'},
       body: 'progress=' + val
     });
   }
 
-  // Sauvegarde simulée toutes les 30s (remplacer par un vrai player)
-  setInterval(function() {
-    if (progress < 100) {
-      progress = Math.min(100, progress + 2);
-      if (bar) bar.style.width = progress + '%';
-      if (label) label.textContent = progress + '%';
-      saveProgress(progress);
+  if (!video) return;
+
+  video.addEventListener('timeupdate', function() {
+    if (!video.duration) return;
+    const pct = Math.min(100, Math.round((video.currentTime / video.duration) * 100));
+    if (bar) bar.style.width = pct + '%';
+    if (label) label.textContent = pct + '%';
+
+    // Écriture réseau limitée : tous les 5 points de progression.
+    if (pct >= lastSaved + 5 || pct === 100) {
+      lastSaved = pct;
+      saveProgress(pct);
     }
-  }, 30000);
+  });
 })();
 </script>
 {% endif %}

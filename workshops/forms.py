@@ -73,7 +73,6 @@ class WorkshopForm(_BootstrapMixin, forms.ModelForm):
             'capacity', 'is_open',
             'cover_image',
         ]
-        exclude = ['topic_tags', 'slug', 'created_by', 'created_at']
         widgets = {
             'starts_at':      forms.DateTimeInput(
                 attrs={'type': 'datetime-local'}, format='%Y-%m-%dT%H:%M'),
@@ -128,11 +127,12 @@ class WorkshopForm(_BootstrapMixin, forms.ModelForm):
             self.add_error('replay_url',
                            'Une URL de replay est obligatoire pour une vidéo enregistrée.')
 
-        # 3. Capacité : replay → 0 (illimité) recommandé
+        # 3. Capacité : replay → 0 (illimité) recommandé (non bloquant)
         capacity = cleaned.get('capacity', 0)
         if mode == Workshop.Mode.RECORDED and capacity > 0:
-            # On informe mais on n'bloque pas
-            pass
+            self.fields['capacity'].help_text = (
+                'Pour un replay, 0 signifie « places illimitées ».'
+            )
 
         return cleaned
 

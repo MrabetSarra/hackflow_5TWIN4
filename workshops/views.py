@@ -32,21 +32,19 @@ Dashboard & calendrier
   export_ics           GET          fichier .ics
 """
 
-import io
-import secrets
-from datetime import timedelta
 from datetime import timezone as dt_timezone
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
 from django.db.models import Avg, Count, Q
 from django.http import (FileResponse, HttpResponse, HttpResponseBadRequest,
                           JsonResponse)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_POST
 
 from accounts.decorators import role_required
 from student.models import Notification
@@ -190,7 +188,10 @@ def workshop_list(request):
         try:
             from .services.recommend import recommend
             from .services.schedule import optimise_schedule
-            recommended = recommend(request.user, workshops, top_n=6)
+            recommended = [
+                w for w in recommend(request.user, workshops, top_n=6)
+                if getattr(w, 'ai_score', 0) > 0
+            ]
             schedule_plan = optimise_schedule(request.user, recommended, top_n=3)
         except Exception:
             pass
@@ -205,8 +206,19 @@ def workshop_list(request):
             ).values_list('workshop_id', flat=True)
         )
 
+    # Pagination : 12 cartes par page, sans perdre les filtres courants.
+    total_count = len(workshops)
+    paginator = Paginator(workshops, 12)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    params = request.GET.copy()
+    params.pop('page', None)
+    filter_query = params.urlencode()
+
     return render(request, 'workshops/workshop_list.html', {
-        'workshops':     workshops,
+        'workshops':     list(page_obj.object_list),
+        'page_obj':      page_obj,
+        'total_count':   total_count,
+        'filter_query':  filter_query,
         'recommended':   recommended,
         'schedule_plan': schedule_plan,
         'filter_form':   form,
@@ -220,7 +232,8 @@ def workshop_list(request):
 
 @login_required
 def workshop_detail(request, slug):
-    ws = get_object_or_404(Workshop, slug=slug)
+    ws = get_object_or_404(
+        Workshop.objects.prefetch_related('bookings'), slug=slug)
     booking = _get_user_booking(ws, request.user)
 
     # Lien Zoom : jamais exposé si non réservé (contrôle serveur)
@@ -231,9 +244,13 @@ def workshop_detail(request, slug):
 
     # Replay : disponible uniquement si réservé et non expiré
     replay_accessible = False
+    replay_is_direct = False
     if ws.mode == Workshop.Mode.RECORDED:
         if booking and booking.status in ['confirmed', 'attended']:
             replay_accessible = ws.is_replay_available
+        clean_url = (ws.replay_url or '').split('?', 1)[0].lower()
+        replay_is_direct = clean_url.endswith(
+            ('.mp4', '.webm', '.ogg', '.ogv', '.mov', '.m4v'))
 
     # Prédiction de remplissage (organisateur uniquement)
     forecast_data = None
@@ -253,6 +270,7 @@ def workshop_detail(request, slug):
         'booking':           booking,
         'meeting_url':       meeting_url,
         'replay_accessible': replay_accessible,
+        'replay_is_direct':  replay_is_direct,
         'forecast':          forecast_data,
         'avis':              avis,
         'can_manage':        _can_manage(request.user, ws),
@@ -425,22 +443,30 @@ def book(request, pk):
 @login_required
 @require_POST
 def cancel(request, pk):
-    ws = get_object_or_404(Workshop, pk=pk)
-    booking = get_object_or_404(Booking, workshop=ws, user=request.user)
-
-    if booking.status == Booking.Status.ATTENDED:
-        messages.error(request, 'Vous avez déjà participé, impossible d\'annuler.')
-        return redirect('workshops:my_bookings')
-
-    if booking.status == Booking.Status.CANCELLED:
-        messages.info(request, 'Cette réservation est déjà annulée.')
-        return redirect('workshops:my_bookings')
-
-    # Seule une réservation confirmée libère réellement une place.
-    # Annuler une place "en attente" ne doit jamais promouvoir quelqu'un.
-    freed_a_seat = booking.status == Booking.Status.CONFIRMED
-
     with transaction.atomic():
+        # Verrouiller l'atelier et la réservation : deux annulations
+        # simultanées ne peuvent pas promouvoir deux personnes.
+        ws = get_object_or_404(
+            Workshop.objects.select_for_update(), pk=pk)
+        booking = get_object_or_404(
+            Booking.objects.select_for_update(),
+            workshop=ws, user=request.user,
+        )
+
+        if booking.status == Booking.Status.ATTENDED:
+            messages.error(
+                request, 'Vous avez déjà participé, impossible d\'annuler.')
+            return redirect('workshops:my_bookings')
+
+        if booking.status == Booking.Status.CANCELLED:
+            messages.info(request, 'Cette réservation est déjà annulée.')
+            return redirect('workshops:my_bookings')
+
+        # Seule une réservation confirmée libère réellement une place.
+        # Annuler une place "en attente" ne doit jamais promouvoir quelqu'un.
+        freed_a_seat = booking.status == Booking.Status.CONFIRMED
+        freed_seat_number = booking.seat_number
+
         booking.status = Booking.Status.CANCELLED
         booking.cancelled_at = timezone.now()
         booking.save(update_fields=['status', 'cancelled_at'])
@@ -458,7 +484,7 @@ def cancel(request, pk):
             if first_wait:
                 # Attribuer le numéro de place libéré
                 first_wait.status = Booking.Status.CONFIRMED
-                first_wait.seat_number = booking.seat_number
+                first_wait.seat_number = freed_seat_number
                 first_wait.save(update_fields=['status', 'seat_number'])
                 _notify(
                     first_wait.user,
@@ -509,9 +535,17 @@ def checkin(request, pk, token):
 
     Réservée aux organisateurs / mentors : un étudiant ne peut pas valider
     sa propre présence (intégrité du certificat).
+
+    GET  → page de confirmation (aucune modification d'état).
+    POST → valide réellement le check-in. Cela évite qu'un simple aperçu
+           de lien, un robot d'indexation ou une balise <img> déclenche
+           un check-in accidentel.
     """
     ws = get_object_or_404(Workshop, pk=pk)
-    booking = get_object_or_404(Booking, workshop=ws, checkin_token=token)
+    booking = get_object_or_404(
+        Booking.objects.select_related('user'), workshop=ws,
+        checkin_token=token,
+    )
 
     if request.user.role not in ('admin', 'mentor'):
         raise PermissionDenied
@@ -524,10 +558,25 @@ def checkin(request, pk, token):
         messages.error(request, 'Cette réservation n\'est pas confirmée.')
         return redirect('workshops:detail', slug=ws.slug)
 
+    if request.method != 'POST':
+        return render(request, 'workshops/checkin_confirm.html', {
+            'workshop': ws,
+            'booking':  booking,
+        })
+
     with transaction.atomic():
-        booking.status = Booking.Status.ATTENDED
-        booking.attended_at = timezone.now()
-        booking.save(update_fields=['status', 'attended_at'])
+        locked = Booking.objects.select_for_update().get(pk=booking.pk)
+        if locked.status == Booking.Status.ATTENDED:
+            messages.info(request, 'Présence déjà enregistrée.')
+            return redirect('workshops:detail', slug=ws.slug)
+        if locked.status != Booking.Status.CONFIRMED:
+            messages.error(request, 'Cette réservation n\'est pas confirmée.')
+            return redirect('workshops:detail', slug=ws.slug)
+
+        locked.status = Booking.Status.ATTENDED
+        locked.attended_at = timezone.now()
+        locked.save(update_fields=['status', 'attended_at'])
+        booking = locked
         _log_activity(ws, booking.user, 'checkin')
 
         # Créer le certificat
@@ -571,6 +620,9 @@ def replay_progress(request, pk):
         except (ValueError, TypeError):
             return HttpResponseBadRequest('progress invalide')
 
+        # La progression ne régresse jamais (un retour en arrière dans la
+        # vidéo ne doit pas effacer une progression déjà enregistrée).
+        progress = max(booking.replay_progress, progress)
         booking.replay_progress = progress
         booking.save(update_fields=['replay_progress'])
         return JsonResponse({'progress': progress, 'ok': True})
@@ -612,7 +664,7 @@ def my_bookings(request):
     bookings = (
         Booking.objects.filter(user=request.user)
         .select_related('workshop')
-        .prefetch_related('workshop__certificates')
+        .prefetch_related('workshop__bookings')
         .order_by('-booked_at')
     )
     certificates = Certificate.objects.filter(
@@ -704,29 +756,31 @@ def revoke_certificate(request, pk):
 
 @role_required('admin', 'mentor')
 def organizer_dashboard(request):
-    workshops = (
+    base_qs = (
         Workshop.objects.filter(created_by=request.user)
-        .annotate(
+        if request.user.role != 'admin'
+        else Workshop.objects.all()
+    )
+    workshops = list(
+        base_qs.annotate(
             nb_confirmed=Count(
                 'bookings',
                 filter=Q(bookings__status__in=['confirmed', 'attended']),
+                distinct=True,
+            ),
+            nb_attended=Count(
+                'bookings',
+                filter=Q(bookings__status='attended'),
+                distinct=True,
+            ),
+            nb_waiting=Count(
+                'bookings',
+                filter=Q(bookings__status='waiting'),
+                distinct=True,
             ),
             avg_rating=Avg('bookings__rating'),
-        )
-        .order_by('-starts_at')
+        ).order_by('-starts_at')
     )
-
-    # Si admin → tous les ateliers
-    if request.user.role == 'admin':
-        workshops = (
-            Workshop.objects.annotate(
-                nb_confirmed=Count(
-                    'bookings',
-                    filter=Q(bookings__status__in=['confirmed', 'attended']),
-                ),
-                avg_rating=Avg('bookings__rating'),
-            ).order_by('-starts_at')
-        )
 
     # Prédictions IA sur les ateliers à venir
     now = timezone.now()
@@ -738,12 +792,15 @@ def organizer_dashboard(request):
             forecasts[w.pk] = do_forecast(w)
     except Exception:
         pass
+    forecast_rows = [
+        {'workshop': w, 'forecast': forecasts[w.pk]}
+        for w in upcoming if w.pk in forecasts
+    ]
+    has_forecast_alert = any(fc.get('alert') for fc in forecasts.values())
 
-    # Statistiques globales
-    total_confirmed = sum(getattr(w, 'nb_confirmed', 0) for w in workshops)
-    total_attended  = sum(
-        w.bookings.filter(status='attended').count() for w in workshops
-    )
+    # Statistiques globales (aucune requête par atelier)
+    total_confirmed = sum(w.confirmed_count for w in workshops)
+    total_attended  = sum(w.attendee_count for w in workshops)
     total_certs = Certificate.objects.filter(
         workshop__in=workshops
     ).count()
@@ -751,6 +808,8 @@ def organizer_dashboard(request):
     return render(request, 'workshops/organizer_dashboard.html', {
         'workshops':       workshops,
         'forecasts':       forecasts,
+        'forecast_rows':   forecast_rows,
+        'has_forecast_alert': has_forecast_alert,
         'total_confirmed': total_confirmed,
         'total_attended':  total_attended,
         'total_certs':     total_certs,
@@ -768,7 +827,9 @@ def export_ics(request):
     Génère un fichier iCalendar (.ics) pour les ateliers réservés
     (ou tous si organisateur).
     """
-    if request.user.role in ('admin', 'mentor'):
+    if request.user.role == 'admin':
+        workshops = Workshop.objects.all()
+    elif request.user.role == 'mentor':
         workshops = Workshop.objects.filter(created_by=request.user)
     else:
         booked_ids = Booking.objects.filter(
@@ -776,6 +837,14 @@ def export_ics(request):
             status__in=['confirmed', 'attended', 'waiting'],
         ).values_list('workshop_id', flat=True)
         workshops = Workshop.objects.filter(pk__in=booked_ids)
+
+    # Depuis la page de détail, on n'exporte que l'atelier demandé.
+    workshop_id = request.GET.get('workshop')
+    if workshop_id:
+        try:
+            workshops = workshops.filter(pk=int(workshop_id))
+        except (TypeError, ValueError):
+            pass
 
     lines = [
         'BEGIN:VCALENDAR',
