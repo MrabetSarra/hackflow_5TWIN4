@@ -113,6 +113,7 @@
           <tr>
             <th>Atelier</th>
             <th>Mode</th>
+            <th>Contenu / Accès</th>
             <th>Date</th>
             <th>Capacité</th>
             <th>Remplissage</th>
@@ -137,6 +138,22 @@
                 <span class="badge bg-primary rounded-pill">Live</span>
               {% else %}
                 <span class="badge bg-secondary rounded-pill">Replay</span>
+              {% endif %}
+            </td>
+            <td class="small">
+              {% if ws.mode == 'onsite' and ws.room %}
+                <span class="badge bg-info text-dark"><i class="bi bi-geo-alt-fill me-1"></i>{{ ws.room }}</span>
+              {% elif ws.mode == 'online' and ws.meeting_url %}
+                <a href="{{ ws.meeting_url }}" target="_blank" rel="noopener noreferrer"
+                   class="badge bg-primary text-decoration-none"><i class="bi bi-link-45deg me-1"></i>Lien visio</a>
+              {% elif ws.mode == 'recorded' and ws.replay_url %}
+                <a href="{{ ws.replay_url }}" target="_blank" rel="noopener noreferrer"
+                   class="badge bg-secondary text-decoration-none"><i class="bi bi-play-circle me-1"></i>Replay</a>
+              {% elif ws.mode == 'recorded' and ws.video_file %}
+                <a href="{{ ws.video_file.url }}" target="_blank" rel="noopener noreferrer"
+                   class="badge bg-secondary text-decoration-none"><i class="bi bi-file-earmark-play me-1"></i>Vidéo</a>
+              {% else %}
+                <span class="text-body-secondary small">—</span>
               {% endif %}
             </td>
             <td class="small">{{ ws.starts_at|date:"d/m/Y" }}<br>{{ ws.starts_at|date:"H\hi" }}</td>
@@ -216,7 +233,7 @@
           </tr>
           {% empty %}
           <tr>
-            <td colspan="10" class="text-center py-4 text-body-secondary">
+              <td colspan="11" class="text-center py-4 text-body-secondary">
               <i class="bi bi-calendar-x fs-3 d-block mb-2 opacity-25"></i>
               Aucun atelier pour le moment.
               <a href="{% url 'workshops:create' %}">Créer le premier</a>
