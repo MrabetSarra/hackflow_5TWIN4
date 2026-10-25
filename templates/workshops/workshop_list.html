@@ -1,4 +1,4 @@
-{% extends "layouts/base_student.html" %}
+{% extends workshop_base_template %}
 {% load static %}
 
 {% block title %}Ateliers & Formations — HackFlow{% endblock %}
@@ -12,12 +12,26 @@
       <h1 class="h3 fw-bold mb-1">Ateliers &amp; Formations</h1>
       <p class="text-body-secondary mb-0">Développez vos compétences avec nos experts.</p>
     </div>
-    {% if request.user.role in 'admin mentor' %}
-    <a href="{% url 'workshops:create' %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
-      <i class="bi bi-plus-circle-fill me-2"></i>Créer un atelier
-    </a>
-    {% endif %}
+    <div class="d-flex flex-wrap gap-2">
+      {% if request.user.role == 'student' %}
+      <a href="?favorites=1" class="btn btn-outline-warning rounded-pill px-4 shadow-sm">
+        <i class="bi bi-star-fill me-2"></i>Mes favoris
+      </a>
+      {% endif %}
+      {% if request.user.role == 'admin' or request.user.role == 'mentor' %}
+      <a href="{% url 'workshops:create' %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+        <i class="bi bi-plus-circle-fill me-2"></i>Créer un atelier
+      </a>
+      {% endif %}
+    </div>
   </div>
+
+  {% if favorites_only %}
+  <div class="alert alert-warning d-flex align-items-center justify-content-between flex-wrap gap-2 py-2">
+    <span><i class="bi bi-star-fill me-1"></i>Vous consultez uniquement vos ateliers favoris.</span>
+    <a href="{% url 'workshops:list' %}" class="btn btn-sm btn-outline-dark rounded-pill">Voir tous les ateliers</a>
+  </div>
+  {% endif %}
 
   <!-- ── Filtres ──────────────────────────────────────────────────── -->
   <form method="get" class="card border-0 shadow-sm mb-4">

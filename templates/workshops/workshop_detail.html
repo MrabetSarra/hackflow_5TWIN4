@@ -1,4 +1,4 @@
-{% extends "layouts/base_student.html" %}
+{% extends workshop_base_template %}
 {% load static %}
 
 {% block title %}{{ workshop.title }} — HackFlow{% endblock %}
@@ -82,6 +82,18 @@
 
           <!-- Description -->
           <p class="text-body lh-lg">{{ workshop.description|linebreaksbr }}</p>
+
+          {% if request.user.role == 'student' %}
+          <form method="post" action="{% url 'workshops:favorite' workshop.pk %}" class="mb-3">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button type="submit"
+                    class="btn btn-sm rounded-pill {% if is_favorite %}btn-warning{% else %}btn-outline-warning{% endif %}">
+              <i class="bi bi-star{% if is_favorite %}-fill{% endif %} me-1"></i>
+              {% if is_favorite %}Retirer des favoris{% else %}Ajouter aux favoris{% endif %}
+            </button>
+          </form>
+          {% endif %}
 
           <!-- Actions organisateur -->
           {% if can_manage %}
@@ -206,6 +218,9 @@
           <h5 class="fw-bold mb-3"><i class="bi bi-geo-alt-fill text-success me-2"></i>Informations présentiel</h5>
           {% if workshop.room %}
           <p class="mb-2"><strong>Salle :</strong> {{ workshop.room }}</p>
+          {% endif %}
+          {% if booking and booking.status == 'confirmed' and booking.seat_number %}
+          <p class="mb-2"><strong>Votre place :</strong> n°{{ booking.seat_number }}</p>
           {% endif %}
           {% if booking and booking.status == 'confirmed' %}
           <div class="d-flex align-items-center gap-3 p-3 bg-body-tertiary rounded-3">
@@ -360,7 +375,14 @@
               {% if booking.status == 'confirmed' %}
               <div class="alert alert-success py-2 small mb-3">
                 <i class="bi bi-check-circle-fill me-1"></i>
-                Réservé — Place n°{{ booking.seat_number }}
+                Réservé
+                {% if workshop.mode == 'onsite' and booking.seat_number %}
+                  — Place n°{{ booking.seat_number }}
+                {% elif workshop.mode == 'online' %}
+                  — Accès visio disponible
+                {% elif workshop.mode == 'recorded' %}
+                  — Replay disponible
+                {% endif %}
               </div>
               <div class="d-grid gap-2">
                 <form method="post" action="{% url 'workshops:cancel' workshop.pk %}">
@@ -394,18 +416,47 @@
               <div class="alert alert-secondary py-2 small mb-3">
                 Réservation annulée
               </div>
+              {% if not workshop.booking_closed_reason %}
+                {% if workshop.mode == 'onsite' and workshop.capacity > 0 %}
+                <a href="{% url 'workshops:seats' workshop.pk %}"
+                   class="btn btn-primary w-100 rounded-pill fw-semibold py-2">
+                  <i class="bi bi-grid-3x3-gap-fill me-1"></i>Choisir une nouvelle place
+                </a>
+                {% else %}
+                <form method="post" action="{% url 'workshops:book' workshop.pk %}">
+                  {% csrf_token %}
+                  <button class="btn btn-primary w-100 rounded-pill fw-semibold py-2">
+                    <i class="bi bi-bookmark-plus-fill me-1"></i>Réserver à nouveau
+                  </button>
+                </form>
+                {% endif %}
+              {% endif %}
               {% endif %}
             {% elif not workshop.booking_closed_reason %}
-              <form method="post" action="{% url 'workshops:book' workshop.pk %}">
-                {% csrf_token %}
-                <button class="btn btn-primary w-100 rounded-pill fw-semibold py-2">
+              {% if workshop.mode == 'onsite' and workshop.capacity > 0 %}
+                <a href="{% url 'workshops:seats' workshop.pk %}"
+                   class="btn btn-primary w-100 rounded-pill fw-semibold py-2">
                   {% if workshop.seats_left == 0 %}
                     <i class="bi bi-hourglass-split me-1"></i>Rejoindre la liste d'attente
                   {% else %}
-                    <i class="bi bi-bookmark-plus-fill me-1"></i>Réserver ma place
+                    <i class="bi bi-grid-3x3-gap-fill me-1"></i>Choisir ma place
                   {% endif %}
-                </button>
-              </form>
+                </a>
+                <p class="small text-body-secondary text-center mt-2 mb-0">
+                  Sélectionnez votre place sur le plan de la salle.
+                </p>
+              {% else %}
+                <form method="post" action="{% url 'workshops:book' workshop.pk %}">
+                  {% csrf_token %}
+                  <button class="btn btn-primary w-100 rounded-pill fw-semibold py-2">
+                    {% if workshop.seats_left == 0 %}
+                      <i class="bi bi-hourglass-split me-1"></i>Rejoindre la liste d'attente
+                    {% else %}
+                      <i class="bi bi-bookmark-plus-fill me-1"></i>Réserver ma place
+                    {% endif %}
+                  </button>
+                </form>
+              {% endif %}
             {% else %}
               <button class="btn btn-secondary w-100 rounded-pill" disabled>
                 <i class="bi bi-lock-fill me-1"></i>{{ workshop.booking_closed_reason }}
@@ -413,11 +464,18 @@
             {% endif %}
           {% endif %}
 
-          <!-- Export .ics -->
-          <a href="{% url 'workshops:export_ics' %}?workshop={{ workshop.pk }}"
-             class="btn btn-sm btn-outline-secondary w-100 rounded-pill mt-2">
-            <i class="bi bi-calendar-plus me-1"></i>Ajouter cet atelier à mon calendrier
-          </a>
+          <!-- Ajout direct dans Google Calendar (aucune clé API requise) -->
+          <div class="d-grid gap-2 mt-3">
+            <a href="{{ workshop.google_calendar_url }}"
+               target="_blank" rel="noopener noreferrer"
+               class="btn btn-sm btn-danger rounded-pill">
+              <i class="bi bi-google me-1"></i>Ajouter à Google Calendar
+            </a>
+            <a href="{% url 'workshops:export_ics' %}?workshop={{ workshop.pk }}"
+               class="btn btn-sm btn-outline-secondary rounded-pill">
+              <i class="bi bi-calendar-plus me-1"></i>Télécharger le fichier .ics
+            </a>
+          </div>
 
         </div>
       </div>

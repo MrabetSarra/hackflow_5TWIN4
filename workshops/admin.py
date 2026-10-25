@@ -8,7 +8,8 @@ from django.contrib import admin
 from django.utils.html import format_html
 
 from .models import (
-    Badge, BadgeAward, Booking, Certificate, Workshop, WorkshopActivity
+    Badge, BadgeAward, Booking, Certificate, Workshop, WorkshopActivity,
+    WorkshopFavorite
 )
 
 
@@ -116,6 +117,18 @@ class BookingAdmin(admin.ModelAdmin):
                        'attended_at')
     raw_id_fields  = ('user', 'workshop')
     date_hierarchy = 'booked_at'
+
+
+# ---------------------------------------------------------------------------
+# WorkshopFavorite
+# ---------------------------------------------------------------------------
+
+@admin.register(WorkshopFavorite)
+class WorkshopFavoriteAdmin(admin.ModelAdmin):
+    list_display = ('user', 'workshop', 'created_at')
+    search_fields = ('user__username', 'user__email', 'workshop__title')
+    raw_id_fields = ('user', 'workshop')
+    date_hierarchy = 'created_at'
 
 
 # ---------------------------------------------------------------------------

@@ -68,7 +68,7 @@ class WorkshopForm(_BootstrapMixin, forms.ModelForm):
             'topic_tags_raw',       # champ virtuel → topic_tags
             'level', 'mode',
             'room', 'meeting_url',
-            'replay_url', 'replay_duration', 'available_until',
+            'replay_url', 'replay_duration', 'available_until', 'video_file',
             'starts_at', 'ends_at',
             'capacity', 'is_open',
             'cover_image',
@@ -80,6 +80,8 @@ class WorkshopForm(_BootstrapMixin, forms.ModelForm):
                 attrs={'type': 'datetime-local'}, format='%Y-%m-%dT%H:%M'),
             'available_until': forms.DateTimeInput(
                 attrs={'type': 'datetime-local'}, format='%Y-%m-%dT%H:%M'),
+            'video_file':     forms.ClearableFileInput(
+                attrs={'class': 'form-control', 'accept': 'video/*'}),
             'description':    forms.Textarea(attrs={'rows': 5}),
         }
 
@@ -123,9 +125,9 @@ class WorkshopForm(_BootstrapMixin, forms.ModelForm):
             self.add_error('meeting_url',
                            'Un lien de réunion est obligatoire pour un atelier live.')
 
-        if mode == Workshop.Mode.RECORDED and not replay:
+        if mode == Workshop.Mode.RECORDED and not replay and not cleaned.get('video_file'):
             self.add_error('replay_url',
-                           'Une URL de replay est obligatoire pour une vidéo enregistrée.')
+                           'Une URL de replay ou un fichier vidéo est obligatoire pour une vidéo enregistrée.')
 
         # 3. Capacité : replay → 0 (illimité) recommandé (non bloquant)
         capacity = cleaned.get('capacity', 0)

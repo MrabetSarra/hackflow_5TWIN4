@@ -33,6 +33,7 @@ Dashboard & calendrier
 """
 
 from datetime import timezone as dt_timezone
+from urllib.parse import quote
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -43,7 +44,9 @@ from django.db.models import Avg, Count, Q
 from django.http import (FileResponse, HttpResponse, HttpResponseBadRequest,
                           JsonResponse)
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from accounts.decorators import role_required
@@ -51,7 +54,7 @@ from student.models import Notification
 
 from .forms import RatingForm, WorkshopFilterForm, WorkshopForm
 from .models import (Badge, BadgeAward, Booking, Certificate, Workshop,
-                     WorkshopActivity)
+                     WorkshopActivity, WorkshopFavorite)
 
 
 # ---------------------------------------------------------------------------
@@ -108,9 +111,62 @@ def _check_schedule_conflict(user, workshop, exclude_booking=None):
     return None
 
 
+def _taken_seat_numbers(workshop):
+    """Numéros de places réellement occupés (confirmés ou présents)."""
+    return set(
+        Booking.objects.filter(
+            workshop=workshop,
+            status__in=['confirmed', 'attended'],
+            seat_number__isnull=False,
+        ).values_list('seat_number', flat=True)
+    )
+
+
+def _next_available_seat(workshop):
+    """Première place libre, ou None si l'atelier est complet."""
+    if not workshop.capacity:
+        return None
+    taken = _taken_seat_numbers(workshop)
+    for number in range(1, workshop.capacity + 1):
+        if number not in taken:
+            return number
+    return None
+
+
 def _can_manage(user, workshop):
-    """True si l'utilisateur peut éditer/supprimer cet atelier."""
-    return user.role == 'admin' or workshop.created_by == user
+    """True si l'utilisateur peut éditer/supprimer cet atelier.
+
+    Un étudiant ne doit jamais pouvoir gérer un atelier, même si une donnée
+    ancienne lui attribuait par erreur ``created_by``.
+    """
+    if getattr(user, 'role', None) == 'admin':
+        return True
+    return (
+        getattr(user, 'role', None) == 'mentor'
+        and workshop.created_by_id == user.pk
+    )
+
+
+def _workshop_base_template(user):
+    """Layout cohérent avec le rôle de l'utilisateur."""
+    role = getattr(user, 'role', None)
+    if role == 'mentor':
+        return 'layouts/base_mentor.html'
+    if role in ('admin', 'organization'):
+        return 'layouts/base_admin.html'
+    return 'layouts/base_student.html'
+
+
+def _redirect_back(request, fallback):
+    """Redirige vers ``next``/Referer uniquement si la cible est sûre."""
+    target = request.POST.get('next') or request.META.get('HTTP_REFERER') or ''
+    if target and url_has_allowed_host_and_scheme(
+        target,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return redirect(target)
+    return redirect(fallback)
 
 
 def _ics_escape(value: str) -> str:
@@ -134,7 +190,14 @@ def workshop_list(request):
     Si l'utilisateur est étudiant, applique les recommandations IA.
     """
     form = WorkshopFilterForm(request.GET or None)
+    favorites_only = (
+        request.user.is_authenticated
+        and request.user.role == 'student'
+        and request.GET.get('favorites') == '1'
+    )
     qs = Workshop.objects.select_related('created_by').prefetch_related('bookings')
+    if favorites_only:
+        qs = qs.filter(favorites__user=request.user)
 
     if form.is_valid():
         q        = form.cleaned_data.get('q', '')
@@ -181,10 +244,14 @@ def workshop_list(request):
             )
         )
 
-    # Recommandation IA pour les étudiants
+    # Recommandation IA pour les étudiants (masquée quand on filtre les favoris)
     recommended = []
     schedule_plan = []
-    if request.user.is_authenticated and request.user.role == 'student':
+    if (
+        request.user.is_authenticated
+        and request.user.role == 'student'
+        and not favorites_only
+    ):
         try:
             from .services.recommend import recommend
             from .services.schedule import optimise_schedule
@@ -196,13 +263,19 @@ def workshop_list(request):
         except Exception:
             pass
 
-    # Marquer les ateliers déjà réservés par l'utilisateur courant
+    # Marquer les ateliers déjà réservés / favoris de l'utilisateur courant
     booked_ids = set()
+    favorite_ids = set()
     if request.user.is_authenticated:
         booked_ids = set(
             Booking.objects.filter(
                 user=request.user,
                 status__in=['confirmed', 'waiting', 'attended'],
+            ).values_list('workshop_id', flat=True)
+        )
+        favorite_ids = set(
+            WorkshopFavorite.objects.filter(
+                user=request.user,
             ).values_list('workshop_id', flat=True)
         )
 
@@ -223,6 +296,9 @@ def workshop_list(request):
         'schedule_plan': schedule_plan,
         'filter_form':   form,
         'booked_ids':    booked_ids,
+        'favorite_ids':  favorite_ids,
+        'favorites_only': favorites_only,
+        'workshop_base_template': _workshop_base_template(request.user),
     })
 
 
@@ -265,6 +341,12 @@ def workshop_detail(request, slug):
         rating__isnull=False
     ).select_related('user').order_by('-booked_at')[:10]
 
+    is_favorite = (
+        request.user.role == 'student'
+        and WorkshopFavorite.objects.filter(
+            user=request.user, workshop=ws).exists()
+    )
+
     return render(request, 'workshops/workshop_detail.html', {
         'workshop':          ws,
         'booking':           booking,
@@ -274,6 +356,8 @@ def workshop_detail(request, slug):
         'forecast':          forecast_data,
         'avis':              avis,
         'can_manage':        _can_manage(request.user, ws),
+        'is_favorite':       is_favorite,
+        'workshop_base_template': _workshop_base_template(request.user),
     })
 
 
@@ -294,6 +378,7 @@ def workshop_create(request):
     return render(request, 'workshops/workshop_form.html', {
         'form':  form,
         'action': 'Créer',
+        'workshop_base_template': _workshop_base_template(request.user),
     })
 
 
@@ -317,6 +402,7 @@ def workshop_edit(request, pk):
         'form':     form,
         'workshop': ws,
         'action':   'Modifier',
+        'workshop_base_template': _workshop_base_template(request.user),
     })
 
 
@@ -331,8 +417,10 @@ def workshop_delete(request, pk):
         ws.delete()
         messages.success(request, f'Atelier «{title}» supprimé.')
         return redirect('workshops:list')
-    return render(request, 'workshops/workshop_confirm_delete.html',
-                  {'workshop': ws})
+    return render(request, 'workshops/workshop_confirm_delete.html', {
+        'workshop': ws,
+        'workshop_base_template': _workshop_base_template(request.user),
+    })
 
 
 @login_required
@@ -377,31 +465,94 @@ def book(request, pk):
                 )
                 return redirect('workshops:detail', slug=ws.slug)
 
-            # Déterminer le statut
+            existing = (
+                Booking.objects.select_for_update()
+                .filter(workshop=ws_locked, user=request.user)
+                .first()
+            )
+            if existing and existing.status != Booking.Status.CANCELLED:
+                messages.warning(request, 'Vous avez déjà réservé cet atelier.')
+                return redirect('workshops:detail', slug=ws.slug)
+
+            # Sélection explicite d'une place (atelier présentiel).
+            requested_seat = None
+            if ws_locked.mode == Workshop.Mode.ONSITE and ws_locked.capacity > 0:
+                raw_seat = (request.POST.get('seat_number') or '').strip()
+                if raw_seat:
+                    try:
+                        requested_seat = int(raw_seat)
+                    except (TypeError, ValueError):
+                        messages.error(request, 'Place invalide.')
+                        return redirect('workshops:seats', pk=ws.pk)
+                    if not 1 <= requested_seat <= ws_locked.capacity:
+                        messages.error(request, 'Cette place n\'existe pas.')
+                        return redirect('workshops:seats', pk=ws.pk)
+                    if requested_seat in _taken_seat_numbers(ws_locked):
+                        messages.error(
+                            request,
+                            'Cette place vient d\'être réservée. '
+                            'Choisissez-en une autre.',
+                        )
+                        return redirect('workshops:seats', pk=ws.pk)
+
+            # Déterminer le statut et la place.
             seats = ws_locked.seats_left
+            status = Booking.Status.WAITING
+            seat_number = None
             if seats is None or seats > 0:
                 status = Booking.Status.CONFIRMED
-                # Prochain numéro de place
-                last_seat = (
-                    Booking.objects.filter(
-                        workshop=ws_locked,
-                        status__in=['confirmed', 'attended'],
-                        seat_number__isnull=False,
-                    ).order_by('-seat_number').first()
-                )
-                seat_number = (last_seat.seat_number + 1) if last_seat else 1
-            else:
+                if ws_locked.mode == Workshop.Mode.ONSITE:
+                    if ws_locked.capacity > 0:
+                        seat_number = (
+                            requested_seat
+                            if requested_seat is not None
+                            else _next_available_seat(ws_locked)
+                        )
+                    # capacity=0 : atelier présentiel sans places numérotées.
+                # En visio ou replay, il n'y a pas de place physique : on ne
+                # stocke pas de seat_number pour ne pas afficher « Place n°1 »
+                # à un participant en ligne.
+
+            if (
+                status == Booking.Status.CONFIRMED
+                and ws_locked.mode == Workshop.Mode.ONSITE
+                and ws_locked.capacity > 0
+                and seat_number is None
+            ):
+                # Toutes les places ont été prises entre-temps : waitlist.
                 status = Booking.Status.WAITING
-                seat_number = None
 
-            booking = Booking.objects.create(
-                workshop=ws_locked,
-                user=request.user,
-                status=status,
-                seat_number=seat_number,
+            if existing:
+                # Réutilisation d'une réservation annulée : évite de bloquer
+                # l'étudiant à cause de la contrainte unique (atelier, user).
+                existing.status = status
+                existing.seat_number = seat_number
+                existing.cancelled_at = None
+                existing.attended_at = None
+                existing.rating = None
+                existing.comment = ''
+                existing.replay_progress = 0
+                existing.save(update_fields=[
+                    'status', 'seat_number', 'cancelled_at', 'attended_at',
+                    'rating', 'comment', 'replay_progress',
+                ])
+                booking = existing
+            else:
+                booking = Booking.objects.create(
+                    workshop=ws_locked,
+                    user=request.user,
+                    status=status,
+                    seat_number=seat_number,
+                )
+
+    except IntegrityError as exc:
+        error_text = str(exc).lower()
+        if 'seat_number' in error_text or 'unique_active_seat' in error_text:
+            messages.error(
+                request,
+                'Cette place vient d\'être réservée. Choisissez-en une autre.',
             )
-
-    except IntegrityError:
+            return redirect('workshops:seats', pk=ws.pk)
         messages.warning(request, 'Vous avez déjà réservé cet atelier.')
         return redirect('workshops:detail', slug=ws.slug)
 
@@ -409,17 +560,26 @@ def book(request, pk):
                   f'status={booking.status}')
 
     if booking.status == Booking.Status.CONFIRMED:
+        if booking.seat_number:
+            confirmation = (
+                f'Place n°{booking.seat_number} confirmée pour le '
+                f'{ws.starts_at.strftime("%d/%m/%Y à %Hh%M")}.'
+            )
+            success = f'Réservation confirmée ! Place n°{booking.seat_number}.'
+        else:
+            confirmation = (
+                f'Réservation confirmée pour le '
+                f'{ws.starts_at.strftime("%d/%m/%Y à %Hh%M")}.'
+            )
+            success = 'Réservation confirmée !'
         _notify(
             request.user,
             title=f'Réservation confirmée — {ws.title}',
-            message=f'Place n°{booking.seat_number} confirmée pour le '
-                    f'{ws.starts_at.strftime("%d/%m/%Y à %Hh%M")}.',
+            message=confirmation,
             icon='bi-check-circle-fill',
             url=ws.get_absolute_url(),
         )
-        messages.success(
-            request,
-            f'Réservation confirmée ! Place n°{booking.seat_number}.')
+        messages.success(request, success)
     else:
         pos = booking.waitlist_position
         _notify(
@@ -434,6 +594,64 @@ def book(request, pk):
             f'Complet — vous êtes en position {pos} sur la liste d\'attente.')
 
     return redirect('workshops:detail', slug=ws.slug)
+
+
+@role_required('student')
+def select_seat(request, pk):
+    """Carte des places pour un atelier présentiel."""
+    ws = get_object_or_404(Workshop, pk=pk)
+
+    if ws.mode != Workshop.Mode.ONSITE:
+        messages.info(
+            request,
+            'Cet atelier ne nécessite pas de sélection de place.',
+        )
+        return redirect('workshops:detail', slug=ws.slug)
+
+    if ws.capacity <= 0:
+        messages.info(
+            request,
+            'Cet atelier ne propose pas de places numérotées.',
+        )
+        return redirect('workshops:detail', slug=ws.slug)
+
+    existing = (
+        Booking.objects.filter(workshop=ws, user=request.user)
+        .exclude(status=Booking.Status.CANCELLED)
+        .first()
+    )
+    if existing:
+        messages.info(
+            request,
+            'Vous avez déjà une réservation pour cet atelier.',
+        )
+        return redirect('workshops:detail', slug=ws.slug)
+
+    closed_reason = ws.booking_closed_reason
+    if closed_reason:
+        messages.error(
+            request,
+            f'Réservation impossible : {closed_reason.lower()}.',
+        )
+        return redirect('workshops:detail', slug=ws.slug)
+
+    taken = _taken_seat_numbers(ws)
+    columns = 12
+    seat_rows = []
+    for start in range(1, ws.capacity + 1, columns):
+        seat_rows.append([
+            {'number': number, 'taken': number in taken}
+            for number in range(
+                start, min(start + columns, ws.capacity + 1))
+        ])
+
+    return render(request, 'workshops/workshop_seats.html', {
+        'workshop': ws,
+        'seat_rows': seat_rows,
+        'taken_count': len(taken),
+        'free_count': max(0, ws.capacity - len(taken)),
+        'columns': columns,
+    })
 
 
 # ---------------------------------------------------------------------------
@@ -482,15 +700,28 @@ def cancel(request, pk):
                 .first()
             )
             if first_wait:
-                # Attribuer le numéro de place libéré
+                # Attribuer le numéro de place libéré (présentiel uniquement).
                 first_wait.status = Booking.Status.CONFIRMED
-                first_wait.seat_number = freed_seat_number
+                first_wait.seat_number = (
+                    freed_seat_number
+                    if ws.mode == Workshop.Mode.ONSITE
+                    else None
+                )
                 first_wait.save(update_fields=['status', 'seat_number'])
+                if first_wait.seat_number:
+                    promotion_message = (
+                        'Vous avez été promu(e) de la liste d\'attente. '
+                        f'Place n°{first_wait.seat_number} confirmée.'
+                    )
+                else:
+                    promotion_message = (
+                        'Vous avez été promu(e) de la liste d\'attente. '
+                        'Votre réservation est confirmée.'
+                    )
                 _notify(
                     first_wait.user,
                     title=f'Bonne nouvelle ! Place disponible — {ws.title}',
-                    message=f'Vous avez été promu(e) de la liste d\'attente. '
-                            f'Place n°{first_wait.seat_number} confirmée.',
+                    message=promotion_message,
                     icon='bi-arrow-up-circle-fill',
                     url=ws.get_absolute_url(),
                 )
@@ -667,19 +898,98 @@ def my_bookings(request):
         .prefetch_related('workshop__bookings')
         .order_by('-booked_at')
     )
-    certificates = Certificate.objects.filter(
-        user=request.user
-    ).select_related('workshop').order_by('-issued_at')
+    certificates = list(
+        Certificate.objects.filter(user=request.user)
+        .select_related('workshop')
+        .order_by('-issued_at')
+    )
+    badges_awarded = list(
+        BadgeAward.objects.filter(user=request.user)
+        .select_related('badge', 'workshop')
+        .order_by('-awarded_at')
+    )
 
-    badges_awarded = BadgeAward.objects.filter(
-        user=request.user
-    ).select_related('badge', 'workshop').order_by('-awarded_at')
+    # Associe le badge obtenu à l'atelier correspondant pour l'afficher sur
+    # la carte du certificat (un seul badge par atelier dans ce résumé).
+    badge_by_workshop = {}
+    for award in badges_awarded:
+        if award.workshop_id and award.workshop_id not in badge_by_workshop:
+            badge_by_workshop[award.workshop_id] = award
+
+    for cert in certificates:
+        cert.badge_award = badge_by_workshop.get(cert.workshop_id)
+        verify_url = request.build_absolute_uri(cert.get_verify_url())
+        cert.linkedin_share_url = (
+            'https://www.linkedin.com/sharing/share-offsite/?url='
+            + quote(verify_url, safe='')
+        )
+
+    booked_ids = set(
+        Booking.objects.filter(
+            user=request.user,
+            status__in=['confirmed', 'waiting', 'attended'],
+        ).values_list('workshop_id', flat=True)
+    )
+    favorite_ids = set(
+        WorkshopFavorite.objects.filter(
+            user=request.user,
+        ).values_list('workshop_id', flat=True)
+    )
+
+    favorite_workshops = []
+    recommended = []
+    if request.user.role == 'student':
+        favorite_workshops = list(
+            Workshop.objects.filter(favorites__user=request.user)
+            .select_related('created_by')
+            .prefetch_related('bookings')
+            .order_by('starts_at')
+        )
+        candidates = list(
+            Workshop.objects.filter(
+                is_open=True,
+                starts_at__gte=timezone.now(),
+            )
+            .exclude(pk__in=booked_ids)
+            .select_related('created_by')
+            .prefetch_related('bookings')
+            .order_by('starts_at')
+        )
+        try:
+            from .services.recommend import recommend
+            recommended = [
+                w for w in recommend(request.user, candidates, top_n=6)
+                if getattr(w, 'ai_score', 0) > 0
+            ][:3]
+        except Exception:
+            recommended = []
 
     return render(request, 'workshops/my_bookings.html', {
-        'bookings':     bookings,
-        'certificates': certificates,
-        'badges':       badges_awarded,
+        'bookings':           bookings,
+        'certificates':       certificates,
+        'badges':             badges_awarded,
+        'favorite_workshops': favorite_workshops,
+        'recommended':        recommended,
+        'booked_ids':         booked_ids,
+        'favorite_ids':       favorite_ids,
     })
+
+
+@role_required('student')
+@require_POST
+def toggle_favorite(request, pk):
+    """Ajoute ou retire un atelier des favoris de l'étudiant connecté."""
+    workshop = get_object_or_404(Workshop, pk=pk)
+    favorite, created = WorkshopFavorite.objects.get_or_create(
+        user=request.user, workshop=workshop)
+    if created:
+        messages.success(
+            request, f'«{workshop.title}» ajouté à vos favoris.')
+    else:
+        favorite.delete()
+        messages.info(
+            request, f'«{workshop.title}» retiré de vos favoris.')
+    return _redirect_back(request, reverse('workshops:list'))
 
 
 # ---------------------------------------------------------------------------
@@ -814,6 +1124,7 @@ def organizer_dashboard(request):
         'total_attended':  total_attended,
         'total_certs':     total_certs,
         'now':             now,
+        'workshop_base_template': _workshop_base_template(request.user),
     })
 
 
@@ -827,9 +1138,10 @@ def export_ics(request):
     Génère un fichier iCalendar (.ics) pour les ateliers réservés
     (ou tous si organisateur).
     """
-    if request.user.role == 'admin':
+    role = request.user.role
+    if role == 'admin':
         workshops = Workshop.objects.all()
-    elif request.user.role == 'mentor':
+    elif role == 'mentor':
         workshops = Workshop.objects.filter(created_by=request.user)
     else:
         booked_ids = Booking.objects.filter(
@@ -837,6 +1149,18 @@ def export_ics(request):
             status__in=['confirmed', 'attended', 'waiting'],
         ).values_list('workshop_id', flat=True)
         workshops = Workshop.objects.filter(pk__in=booked_ids)
+
+    # Le lien Zoom/Meet ne doit être exporté que pour les étudiants dont la
+    # place est confirmée (ou qui ont participé), jamais pour une liste
+    # d'attente.
+    confirmed_meeting_ids = set()
+    if role == 'student':
+        confirmed_meeting_ids = set(
+            Booking.objects.filter(
+                user=request.user,
+                status__in=['confirmed', 'attended'],
+            ).values_list('workshop_id', flat=True)
+        )
 
     # Depuis la page de détail, on n'exporte que l'atelier demandé.
     workshop_id = request.GET.get('workshop')
@@ -860,8 +1184,15 @@ def export_ics(request):
         dtstart = ws.starts_at.astimezone(dt_timezone.utc).strftime('%Y%m%dT%H%M%SZ')
         dtend   = ws.ends_at.astimezone(dt_timezone.utc).strftime('%Y%m%dT%H%M%SZ')
         now_str = timezone.now().astimezone(dt_timezone.utc).strftime('%Y%m%dT%H%M%SZ')
-        location = ws.room if ws.mode == 'onsite' else (
-            ws.meeting_url if ws.mode == 'online' else 'En ligne (replay)')
+        if ws.mode == 'onsite':
+            location = ws.room
+        elif ws.mode == 'online':
+            if role in ('admin', 'mentor') or ws.pk in confirmed_meeting_ids:
+                location = ws.meeting_url
+            else:
+                location = 'En ligne (lien après confirmation)'
+        else:
+            location = 'En ligne (replay)'
         summary = _ics_escape(ws.title)
         desc = _ics_escape(ws.description[:200] + '…')
 

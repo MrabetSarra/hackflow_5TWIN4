@@ -1,7 +1,7 @@
 """
 workshops/tests.py
 ==================
-15 tests couvrant P2 → P6 :
+44 tests couvrant P2 → P7 :
 
  1.  Création d'atelier par admin → OK
  2.  Création par étudiant → 403
@@ -24,6 +24,13 @@ workshops/tests.py
  19.  Atelier passé → réservation impossible
  20.  Atelier à venir → compte à rebours affiché
  21.  Atelier commencé → réservation impossible
+ 22.  Favoris, Google Calendar, layouts par rôle et partage LinkedIn
+ 39.  Présentiel : plan de salle et réservation d'une place choisie
+ 40.  Une place déjà occupée ne peut pas être réservée
+ 41.  Visio : lien d'accès visible après réservation
+ 42.  Replay : lecture vidéo et accès depuis « Mes ateliers »
+ 43.  Présentiel complet : repli liste d'attente
+ 44.  Annulation puis nouvelle réservation avec une autre place
 """
 
 from datetime import timedelta
@@ -33,7 +40,9 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import Badge, BadgeAward, Booking, Certificate, Workshop
+from .models import (
+    Badge, BadgeAward, Booking, Certificate, Workshop, WorkshopFavorite
+)
 from .services.badges import ensure_badges_exist
 
 User = get_user_model()
@@ -553,7 +562,7 @@ class WorkshopCrudTests(TestCase):
         response = self.client.get(
             reverse('workshops:detail', kwargs={'slug': ws.slug}))
         self.assertContains(response, 'data-workshop-countdown')
-        self.assertContains(response, 'Réserver ma place')
+        self.assertContains(response, 'Choisir ma place')
 
     # ------------------------------------------------------------------
     # Test 21 — Atelier commencé mais pas terminé : réservation refusée
@@ -699,3 +708,311 @@ class WorkshopCrudTests(TestCase):
 
         result = recommend(user, [unrelated])
         self.assertEqual(result[0].ai_score, 0)
+
+    # ------------------------------------------------------------------
+    # Test 29 — Un étudiant ne voit pas le bouton de création
+    # ------------------------------------------------------------------
+    def test_29_student_does_not_see_create_button(self):
+        _make_workshop(self.admin)
+        self.client.login(username='student_user', password='Test1234!')
+        response = self.client.get(reverse('workshops:list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Créer un atelier')
+        self.assertEqual(
+            self.client.get(reverse('workshops:create')).status_code, 403)
+
+    # ------------------------------------------------------------------
+    # Test 30 — Lien Google Calendar pré-rempli, sans clé API
+    # ------------------------------------------------------------------
+    def test_30_google_calendar_url_is_prefilled(self):
+        ws = _make_workshop(self.admin, title='Atelier Google')
+        url = ws.google_calendar_url
+        self.assertTrue(url.startswith(
+            'https://calendar.google.com/calendar/render?'))
+        self.assertIn('action=TEMPLATE', url)
+        self.assertIn('text=Atelier+Google', url)
+        self.assertIn('dates=', url)
+        self.assertIn('location=B12', url)
+
+    # ------------------------------------------------------------------
+    # Test 31 — Ajout / retrait d'un favori par un étudiant
+    # ------------------------------------------------------------------
+    def test_31_student_can_toggle_favorite(self):
+        ws = _make_workshop(self.admin)
+        self.client.login(username='student_user', password='Test1234!')
+        url = reverse('workshops:favorite', kwargs={'pk': ws.pk})
+
+        response = self.client.post(url, {'next': reverse('workshops:list')})
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(
+            WorkshopFavorite.objects.filter(
+                user=self.student, workshop=ws).exists())
+
+        self.client.post(url, {'next': reverse('workshops:list')})
+        self.assertFalse(
+            WorkshopFavorite.objects.filter(
+                user=self.student, workshop=ws).exists())
+
+    # ------------------------------------------------------------------
+    # Test 32 — Filtre « Mes favoris » du catalogue
+    # ------------------------------------------------------------------
+    def test_32_catalog_favorites_filter(self):
+        favorite = _make_workshop(self.admin, title='Atelier favori')
+        other = _make_workshop(self.admin, title='Atelier normal')
+        WorkshopFavorite.objects.create(
+            user=self.student, workshop=favorite)
+
+        self.client.login(username='student_user', password='Test1234!')
+        response = self.client.get(
+            reverse('workshops:list'), {'favorites': '1'})
+        ids = [w.pk for w in response.context['workshops']]
+        self.assertIn(favorite.pk, ids)
+        self.assertNotIn(other.pk, ids)
+
+    # ------------------------------------------------------------------
+    # Test 33 — Ancienne URL mentor → redirection vers le dashboard
+    # ------------------------------------------------------------------
+    def test_33_mentor_workshops_dashboard_alias_redirects(self):
+        mentor = _make_user('mentor_user', role='mentor')
+        self.client.login(username=mentor.username, password='Test1234!')
+        response = self.client.get('/mentor/workshops/dashboard/')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('workshops:dashboard'))
+
+    # ------------------------------------------------------------------
+    # Test 34 — Partage LinkedIn d'un certificat
+    # ------------------------------------------------------------------
+    def test_34_certificate_has_linkedin_share_link(self):
+        ws = _make_workshop(self.admin)
+        Certificate.objects.create(workshop=ws, user=self.student)
+        self.client.login(username='student_user', password='Test1234!')
+        response = self.client.get(reverse('workshops:my_bookings'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'linkedin.com/sharing/share-offsite')
+        self.assertContains(response, 'Partager sur LinkedIn')
+
+    # ------------------------------------------------------------------
+    # Test 35 — Un étudiant ne gère jamais un atelier, même comme créateur
+    # ------------------------------------------------------------------
+    def test_35_student_cannot_manage_even_as_creator(self):
+        ws = _make_workshop(self.student)
+        self.client.login(username='student_user', password='Test1234!')
+        response = self.client.get(
+            reverse('workshops:edit', kwargs={'pk': ws.pk}))
+        self.assertEqual(response.status_code, 403)
+
+    # ------------------------------------------------------------------
+    # Test 36 — Le mentor garde son propre layout dans les ateliers
+    # ------------------------------------------------------------------
+    def test_36_mentor_workshop_pages_use_mentor_layout(self):
+        mentor = _make_user('mentor_layout', role='mentor')
+        ws = _make_workshop(mentor)
+        self.client.login(username=mentor.username, password='Test1234!')
+
+        response = self.client.get(reverse('workshops:list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context['workshop_base_template'],
+            'layouts/base_mentor.html',
+        )
+        self.assertContains(response, 'Mentor')
+
+        response = self.client.get(
+            reverse('workshops:detail', kwargs={'slug': ws.slug}))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Tableau de Bord')
+
+    # ------------------------------------------------------------------
+    # Test 37 — L'admin garde son layout et le dashboard ateliers s'affiche
+    # ------------------------------------------------------------------
+    def test_37_admin_workshop_dashboard_uses_admin_layout(self):
+        self.client.login(username='admin_user', password='Test1234!')
+        response = self.client.get(reverse('workshops:dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context['workshop_base_template'],
+            'layouts/base_admin.html',
+        )
+        self.assertContains(response, 'Cockpit Organisateur')
+
+    # ------------------------------------------------------------------
+    # Test 38 — Export .ics : pas de lien Zoom pour une liste d'attente
+    # ------------------------------------------------------------------
+    def test_38_export_ics_hides_zoom_for_waiting_student(self):
+        ws = _make_workshop(self.admin, mode='online', capacity=1)
+        ws.meeting_url = 'https://zoom.us/j/SECRETICS'
+        ws.save(update_fields=['meeting_url'])
+        Booking.objects.create(
+            workshop=ws, user=self.student, status=Booking.Status.WAITING)
+        self.client.login(username='student_user', password='Test1234!')
+        response = self.client.get(
+            reverse('workshops:export_ics'), {'workshop': ws.pk})
+        body = response.content.decode('utf-8')
+        self.assertNotIn('SECRETICS', body)
+        self.assertIn('lien après confirmation', body)
+
+    # ------------------------------------------------------------------
+    # Test 39 — Présentiel : plan de salle et réservation d'une place choisie
+    # ------------------------------------------------------------------
+    def test_39_onsite_seat_selection_assigns_chosen_seat(self):
+        ws = _make_workshop(self.admin, capacity=6)
+        other = _make_user('seat_holder', role='student')
+        Booking.objects.create(
+            workshop=ws, user=other,
+            status=Booking.Status.CONFIRMED,
+            seat_number=2,
+        )
+
+        self.client.login(username='student_user', password='Test1234!')
+        response = self.client.get(
+            reverse('workshops:seats', kwargs={'pk': ws.pk}))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Sélectionnez votre place')
+        self.assertContains(response, 'B12')
+
+        seat_map = {
+            seat['number']: seat['taken']
+            for row in response.context['seat_rows']
+            for seat in row
+        }
+        self.assertTrue(seat_map[2])
+        self.assertFalse(seat_map[1])
+
+        response = self.client.post(
+            reverse('workshops:book', kwargs={'pk': ws.pk}),
+            {'seat_number': '3'},
+        )
+        self.assertRedirects(
+            response,
+            reverse('workshops:detail', kwargs={'slug': ws.slug}),
+        )
+        booking = Booking.objects.get(workshop=ws, user=self.student)
+        self.assertEqual(booking.status, Booking.Status.CONFIRMED)
+        self.assertEqual(booking.seat_number, 3)
+
+        response = self.client.get(
+            reverse('workshops:detail', kwargs={'slug': ws.slug}))
+        self.assertContains(response, 'Votre place')
+        self.assertContains(response, 'Place n°3')
+
+    # ------------------------------------------------------------------
+    # Test 40 — Une place déjà occupée ne peut pas être réservée
+    # ------------------------------------------------------------------
+    def test_40_taken_seat_is_rejected(self):
+        ws = _make_workshop(self.admin, capacity=4)
+        other = _make_user('seat_holder_2', role='student')
+        Booking.objects.create(
+            workshop=ws, user=other,
+            status=Booking.Status.CONFIRMED,
+            seat_number=2,
+        )
+
+        self.client.login(username='student_user', password='Test1234!')
+        response = self.client.post(
+            reverse('workshops:book', kwargs={'pk': ws.pk}),
+            {'seat_number': '2'},
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(
+            Booking.objects.filter(
+                workshop=ws, user=self.student).exists()
+        )
+        messages_list = list(response.context['messages'])
+        self.assertTrue(any(
+            'vient d\'être réservée' in str(message)
+            for message in messages_list
+        ))
+
+    # ------------------------------------------------------------------
+    # Test 41 — Visio : le lien d'accès apparaît après réservation
+    # ------------------------------------------------------------------
+    def test_41_online_student_sees_access_link_after_booking(self):
+        ws = _make_workshop(self.admin, mode='online', capacity=10)
+        ws.meeting_url = 'https://zoom.us/j/ACCESS123'
+        ws.save(update_fields=['meeting_url'])
+
+        self.client.login(username='student_user', password='Test1234!')
+        self.client.post(reverse('workshops:book', kwargs={'pk': ws.pk}))
+
+        response = self.client.get(
+            reverse('workshops:detail', kwargs={'slug': ws.slug}))
+        self.assertContains(response, 'ACCESS123')
+        self.assertContains(response, 'Rejoindre la session')
+
+        response = self.client.get(reverse('workshops:my_bookings'))
+        self.assertContains(response, 'ACCESS123')
+        self.assertContains(response, 'Rejoindre la visio')
+
+    # ------------------------------------------------------------------
+    # Test 42 — Replay : lecture vidéo et accès depuis « Mes ateliers »
+    # ------------------------------------------------------------------
+    def test_42_recorded_student_can_watch_replay_after_booking(self):
+        ws = _make_workshop(
+            self.admin,
+            mode='recorded',
+            capacity=0,
+            replay_url='https://cdn.example.test/replay.mp4',
+            available_until=timezone.now() + timedelta(days=30),
+        )
+
+        self.client.login(username='student_user', password='Test1234!')
+        self.client.post(reverse('workshops:book', kwargs={'pk': ws.pk}))
+
+        response = self.client.get(
+            reverse('workshops:detail', kwargs={'slug': ws.slug}))
+        self.assertContains(response, 'replay.mp4')
+        self.assertContains(response, '<video')
+
+        response = self.client.get(reverse('workshops:my_bookings'))
+        self.assertContains(response, 'Regarder le replay')
+
+    # ------------------------------------------------------------------
+    # Test 43 — Présentiel complet : seul le repli liste d'attente est proposé
+    # ------------------------------------------------------------------
+    def test_43_full_onsite_shows_waitlist(self):
+        ws = _make_workshop(self.admin, capacity=1)
+        other = _make_user('seat_holder_3', role='student')
+        Booking.objects.create(
+            workshop=ws, user=other,
+            status=Booking.Status.CONFIRMED,
+            seat_number=1,
+        )
+
+        self.client.login(username='student_user', password='Test1234!')
+        response = self.client.get(
+            reverse('workshops:seats', kwargs={'pk': ws.pk}))
+        self.assertContains(response, 'Toutes les places sont occupées')
+        self.assertContains(response, 'Rejoindre la liste d\'attente')
+
+        self.client.post(reverse('workshops:book', kwargs={'pk': ws.pk}))
+        booking = Booking.objects.get(workshop=ws, user=self.student)
+        self.assertEqual(booking.status, Booking.Status.WAITING)
+        self.assertIsNone(booking.seat_number)
+
+    # ------------------------------------------------------------------
+    # Test 44 — Annulation puis nouvelle réservation avec une autre place
+    # ------------------------------------------------------------------
+    def test_44_cancelled_booking_can_be_rebooked(self):
+        ws = _make_workshop(self.admin, capacity=3)
+        other = _make_user('seat_holder_4', role='student')
+        Booking.objects.create(
+            workshop=ws, user=other,
+            status=Booking.Status.CONFIRMED,
+            seat_number=2,
+        )
+
+        self.client.login(username='student_user', password='Test1234!')
+        self.client.post(
+            reverse('workshops:book', kwargs={'pk': ws.pk}),
+            {'seat_number': '1'},
+        )
+        self.client.post(reverse('workshops:cancel', kwargs={'pk': ws.pk}))
+        self.client.post(
+            reverse('workshops:book', kwargs={'pk': ws.pk}),
+            {'seat_number': '3'},
+        )
+
+        booking = Booking.objects.get(workshop=ws, user=self.student)
+        self.assertEqual(booking.status, Booking.Status.CONFIRMED)
+        self.assertEqual(booking.seat_number, 3)

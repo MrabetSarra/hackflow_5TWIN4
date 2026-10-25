@@ -1,6 +1,6 @@
 {% load static %}
-{# Carte atelier réutilisable — utilisée par workshop_list.html #}
-{# Variables : workshop, show_ai (bool), booked_ids (set) #}
+{# Carte atelier réutilisable — utilisée par workshop_list.html et my_bookings.html #}
+{# Variables : workshop, show_ai (bool), booked_ids (set), favorite_ids (set) #}
 
 {% with ws=workshop %}
 <div class="col-12 col-md-6 col-xl-4">
@@ -141,7 +141,30 @@
         </p>
         {% endif %}
 
-        <!-- Actions -->
+        <!-- Actions secondaires : favoris + Google Calendar -->
+        <div class="d-flex gap-2 mb-2">
+          {% if request.user.role == 'student' %}
+          <form method="post" action="{% url 'workshops:favorite' ws.pk %}" class="flex-grow-1">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button type="submit"
+                    class="btn btn-sm w-100 rounded-pill {% if ws.pk in favorite_ids %}btn-warning{% else %}btn-outline-warning{% endif %}"
+                    title="{% if ws.pk in favorite_ids %}Retirer des favoris{% else %}Ajouter aux favoris{% endif %}">
+              <i class="bi bi-star{% if ws.pk in favorite_ids %}-fill{% endif %} me-1"></i>
+              Favori
+            </button>
+          </form>
+          {% endif %}
+          <a href="{{ ws.google_calendar_url }}"
+             target="_blank" rel="noopener noreferrer"
+             class="btn btn-sm btn-outline-danger rounded-pill"
+             title="Ajouter à Google Calendar"
+             aria-label="Ajouter {{ ws.title }} à Google Calendar">
+            <i class="bi bi-google"></i>
+          </a>
+        </div>
+
+        <!-- Actions principales -->
         <div class="d-flex gap-2">
           <a href="{{ ws.get_absolute_url }}" class="btn btn-sm btn-outline-primary rounded-pill flex-grow-1">
             Voir le détail
@@ -156,6 +179,15 @@
                       title="{{ ws.booking_closed_reason }}">
                 <i class="bi bi-lock-fill me-1"></i>{{ ws.booking_closed_reason }}
               </button>
+            {% elif ws.mode == 'onsite' and ws.capacity > 0 %}
+              <a href="{% url 'workshops:seats' ws.pk %}"
+                 class="btn btn-sm btn-primary rounded-pill text-nowrap">
+                {% if ws.seats_left == 0 %}
+                  <i class="bi bi-hourglass-split me-1"></i>Attente
+                {% else %}
+                  <i class="bi bi-grid-3x3-gap-fill me-1"></i>Choisir ma place
+                {% endif %}
+              </a>
             {% else %}
               <form method="post" action="{% url 'workshops:book' ws.pk %}">
                 {% csrf_token %}

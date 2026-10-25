@@ -134,6 +134,9 @@
             {# La page profil (accounts) affiche déjà ses propres messages. #}
             {% if request.resolver_match.app_name == 'mentor' %}{% include "repositories/_messages.html" %}{% endif %}
             {% block mentor_content %}{% block profile_content %}{% endblock %}{% endblock %}
+            {# Points d'extension pour les modules partagés (ex. workshops). #}
+            {% block student_content %}{% endblock %}
+            {% block admin_content %}{% endblock %}
         </main>
     </div>
 </div>

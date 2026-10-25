@@ -33,9 +33,11 @@ urlpatterns = [
     # ---------------------------------------------------------------
     # Réservation / annulation / notation
     # ---------------------------------------------------------------
+    path('<int:pk>/seats/', views.select_seat, name='seats'),
     path('<int:pk>/book/', views.book, name='book'),
     path('<int:pk>/cancel/', views.cancel, name='cancel'),
     path('<int:pk>/rate/', views.rate, name='rate'),
+    path('<int:pk>/favorite/', views.toggle_favorite, name='favorite'),
 
     # ---------------------------------------------------------------
     # Check-in QR

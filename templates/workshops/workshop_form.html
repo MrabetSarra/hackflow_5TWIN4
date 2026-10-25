@@ -1,4 +1,4 @@
-{% extends "layouts/base_student.html" %}
+{% extends workshop_base_template %}
 {% load static %}
 
 {% block title %}{{ action }} un atelier — HackFlow{% endblock %}
@@ -97,27 +97,38 @@
                 <label class="form-label fw-semibold">Mode <span class="text-danger">*</span></label>
                 {{ form.mode }}
               </div>
-              <div class="col-12 col-md-6">
+
+              <div class="col-12 col-md-6 mode-field-onsite">
                 <label class="form-label fw-semibold">Salle <small class="text-body-secondary">(présentiel)</small></label>
                 {{ form.room }}
                 {% if form.room.errors %}<div class="text-danger small mt-1">{{ form.room.errors|join:", " }}</div>{% endif %}
               </div>
-              <div class="col-12">
+
+              <div class="col-12 mode-field-online">
                 <label class="form-label fw-semibold">Lien Zoom / Meet <small class="text-body-secondary">(live)</small></label>
                 {{ form.meeting_url }}
                 {% if form.meeting_url.errors %}<div class="text-danger small mt-1">{{ form.meeting_url.errors|join:", " }}</div>{% endif %}
                 <div class="form-text text-warning"><i class="bi bi-lock-fill me-1"></i>Ce lien sera uniquement visible par les participants réservés.</div>
               </div>
-              <div class="col-12 col-md-8">
+
+              <div class="col-12 col-md-8 mode-field-recorded">
                 <label class="form-label fw-semibold">URL du replay <small class="text-body-secondary">(vidéo enregistrée)</small></label>
                 {{ form.replay_url }}
                 {% if form.replay_url.errors %}<div class="text-danger small mt-1">{{ form.replay_url.errors|join:", " }}</div>{% endif %}
               </div>
-              <div class="col-6 col-md-2">
+
+              <div class="col-12 col-md-6 mode-field-recorded">
+                <label class="form-label fw-semibold">Fichier vidéo (upload) <small class="text-body-secondary">(MP4, WebM…)</small></label>
+                {{ form.video_file }}
+                {% if form.video_file.errors %}<div class="text-danger small mt-1">{{ form.video_file.errors|join:", " }}</div>{% endif %}
+              </div>
+
+              <div class="col-6 col-md-2 mode-field-recorded">
                 <label class="form-label fw-semibold">Durée (min)</label>
                 {{ form.replay_duration }}
               </div>
-              <div class="col-12 col-md-6">
+
+              <div class="col-12 col-md-6 mode-field-recorded">
                 <label class="form-label fw-semibold">Accès replay jusqu'au</label>
                 {{ form.available_until }}
               </div>
@@ -176,5 +187,29 @@
 
     </div>
   </div>
-</div>
+
+  <style>
+    .mode-field { display: none; }
+    .mode-field.show { display: block; }
+  </style>
+
+  <script>
+    (function () {
+      const modeSelect = document.getElementById('id_mode');
+      if (!modeSelect) return;
+
+      function toggleModeFields() {
+        const mode = modeSelect.value;
+        document.querySelectorAll('.mode-field-onsite').forEach(
+          el => el.classList.toggle('show', mode === 'onsite'));
+        document.querySelectorAll('.mode-field-online').forEach(
+          el => el.classList.toggle('show', mode === 'online'));
+        document.querySelectorAll('.mode-field-recorded').forEach(
+          el => el.classList.toggle('show', mode === 'recorded'));
+      }
+
+      modeSelect.addEventListener('change', toggleModeFields);
+      toggleModeFields();
+    })();
+  </script>
 {% endblock %}

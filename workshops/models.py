@@ -12,6 +12,8 @@ workshops/models.py
 import secrets
 import string
 import uuid
+from datetime import timezone as dt_timezone
+from urllib.parse import urlencode
 
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -81,6 +83,9 @@ class Workshop(models.Model):
         null=True, blank=True, verbose_name='Durée replay (min)')
     available_until = models.DateTimeField(
         null=True, blank=True, verbose_name='Accès replay jusqu\'au')
+    video_file = models.FileField(
+        upload_to='workshop_videos/', blank=True, null=True,
+        verbose_name='Fichier vidéo (upload)')
 
     # Créneau
     starts_at      = models.DateTimeField(verbose_name='Début')
@@ -245,6 +250,46 @@ class Workshop(models.Model):
             return False
         return bool(self.replay_url)
 
+    @property
+    def google_calendar_url(self):
+        """Lien pré-rempli « Ajouter à Google Calendar ».
+
+        Aucune clé API n'est nécessaire : Google Calendar ouvre simplement
+        un formulaire d'événement avec les champs déjà remplis. L'utilisateur
+        garde le contrôle et clique sur « Enregistrer ».
+        """
+        start = self.starts_at.astimezone(
+            dt_timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+        end = self.ends_at.astimezone(
+            dt_timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+
+        if self.mode == self.Mode.ONSITE:
+            location = self.room or 'Présentiel'
+        elif self.mode == self.Mode.ONLINE:
+            # Ne jamais exposer meeting_url ici : le lien Zoom reste réservé
+            # aux participants inscrits (contrôle côté vue de détail).
+            location = 'En ligne'
+        else:
+            location = 'Replay en ligne'
+
+        site_url = getattr(settings, 'SITE_URL', '').rstrip('/')
+        details = self.description.strip()
+        if site_url:
+            details = f'{details}\n\nPlus d\'infos : {site_url}{self.get_absolute_url()}'
+
+        params = {
+            'action': 'TEMPLATE',
+            'text': self.title,
+            'dates': f'{start}/{end}',
+            'details': details[:900],
+            'location': location,
+            'trp': 'false',
+        }
+        return (
+            'https://calendar.google.com/calendar/render?'
+            + urlencode(params)
+        )
+
     def get_absolute_url(self):
         return reverse('workshops:detail', kwargs={'slug': self.slug})
 
@@ -306,7 +351,13 @@ class Booking(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['workshop', 'user'],
-                name='unique_booking')
+                name='unique_booking'),
+            # Une place physique ne peut être occupée que par une seule
+            # réservation active. Les annulations libèrent la place.
+            models.UniqueConstraint(
+                fields=['workshop', 'seat_number'],
+                condition=models.Q(status__in=['confirmed', 'attended']),
+                name='unique_active_seat'),
         ]
         ordering = ['booked_at']
 
@@ -342,6 +393,39 @@ class Booking(models.Model):
 
     def __str__(self):
         return f'{self.user} → {self.workshop} [{self.status}]'
+
+
+# ---------------------------------------------------------------------------
+# WorkshopFavorite
+# ---------------------------------------------------------------------------
+
+class WorkshopFavorite(models.Model):
+    """Atelier mis en favori par un étudiant."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='workshop_favorites',
+        verbose_name='Étudiant')
+    workshop = models.ForeignKey(
+        Workshop,
+        on_delete=models.CASCADE,
+        related_name='favorites',
+        verbose_name='Atelier')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Favori atelier'
+        verbose_name_plural = 'Favoris ateliers'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'workshop'],
+                name='unique_workshop_favorite')
+        ]
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.user} ♥ {self.workshop}'
 
 
 # ---------------------------------------------------------------------------

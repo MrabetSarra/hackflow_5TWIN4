@@ -150,6 +150,7 @@
 
         <!-- Main Content Body -->
         <main id="main-content" class="p-3 p-md-4 flex-grow-1">
+            {% if request.resolver_match.app_name == 'workshops' %}{% include "repositories/_messages.html" %}{% endif %}
             {% block student_content %}{% block profile_content %}{% endblock %}{% endblock %}
         </main>
     </div>

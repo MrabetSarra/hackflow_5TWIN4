@@ -9,7 +9,7 @@
   <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
     <div>
       <h1 class="h3 fw-bold mb-1">Mes ateliers</h1>
-      <p class="text-body-secondary mb-0">Réservations, certificats et badges.</p>
+      <p class="text-body-secondary mb-0">Réservations, certificats, badges, favoris et recommandations.</p>
     </div>
     <a href="{% url 'workshops:export_ics' %}" class="btn btn-outline-secondary rounded-pill">
       <i class="bi bi-calendar-plus me-2"></i>Exporter .ics
@@ -56,6 +56,18 @@
         <span class="badge bg-success rounded-pill ms-1">{{ certificates|length }}</span>
       </button>
     </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-favorites" type="button">
+        <i class="bi bi-star-fill me-1"></i>Favoris
+        <span class="badge bg-warning text-dark rounded-pill ms-1">{{ favorite_workshops|length }}</span>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-recommended" type="button">
+        <i class="bi bi-stars me-1"></i>Recommandés
+        <span class="badge bg-primary rounded-pill ms-1">{{ recommended|length }}</span>
+      </button>
+    </li>
   </ul>
 
   <div class="tab-content">
@@ -97,14 +109,18 @@
                 </a>
               </h6>
 
-              <!-- Date -->
+              <!-- Date & salle -->
               <p class="small text-body-secondary mb-2">
                 <i class="bi bi-calendar3 me-1"></i>
                 {{ booking.workshop.starts_at|date:"d/m/Y à H\hi" }}
+                {% if booking.workshop.mode == 'onsite' and booking.workshop.room %}
+                <span class="mx-1">·</span>
+                <i class="bi bi-building me-1"></i>{{ booking.workshop.room }}
+                {% endif %}
               </p>
 
               <!-- Place / progression replay -->
-              {% if booking.status == 'confirmed' and booking.seat_number %}
+              {% if booking.workshop.mode == 'onsite' and booking.seat_number and booking.status != 'cancelled' and booking.status != 'waiting' %}
               <p class="small mb-2">
                 <i class="bi bi-ticket-perforated me-1 text-primary"></i>Place n°{{ booking.seat_number }}
               </p>
@@ -131,6 +147,41 @@
               </p>
               {% endif %}
 
+              <!-- Accès direct selon le mode -->
+              {% if booking.workshop.mode == 'online' and booking.status == 'confirmed' and booking.workshop.meeting_url %}
+              <div class="d-grid mb-2">
+                <a href="{{ booking.workshop.meeting_url }}" target="_blank" rel="noopener noreferrer"
+                   class="btn btn-sm btn-success rounded-pill">
+                  <i class="bi bi-camera-video-fill me-1"></i>Rejoindre la visio
+                </a>
+              </div>
+              {% elif booking.workshop.mode == 'recorded' and booking.status != 'cancelled' and booking.status != 'waiting' %}
+              <div class="d-grid mb-2">
+                <a href="{{ booking.workshop.get_absolute_url }}"
+                   class="btn btn-sm btn-secondary rounded-pill">
+                  <i class="bi bi-play-circle-fill me-1"></i>Regarder le replay
+                </a>
+              </div>
+              {% endif %}
+
+              {% if booking.status == 'cancelled' and not booking.workshop.booking_closed_reason %}
+              <div class="d-grid mb-2">
+                {% if booking.workshop.mode == 'onsite' and booking.workshop.capacity > 0 %}
+                <a href="{% url 'workshops:seats' booking.workshop.pk %}"
+                   class="btn btn-sm btn-primary rounded-pill">
+                  <i class="bi bi-grid-3x3-gap-fill me-1"></i>Choisir une nouvelle place
+                </a>
+                {% else %}
+                <form method="post" action="{% url 'workshops:book' booking.workshop.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-primary rounded-pill">
+                    <i class="bi bi-bookmark-plus-fill me-1"></i>Réserver à nouveau
+                  </button>
+                </form>
+                {% endif %}
+              </div>
+              {% endif %}
+
               <!-- Actions -->
               <div class="d-flex gap-2 mt-auto pt-2">
                 <a href="{{ booking.workshop.get_absolute_url }}"
@@ -141,6 +192,15 @@
                 <a href="{% url 'workshops:rate' booking.workshop.pk %}"
                    class="btn btn-sm btn-outline-warning rounded-pill">
                   <i class="bi bi-star me-1"></i>Noter
+                </a>
+                {% endif %}
+                {% if booking.status != 'cancelled' %}
+                <a href="{{ booking.workshop.google_calendar_url }}"
+                   class="btn btn-sm btn-outline-danger rounded-pill"
+                   target="_blank" rel="noopener noreferrer"
+                   title="Ajouter à Google Calendar"
+                   aria-label="Ajouter {{ booking.workshop.title }} à Google Calendar">
+                  <i class="bi bi-google"></i>
                 </a>
                 {% endif %}
                 {% if booking.status in 'confirmed waiting' %}
@@ -196,6 +256,12 @@
               <p class="small text-body-secondary mb-2">
                 <i class="bi bi-clock me-1"></i>{{ cert.hours_display }} de formation
               </p>
+              {% if cert.badge_award %}
+              <p class="small text-warning mb-2">
+                <i class="{{ cert.badge_award.badge.icon }} me-1"></i>
+                Badge obtenu : {{ cert.badge_award.badge.name }}
+              </p>
+              {% endif %}
               <code class="small text-body-secondary d-block mb-3" style="font-size:.72rem;">{{ cert.code }}</code>
 
               <div class="d-flex gap-2">
@@ -211,6 +277,13 @@
                   <i class="bi bi-shield-check me-1"></i>Vérifier
                 </a>
               </div>
+              {% if not cert.is_revoked %}
+              <a href="{{ cert.linkedin_share_url }}"
+                 class="btn btn-sm btn-outline-primary rounded-pill w-100 mt-2"
+                 target="_blank" rel="noopener noreferrer">
+                <i class="bi bi-linkedin me-1"></i>Partager sur LinkedIn
+              </a>
+              {% endif %}
             </div>
           </div>
         </div>
@@ -225,6 +298,49 @@
       {% endif %}
     </div>
 
+    <!-- ── Favoris ────────────────────────────────────────────────── -->
+    <div class="tab-pane fade" id="tab-favorites" role="tabpanel">
+      {% if favorite_workshops %}
+      <div class="row g-3">
+        {% for ws in favorite_workshops %}
+        {% include "workshops/_workshop_card.html" with workshop=ws show_ai=False %}
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center py-5 text-body-secondary">
+        <i class="bi bi-star fs-1 opacity-25 d-block mb-3"></i>
+        <p class="mb-0">Vous n'avez pas encore de favoris.</p>
+        <a href="{% url 'workshops:list' %}" class="btn btn-warning rounded-pill mt-3">
+          Explorer les ateliers
+        </a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- ── Recommandations IA ─────────────────────────────────────── -->
+    <div class="tab-pane fade" id="tab-recommended" role="tabpanel">
+      {% if recommended %}
+      <div class="alert alert-primary py-2 small">
+        <i class="bi bi-stars me-1"></i>
+        Suggestions basées sur vos compétences et votre profil (TF-IDF).
+      </div>
+      <div class="row g-3">
+        {% for ws in recommended %}
+        {% include "workshops/_workshop_card.html" with workshop=ws show_ai=True %}
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center py-5 text-body-secondary">
+        <i class="bi bi-stars fs-1 opacity-25 d-block mb-3"></i>
+        <p class="mb-0">Aucune recommandation pour le moment.</p>
+        <a href="{% url 'workshops:list' %}" class="btn btn-primary rounded-pill mt-3">
+          Voir le catalogue
+        </a>
+      </div>
+      {% endif %}
+    </div>
+
   </div>
 </div>
+{% include "workshops/_countdown_script.html" %}
 {% endblock %}

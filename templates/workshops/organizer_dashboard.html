@@ -1,4 +1,4 @@
-{% extends "layouts/base_admin.html" %}
+{% extends workshop_base_template %}
 {% load static %}
 
 {% block title %}Dashboard Ateliers — HackFlow{% endblock %}
@@ -200,6 +200,12 @@
                 <a href="{% url 'workshops:edit' ws.pk %}"
                    class="btn btn-sm btn-outline-warning rounded-pill px-2" title="Modifier">
                   <i class="bi bi-pencil-fill"></i>
+                </a>
+                <a href="{{ ws.google_calendar_url }}" target="_blank"
+                   rel="noopener noreferrer"
+                   class="btn btn-sm btn-outline-danger rounded-pill px-2"
+                   title="Ajouter à Google Calendar">
+                  <i class="bi bi-google"></i>
                 </a>
                 <a href="{% url 'workshops:delete' ws.pk %}"
                    class="btn btn-sm btn-outline-danger rounded-pill px-2" title="Supprimer">
