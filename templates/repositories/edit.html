@@ -1,0 +1,39 @@
+{% extends "layouts/base_student.html" %}
+{% load static %}
+{% block title %}Modify {{ repository.name }} - HackFlow{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'repositories/repositories.css' %}?v={{ repositories_css_version }}">{% endblock %}
+{% block student_content %}
+<div class="container-fluid px-0 repository-page">
+    {% include "repositories/_messages.html" %}
+    <div class="repo-header">
+        <div class="repo-header__breadcrumb">
+            <a href="{% url 'repositories:list' %}">Repositories</a>
+            <span class="text-body-secondary">/</span>
+            <span class="fw-semibold text-body">Modify {{ repository.name }}</span>
+        </div>
+        <h1 class="fw-bold text-body mt-2 mb-1">Modify repository</h1>
+        <p class="text-body-secondary small mb-0">Change the repository name or description. Its URL and Git history will stay the same.</p>
+    </div>
+
+    <div class="card-modern p-4 mt-4" style="max-width: 760px;">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% for error in form.non_field_errors %}<div class="alert alert-danger">{{ error }}</div>{% endfor %}
+            <div class="mb-3">
+                <label class="form-label fw-semibold" for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+                {{ form.name }}
+                {% for error in form.name.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="mb-4">
+                <label class="form-label fw-semibold" for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+                {{ form.description }}
+                {% for error in form.description.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-primary rounded-pill px-4"><i aria-hidden="true" class="bi bi-check-lg me-1"></i>Save changes</button>
+                <a href="{% url 'repositories:list' %}" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

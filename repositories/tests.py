@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
-from django.test import TestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.utils import timezone
 
 from student.models import Hackathon, MentorRequest, Milestone, Task, Team, TeamMembership
@@ -26,7 +26,7 @@ class RepositoryFeatureTests(TestCase):
     def setUp(self):
         self.temp_root = tempfile.TemporaryDirectory(prefix='hackflow-repository-tests-')
         self.repo_root = Path(self.temp_root.name) / 'git-data'
-        self.settings_override = override_settings(REPOS_ROOT=self.repo_root)
+        self.settings_override = override_settings(DEBUG=True, REPOS_ROOT=self.repo_root)
         self.settings_override.enable()
         user_model = get_user_model()
         self.student = user_model.objects.create_user(username='student-a', email='student@example.test', password='password123', role='student', first_name='Test', last_name='Student')
@@ -79,10 +79,48 @@ class RepositoryFeatureTests(TestCase):
         with self.assertRaisesMessage(ValidationError, 'protected'):
             git_service.merge_branches(self.repository, 'main', 'main', 'Blocked merge', self.student)
 
+    @override_settings(DEBUG=False, GITHUB_TOKEN='test-token', GITHUB_OWNER='hackflow-org')
+    def test_production_does_not_reinitialize_existing_local_history(self):
+        before = git_service._run([
+            '--git-dir', self.repository.path, 'rev-parse', 'refs/heads/main',
+        ]).stdout.strip()
+
+        with self.assertRaisesMessage(git_service.GitError, 'Local Git data already exists'):
+            git_service.initialize_repository(self.repository, self.student)
+
+        after = git_service._run([
+            '--git-dir', self.repository.path, 'rev-parse', 'refs/heads/main',
+        ]).stdout.strip()
+        self.assertEqual(after, before)
+
+    def test_upload_is_not_reported_successful_if_github_rejects_the_push(self):
+        git_service.create_branch(self.repository, 'feature/rejected', 'main')
+        upload = SimpleUploadedFile('failure.txt', b'not persisted remotely\n', content_type='text/plain')
+        _token, stage_dir, _ignored, _count = stage_uploads([upload], self.student.pk)
+        with patch('repositories.services.git_service._push_branch', side_effect=git_service.GitError('GitHub rejected the push')):
+            with self.assertRaisesMessage(git_service.GitError, 'GitHub rejected the push'):
+                git_service.commit_upload(self.repository, 'feature/rejected', stage_dir, 'keep', 'Fail push', self.student)
+
     def test_repository_is_hidden_from_other_team(self):
         self.client.force_login(self.other_student)
         response = self.client.get(f'/student/repositories/{self.repository.slug}/')
         self.assertEqual(response.status_code, 404)
+
+    @patch('repositories.services.github._request')
+    def test_removing_hackflow_record_does_not_delete_github_repository(self, github_request):
+        Repository.objects.filter(pk=self.repository.pk).update(
+            remote_provider='github', remote_id=987654321, remote_owner='hackflow-org',
+            remote_name='hackflow-1-demo-project',
+            remote_url='https://github.com/hackflow-org/hackflow-1-demo-project',
+            clone_url='https://github.com/hackflow-org/hackflow-1-demo-project.git',
+        )
+        self.client.force_login(self.student)
+
+        response = self.client.post(f'/student/repositories/{self.repository.slug}/delete/')
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Repository.objects.filter(pk=self.repository.pk).exists())
+        github_request.assert_not_called()
 
     def test_repository_detail_shows_real_main_branch(self):
         self.client.force_login(self.student)
@@ -90,6 +128,25 @@ class RepositoryFeatureTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Branches')
         self.assertContains(response, 'main')
+
+    def test_github_provider_metadata_persists_on_repository_record(self):
+        from .services.github import save_remote_metadata
+
+        save_remote_metadata(self.repository, {
+            'id': 123456, 'node_id': 'R_123456', 'name': 'hackflow-1-demo-project',
+            'owner': {'login': 'hackflow-org'},
+            'html_url': 'https://github.com/hackflow-org/hackflow-1-demo-project',
+            'clone_url': 'https://github.com/hackflow-org/hackflow-1-demo-project.git',
+            'default_branch': 'main',
+        })
+
+        self.repository.refresh_from_db()
+        self.assertEqual(self.repository.remote_provider, Repository.Provider.GITHUB)
+        self.assertEqual(self.repository.remote_id, 123456)
+        self.assertEqual(self.repository.remote_node_id, 'R_123456')
+        self.assertEqual(self.repository.remote_owner, 'hackflow-org')
+        self.assertEqual(self.repository.remote_name, 'hackflow-1-demo-project')
+        self.assertEqual(self.repository.default_branch, 'main')
 
     def test_upload_preview_and_commit_create_real_git_commit(self):
         git_service.create_branch(self.repository, 'feature/demo', 'main')
@@ -306,6 +363,14 @@ class RepositoryFeatureTests(TestCase):
         self.assertEqual(git_service.read_file(self.repository, 'feature/restore', 'app.txt')[0], 'older\n')
         self.assertEqual(git_service.commit_detail(self.repository, restored)['message'], 'Restore old content')
 
+    def test_local_history_migration_dry_run_does_not_contact_github(self):
+        with patch('repositories.management.commands.migrate_local_repositories.github.create_repository') as create_remote:
+            output = StringIO()
+            call_command('migrate_local_repositories', '--dry-run', '--source-root', str(self.repo_root), stdout=output)
+        self.assertIn('Would import', output.getvalue())
+        self.assertIn('commit(s)', output.getvalue())
+        create_remote.assert_not_called()
+
     def test_merge_request_review_and_merge_require_assigned_reviewer(self):
         git_service.create_branch(self.repository, 'feature/review', 'main')
         self._commit_text('feature/review', 'readme.txt', 'review me\n', 'Add review file')
@@ -351,6 +416,7 @@ class RepositoryFeatureTests(TestCase):
         self.assertEqual(mr.status, MergeRequest.Status.OPEN)
         self.assertEqual(git_service.resolve_branch(self.repository, 'main'),
                          git_service.resolve_branch(self.repository, 'main'))
+
 
     def test_captain_can_approve_and_merge_a_request_they_opened(self):
         git_service.create_branch(self.repository, 'feature/captain', 'main')
@@ -482,4 +548,66 @@ class AIEvaluationCommandTests(TestCase):
         self.assertIn('Acceptance rate', report)
         self.assertIn('AI usage latency p95', report)
         self.assertIn('Mocked provider returned 1 valid task suggestion(s).', report)
+
+
+class GitHubClientTests(SimpleTestCase):
+    @override_settings(GITHUB_TOKEN='test-token', GITHUB_OWNER='hackflow-org', GITHUB_PRIVATE_REPOSITORIES=True)
+    @patch('repositories.services.github.save_remote_metadata')
+    @patch('repositories.services.github._request')
+    def test_create_repository_uses_org_api_and_persists_provider_response(self, request, save_metadata):
+        request.side_effect = [
+            {'type': 'Organization'},
+            {'id': 123, 'node_id': 'R_123', 'name': 'hackflow-7-demo',
+             'owner': {'login': 'hackflow-org'}, 'html_url': 'https://github.com/hackflow-org/hackflow-7-demo',
+             'clone_url': 'https://github.com/hackflow-org/hackflow-7-demo.git', 'default_branch': 'main'},
+        ]
+        save_metadata.side_effect = lambda _repository, data: data
+        from .services import github
+        repository = type('RepositoryStub', (), {
+            'team_id': 7, 'slug': 'demo', 'description': 'Demo repository',
+        })()
+
+        result = github.create_repository(repository)
+
+        self.assertEqual(result['id'], 123)
+        self.assertEqual(request.call_args_list[1].args[:2], ('POST', '/orgs/hackflow-org/repos'))
+        self.assertEqual(request.call_args_list[1].kwargs['payload'], {
+            'name': 'hackflow-7-demo', 'description': 'Demo repository',
+            'private': True, 'auto_init': True,
+        })
+        save_metadata.assert_called_once_with(repository, result)
+
+    @override_settings(GITHUB_TOKEN='', GITHUB_OWNER='')
+    def test_missing_credentials_give_actionable_configuration_error(self):
+        from .services.github import GitHubError, _configuration
+        with self.assertRaisesMessage(GitHubError, 'GITHUB_TOKEN and GITHUB_OWNER'):
+            _configuration()
+
+    @override_settings(GITHUB_TOKEN='test-token', GITHUB_OWNER='hackflow-org')
+    @patch('repositories.services.git_service._ensure_remote_cache')
+    @patch('repositories.services.git_service._push_branch')
+    def test_branch_creation_pushes_the_real_git_ref(self, push_branch, ensure_remote_cache):
+        repository = type('RepositoryStub', (), {
+            'remote_provider': 'github', 'clone_url': 'https://github.com/hackflow-org/demo.git',
+            'team_id': 9, 'slug': 'demo', 'default_branch': 'main',
+            'is_protected': lambda self, branch: branch == 'main',
+        })()
+        import tempfile
+        from pathlib import Path
+        root = tempfile.TemporaryDirectory()
+        repository.path = Path(root.name) / 'demo.git'
+        git_service._run(['init', '--bare', '--initial-branch=main', repository.path])
+        try:
+            working = Path(root.name) / 'working'
+            git_service._run(['init', '--initial-branch=main', working])
+            author_env = git_service.git_env()
+            author_env.update({'GIT_AUTHOR_NAME': 'Test', 'GIT_AUTHOR_EMAIL': 'test@example.test'})
+            git_service._run(['-C', working, 'commit', '--allow-empty', '-m', 'Initial'], env=author_env)
+            git_service._run(['--git-dir', repository.path, 'fetch', str(working), 'main:refs/heads/main'])
+            with override_settings(REPOS_ROOT=Path(root.name) / 'cache'):
+                git_service.create_branch(repository, 'feature/test', 'main')
+            ensure_remote_cache.assert_called()
+            push_branch.assert_called_once_with(repository, 'feature/test')
+        finally:
+            root.cleanup()
 

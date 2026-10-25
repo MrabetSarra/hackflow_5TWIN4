@@ -20,9 +20,9 @@ from django.conf import settings
 from django.conf.urls.static import static
 from repositories.views import mentor_repository_list
 from core.views import healthz
-
 urlpatterns = [
     path('healthz/', healthz, name='healthz'),
+    path('prometheus/', include('django_prometheus.urls')),
     # Espace Public / Landing
     path('', include('core.urls')),
 

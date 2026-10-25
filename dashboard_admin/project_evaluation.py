@@ -6,6 +6,7 @@ import urllib.error
 import urllib.request
 
 from django.conf import settings
+from hackflow.ollama import request_headers as ollama_request_headers
 
 
 class ProjectEvaluationError(Exception):
@@ -145,7 +146,7 @@ def analyze_project_submission(submission):
     base_url = getattr(settings, 'OLLAMA_BASE_URL', 'http://127.0.0.1:11434').rstrip('/')
     request = urllib.request.Request(
         f'{base_url}/api/chat', data=json.dumps(payload).encode('utf-8'),
-        headers={'Content-Type': 'application/json'}, method='POST',
+        headers=ollama_request_headers(), method='POST',
     )
     try:
         with urllib.request.urlopen(request, timeout=150) as response:

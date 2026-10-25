@@ -1,0 +1,3 @@
+[submodule "hackflow-gestion-evenements"]
+	path = hackflow-gestion-evenements
+	url = https://github.com/MrabetSarra/hackflow_5TWIN4.git

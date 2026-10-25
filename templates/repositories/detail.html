@@ -37,6 +37,7 @@
                     <i aria-hidden="true" class="bi bi-signpost-2-fill" style="font-size:.7rem;"></i>
                     {{ branch }}
                 </span>
+                {% if repository.remote_url %}<a class="small" href="{{ repository.remote_url }}" target="_blank" rel="noopener noreferrer">Open on GitHub <i aria-hidden="true" class="bi bi-box-arrow-up-right"></i></a>{% endif %}
             </div>
             <!-- Action buttons (top-right, like GitHub) -->
             <div class="d-flex flex-wrap gap-2">

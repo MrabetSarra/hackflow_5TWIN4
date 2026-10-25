@@ -210,7 +210,8 @@ Copy `.env.example` to `.env` and set the values for your environment:
 - Django: `DJANGO_DEBUG`, `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`.
 - Production security: `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, `SECURE_SSL_REDIRECT`, `SECURE_HSTS_SECONDS`, `SECURE_HSTS_INCLUDE_SUBDOMAINS`, `SECURE_HSTS_PRELOAD`, `SECURE_CONTENT_TYPE_NOSNIFF`, `X_FRAME_OPTIONS`, `SECURE_PROXY_SSL_HEADER`, and `CSRF_TRUSTED_ORIGINS`.
 - Email: `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL`. The console backend is used unless both SMTP credentials are set.
-- Private repository storage: `HACKFLOW_REPOS_ROOT`.
+- GitHub repository hosting: `GITHUB_TOKEN`, `GITHUB_OWNER`, and optional `GITHUB_PRIVATE_REPOSITORIES`.
+- Local repository cache/staging: `HACKFLOW_REPOS_ROOT` (disposable; GitHub stores durable repository history).
 - AI providers: `REPOSITORY_AI_PROVIDER`, `REPOSITORY_AI_TIMEOUT`, `OLLAMA_BASE_URL`, `OLLAMA_MODEL`, `OPENAI_API_KEY`, `OPENAI_MODEL`, `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`.
 - Background jobs: `CELERY_BROKER_URL`, `CELERY_TASK_ALWAYS_EAGER`.
 
@@ -255,7 +256,8 @@ The complete example is in `.env.production.example`. Configure the following va
 | `DATABASE_PATH` | `/tmp/hackflow.sqlite3` | Ephemeral SQLite database file. |
 | `MEDIA_ROOT` | `/tmp/media/uploads` | Upload storage. |
 | `PRIVATE_MEDIA_ROOT` | `/tmp/private_media` | Private student files. |
-| `HACKFLOW_REPOS_ROOT` | `/tmp/.repository-data` | Private Git repository storage. |
+| `GITHUB_TOKEN`, `GITHUB_OWNER` | **Secret/configuration** | GitHub server credential and owning user/organization. |
+| `GITHUB_PRIVATE_REPOSITORIES` | `true` | Create new GitHub repositories as private by default. |
 | `STATIC_ROOT` | `/opt/render/project/src/staticfiles` | `collectstatic` output served by WhiteNoise. |
 | `SEED_DEMO` | `1` | Re-create demo data at startup. |
 | `CELERY_TASK_ALWAYS_EAGER` | `true` | Run jobs inline; no worker is deployed. |

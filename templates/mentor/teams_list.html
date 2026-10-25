@@ -1,99 +1,125 @@
 {% extends "layouts/base_mentor.html" %}
 
-{% block title %}Répertoire des Équipes - Espace Mentor - HackFlow{% endblock %}
+{% block title %}Équipes & Projets - Espace Mentor - HackFlow{% endblock %}
 
 {% block mentor_content %}
 <div class="container-fluid px-0">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-1">Équipes & Projets du Hackathon</h2>
-            <p class="text-muted small mb-0">Explorez l'avancement des collectifs, identifiez les équipes en difficulté et offrez votre soutien.</p>
+            <h1 class="h2 fw-bold text-body mb-1">Équipes & Projets du Hackathon</h1>
+            <p class="text-body-secondary small mb-0">Suivez les équipes que vous accompagnez, repérez celles qui ont besoin d'aide.</p>
         </div>
-        <div class="d-flex gap-2">
-            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill font-mono">
-                92 équipes enregistrées
-            </span>
-        </div>
+        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill font-mono">
+            {{ teams_total }} équipe{{ teams_total|pluralize }}
+        </span>
     </div>
 
     <!-- Filtres -->
-    <div class="card-modern p-3 mb-4">
-        <div class="row g-3 align-items-center">
+    <form method="get" class="card-modern p-3 mb-4" role="search" aria-label="Filtrer les équipes">
+        <div class="row g-3 align-items-end">
             <div class="col-md-5">
-                <div class="input-group">
-                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
-                    <input type="text" class="form-control border-start-0" placeholder="Rechercher une équipe ou un mot-clé de projet...">
-                </div>
-            </div>
-            <div class="col-md-4">
-                <select class="form-select">
-                    <option selected>Toutes les thématiques</option>
-                    <option>Climat & Énergie</option>
-                    <option>Santé & Bien-être</option>
-                    <option>FinTech Éducative</option>
-                    <option>Éducation & IA</option>
-                    <option>Smart City & Sécurité</option>
-                </select>
+                <label for="{{ form.q.id_for_label }}" class="form-label small fw-semibold">{{ form.q.label }}</label>
+                {{ form.q }}
             </div>
             <div class="col-md-3">
-                <button class="btn btn-primary w-100" data-demo-toast="Filtre appliqué aux équipes !">
-                    <i class="bi bi-funnel-fill me-1"></i>Filtrer
+                <label for="{{ form.category.id_for_label }}" class="form-label small fw-semibold">{{ form.category.label }}</label>
+                {{ form.category }}
+            </div>
+            <div class="col-md-2">
+                <div class="form-check mb-2">
+                    {{ form.mine }}
+                    <label for="{{ form.mine.id_for_label }}" class="form-check-label small">Mes équipes</label>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-funnel-fill me-1" aria-hidden="true"></i>Filtrer
                 </button>
             </div>
         </div>
-    </div>
+    </form>
 
     <!-- Grille des Équipes -->
     <div class="row g-4">
         {% for team in teams %}
         <div class="col-sm-6 col-xl-4 d-flex">
-            <article class="card-modern card-modern-hoverable mentor-team-card overflow-hidden w-100">
-                <div class="mentor-team-card__cover position-relative">
-                    <img src="{{ team.cover_img }}" alt="{{ team.name }}" class="w-100 h-100">
+            <article class="card-modern card-modern-hoverable mentor-team-card overflow-hidden w-100" aria-labelledby="team-{{ team.pk }}-title">
+                <div class="mentor-team-card__cover position-relative" {% if not team.cover_image_url %}style="background: linear-gradient(135deg, #6366f1, #a855f7);"{% endif %}>
+                    {% if team.cover_image_url %}<img src="{{ team.cover_image_url }}" alt="" class="w-100 h-100">{% endif %}
                     <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 100%);"></div>
                     <div class="mentor-team-card__cover-meta position-absolute bottom-0 start-0 p-3 w-100 d-flex justify-content-between align-items-center gap-2">
                         <span class="badge bg-primary bg-opacity-75 text-white border border-white border-opacity-25 rounded-pill px-2 py-1 font-mono small text-truncate">
-                            {{ team.category }}
+                            {{ team.category|default:"Thème libre" }}
                         </span>
+                        {% if team.table_number %}
                         <span class="badge bg-dark bg-opacity-75 text-white border border-white border-opacity-25 font-mono small flex-shrink-0">
-                            {{ team.table }}
+                            Table {{ team.table_number }}
                         </span>
+                        {% endif %}
                     </div>
                 </div>
 
                 <div class="mentor-team-card__body p-4">
-                    <h3 class="mentor-team-card__title fw-bold text-body mb-2">{{ team.name }}</h3>
-                    <p class="mentor-team-card__pitch text-muted small mb-4">{{ team.pitch }}</p>
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                        <h2 id="team-{{ team.pk }}-title" class="mentor-team-card__title fw-bold text-body mb-0">{{ team.name }}</h2>
+                        {% if team.is_followed %}<span class="badge bg-success-subtle text-success rounded-pill flex-shrink-0"><i class="bi bi-star-fill me-1" aria-hidden="true"></i>Suivie</span>{% endif %}
+                    </div>
+                    <p class="mentor-team-card__pitch text-body-secondary small mb-4">{{ team.project_pitch|default:team.description|default:"Pas encore de description du projet."|truncatechars:140 }}</p>
 
                     <div class="mentor-team-card__progress mb-3">
-                        <div class="d-flex justify-content-between small text-muted mb-2">
-                            <span>Avancement</span>
+                        <div class="d-flex justify-content-between small text-body-secondary mb-2">
+                            <span>Avancement ({{ team.tasks_done }}/{{ team.tasks_total }} tâches)</span>
                             <strong class="text-body">{{ team.progress }}%</strong>
                         </div>
                         <div class="progress" role="progressbar" aria-label="Avancement de {{ team.name }}" aria-valuenow="{{ team.progress }}" aria-valuemin="0" aria-valuemax="100">
-                            <div class="progress-bar {% if team.progress >= 70 %}bg-success{% elif team.progress >= 50 %}bg-primary{% else %}bg-warning{% endif %}" style="width: {{ team.progress }}%;"></div>
+                            <div class="progress-bar {% if team.progress >= 70 %}bg-success{% elif team.progress >= 40 %}bg-primary{% else %}bg-warning{% endif %}" style="width: {{ team.progress }}%;"></div>
                         </div>
                     </div>
 
                     <div class="mentor-team-card__details d-flex justify-content-between align-items-center gap-2 small mb-3">
-                        <span class="text-muted text-nowrap"><i class="bi bi-people-fill text-secondary me-1"></i>{{ team.members_count }} membres</span>
-                        <span class="badge {% if team.status == 'Besoin d\'aide' %}bg-danger{% else %}bg-secondary{% endif %} rounded-pill text-truncate">
-                            {{ team.status }}
-                        </span>
+                        <span class="text-body-secondary text-nowrap"><i class="bi bi-people-fill text-secondary me-1" aria-hidden="true"></i>{{ team.members_total }} membre{{ team.members_total|pluralize }}</span>
+                        {% if team.open_requests %}
+                        <span class="badge bg-danger rounded-pill">{{ team.open_requests }} demande{{ team.open_requests|pluralize }} d'aide</span>
+                        {% else %}
+                        <span class="badge bg-secondary-subtle text-secondary rounded-pill">Sprint actif</span>
+                        {% endif %}
                     </div>
 
                     <div class="mentor-team-card__actions d-flex gap-2 pt-3 border-top">
-                        <button class="btn btn-outline-primary btn-sm rounded-pill flex-grow-1" data-demo-toast="Session d'accompagnement proposée à {{ team.name }} !">
-                            <i class="bi bi-chat-dots me-1"></i>Accompagner
-                        </button>
-                        <a href="{% url 'student:team_detail' %}" class="btn btn-light border btn-sm rounded-pill px-3" title="Voir la fiche de {{ team.name }}" aria-label="Voir la fiche de {{ team.name }}">
-                            <i class="bi bi-eye"></i>
+                        {% if team.is_followed %}
+                        <form method="post" action="{% url 'mentor:team_unfollow' team.pk %}" class="flex-grow-1">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <button type="submit" class="btn btn-outline-secondary btn-sm rounded-pill w-100" aria-label="Ne plus suivre {{ team.name }}">
+                                <i class="bi bi-star me-1" aria-hidden="true"></i>Ne plus suivre
+                            </button>
+                        </form>
+                        {% else %}
+                        <form method="post" action="{% url 'mentor:team_follow' team.pk %}" class="flex-grow-1">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <button type="submit" class="btn btn-outline-primary btn-sm rounded-pill w-100" aria-label="Suivre {{ team.name }}">
+                                <i class="bi bi-star-fill me-1" aria-hidden="true"></i>Suivre
+                            </button>
+                        </form>
+                        {% endif %}
+                        <a href="{% url 'mentor:team_detail' team.pk %}" class="btn btn-light border btn-sm rounded-pill px-3" aria-label="Voir la fiche de {{ team.name }}">
+                            <i class="bi bi-eye" aria-hidden="true"></i>
                         </a>
                     </div>
                 </div>
             </article>
         </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card-modern p-5 text-center text-body-secondary">
+                <i class="bi bi-people fs-2 d-block mb-2" aria-hidden="true"></i>
+                Aucune équipe ne correspond à ces critères.
+            </div>
+        </div>
         {% endfor %}
     </div>
+
+    {% include "mentor/_pagination.html" %}
 </div>
 {% endblock %}

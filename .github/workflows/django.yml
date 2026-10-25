@@ -29,6 +29,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -106,6 +108,8 @@ jobs:
           DJANGO_DEBUG: "False"
           DJANGO_SECRET_KEY: ci-only-random-test-key-9f2a7c1e5b8d3a6f0c4e9b2d7a1c5f8e6d0b3a9c4f2e7d1
           DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+          # Use an isolated SQLite database for deployment configuration checks.
+          DATABASE_URL: sqlite:///ci-deploy-check.sqlite3
           SECURE_SSL_REDIRECT: "true"
           SESSION_COOKIE_SECURE: "true"
           CSRF_COOKIE_SECURE: "true"

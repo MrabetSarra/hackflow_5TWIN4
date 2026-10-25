@@ -44,8 +44,12 @@ services:
         value: /tmp/media/uploads
       - key: PRIVATE_MEDIA_ROOT
         value: /tmp/private_media
-      - key: HACKFLOW_REPOS_ROOT
-        value: /tmp/.repository-data
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: GITHUB_OWNER
+        sync: false
+      - key: GITHUB_PRIVATE_REPOSITORIES
+        value: "true"
       - key: STATIC_ROOT
         value: /opt/render/project/src/staticfiles
       - key: SEED_DEMO
@@ -53,7 +57,7 @@ services:
       - key: CELERY_TASK_ALWAYS_EAGER
         value: "true"
       - key: REPOSITORY_AI_PROVIDER
-        value: openai
+        value: ollama
       - key: OPENAI_API_KEY
         sync: false
       - key: OPENAI_MODEL
@@ -63,11 +67,15 @@ services:
       - key: ANTHROPIC_MODEL
         value: claude-haiku-4-5-20251001
       - key: OLLAMA_BASE_URL
-        value: http://127.0.0.1:11434
+        sync: false
+      - key: OLLAMA_PROXY_TOKEN
+        sync: false
       - key: OLLAMA_MODEL
         value: qwen2.5-coder:3b
+      - key: OLLAMA_COPILOT_MODEL
+        value: qwen2.5-coder:3b
       - key: REPOSITORY_AI_TIMEOUT
-        value: "30"
+        value: "240"
       - key: DJANGO_SUPERUSER_USERNAME
         sync: false
       - key: DJANGO_SUPERUSER_EMAIL
