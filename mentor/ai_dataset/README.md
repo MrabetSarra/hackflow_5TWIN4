@@ -10,8 +10,7 @@ python manage.py evaluate_triage                       # les 60 exemples
 python manage.py evaluate_triage --include-corrections  # + tickets réels corrigés par les mentors
 ```
 
-Le rapport est écrit dans `reports/mentor_triage_metrics.md` (lisible) et `reports/mentor_triage_metrics.json`
-(affiché sur la page « Métriques IA » de l'espace mentor).
+Le rapport est écrit dans `reports/mentor_triage_metrics.md` (lisible) et `reports/mentor_triage_metrics.json`.
 
 ## Historique des réglages du prompt (modèle `llama3.2`, 3B, température 0)
 
@@ -27,5 +26,4 @@ frontière « code serveur » / « déploiement »). La v2 a fait baisser l'urge
 
 **Limite assumée :** le prompt a été ajusté en observant ce même jeu de 60 exemples, les scores sont donc
 probablement optimistes. Les corrections saisies par les mentors en conditions réelles (stockées dans
-`RequestTriage.corrected_*`) fournissent une mesure indépendante via `--include-corrections`, et le taux
-d'accord IA / mentor est affiché en direct sur la page « Métriques IA ».
+`RequestTriage.corrected_*`) fournissent une mesure indépendante via `--include-corrections`.
