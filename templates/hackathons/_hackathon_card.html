@@ -1,0 +1,30 @@
+{# Carte hackathon : variables h, manage (bool) #}
+<div class="card-modern card-modern-hoverable h-100 overflow-hidden d-flex flex-column">
+    {% if h.banner %}
+    <img src="{{ h.banner.url }}" alt="Bannière {{ h.title }}" class="w-100" style="height: 140px; object-fit: cover;">
+    {% else %}
+    <div class="d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary" style="height: 140px;"><i class="bi bi-trophy-fill fs-1"></i></div>
+    {% endif %}
+    <div class="p-3 d-flex flex-column flex-grow-1">
+        <div class="d-flex flex-wrap gap-1 mb-2">
+            <span class="badge bg-{{ h.stage_color }}-subtle text-{{ h.stage_color }}-emphasis rounded-pill">{{ h.current_stage_label }}</span>
+            {% if manage %}<span class="badge bg-{{ h.status_color }}-subtle text-{{ h.status_color }} rounded-pill">{{ h.get_status_display }}</span>{% endif %}
+            <span class="badge bg-body-secondary text-body-secondary rounded-pill">{{ h.track.name }}</span>
+        </div>
+        <h5 class="fw-bold mb-1">{{ h.title }}</h5>
+        {% if h.short_description %}<p class="small text-body-secondary mb-2">{{ h.short_description }}</p>{% endif %}
+        <ul class="list-unstyled small text-body-secondary mb-3">
+            <li><i class="bi bi-calendar-event me-1"></i>{{ h.starts_at|date:"d/m/Y H:i" }} → {{ h.ends_at|date:"d/m/Y H:i" }}</li>
+            <li><i class="bi bi-geo-alt me-1"></i>{{ h.mode_label }}</li>
+            <li><i class="bi bi-flag me-1"></i>{{ h.challenge_count }} challenge{{ h.challenge_count|pluralize }}{% if h.max_participants %} · capacité {{ h.max_participants }}{% endif %}</li>
+        </ul>
+        <div class="mt-auto">
+            {% if manage %}
+            <a href="{% url 'hackathons:hackathon_manage' h.pk %}" class="btn btn-sm btn-primary rounded-pill px-3">Gérer</a>
+            <a href="{% url 'hackathons:hackathon_edit' h.pk %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">Modifier</a>
+            {% else %}
+            <a href="{% url 'hackathons:hackathon_detail' h.slug %}" class="btn btn-sm btn-primary rounded-pill px-3">Voir le hackathon</a>
+            {% endif %}
+        </div>
+    </div>
+</div>

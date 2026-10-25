@@ -1,0 +1,34 @@
+{# Variables : kind, items, challenge #}
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead><tr>
+            {% if kind == 'schedule' %}<th>Étape</th><th>Type</th><th>Début</th><th>Fin</th><th>Mentor</th>
+            {% elif kind == 'announcements' %}<th>Message</th><th>Niveau</th><th>Publication</th><th>Expiration</th><th>État</th>
+            {% else %}<th>Titre</th><th>Catégorie</th><th>Lien / fichier</th><th>Publiée</th>{% endif %}
+            <th class="text-end">Actions</th>
+        </tr></thead>
+        <tbody>
+        {% for i in items %}
+        <tr>
+            {% if kind == 'schedule' %}
+            <td class="fw-semibold">{{ i.title }}{% if i.is_key_step %} <i class="bi bi-star-fill text-warning" title="Étape clé"></i>{% endif %}</td>
+            <td>{{ i.get_kind_display }}</td><td>{{ i.starts_at|date:"d/m/Y H:i" }}</td><td>{{ i.ends_at|date:"d/m/Y H:i"|default:"—" }}</td><td>{{ i.mentor.get_full_name|default:"—" }}</td>
+            {% elif kind == 'announcements' %}
+            <td>{{ i.message|truncatechars:80 }}</td>
+            <td><span class="badge bg-{% if i.level == 'urgent' %}danger{% else %}info{% endif %}-subtle text-{% if i.level == 'urgent' %}danger{% else %}info{% endif %}-emphasis rounded-pill">{{ i.get_level_display }}</span></td>
+            <td>{{ i.publish_at|date:"d/m/Y H:i" }}</td><td>{{ i.expires_at|date:"d/m/Y H:i"|default:"—" }}</td>
+            <td>{% if i.is_active %}<span class="badge bg-success-subtle text-success-emphasis rounded-pill">Active</span>{% else %}<span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill">Inactive</span>{% endif %}</td>
+            {% else %}
+            <td class="fw-semibold">{{ i.title }}</td><td>{{ i.get_category_display }}</td>
+            <td>{% if i.url %}<a href="{{ i.url }}" target="_blank" rel="noopener noreferrer">Lien</a>{% endif %} {% if i.file %}<a href="{{ i.file.url }}">Fichier</a>{% endif %}</td>
+            <td>{% if i.is_published %}Oui{% else %}Non{% endif %}</td>
+            {% endif %}
+            <td class="text-end text-nowrap">
+                <a href="{% url 'hackathons:child_edit' challenge.pk kind i.pk %}" class="btn btn-sm btn-outline-secondary rounded-pill" aria-label="Modifier"><i class="bi bi-pencil"></i></a>
+                <a href="{% url 'hackathons:child_delete' challenge.pk kind i.pk %}" class="btn btn-sm btn-outline-danger rounded-pill" aria-label="Supprimer"><i class="bi bi-trash"></i></a>
+            </td>
+        </tr>
+        {% empty %}<tr><td colspan="7" class="text-center text-muted py-5">Aucun élément pour le moment.</td></tr>{% endfor %}
+        </tbody>
+    </table>
+</div>

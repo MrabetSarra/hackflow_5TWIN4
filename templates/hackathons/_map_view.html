@@ -1,0 +1,29 @@
+{# Carte de localisation en lecture seule. Variable : h #}
+{% if h.latitude is not None and h.longitude is not None %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<div id="hf-map-view" style="height: 340px; border-radius: 1rem; z-index: 0;" data-lat="{{ h.latitude|stringformat:'f' }}" data-lng="{{ h.longitude|stringformat:'f' }}" data-label="{{ h.location }}"></div>
+<div class="small text-body-secondary mt-3"><i class="bi bi-geo-alt me-1"></i>{{ h.location }}
+    · <a href="https://www.openstreetmap.org/?mlat={{ h.latitude|stringformat:'f' }}&amp;mlon={{ h.longitude|stringformat:'f' }}#map=16/{{ h.latitude|stringformat:'f' }}/{{ h.longitude|stringformat:'f' }}" target="_blank" rel="noopener noreferrer">Ouvrir dans OpenStreetMap</a></div>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+  var el = document.getElementById('hf-map-view');
+  var lat = parseFloat(el.dataset.lat), lng = parseFloat(el.dataset.lng);
+  var map = L.map(el, {scrollWheelZoom: false}).setView([lat, lng], 15);
+  var tiles = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+    maxZoom: 19, referrerPolicy: 'origin',
+    attribution: '&copy; contributeurs <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  }).addTo(map);
+  var tileErrors = 0;
+  tiles.on('tileerror', function () {
+    if (++tileErrors === 4) {
+      map.removeLayer(tiles);
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19, attribution: 'Tuiles &copy; Esri'
+      }).addTo(map);
+    }
+  });
+  L.marker([lat, lng]).addTo(map).bindPopup(el.dataset.label || '').openPopup();
+})();
+</script>
+{% endif %}

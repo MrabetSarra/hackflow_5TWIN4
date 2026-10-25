@@ -1,0 +1,54 @@
+{# Onglets d'un challenge pour étudiants et mentors. Variable attendue : c #}
+{% with announcements=c.active_announcements resources=c.published_resources %}
+<ul class="nav hf-pills gap-1 mb-4 flex-wrap" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#ct-{{ c.pk }}-overview" type="button" role="tab"><i class="bi bi-info-circle me-2"></i>Aperçu</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#ct-{{ c.pk }}-schedule" type="button" role="tab"><i class="bi bi-calendar-event me-2"></i>Programme</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#ct-{{ c.pk }}-news" type="button" role="tab"><i class="bi bi-megaphone me-2"></i>Annonces{% if announcements %} <span class="badge bg-danger rounded-pill ms-1">{{ announcements|length }}</span>{% endif %}</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#ct-{{ c.pk }}-resources" type="button" role="tab"><i class="bi bi-box-seam me-2"></i>Ressources</button></li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="ct-{{ c.pk }}-overview" role="tabpanel">
+        {% include "hackathons/_challenge_body.html" with challenge=c %}
+    </div>
+
+    <div class="tab-pane fade" id="ct-{{ c.pk }}-schedule" role="tabpanel">
+        {% for s in c.schedule_items.all %}
+        <div class="hf-tile mb-3 d-flex gap-4">
+            <div class="text-center flex-shrink-0" style="min-width: 76px;"><div class="h5 fw-bold mb-0">{{ s.starts_at|date:"H:i" }}</div><div class="small text-body-secondary">{{ s.starts_at|date:"d M" }}</div></div>
+            <div class="flex-grow-1">
+                <div class="fw-semibold">{{ s.title }}{% if s.is_key_step %} <i class="bi bi-star-fill text-warning ms-1" title="Étape clé"></i>{% endif %}
+                    <span class="badge rounded-pill ms-2 fw-medium bg-{% if s.state == 'ongoing' %}success{% elif s.state == 'done' %}secondary{% else %}primary{% endif %}-subtle text-{% if s.state == 'ongoing' %}success{% elif s.state == 'done' %}secondary{% else %}primary{% endif %}-emphasis">{% if s.state == 'ongoing' %}En cours{% elif s.state == 'done' %}Terminé{% else %}À venir{% endif %}</span></div>
+                <div class="small text-body-secondary mt-1">{{ s.get_kind_display }}{% if s.ends_at %} · jusqu'à {{ s.ends_at|date:"H:i" }}{% endif %}{% if s.location %} · {{ s.location }}{% endif %}{% if s.mentor %} · Mentor : {{ s.mentor.get_full_name|default:s.mentor.username }}{% endif %}</div>
+                {% if s.description %}<p class="hf-text small mt-2">{{ s.description }}</p>{% endif %}
+            </div>
+        </div>
+        {% empty %}<div class="text-center text-body-secondary py-5"><i class="bi bi-calendar-x fs-2 d-block mb-2"></i>Le programme sera bientôt disponible.</div>{% endfor %}
+    </div>
+
+    <div class="tab-pane fade" id="ct-{{ c.pk }}-news" role="tabpanel">
+        {% for a in announcements %}
+        <div class="hf-soft mb-3 d-flex gap-3 bg-{% if a.level == 'urgent' %}danger{% else %}info{% endif %}-subtle">
+            <i class="bi {% if a.level == 'urgent' %}bi-exclamation-triangle{% else %}bi-info-circle{% endif %} fs-4 text-{% if a.level == 'urgent' %}danger{% else %}info{% endif %}-emphasis"></i>
+            <div><div class="fw-semibold">{{ a.get_level_display }}</div><div>{{ a.message }}</div><div class="small text-body-secondary mt-1">{{ a.publish_at|date:"d/m/Y H:i" }}</div></div>
+        </div>
+        {% empty %}<div class="text-center text-body-secondary py-5"><i class="bi bi-megaphone fs-2 d-block mb-2"></i>Aucune annonce active.</div>{% endfor %}
+    </div>
+
+    <div class="tab-pane fade" id="ct-{{ c.pk }}-resources" role="tabpanel">
+        <div class="row g-3">
+            {% for r in resources %}
+            <div class="col-md-6"><div class="hf-tile">
+                <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill fw-medium mb-2">{{ r.get_category_display }}</span>
+                <div class="fw-semibold">{{ r.title }}</div>
+                {% if r.description %}<p class="hf-text small mt-1">{{ r.description }}</p>{% endif %}
+                <div class="d-flex gap-2 mt-3">
+                    {% if r.url %}<a class="btn btn-sm btn-outline-primary rounded-pill px-3" href="{{ r.url }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right me-1"></i>Ouvrir</a>{% endif %}
+                    {% if r.file %}<a class="btn btn-sm btn-outline-secondary rounded-pill px-3" href="{{ r.file.url }}" download><i class="bi bi-download me-1"></i>Télécharger</a>{% endif %}
+                </div>
+            </div></div>
+            {% empty %}<div class="col-12 text-center text-body-secondary py-5"><i class="bi bi-box-seam fs-2 d-block mb-2"></i>Aucune ressource publiée.</div>{% endfor %}
+        </div>
+    </div>
+</div>
+{% endwith %}

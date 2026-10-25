@@ -1,0 +1,134 @@
+<style>
+  .hf-cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+  .hf-cal-head { text-align: center; font-size: .8rem; font-weight: 600; color: var(--bs-secondary-color); padding: .25rem 0; }
+  .hf-cal-day { min-height: 112px; padding: .4rem; border: 1px solid var(--bs-border-color-translucent); border-radius: .85rem; background: var(--bs-body-bg); display: flex; flex-direction: column; gap: 4px; }
+  .hf-cal-day.muted { background: transparent; opacity: .55; }
+  .hf-cal-day.today { border-color: var(--bs-primary); box-shadow: 0 0 0 2px var(--bs-primary-bg-subtle); }
+  .hf-cal-num { font-size: .8rem; font-weight: 600; color: var(--bs-secondary-color); }
+  .hf-cal-day.today .hf-cal-num { color: var(--bs-primary); }
+  .hf-chip { display: block; width: 100%; text-align: left; border: 0; border-radius: .5rem; padding: .2rem .45rem; font-size: .75rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hf-chip.step { font-weight: 500; }
+  @media (max-width: 767px) { .hf-cal-day { min-height: 74px; } .hf-chip { font-size: .65rem; padding: .15rem .3rem; } }
+</style>
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h1 class="h2 fw-bold mb-1">Mes inscriptions</h1>
+        <p class="text-body-secondary mb-0">Votre calendrier personnel : hackathons et étapes de programme de vos challenges.</p>
+    </div>
+    <a href="{% url 'hackathons:catalog' %}" class="btn btn-outline-primary rounded-pill px-4"><i class="bi bi-search me-1"></i>Découvrir des hackathons</a>
+</div>
+
+{% if agenda.next_up %}
+<div class="card-modern p-4 mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+    <div>
+        <div class="small text-body-secondary mb-1"><i class="bi bi-stars me-1 text-primary"></i>Prochain rendez-vous</div>
+        <a href="{{ agenda.next_up.url }}" class="h5 fw-bold text-decoration-none">{{ agenda.next_up.title }}</a>
+    </div>
+    <div class="text-center px-4 py-3 rounded-4 bg-primary-subtle">
+        <div class="small text-body-secondary mb-1">{{ agenda.next_up.label }}</div>
+        <div class="h5 fw-bold font-mono mb-0" data-hf-countdown="{{ agenda.next_up.target }}">--</div>
+    </div>
+</div>
+{% endif %}
+
+{% for warning in agenda.conflicts %}
+<div class="alert alert-warning d-flex align-items-center gap-3" role="alert"><i class="bi bi-exclamation-triangle fs-4"></i><div><strong>Conflit d'agenda.</strong> {{ warning }}</div></div>
+{% endfor %}
+
+<section class="card-modern p-4 p-lg-5 mb-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <h2 class="h4 fw-bold mb-0">{{ agenda.month_label }}</h2>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary rounded-pill px-3" href="?month={{ agenda.prev_month }}" aria-label="Mois précédent"><i class="bi bi-chevron-left"></i></a>
+            {% if not agenda.is_current_month %}<a class="btn btn-outline-primary rounded-pill px-3" href="{% url 'hackathons:my_registrations' %}">Aujourd'hui</a>{% endif %}
+            <a class="btn btn-outline-secondary rounded-pill px-3" href="?month={{ agenda.next_month }}" aria-label="Mois suivant"><i class="bi bi-chevron-right"></i></a>
+        </div>
+    </div>
+
+    <div class="hf-cal">
+        {% for name in weekdays %}<div class="hf-cal-head">{{ name }}</div>{% endfor %}
+        {% for week in agenda.weeks %}{% for day in week %}
+        <div class="hf-cal-day {% if not day.in_month %}muted{% endif %} {% if day.is_today %}today{% endif %}">
+            <span class="hf-cal-num">{{ day.date.day }}</span>
+            {% for e in day.entries %}
+            <button type="button" class="hf-chip {% if e.kind == 'schedule' %}step{% endif %} bg-{{ e.color }}-subtle text-{{ e.color }}-emphasis"
+                    data-bs-toggle="modal" data-bs-target="#hf-event-modal"
+                    data-kind="{{ e.kind }}" data-title="{{ e.title }}" data-challenge="{{ e.challenge }}" data-when="{{ e.when }}"
+                    data-place="{{ e.place }}" data-url="{{ e.url }}" data-cancel-url="{{ e.cancel_url }}">
+                {% if e.kind == 'schedule' %}<i class="bi bi-clock me-1"></i>{{ e.time }} {% endif %}{{ e.title }}
+            </button>
+            {% endfor %}
+        </div>
+        {% endfor %}{% endfor %}
+    </div>
+
+    <div class="d-flex flex-wrap gap-4 small text-body-secondary mt-4">
+        <span><span class="badge bg-primary-subtle text-primary-emphasis me-1">&nbsp;</span>Hackathon</span>
+        <span><span class="badge bg-info-subtle text-info-emphasis me-1">&nbsp;</span>Étape du programme</span>
+        <span><span class="badge border border-primary me-1">&nbsp;</span>Aujourd'hui</span>
+    </div>
+    {% if not agenda.has_events %}<p class="text-center text-body-secondary mt-4 mb-0">Aucune inscription pour le moment : vos hackathons apparaîtront ici.</p>{% endif %}
+</section>
+
+<div class="modal fade" id="hf-event-modal" tabindex="-1" aria-labelledby="hf-event-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h2 class="modal-title h5 fw-bold" id="hf-event-title"></h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2"><i class="bi bi-flag me-2 text-primary"></i><span id="hf-event-challenge"></span></p>
+                <p class="mb-2"><i class="bi bi-calendar-event me-2 text-primary"></i><span id="hf-event-when"></span></p>
+                <p class="mb-0" id="hf-event-place-row"><i class="bi bi-geo-alt me-2 text-primary"></i><span id="hf-event-place"></span></p>
+            </div>
+            <div class="modal-footer border-0 pt-0 justify-content-between">
+                <a href="#" id="hf-event-link" class="btn btn-primary rounded-pill px-4"><i class="bi bi-eye me-1"></i>Voir les détails du hackathon</a>
+                <form method="post" id="hf-event-cancel" class="m-0">{% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger rounded-pill px-4"><i class="bi bi-trash me-1"></i>Supprimer l'inscription</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h2 class="h4 fw-bold mb-3">Historique</h2>
+<div class="card-modern overflow-hidden">
+    <div class="table-responsive"><table class="table align-middle mb-0">
+        <thead><tr><th class="ps-4">Hackathon</th><th>Challenge</th><th>Équipe</th><th>Date</th><th>Statut</th><th class="pe-4"></th></tr></thead>
+        <tbody>
+        {% for r in registrations %}
+        <tr>
+            <td class="ps-4"><a href="{% url 'hackathons:hackathon_detail' r.challenge.hackathon.slug %}" class="fw-semibold text-decoration-none">{{ r.challenge.hackathon.title }}</a></td>
+            <td>{{ r.challenge.title }}</td>
+            <td>{{ r.team.name|default:"—" }}</td>
+            <td>{{ r.registered_at|date:"d/m/Y H:i" }}</td>
+            <td><span class="badge bg-{{ r.status_color }}-subtle text-{{ r.status_color }}-emphasis rounded-pill">{{ r.get_status_display }}</span></td>
+            <td class="pe-4 text-end">{% if r.status == 'confirmed' %}<form method="post" action="{% url 'hackathons:registration_cancel' r.pk %}">{% csrf_token %}<button class="btn btn-sm btn-outline-danger rounded-pill" onclick="return confirm('Supprimer cette inscription ?')">Supprimer</button></form>{% endif %}</td>
+        </tr>
+        {% empty %}<tr><td colspan="6" class="text-center text-muted py-5">Vous n'avez aucune inscription.</td></tr>{% endfor %}
+        </tbody>
+    </table></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var modal = document.getElementById('hf-event-modal');
+  modal.addEventListener('show.bs.modal', function (event) {
+    var d = event.relatedTarget.dataset;
+    document.getElementById('hf-event-title').textContent = d.title;
+    document.getElementById('hf-event-challenge').textContent = d.challenge;
+    document.getElementById('hf-event-when').textContent = d.when;
+    document.getElementById('hf-event-place').textContent = d.place;
+    document.getElementById('hf-event-place-row').style.display = d.place ? '' : 'none';
+    document.getElementById('hf-event-link').href = d.url;
+    var form = document.getElementById('hf-event-cancel');
+    form.style.display = d.cancelUrl ? '' : 'none';
+    form.action = d.cancelUrl || '';
+  });
+  document.getElementById('hf-event-cancel').addEventListener('submit', function (e) {
+    if (!confirm('Supprimer votre inscription à ce challenge ?')) { e.preventDefault(); }
+  });
+});
+</script>

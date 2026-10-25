@@ -1,0 +1,58 @@
+{# Variable attendue : challenge #}
+{% if challenge.description %}<p class="mb-4 fs-6" style="line-height: 1.8;">{{ challenge.description|linebreaksbr }}</p>{% endif %}
+
+<div class="row g-3">
+    {% if challenge.problem_statement %}
+    <div class="col-md-6"><div class="hf-tile">
+        <div class="d-flex align-items-center gap-3 mb-3"><span class="hf-icon bg-primary-subtle text-primary"><i class="bi bi-lightbulb"></i></span><h6 class="fw-bold mb-0">Problématique</h6></div>
+        <p class="hf-text">{{ challenge.problem_statement|linebreaksbr }}</p>
+    </div></div>
+    {% endif %}
+    {% if challenge.objectives %}
+    <div class="col-md-6"><div class="hf-tile">
+        <div class="d-flex align-items-center gap-3 mb-3"><span class="hf-icon bg-success-subtle text-success"><i class="bi bi-bullseye"></i></span><h6 class="fw-bold mb-0">Objectifs</h6></div>
+        <p class="hf-text">{{ challenge.objectives|linebreaksbr }}</p>
+    </div></div>
+    {% endif %}
+    {% if challenge.constraints %}
+    <div class="col-md-6"><div class="hf-tile">
+        <div class="d-flex align-items-center gap-3 mb-3"><span class="hf-icon bg-warning-subtle text-warning-emphasis"><i class="bi bi-shield-check"></i></span><h6 class="fw-bold mb-0">Contraintes</h6></div>
+        <p class="hf-text">{{ challenge.constraints|linebreaksbr }}</p>
+    </div></div>
+    {% endif %}
+    {% if challenge.deliverables %}
+    <div class="col-md-6"><div class="hf-tile">
+        <div class="d-flex align-items-center gap-3 mb-3"><span class="hf-icon bg-info-subtle text-info-emphasis"><i class="bi bi-box-seam"></i></span><h6 class="fw-bold mb-0">Livrables attendus</h6></div>
+        <p class="hf-text">{{ challenge.deliverables|linebreaksbr }}</p>
+    </div></div>
+    {% endif %}
+    {% if challenge.guidelines %}
+    <div class="col-12"><div class="hf-tile">
+        <div class="d-flex align-items-center gap-3 mb-3"><span class="hf-icon bg-secondary-subtle text-secondary-emphasis"><i class="bi bi-list-check"></i></span><h6 class="fw-bold mb-0">Consignes spécifiques</h6></div>
+        <p class="hf-text">{{ challenge.guidelines|linebreaksbr }}</p>
+    </div></div>
+    {% endif %}
+</div>
+
+{% if challenge.technology_list or challenge.reward %}
+<div class="d-flex flex-column flex-md-row gap-3 mt-4 align-items-md-center">
+    {% if challenge.technology_list %}
+    <div class="flex-grow-1">
+        <div class="small text-body-secondary mb-2">Technologies recommandées</div>
+        {% for t in challenge.technology_list %}<span class="badge bg-primary-subtle text-primary-emphasis rounded-pill px-3 py-2 me-1 mb-1 fw-medium">{{ t }}</span>{% endfor %}
+    </div>
+    {% endif %}
+    {% if challenge.reward %}
+    <div class="hf-soft bg-warning-subtle d-flex align-items-center gap-3">
+        <i class="bi bi-trophy fs-3 text-warning-emphasis"></i>
+        <div><div class="small text-body-secondary">Récompense</div><div class="fw-semibold">{{ challenge.reward }}</div></div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if is_mentor and challenge.registered_team_names %}
+<div class="mt-4"><div class="small text-body-secondary mb-2">Équipes inscrites</div>
+    {% for t in challenge.registered_team_names %}<span class="badge bg-success-subtle text-success-emphasis rounded-pill px-3 py-2 me-1">{{ t }}</span>{% endfor %}
+</div>
+{% endif %}

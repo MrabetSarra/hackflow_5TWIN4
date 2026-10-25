@@ -38,6 +38,10 @@
             </a>
 
             <div class="sidebar-heading mt-3">Suivi & Feedbacks</div>
+            <a href="{% url 'hackathons:catalog' %}" class="nav-link-item {% if request.resolver_match.namespace == 'hackathons' %}active{% endif %}">
+                <i class="bi bi-trophy-fill"></i>
+                <span>Hackathons</span>
+            </a>
             <a href="{% url 'mentor:evaluations' %}" class="nav-link-item {% if request.resolver_match.url_name == 'evaluations' %}active{% endif %}">
                 <i class="bi bi-pencil-square"></i>
                 <span>Retours & Conseils</span>

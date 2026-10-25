@@ -1,0 +1,36 @@
+<article class="card-modern overflow-hidden">
+    <div class="p-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between gap-4">
+            <div class="flex-grow-1">
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <span class="badge bg-{{ c.difficulty_color }}-subtle text-{{ c.difficulty_color }}-emphasis rounded-pill px-3 py-2 fw-medium">{{ c.get_difficulty_display }}</span>
+                    {% if is_student %}
+                        {% if c.pk in mine %}<span class="badge bg-success rounded-pill px-3 py-2 fw-medium"><i class="bi bi-check-lg me-1"></i>Inscrit</span>
+                        {% elif has_registration %}<span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-3 py-2 fw-medium">Un seul challenge par hackathon</span>
+                        {% elif c.registration_open %}<span class="badge bg-success-subtle text-success-emphasis rounded-pill px-3 py-2 fw-medium">Inscriptions ouvertes</span>
+                        {% else %}<span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-3 py-2 fw-medium">Inscriptions fermées</span>{% endif %}
+                    {% endif %}
+                </div>
+                <h4 class="fw-bold mb-2">{{ c.title }}</h4>
+                {% if c.short_description %}<p class="text-body-secondary mb-3">{{ c.short_description }}</p>{% endif %}
+                <div class="d-flex flex-wrap gap-4 small text-body-secondary">
+                    {% if c.reward %}<span><i class="bi bi-trophy me-1"></i>{{ c.reward }}</span>{% endif %}
+                    {% if is_student %}<span><i class="bi bi-clock me-1"></i>Date limite : {{ c.deadline|date:"d/m/Y H:i" }}</span>{% endif %}
+                </div>
+            </div>
+            <div class="d-flex flex-md-column gap-2 align-self-md-start">
+                <button class="btn btn-outline-primary rounded-pill px-4" type="button" data-bs-toggle="collapse" data-bs-target="#challenge-{{ c.pk }}" aria-expanded="false" aria-controls="challenge-{{ c.pk }}">
+                    <i class="bi bi-chevron-down me-1"></i>Voir le challenge
+                </button>
+                {% if is_student and c.registration_open and not has_registration %}
+                <a href="{% url 'hackathons:challenge_register' c.pk %}" class="btn btn-primary rounded-pill px-4">S'inscrire</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="collapse border-top" id="challenge-{{ c.pk }}">
+        <div class="p-4">
+            {% include "hackathons/_challenge_tabs.html" %}
+        </div>
+    </div>
+</article>
