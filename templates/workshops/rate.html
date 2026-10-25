@@ -1,0 +1,81 @@
+{% extends "layouts/base_student.html" %}
+{% load static %}
+
+{% block title %}Noter « {{ workshop.title }} » — HackFlow{% endblock %}
+
+{% block student_content %}
+<div class="container-fluid px-4 py-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-7 col-lg-5">
+
+      <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{% url 'workshops:my_bookings' %}">Mes ateliers</a></li>
+          <li class="breadcrumb-item active">Donner mon avis</li>
+        </ol>
+      </nav>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <div class="text-center mb-4">
+            <i class="bi bi-star-fill text-warning fs-1"></i>
+            <h4 class="fw-bold mt-3 mb-1">Votre avis compte !</h4>
+            <p class="text-body-secondary">
+              Notez <strong>{{ workshop.title }}</strong><br>
+              <span class="small">par {{ workshop.speaker_name }}</span>
+            </p>
+          </div>
+
+          <form method="post">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger small">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <!-- Note étoiles -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Note <span class="text-danger">*</span></label>
+              <div class="d-flex flex-column gap-2">
+                {% for choice in form.rating %}
+                <div class="form-check p-3 rounded-3 bg-body-tertiary border hover-bg-primary"
+                     style="cursor:pointer;">
+                  {{ choice.tag }}
+                  <label class="form-check-label ms-2 fw-semibold" for="{{ choice.id_for_label }}"
+                         style="cursor:pointer;">
+                    {{ choice.choice_label }}
+                  </label>
+                </div>
+                {% endfor %}
+              </div>
+              {% if form.rating.errors %}
+              <div class="text-danger small mt-1">{{ form.rating.errors|join:", " }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Commentaire -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Commentaire</label>
+              {{ form.comment }}
+              {% if form.comment.errors %}
+              <div class="text-danger small mt-1">{{ form.comment.errors|join:", " }}</div>
+              {% endif %}
+            </div>
+
+            <div class="d-flex gap-3">
+              <button type="submit" class="btn btn-warning rounded-pill px-4 fw-semibold text-white flex-grow-1">
+                <i class="bi bi-send-fill me-2"></i>Envoyer mon avis
+              </button>
+              <a href="{% url 'workshops:my_bookings' %}"
+                 class="btn btn-outline-secondary rounded-pill px-4">
+                Annuler
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

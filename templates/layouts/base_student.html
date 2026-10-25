@@ -40,6 +40,15 @@
                 <span>Repositories</span>
             </a>
 
+            <a href="{% url 'workshops:list' %}" class="nav-link-item {% if 'workshops' in request.resolver_match.app_name %}active{% endif %}">
+                <i class="bi bi-mortarboard-fill"></i>
+                <span>Ateliers & Formations</span>
+            </a>
+            <a href="{% url 'workshops:my_bookings' %}" class="nav-link-item {% if request.resolver_match.url_name == 'my_bookings' %}active{% endif %}">
+                <i class="bi bi-bookmark-fill"></i>
+                <span>Mes ateliers</span>
+            </a>
+
             <div class="sidebar-heading mt-3">Network & Support</div>
             <a href="{% url 'hackathons:catalog' %}" class="nav-link-item {% if request.resolver_match.namespace == 'hackathons' and request.resolver_match.url_name != 'my_registrations' and request.resolver_match.url_name != 'my_favorites' and request.resolver_match.url_name != 'ai_recommendations' %}active{% endif %}">
                 <i class="bi bi-trophy-fill" aria-hidden="true"></i>
@@ -157,6 +166,7 @@
 
         <!-- Main Content Body -->
         <main id="main-content" class="p-3 p-md-4 flex-grow-1">
+            {% if request.resolver_match.app_name == 'workshops' %}{% include "repositories/_messages.html" %}{% endif %}
             {% block student_content %}{% block profile_content %}{% endblock %}{% endblock %}
         </main>
     </div>

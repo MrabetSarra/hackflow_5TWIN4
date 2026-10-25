@@ -46,6 +46,16 @@
                 <span>Soumissions à évaluer</span>
             </a>
 
+            <div class="sidebar-heading mt-3">Ateliers</div>
+            <a href="{% url 'workshops:list' %}" class="nav-link-item {% if request.resolver_match.namespace == 'workshops' and request.resolver_match.url_name == 'list' %}active{% endif %}">
+                <i class="bi bi-easel2-fill"></i>
+                <span>Catalogue Ateliers</span>
+            </a>
+            <a href="{% url 'workshops:dashboard' %}" class="nav-link-item {% if request.resolver_match.namespace == 'workshops' and request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <i class="bi bi-qr-code-scan"></i>
+                <span>Mes Animations</span>
+            </a>
+
             <div class="sidebar-heading mt-3">Suivi & Feedbacks</div>
             <a href="{% url 'hackathons:catalog' %}" class="nav-link-item {% if request.resolver_match.namespace == 'hackathons' and request.resolver_match.url_name != 'ai_mentor' %}active{% endif %}">
                 <i class="bi bi-trophy-fill"></i>
@@ -127,6 +137,9 @@
             {# La page profil (accounts) affiche déjà ses propres messages. #}
             {% if request.resolver_match.app_name == 'mentor' %}{% include "repositories/_messages.html" %}{% endif %}
             {% block mentor_content %}{% block profile_content %}{% endblock %}{% endblock %}
+            {# Points d'extension pour les modules partagés (ex. workshops). #}
+            {% block student_content %}{% endblock %}
+            {% block admin_content %}{% endblock %}
         </main>
     </div>
 </div>

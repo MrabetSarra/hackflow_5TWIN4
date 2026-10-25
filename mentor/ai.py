@@ -92,9 +92,9 @@ def _base_url():
 
 def _timeout():
     try:
-        return int(os.environ.get('MENTOR_AI_TIMEOUT', '90'))
+        return int(os.environ.get('MENTOR_AI_TIMEOUT', '5'))
     except ValueError:
-        return 90
+        return 5
 
 
 def build_ticket_text(subject, description):

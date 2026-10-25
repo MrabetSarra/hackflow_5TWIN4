@@ -41,6 +41,8 @@ urlpatterns = [
     path('cockpit/', include('dashboard_admin.urls')),
     path('careers/', include('career_opportunities.urls')),
 
+    # Module Ateliers & Formations
+    path('workshops/', include('workshops.urls')),
     # Tracks, Hackathons & Challenges
     path('hackathons/', include('hackathons.urls')),
 

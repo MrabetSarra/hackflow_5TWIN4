@@ -15,6 +15,11 @@ onnxruntime>=1.18,<2
 Markdown==3.10.3
 bleach==6.4.0
 Pygments==2.21.0
+
+# --- Module Workshops ---
+scikit-learn==1.9.1        # IA recommandation TF-IDF + forecast Ridge
+fpdf2==2.8.9               # Génération PDF certificat (pur Python, pas de binaire)
+qrcode[pil]==8.2           # QR code de check-in (dépend de Pillow)
 django-prometheus>=2.3,<3
 pyotp>=2.9,<3
 qrcode>=8.0,<9

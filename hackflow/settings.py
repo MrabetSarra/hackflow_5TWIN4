@@ -121,6 +121,7 @@ INSTALLED_APPS = [
     'student.apps.StudentConfig',
     'mentor.apps.MentorConfig',
     'dashboard_admin.apps.DashboardAdminConfig',
+    'workshops.apps.WorkshopsConfig',
     'career_opportunities.apps.CareerOpportunitiesConfig',
     'repositories.apps.RepositoriesConfig',
     'hackathons.apps.HackathonsConfig',
@@ -502,6 +503,9 @@ CELERY_TASK_EAGER_PROPAGATES = True
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_RESULT_SERIALIZER = 'json'
+
+# Absolute base URL used in generated documents (QR codes of certificates).
+SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

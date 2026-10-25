@@ -1,0 +1,227 @@
+{% extends workshop_base_template %}
+{% load static %}
+
+{% block title %}Dashboard Ateliers — HackFlow{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid px-4 py-4">
+
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <div>
+      <h1 class="h3 fw-bold mb-1">Dashboard Ateliers</h1>
+      <p class="text-body-secondary mb-0">Vue d'ensemble, prédictions IA et statistiques.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'workshops:create' %}" class="btn btn-primary rounded-pill px-4">
+        <i class="bi bi-plus-circle-fill me-2"></i>Nouvel atelier
+      </a>
+      <a href="{% url 'workshops:export_ics' %}" class="btn btn-outline-secondary rounded-pill">
+        <i class="bi bi-calendar-plus me-1"></i>.ics
+      </a>
+    </div>
+  </div>
+
+  <!-- KPIs globaux -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body text-center">
+          <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center mb-2"
+               style="width:48px;height:48px;">
+            <i class="bi bi-calendar-event-fill"></i>
+          </div>
+          <h2 class="fw-bold mb-0">{{ workshops|length }}</h2>
+          <p class="small text-body-secondary mb-0">Ateliers au total</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body text-center">
+          <div class="rounded-circle bg-success bg-opacity-10 text-success d-inline-flex align-items-center justify-content-center mb-2"
+               style="width:48px;height:48px;">
+            <i class="bi bi-people-fill"></i>
+          </div>
+          <h2 class="fw-bold mb-0">{{ total_confirmed }}</h2>
+          <p class="small text-body-secondary mb-0">Réservations confirmées</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body text-center">
+          <div class="rounded-circle bg-info bg-opacity-10 text-info d-inline-flex align-items-center justify-content-center mb-2"
+               style="width:48px;height:48px;">
+            <i class="bi bi-patch-check-fill"></i>
+          </div>
+          <h2 class="fw-bold mb-0">{{ total_attended }}</h2>
+          <p class="small text-body-secondary mb-0">Présences validées</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body text-center">
+          <div class="rounded-circle bg-warning bg-opacity-10 text-warning d-inline-flex align-items-center justify-content-center mb-2"
+               style="width:48px;height:48px;">
+            <i class="bi bi-file-earmark-text-fill"></i>
+          </div>
+          <h2 class="fw-bold mb-0">{{ total_certs }}</h2>
+          <p class="small text-body-secondary mb-0">Certificats émis</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tableau des ateliers -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-transparent border-bottom py-3">
+      <h5 class="mb-0 fw-bold">Mes ateliers</h5>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Atelier</th>
+            <th>Mode</th>
+            <th>Contenu / Accès</th>
+            <th>Date</th>
+            <th>Capacité</th>
+            <th>Remplissage</th>
+            <th>Présence</th>
+            <th>Note moy.</th>
+            <th>Statut</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ws in workshops %}
+          <tr>
+            <td>
+              <div class="fw-semibold">{{ ws.title|truncatechars:35 }}</div>
+              <div class="small text-body-secondary">{{ ws.speaker_name }}</div>
+            </td>
+            <td>
+              {% if ws.mode == 'onsite' %}
+                <span class="badge bg-success rounded-pill">Présentiel</span>
+              {% elif ws.mode == 'online' %}
+                <span class="badge bg-primary rounded-pill">Live</span>
+              {% else %}
+                <span class="badge bg-secondary rounded-pill">Replay</span>
+              {% endif %}
+            </td>
+            <td class="small">
+              {% if ws.mode == 'onsite' %}
+                {% if ws.room %}
+                  <a href="#" class="badge bg-info text-dark text-decoration-none d-inline-block"
+                     title="Salle présente">
+                    <i class="bi bi-geo-alt-fill me-1"></i>{{ ws.room }}
+                  </a>
+                {% else %}
+                  <span class="badge bg-warning text-dark"><i class="bi bi-geo-alt me-1"></i>Salle non définie</span>
+                {% endif %}
+              {% elif ws.mode == 'online' %}
+                {% if ws.meeting_url %}
+                  <a href="{{ ws.meeting_url }}" target="_blank" rel="noopener noreferrer"
+                     class="badge bg-primary text-decoration-none d-inline-block">
+                    <i class="bi bi-link-45deg me-1"></i>Lien visio
+                  </a>
+                {% else %}
+                  <span class="badge bg-warning text-dark"><i class="bi bi-link me-1"></i>Lien non configuré</span>
+                {% endif %}
+              {% elif ws.mode == 'recorded' %}
+                {% if ws.replay_url %}
+                  <a href="{{ ws.replay_url }}" target="_blank" rel="noopener noreferrer"
+                     class="badge bg-secondary text-decoration-none d-inline-block">
+                    <i class="bi bi-play-circle me-1"></i>Replay
+                  </a>
+                {% elif ws.video_file %}
+                  <a href="{{ ws.video_file.url }}" target="_blank" rel="noopener noreferrer"
+                     class="badge bg-secondary text-decoration-none d-inline-block">
+                    <i class="bi bi-file-earmark-play me-1"></i>Vidéo
+                  </a>
+                {% else %}
+                  <span class="badge bg-warning text-dark"><i class="bi bi-play me-1"></i>Vidéo non configurée</span>
+                {% endif %}
+              {% else %}
+                <span class="text-body-secondary small">—</span>
+              {% endif %}
+            </td>
+            <td class="small">{{ ws.starts_at|date:"d/m/Y" }}<br>{{ ws.starts_at|date:"H\hi" }}</td>
+            <td class="text-center">
+              {% if ws.capacity > 0 %}{{ ws.capacity }}{% else %}<i class="bi bi-infinity"></i>{% endif %}
+            </td>
+            <td style="min-width:100px;">
+              {% if ws.capacity > 0 %}
+              <div class="d-flex align-items-center gap-2">
+                <div class="progress flex-grow-1" style="height:6px;">
+                  <div class="progress-bar {% if ws.fill_rate == 100 %}bg-danger{% elif ws.fill_rate >= 75 %}bg-warning{% else %}bg-primary{% endif %}"
+                       style="width:{{ ws.fill_rate }}%"></div>
+                </div>
+                <span class="small text-body-secondary">{{ ws.fill_rate }}%</span>
+              </div>
+              {% else %}
+              <span class="text-body-secondary small">illimitée</span>
+              {% endif %}
+            </td>
+            <td class="text-center">{{ ws.attendee_count }}</td>
+            <td class="text-center">
+              {% if ws.average_rating %}
+              <span class="text-warning small">
+                {% for i in "12345" %}{% if forloop.counter <= ws.rating_stars %}<i class="bi bi-star-fill"></i>{% else %}<i class="bi bi-star"></i>{% endif %}{% endfor %}
+              </span><br>
+              <span class="small text-body-secondary">{{ ws.average_rating }}/5</span>
+              {% else %}
+              <span class="text-body-secondary small">—</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if ws.is_open %}
+                {% if ws.starts_at > now %}
+                  <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 rounded-pill">Ouvert</span>
+                {% else %}
+                  <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-20 rounded-pill">En cours</span>
+                {% endif %}
+              {% else %}
+                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-20 rounded-pill">Fermé</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="d-flex gap-1">
+                <a href="{{ ws.get_absolute_url }}" class="btn btn-sm btn-outline-primary rounded-pill px-2"
+                   title="Voir">
+                  <i class="bi bi-eye-fill"></i>
+                </a>
+                <a href="{% url 'workshops:edit' ws.pk %}"
+                   class="btn btn-sm btn-outline-warning rounded-pill px-2" title="Modifier">
+                  <i class="bi bi-pencil-fill"></i>
+                </a>
+                <a href="{{ ws.google_calendar_url }}" target="_blank"
+                   rel="noopener noreferrer"
+                   class="btn btn-sm btn-outline-danger rounded-pill px-2"
+                   title="Ajouter à Google Calendar">
+                  <i class="bi bi-google"></i>
+                </a>
+                <a href="{% url 'workshops:delete' ws.pk %}"
+                   class="btn btn-sm btn-outline-danger rounded-pill px-2" title="Supprimer">
+                  <i class="bi bi-trash-fill"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+              <td colspan="11" class="text-center py-4 text-body-secondary">
+              <i class="bi bi-calendar-x fs-3 d-block mb-2 opacity-25"></i>
+              Aucun atelier pour le moment.
+              <a href="{% url 'workshops:create' %}">Créer le premier</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

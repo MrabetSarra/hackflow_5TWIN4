@@ -142,9 +142,40 @@ core/              Page publique
 student/           Espace étudiant
 mentor/            Espace mentor
 dashboard_admin/   Espace organisateur
+workshops/         Ateliers, réservations, certificats et badges
 templates/         Pages et layouts
 static/             Styles, scripts et identité visuelle
 ```
+
+## Module Ateliers & Formations (`workshops`)
+
+Module autonome de formation, utilisable en **présentiel**, en **ligne (live)** ou en **replay vidéo**. Il s'appuie sur six modèles : `Workshop`, `Booking`, `Certificate`, `Badge`, `BadgeAward` et `WorkshopActivity`.
+
+- **Catalogue et réservation** : filtres (mode, niveau, places), pagination (12 ateliers/page), liste d'attente automatique, détection de conflit d'horaire, promotion du premier inscrit en attente après une annulation.
+- **États temporels** : comparaison des dates/heures côté serveur ; le bouton « Réserver » est désactivé avec la raison exacte (atelier terminé, commencé, inscriptions fermées, replay expiré) et un compte à rebours en direct (jours/heures/minutes/secondes) s'affiche avant le début.
+- **Certificats vérifiables** : PDF généré avec `fpdf2` (police Unicode si disponible, sinon repli Latin-1), QR code de vérification, code unique consultable publiquement sur `/workshops/verify/<code>/`. La génération est déléguée à Celery après le commit (repli synchrone si le broker est indisponible) et le numéro de série est unique et atomique.
+- **Badges** : cinq badges (premier atelier, assiduité, explorateur de modes, etc.) attribués automatiquement après un certificat, sans requêtes inutiles lorsqu'ils sont déjà obtenus.
+- **Check-in QR** : la page de confirmation est en GET, la validation réelle exige un POST (protection contre les check-ins accidentels). L'export `.ics` peut cibler un seul atelier depuis sa page de détail.
+- **Trois briques d'IA, 100 % hors ligne** :
+  - recommandation d'ateliers par similarité TF-IDF (scikit-learn) entre le profil de l'étudiant et les ateliers ;
+  - optimisation du planning (algorithme glouton avec pénalité de chevauchement) ;
+  - prévision du remplissage et du taux d'absence (régression Ridge, repli sur une heuristique si l'historique est insuffisant).
+
+### Démonstration
+
+```bash
+python manage.py seed_workshops
+```
+
+La commande est idempotente : elle crée les badges, cinq ateliers passés (historique d'entraînement de l'IA), cinq ateliers à venir couvrant les trois modes, ainsi que des réservations, présences, certificats et notes. Comptes créés si absents : `orga.hackflow` et `demo.workshop1..4` (mot de passe `HackFlow2026!`).
+
+### Tests
+
+```bash
+python manage.py test workshops
+```
+
+28 tests couvrent le CRUD, les permissions, les réservations, la liste d'attente, les conflits d'horaire, les états temporels (terminé / commencé / à venir), le check-in QR (GET de confirmation / POST de validation), les certificats et numéros de série, les badges, les recommandations, la prévision, les API JSON, l'export `.ics` et la pagination.
 
 ## Pistes d’évolution
 
