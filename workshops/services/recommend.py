@@ -45,10 +45,19 @@ def _fit_corpus(documents: tuple[str, ...]):
     return vectorizer, matrix
 
 
-def _reset_scores(workshops):
-    for workshop in workshops:
-        workshop.ai_score = 0
-        workshop.ai_reason = ''
+def _default_score(workshop, profile_skills: list[str]) -> int:
+    """
+    Score par défaut quand scikit-learn est indisponible.
+    Basé sur la correspondance simple entre les tags de l'atelier
+    et les compétences du profil utilisateur.
+    """
+    tags = workshop.topic_tags if isinstance(workshop.topic_tags, list) else []
+    matches = sum(1 for t in tags if t.lower() in [s.lower() for s in profile_skills])
+    base = min(50, matches * 20)  # jusqu'à 50% pour les tags correspondants
+    # Bonus si l'atelier est ouvert et a des places
+    if workshop.is_open and (workshop.capacity == 0 or workshop.seats_left is None or workshop.seats_left > 0):
+        base = min(75, base + 25)
+    return base
 
 
 def _build_user_profile(user) -> str:
@@ -104,9 +113,17 @@ def recommend(user, workshops, top_n: int = 6) -> list:
     try:
         from sklearn.metrics.pairwise import cosine_similarity
     except ImportError:
-        logger.warning('scikit-learn non installé : recommandations désactivées.')
-        _reset_scores(workshop_list)
-        return workshop_list
+        logger.warning('scikit-learn non installé : recommandations par score par défaut.')
+        profile_skills = user.skills if isinstance(user.skills, list) else []
+        for workshop in workshop_list:
+            score = _default_score(workshop, profile_skills)
+            workshop.ai_score = score
+            if score > 0:
+                workshop.ai_reason = 'Recommandé selon votre profil et centres d\'intérêt'
+            else:
+                workshop.ai_reason = ''
+        workshop_list.sort(key=lambda w: getattr(w, 'ai_score', 0), reverse=True)
+        return workshop_list[:top_n] if len(workshop_list) > top_n else workshop_list
 
     profile_text = _build_user_profile(user)
     documents = tuple(_workshop_document(w) for w in workshop_list)

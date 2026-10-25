@@ -1,4 +1,6 @@
 {% extends "layouts/base_mentor.html" %}
+{% load i18n %}
+{% load i18n_content %}
 
 {% block title %}Évaluer {{ submission.team.name }} - Espace Mentor - HackFlow{% endblock %}
 
@@ -12,11 +14,11 @@
     </nav>
 
     <h1 class="h2 fw-bold text-body mb-1">{% if is_new %}Évaluer{% else %}Modifier l'évaluation de{% endif %} {{ submission.team.name }}</h1>
-    <p class="text-body-secondary small mb-4">{{ submission.project_name|default:submission.team.project_name }} • Jalon : {{ submission.milestone.title }}</p>
+    <p class="text-body-secondary small mb-4">{{ submission.project_name|default:submission.team.project_name }} • Jalon : {{ submission.milestone.title|localized_milestone }}</p>
 
     <!-- Rappel de la soumission -->
     <section class="card-modern p-4 mb-4" aria-labelledby="recap-title">
-        <h2 id="recap-title" class="h6 fw-bold text-body mb-2">Rappel de la soumission</h2>
+        <h2 id="recap-title" class="h6 fw-bold text-body mb-2">{% trans "Rappel de la soumission" %}</h2>
         <p class="small text-body-secondary mb-2">{{ submission.project_summary|default:submission.description|default:"Pas de description fournie."|linebreaksbr }}</p>
         <div class="d-flex flex-wrap gap-3 small">
             {% if submission.github_url %}<a href="{{ submission.github_url }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-github me-1" aria-hidden="true"></i>Dépôt<span class="visually-hidden"> (nouvel onglet)</span></a>{% endif %}
@@ -33,7 +35,7 @@
         {% endif %}
 
         <fieldset class="card-modern p-4 mb-4">
-            <legend class="h5 fw-bold text-body mb-3">Grille de jugement</legend>
+            <legend class="h5 fw-bold text-body mb-3">{% trans "Grille de jugement" %}</legend>
             {% for criterion, score_field, comment_field in form.criterion_rows %}
             <div class="row g-3 align-items-start py-3 {% if not forloop.last %}border-bottom{% endif %}">
                 <div class="col-md-5">
@@ -68,7 +70,7 @@
         </section>
 
         <div class="d-flex justify-content-end gap-2">
-            <a href="{% if evaluation %}{% url 'mentor:evaluation_detail' evaluation.pk %}{% else %}{% url 'mentor:submissions' %}{% endif %}" class="btn btn-light border">Annuler</a>
+            <a href="{% if evaluation %}{% url 'mentor:evaluation_detail' evaluation.pk %}{% else %}{% url 'mentor:submissions' %}{% endif %}" class="btn btn-light border">{% trans "Annuler" %}</a>
             <button type="submit" class="btn btn-primary">Enregistrer l'évaluation</button>
         </div>
     </form>

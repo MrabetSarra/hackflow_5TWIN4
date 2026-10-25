@@ -98,6 +98,16 @@
                 {% if form.topic_tags_raw.errors %}<div class="text-danger small mt-1">{{ form.topic_tags_raw.errors|join:", " }}</div>{% endif %}
               </div>
               <div class="col-12">
+                <label class="form-label fw-semibold">Objectifs pédagogiques <span class="text-body-secondary fw-normal">(un par ligne)</span></label>
+                {{ form.pedagogical_objectives }}
+                {% if form.pedagogical_objectives.errors %}<div class="text-danger small mt-1">{{ form.pedagogical_objectives.errors|join:", " }}</div>{% endif %}
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">Résumé catalogue</label>
+                {{ form.catalog_summary }}
+                {% if form.catalog_summary.errors %}<div class="text-danger small mt-1">{{ form.catalog_summary.errors|join:", " }}</div>{% endif %}
+              </div>
+              <div class="col-12">
                 <label class="form-label fw-semibold">Image de couverture</label>
                 {{ form.cover_image }}
                 {% if form.cover_image.errors %}<div class="text-danger small mt-1">{{ form.cover_image.errors|join:", " }}</div>{% endif %}
@@ -235,6 +245,8 @@
       // ── Helpers IA ──
       const titleField = document.querySelector('input[name="title"]');
       const descField = document.querySelector('textarea[name="description"], input[name="description"]');
+      const objectivesField = document.querySelector('textarea[name="pedagogical_objectives"]');
+      const summaryField = document.querySelector('textarea[name="catalog_summary"]');
       const tagsField = document.querySelector('input[name="topic_tags_raw"]');
       const speakerField = document.querySelector('input[name="speaker_name"]');
       const levelField = document.querySelector('select[name="level"]');
@@ -366,6 +378,9 @@
             objectivesList.innerHTML = '<strong>Objectifs pédagogiques proposés :</strong><ul class="list-unstyled small mt-2">' +
               data.objectives.map(o => `<li><i class="bi bi-check-circle text-success me-1"></i>${o}</li>`).join('') +
               '</ul>';
+            if (objectivesField) {
+              objectivesField.value = data.objectives.join('\n');
+            }
             setStatus(`${data.objectives.length} objectif(s) généré(s) par IA (llama3.2).`, 'text-success');
           }, (err) => {
             setStatus(err);
@@ -401,6 +416,9 @@
           }, (data) => {
             summaryBox.classList.remove('d-none');
             summaryBox.innerHTML = '<strong>Résumé pour le catalogue :</strong><p class="small mb-0 mt-2">' + data.summary + '</p>';
+            if (summaryField) {
+              summaryField.value = data.summary;
+            }
             setStatus('Résumé généré par IA (llama3.2).', 'text-success');
           }, (err) => {
             setStatus(err);

@@ -55,6 +55,10 @@ urlpatterns = [
     # ---------------------------------------------------------------
     path('<int:pk>/quiz/', views.workshop_quiz, name='quiz'),
     path('<int:pk>/quiz/submit/', views.workshop_quiz_submit, name='quiz_submit'),
+    path('<int:pk>/quiz/manage/', views.workshop_quiz_manage, name='quiz_manage'),
+    path('<int:pk>/quiz/question/add/', views.workshop_quiz_question_add, name='quiz_question_add'),
+    path('<int:pk>/quiz/question/<int:qid>/edit/', views.workshop_quiz_question_edit, name='quiz_question_edit'),
+    path('<int:pk>/quiz/question/<int:qid>/delete/', views.workshop_quiz_question_delete, name='quiz_question_delete'),
 
     # ---------------------------------------------------------------
     # Certificats

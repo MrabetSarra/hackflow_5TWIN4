@@ -1,3 +1,4 @@
+{% load i18n %}
 <div class="mb-4">
     <a href="{% url 'hackathons:hackathon_detail' h.slug %}" class="small text-decoration-none"><i class="bi bi-arrow-left me-1"></i>{{ h.title }}</a>
 </div>
@@ -18,10 +19,10 @@
                 <button type="submit" class="btn btn-outline-warning rounded-pill px-4"><i class="bi {% if favorite_challenge %}bi-star-fill{% else %}bi-star{% endif %} me-1"></i>{% if favorite_challenge %}Retirer des favoris{% else %}Ajouter aux favoris{% endif %}</button>
             </form>
             {% if my_registration %}
-            <span class="badge bg-success rounded-pill px-3 py-2 mb-2 d-inline-block">Inscrit</span>
-            <form method="post" action="{% url 'hackathons:registration_cancel' my_registration.pk %}">{% csrf_token %}<button class="btn btn-outline-danger rounded-pill px-4" onclick="return confirm('Annuler votre inscription à ce challenge ?')">Annuler mon inscription</button></form>
+            <span class="badge bg-success rounded-pill px-3 py-2 mb-2 d-inline-block">{% trans "Inscrit" %}</span>
+            <form method="post" action="{% url 'hackathons:registration_cancel' my_registration.pk %}">{% csrf_token %}<button class="btn btn-outline-danger rounded-pill px-4" onclick="return confirm('Annuler votre inscription à ce challenge ?')">{% trans "Annuler mon inscription" %}</button></form>
             {% elif has_registration %}<span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-3 py-2">Vous êtes déjà inscrit à un autre challenge de ce hackathon</span>
-            {% elif c.registration_open %}<a href="{% url 'hackathons:challenge_register' c.pk %}" class="btn btn-primary rounded-pill px-4">S'inscrire</a>
+            {% elif c.registration_open %}<a href="{% url 'hackathons:challenge_register' c.pk %}" class="btn btn-primary rounded-pill px-4">{% trans "S'inscrire" %}</a>
             {% else %}<span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-3 py-2">Inscriptions fermées</span>{% endif %}
         </div>
         {% endif %}

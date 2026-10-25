@@ -1,10 +1,11 @@
+{% load i18n %}
 <div class="mb-4">
-    <a href="{{ back_href }}" class="small text-decoration-none"><i class="bi bi-arrow-left me-1"></i>Retour</a>
+    <a href="{{ back_href }}" class="small text-decoration-none"><i class="bi bi-arrow-left me-1"></i>{% trans "Retour" %}</a>
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-2">
         <h1 class="h2 fw-bold mb-0">{{ title }}</h1>
         {% if ai_config %}
         <button type="button" class="btn text-white rounded-pill px-4 py-2 shadow-sm" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);" data-bs-toggle="modal" data-bs-target="#hf-ai-modal">
-            <i class="bi bi-stars me-2"></i>Assistant IA
+            <i class="bi bi-stars me-2"></i>{% trans "Assistant IA" %}
         </button>
         {% endif %}
     </div>
@@ -32,8 +33,8 @@
         {% if map_picker %}{% include "hackathons/_map_picker.html" %}{% endif %}
         {% if track_suggestions %}<datalist id="track-suggestions">{% for t in track_suggestions %}<option value="{{ t }}"></option>{% endfor %}</datalist>{% endif %}
         <div class="d-flex gap-2 mt-5">
-            <button class="btn btn-primary rounded-pill px-4" type="submit"><i class="bi bi-check-lg me-1"></i>Enregistrer</button>
-            <a class="btn btn-outline-secondary rounded-pill px-4" href="{{ back_href }}">Annuler</a>
+            <button class="btn btn-primary rounded-pill px-4" type="submit"><i class="bi bi-check-lg me-1"></i>{% trans "Enregistrer" %}</button>
+            <a class="btn btn-outline-secondary rounded-pill px-4" href="{{ back_href }}">{% trans "Annuler" %}</a>
         </div>
     </form>
 </div>

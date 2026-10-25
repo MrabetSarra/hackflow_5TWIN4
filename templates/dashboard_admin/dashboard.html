@@ -1,27 +1,28 @@
 {% extends "layouts/base_admin.html" %}
+{% load i18n %}
 
-{% block title %}Cockpit Organisateur - HackFlow Admin{% endblock %}
+{% block title %}{% trans "Organizer cockpit - HackFlow Admin" %}{% endblock %}
 
 {% block admin_content %}
 <div class="container-fluid px-0">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
-            <h1 class="h2 fw-bold text-dark mb-1">Cockpit Organisateur & Vue Globale</h1>
-            <p class="text-muted small mb-0">{% if active_hackathon %}Supervision de {{ active_hackathon.name }}{% if active_hackathon.edition %} · {{ active_hackathon.edition }}{% endif %}.{% else %}Supervision basée sur les données enregistrées dans HackFlow.{% endif %}</p>
+            <h1 class="h2 fw-bold text-dark mb-1">{% trans "Organizer cockpit & overview" %}</h1>
+            <p class="text-muted small mb-0">{% if active_hackathon %}{% blocktrans with name=active_hackathon.name %}Supervising {{ name }}{% endblocktrans %}{% if active_hackathon.edition %} · {{ active_hackathon.edition }}{% endif %}.{% else %}{% trans "Supervision based on data recorded in HackFlow." %}{% endif %}</p>
         </div>
         <div class="d-flex gap-2">
-            <button class="btn btn-outline-primary btn-sm rounded-pill px-3" data-demo-toast="Rapport d'exportation CSV généré avec succès !">
-                <i class="bi bi-download me-1"></i>Exporter les données
+            <button class="btn btn-outline-primary btn-sm rounded-pill px-3" data-demo-toast="{% trans 'CSV export report generated successfully!' %}">
+                <i class="bi bi-download me-1"></i>{% trans "Export data" %}
             </button>
             <a href="{% url 'dashboard_admin:announcements' %}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm d-flex align-items-center gap-2">
-                <i class="bi bi-broadcast"></i> Diffuser un push
+                <i class="bi bi-broadcast"></i> {% trans "Publish announcement" %}
             </a>
         </div>
     </div>
 
     {% for message in messages %}
     <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %} alert-dismissible fade show" role="status">
-        {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+        {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{% trans 'Close' %}"></button>
     </div>
     {% endfor %}
 
@@ -60,13 +61,13 @@
         <!-- Répartition par défi -->
         <div class="col-lg-6">
             <div class="card-modern p-4 h-100">
-                <h2 class="h5 fw-bold text-dark mb-3"><i class="bi bi-pie-chart-fill text-primary me-2" aria-hidden="true"></i>Répartition des Équipes par Thématique</h2>
+                <h2 class="h5 fw-bold text-dark mb-3"><i class="bi bi-pie-chart-fill text-primary me-2" aria-hidden="true"></i>{% trans "Team distribution by challenge" %}</h2>
                 <div class="d-flex flex-column gap-3">
                     {% for c in challenges_stats %}
                     <div>
                         <div class="d-flex justify-content-between small mb-1">
                             <span class="fw-semibold text-dark">{{ c.name }}</span>
-                            <span class="font-mono text-muted">{{ c.count }} équipes ({{ c.percent }}%)</span>
+                            <span class="font-mono text-muted">{% blocktrans with count=c.count percent=c.percent %}{{ count }} teams ({{ percent }}%){% endblocktrans %}</span>
                         </div>
                         <div class="progress" style="height: 8px;">
                             <div class="progress-bar bg-primary" role="progressbar" aria-label="{{ c.name }} : {{ c.count }} équipes" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ c.percent }}" style="width: {{ c.percent }}%;"></div>
@@ -81,8 +82,8 @@
         <div class="col-lg-6">
             <div class="card-modern p-4 h-100">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2 class="h5 fw-bold text-dark mb-0"><i class="bi bi-activity text-danger me-2" aria-hidden="true"></i>Activité récente enregistrée</h2>
-                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill font-mono">Activité récente</span>
+                    <h2 class="h5 fw-bold text-dark mb-0"><i class="bi bi-activity text-danger me-2" aria-hidden="true"></i>{% trans "Recent recorded activity" %}</h2>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill font-mono">{% trans "Recent activity" %}</span>
                 </div>
 
                 <div class="d-flex flex-column gap-3">
@@ -95,7 +96,7 @@
                         <span class="small text-muted font-mono" style="font-size: 0.72rem;">{{ act.time }}</span>
                     </div>
                     {% endfor %}
-                    {% if not live_activity %}<div class="text-secondary small">Aucune activité enregistrée pour le moment.</div>{% endif %}
+                    {% if not live_activity %}<div class="text-secondary small">{% trans "No activity recorded yet." %}</div>{% endif %}
                 </div>
             </div>
         </div>

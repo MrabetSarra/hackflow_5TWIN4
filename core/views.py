@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.translation import gettext as _
 
 
 def csrf_failure(request, reason=''):
@@ -114,12 +115,12 @@ def landing(request):
     context = {
         'hackathon': hackathon,
         'event_state': event_state,
-        'tagline': 'HackFlow réunit les participants, les équipes et les mentors dans un espace unique pour organiser le hackathon.',
+        'tagline': _('HackFlow réunit les participants, les équipes et les mentors dans un espace unique pour organiser le hackathon.'),
         'stats': [
-            {'label': 'Participants inscrits', 'value': f'{participants_count:,}'.replace(',', ' '), 'icon': 'bi-people-fill', 'color': 'primary'},
-            {'label': 'Équipes créées', 'value': f'{teams_count:,}'.replace(',', ' '), 'icon': 'bi-diagram-3-fill', 'color': 'accent'},
-            {'label': 'Mentors actifs', 'value': f'{mentors_count:,}'.replace(',', ' '), 'icon': 'bi-lightbulb-fill', 'color': 'success'},
-            {'label': 'Places disponibles', 'value': f'{available_places:,}'.replace(',', ' '), 'icon': 'bi-person-plus-fill', 'color': 'warning'},
+            {'label': _('Participants inscrits'), 'value': f'{participants_count:,}'.replace(',', ' '), 'icon': 'bi-people-fill', 'color': 'primary'},
+            {'label': _('Équipes créées'), 'value': f'{teams_count:,}'.replace(',', ' '), 'icon': 'bi-diagram-3-fill', 'color': 'accent'},
+            {'label': _('Mentors actifs'), 'value': f'{mentors_count:,}'.replace(',', ' '), 'icon': 'bi-lightbulb-fill', 'color': 'success'},
+            {'label': _('Places disponibles'), 'value': f'{available_places:,}'.replace(',', ' '), 'icon': 'bi-person-plus-fill', 'color': 'warning'},
         ],
         'teams_count': teams_count,
         'participants_count': participants_count,
@@ -131,16 +132,16 @@ def landing(request):
         'matching_teams': matching_teams,
         'featured_team': matching_teams[0] if matching_teams else None,
         'steps': [
-            {'num': '01', 'title': 'Créez votre profil', 'desc': 'Ajoutez vos compétences, vos rôles préférés et vos disponibilités.', 'badge': 'Profil participant'},
-            {'num': '02', 'title': 'Formez une équipe', 'desc': 'Rejoignez une équipe ou consultez les recommandations de composition.', 'badge': 'Matching assisté'},
-            {'num': '03', 'title': 'Organisez le projet', 'desc': 'Répartissez les tâches, suivez les jalons et échangez avec vos coéquipiers.', 'badge': 'Espace équipe'},
-            {'num': '04', 'title': 'Présentez votre projet', 'desc': 'Déposez votre livrable et partagez vos liens avec le jury.', 'badge': 'Dépôt de projet'},
+            {'num': '01', 'title': _('Créez votre profil'), 'desc': _('Ajoutez vos compétences, vos rôles préférés et vos disponibilités.'), 'badge': _('Profil participant')},
+            {'num': '02', 'title': _('Formez une équipe'), 'desc': _('Rejoignez une équipe ou consultez les recommandations de composition.'), 'badge': _('Matching assisté')},
+            {'num': '03', 'title': _('Organisez le projet'), 'desc': _('Répartissez les tâches, suivez les jalons et échangez avec vos coéquipiers.'), 'badge': _('Espace équipe')},
+            {'num': '04', 'title': _('Présentez votre projet'), 'desc': _('Déposez votre livrable et partagez vos liens avec le jury.'), 'badge': _('Dépôt de projet')},
         ],
         'faq': [
-            {'q': 'Puis-je participer sans équipe ?', 'a': 'Oui. Créez votre profil et rejoignez une équipe disponible. Les organisateurs peuvent aussi proposer une composition à partir des compétences et préférences renseignées.'},
-            {'q': 'Comment trouver une équipe qui correspond à mon profil ?', 'a': 'Les équipes peuvent indiquer les compétences recherchées. Le matching tient compte des compétences, rôles préférés, thématiques et disponibilités renseignés.'},
-            {'q': 'Où suivre les informations de l’événement ?', 'a': 'Les annonces publiées pour le hackathon apparaissent dans les espaces des participants. Les dates et le lieu de l’événement sont affichés ci-dessus lorsqu’ils sont configurés.'},
-            {'q': 'Comment remettre un projet au jury ?', 'a': 'L’équipe peut renseigner sa description, ses liens de démonstration et déposer son archive depuis l’espace de soumission.'},
+            {'q': _('Puis-je participer sans équipe ?'), 'a': _('Oui. Créez votre profil et rejoignez une équipe disponible. Les organisateurs peuvent aussi proposer une composition à partir des compétences et préférences renseignées.')},
+            {'q': _('Comment trouver une équipe qui correspond à mon profil ?'), 'a': _('Les équipes peuvent indiquer les compétences recherchées. Le matching tient compte des compétences, rôles préférés, thématiques et disponibilités renseignés.')},
+            {'q': _('Où suivre les informations de l’événement ?'), 'a': _('Les annonces publiées pour le hackathon apparaissent dans les espaces des participants. Les dates et le lieu de l’événement sont affichés ci-dessus lorsqu’ils sont configurés.')},
+            {'q': _('Comment remettre un projet au jury ?'), 'a': _('L’équipe peut renseigner sa description, ses liens de démonstration et déposer son archive depuis l’espace de soumission.')},
         ],
     }
     return render(request, 'core/landing.html', context)

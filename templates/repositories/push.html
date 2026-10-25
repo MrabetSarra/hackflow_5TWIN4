@@ -1,4 +1,5 @@
 {% extends "layouts/base_student.html" %}
+{% load i18n %}
 {% load static %}
 {% load repo_tags %}
 {% block title %}Push to {{ branch }} · {{ repository.name }} - HackFlow{% endblock %}
@@ -11,7 +12,7 @@
     <!-- Header -->
     <div class="repo-header">
         <div class="repo-header__breadcrumb">
-            <a href="{% url 'repositories:list' %}">Repositories</a>
+            <a href="{% url 'repositories:list' %}">{% trans "Repositories" %}</a>
             <span class="text-body-secondary">/</span>
             <a href="{% url 'repositories:detail' repository.slug %}?branch={{ branch|urlencode }}">{{ repository.name }}</a>
             <span class="text-body-secondary">/</span>
@@ -19,7 +20,7 @@
         </div>
         <div class="repo-header__name mt-1">
             <i aria-hidden="true" class="bi bi-cloud-arrow-up text-primary"></i>
-            <span>Push to</span> <span class="repo-branch-badge"><i aria-hidden="true" class="bi bi-diagram-2"></i> {{ branch }}</span>
+            <span>{% trans "Push to" %}</span> <span class="repo-branch-badge"><i aria-hidden="true" class="bi bi-diagram-2"></i> {{ branch }}</span>
         </div>
         <p class="text-body-secondary small mt-1 mb-0">Upload a folder or ZIP snapshot. Changes will be reviewed before committing.</p>
     </div>
@@ -29,7 +30,7 @@
         <div class="col-lg-8">
             <div class="card-modern">
                 <div class="p-3 border-bottom">
-                    <span class="fw-semibold text-body small"><i aria-hidden="true" class="bi bi-upload text-primary me-1"></i>Select files to upload</span>
+                    <span class="fw-semibold text-body small"><i aria-hidden="true" class="bi bi-upload text-primary me-1"></i>{% trans "Select files to upload" %}</span>
                 </div>
                 <div class="p-4">
                     {% for error in form.non_field_errors %}
@@ -45,12 +46,12 @@
                         <!-- Folder upload -->
                         <div class="mb-4">
                             <label class="form-label fw-semibold" for="id_upload">
-                                <i aria-hidden="true" class="bi bi-folder2-open text-primary me-1"></i>Project folder
+                                <i aria-hidden="true" class="bi bi-folder2-open text-primary me-1"></i>{% trans "Project folder" %}
                             </label>
                             <div class="repo-upload-zone" onclick="document.getElementById('id_upload').click()">
                                 <i aria-hidden="true" class="bi bi-folder-plus fs-2 text-primary mb-2 d-block"></i>
-                                <div class="fw-semibold text-body mb-1">Click to choose a folder</div>
-                                <div class="small text-body-secondary">or drag and drop your project folder here</div>
+                                <div class="fw-semibold text-body mb-1">{% trans "Click to choose a folder" %}</div>
+                                <div class="small text-body-secondary">{% trans "or drag and drop your project folder here" %}</div>
                                 <input class="d-none" type="file" name="upload" id="id_upload" multiple
                                        webkitdirectory directory>
                             </div>
@@ -70,10 +71,10 @@
                         <!-- ZIP / single file -->
                         <div class="mb-4">
                             <label class="form-label fw-semibold" for="id_zip_upload">
-                                <i aria-hidden="true" class="bi bi-file-zip text-primary me-1"></i>ZIP archive or single file
+                                <i aria-hidden="true" class="bi bi-file-zip text-primary me-1"></i>{% trans "ZIP archive or single file" %}
                             </label>
                             <input class="form-control" type="file" name="upload" id="id_zip_upload" accept=".zip,*/*">
-                            <div class="form-text">Select one ZIP archive or a single file.</div>
+                            <div class="form-text">{% trans "Select one ZIP archive or a single file." %}</div>
                             {% for error in form.upload.errors %}
                             <div class="text-danger small mt-1">{{ error }}</div>
                             {% endfor %}
@@ -86,8 +87,8 @@
                             </label>
                             {{ form.upload_mode }}
                             <div class="form-text">
-                                <strong>Keep missing files</strong> — updates uploaded files, leaves others intact.<br>
-                                <strong>Replace everything</strong> — treats upload as a full snapshot, marks missing files as deleted.
+                                <strong>{% trans "Keep missing files" %}</strong> — updates uploaded files, leaves others intact.<br>
+                                <strong>{% trans "Replace everything" %}</strong> — treats upload as a full snapshot, marks missing files as deleted.
                             </div>
                         </div>
 
@@ -114,7 +115,7 @@
                 </ol>
             </div>
             <div class="card-modern p-4 mt-3">
-                <h6 class="fw-semibold text-body mb-2"><i aria-hidden="true" class="bi bi-shield-check text-success me-1"></i>Auto-ignored paths</h6>
+                <h6 class="fw-semibold text-body mb-2"><i aria-hidden="true" class="bi bi-shield-check text-success me-1"></i>{% trans "Auto-ignored paths" %}</h6>
                 <div class="d-flex flex-wrap gap-1">
                     {% for p in ".git,node_modules,venv,.venv,__pycache__,.env,.idea,.vscode"|split:"," %}
                     <code class="badge bg-body-tertiary text-body-secondary border" style="font-size:.75rem;">{{ p }}</code>

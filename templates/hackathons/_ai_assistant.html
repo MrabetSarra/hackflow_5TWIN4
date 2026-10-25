@@ -1,3 +1,4 @@
+{% load i18n %}
 {# Assistant IA de rédaction (admin) : bouton + fenêtre. Variable attendue : ai_config #}
 {{ ai_config|json_script:"hf-ai-config" }}
 {% include "hackathons/_ai_client.html" %}
@@ -8,7 +9,7 @@
             <div class="modal-header border-0 pb-0">
                 <div class="d-flex align-items-center gap-3">
                     <span class="hf-icon text-white" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);"><i class="bi bi-stars"></i></span>
-                    <div><h2 class="modal-title h5 fw-bold mb-0" id="hf-ai-title">Assistant IA</h2><div class="small text-body-secondary">Propositions modifiables avant l'enregistrement</div></div>
+                    <div><h2 class="modal-title h5 fw-bold mb-0" id="hf-ai-title">{% trans "Assistant IA" %}</h2><div class="small text-body-secondary">Propositions modifiables avant l'enregistrement</div></div>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
             </div>

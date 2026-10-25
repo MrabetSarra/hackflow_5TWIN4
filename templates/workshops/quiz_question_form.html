@@ -1,0 +1,99 @@
+{% extends workshop_base_template %}
+{% load static %}
+
+{% block title %}{{ action }} une question — {{ workshop.title }} — HackFlow{% endblock %}
+
+{% block student_content %}
+<div class="container-fluid px-4 py-4">
+
+  <div class="row justify-content-center">
+    <div class="col-12 col-xl-8">
+
+      <!-- Breadcrumb -->
+      <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{% url 'workshops:list' %}">Ateliers</a></li>
+          <li class="breadcrumb-item"><a href="{{ workshop.get_absolute_url }}">{{ workshop.title|truncatechars:30 }}</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'workshops:quiz_manage' workshop.pk %}">Quiz</a></li>
+          <li class="breadcrumb-item active">{{ action }}</li>
+        </ol>
+      </nav>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-info text-white py-3">
+          <h4 class="mb-0 fw-bold">
+            <i class="bi bi-question-circle me-2"></i>{{ action }} une question
+          </h4>
+        </div>
+
+        <div class="card-body p-4">
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Question <span class="text-danger">*</span></label>
+              <input type="text" name="question" class="form-control"
+                     value="{% if question %}{{ question.question }}{% endif %}"
+                     placeholder="Ex: Quel est l'objectif principal de cet atelier ?" required>
+            </div>
+
+            <div class="row g-3 mb-4">
+              <div class="col-6">
+                <label class="form-label fw-semibold">Option A <span class="text-danger">*</span></label>
+                <input type="text" name="option_a" class="form-control"
+                       value="{% if question %}{{ question.option_a }}{% endif %}" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label fw-semibold">Option B <span class="text-danger">*</span></label>
+                <input type="text" name="option_b" class="form-control"
+                       value="{% if question %}{{ question.option_b }}{% endif %}" required>
+              </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+              <div class="col-6">
+                <label class="form-label fw-semibold">Option C <span class="text-danger">*</span></label>
+                <input type="text" name="option_c" class="form-control"
+                       value="{% if question %}{{ question.option_c }}{% endif %}" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label fw-semibold">Option D <span class="text-danger">*</span></label>
+                <input type="text" name="option_d" class="form-control"
+                       value="{% if question %}{{ question.option_d }}{% endif %}" required>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Bonne réponse <span class="text-danger">*</span></label>
+              <select name="correct_index" class="form-select" required>
+                <option value="0" {% if not question or question.correct_index == 0 %}selected{% endif %}>Option A</option>
+                <option value="1" {% if question and question.correct_index == 1 %}selected{% endif %}>Option B</option>
+                <option value="2" {% if question and question.correct_index == 2 %}selected{% endif %}>Option C</option>
+                <option value="3" {% if question and question.correct_index == 3 %}selected{% endif %}>Option D</option>
+              </select>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Explication de la bonne réponse</label>
+              <textarea name="explanation" class="form-control" rows="3"
+                        placeholder="Expliquez pourquoi cette réponse est correcte...">{% if question %}{{ question.explanation }}{% endif %}</textarea>
+              <div class="form-text">Cette explication s'affichera après que l'étudiant a répondu.</div>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary rounded-pill px-4">
+                <i class="bi bi-save me-1"></i>Enregistrer
+              </button>
+              <a href="{% url 'workshops:quiz_manage' workshop.pk %}" class="btn btn-outline-secondary rounded-pill px-4">
+                Annuler
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,10 +1,11 @@
+{% load i18n %}
 {# Carte de localisation en lecture seule. Variable : h #}
 {% if h.latitude is not None and h.longitude is not None %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <div id="hf-map-view" role="region" aria-label="Carte du lieu" style="height: 340px; border-radius: 1rem; z-index: 0;" data-lat="{{ h.latitude|stringformat:'f' }}" data-lng="{{ h.longitude|stringformat:'f' }}" data-label="{{ h.location }}"></div>
 <div class="small text-body-secondary mt-3"><i class="bi bi-geo-alt me-1"></i>{{ h.location }}
-    · <a href="https://www.openstreetmap.org/?mlat={{ h.latitude|stringformat:'f' }}&amp;mlon={{ h.longitude|stringformat:'f' }}#map=16/{{ h.latitude|stringformat:'f' }}/{{ h.longitude|stringformat:'f' }}" target="_blank" rel="noopener noreferrer">Ouvrir dans OpenStreetMap</a></div>
-<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    · <a href="https://www.openstreetmap.org/?mlat={{ h.latitude|stringformat:'f' }}&amp;mlon={{ h.longitude|stringformat:'f' }}#map=16/{{ h.latitude|stringformat:'f' }}/{{ h.longitude|stringformat:'f' }}" target="_blank" rel="noopener noreferrer">{% trans "Ouvrir dans OpenStreetMap" %}</a></div>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <script>
 (function () {
   var el = document.getElementById('hf-map-view');

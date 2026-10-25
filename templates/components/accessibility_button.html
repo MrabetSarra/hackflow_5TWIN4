@@ -1,31 +1,32 @@
+{% load i18n %}
 <div class="a11y-widget" id="displayOptionsWidget">
   <section class="a11y-panel" id="displayOptionsPanel" aria-labelledby="a11yTitle" hidden>
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h2 class="h6 fw-bold mb-0" id="a11yTitle">Display &amp; reading</h2>
-      <button class="btn-close" type="button" data-a11y-close aria-label="Close display and reading options"></button>
+      <h2 class="h6 fw-bold mb-0" id="a11yTitle">{% trans "Display & reading" %}</h2>
+      <button class="btn-close" type="button" data-a11y-close aria-label="{% trans 'Close display and reading options' %}"></button>
     </div>
-    <div class="small fw-semibold mb-2" id="a11yTextSizeLabel">Text size</div>
+    <div class="small fw-semibold mb-2" id="a11yTextSizeLabel">{% trans "Text size" %}</div>
     <div class="d-flex gap-2 mb-3" role="group" aria-labelledby="a11yTextSizeLabel">
-      <button class="btn btn-outline-secondary flex-fill" type="button" data-a11y-size="-1" aria-label="Decrease text size">A−</button>
-      <button class="btn btn-outline-secondary flex-fill" type="button" data-a11y-size="0" aria-label="Reset text size">A</button>
-      <button class="btn btn-outline-secondary flex-fill" type="button" data-a11y-size="1" aria-label="Increase text size">A+</button>
+      <button class="btn btn-outline-secondary flex-fill" type="button" data-a11y-size="-1" aria-label="{% trans 'Decrease text size' %}">A−</button>
+      <button class="btn btn-outline-secondary flex-fill" type="button" data-a11y-size="0" aria-label="{% trans 'Reset text size' %}">A</button>
+      <button class="btn btn-outline-secondary flex-fill" type="button" data-a11y-size="1" aria-label="{% trans 'Increase text size' %}">A+</button>
     </div>
     <button class="btn btn-outline-secondary w-100 text-start" type="button" id="a11yContrast" aria-pressed="false">
-      <i class="bi bi-circle-half me-2" aria-hidden="true"></i>High contrast
+      <i class="bi bi-circle-half me-2" aria-hidden="true"></i>{% trans "High contrast" %}
     </button>
     <div class="d-grid gap-2 mt-2">
-      <button class="btn btn-outline-secondary w-100 text-start" type="button" id="a11ySpacing" aria-pressed="false"><i class="bi bi-text-paragraph me-2" aria-hidden="true"></i>More line spacing</button>
-      <button class="btn btn-outline-secondary w-100 text-start" type="button" id="a11yLinks" aria-pressed="false"><i class="bi bi-link-45deg me-2" aria-hidden="true"></i>Underline links</button>
-      <button class="btn btn-outline-secondary w-100 text-start" type="button" id="a11yFont" aria-pressed="false"><i class="bi bi-type me-2" aria-hidden="true"></i>Simple reading font</button>
-      <button class="btn btn-outline-secondary w-100 text-start" type="button" id="a11yMotion" aria-pressed="false"><i class="bi bi-pause-circle me-2" aria-hidden="true"></i>Reduce motion</button>
-      <button class="btn btn-outline-secondary w-100 text-start" type="button" id="a11yFocus" aria-pressed="false"><i class="bi bi-bullseye me-2" aria-hidden="true"></i>Strong keyboard focus</button>
-      <button class="btn btn-outline-secondary w-100 text-start" type="button" id="a11yAlign" aria-pressed="false"><i class="bi bi-text-left me-2" aria-hidden="true"></i>Align text left</button>
-      <button class="btn btn-outline-secondary w-100 text-start" type="button" id="a11yHeadings" aria-pressed="false"><i class="bi bi-highlighter me-2" aria-hidden="true"></i>Highlight headings</button>
+      <button class="btn btn-outline-secondary w-100 text-start" type="button" id="a11ySpacing" aria-pressed="false"><i class="bi bi-text-paragraph me-2" aria-hidden="true"></i>{% trans "More line spacing" %}</button>
+      <button class="btn btn-outline-secondary w-100 text-start" type="button" id="a11yLinks" aria-pressed="false"><i class="bi bi-link-45deg me-2" aria-hidden="true"></i>{% trans "Underline links" %}</button>
+      <button class="btn btn-outline-secondary w-100 text-start" type="button" id="a11yFont" aria-pressed="false"><i class="bi bi-type me-2" aria-hidden="true"></i>{% trans "Simple reading font" %}</button>
+      <button class="btn btn-outline-secondary w-100 text-start" type="button" id="a11yMotion" aria-pressed="false"><i class="bi bi-pause-circle me-2" aria-hidden="true"></i>{% trans "Reduce motion" %}</button>
+      <button class="btn btn-outline-secondary w-100 text-start" type="button" id="a11yFocus" aria-pressed="false"><i class="bi bi-bullseye me-2" aria-hidden="true"></i>{% trans "Strong keyboard focus" %}</button>
+      <button class="btn btn-outline-secondary w-100 text-start" type="button" id="a11yAlign" aria-pressed="false"><i class="bi bi-text-left me-2" aria-hidden="true"></i>{% trans "Align text left" %}</button>
+      <button class="btn btn-outline-secondary w-100 text-start" type="button" id="a11yHeadings" aria-pressed="false"><i class="bi bi-highlighter me-2" aria-hidden="true"></i>{% trans "Highlight headings" %}</button>
     </div>
-    <button class="btn btn-link btn-sm px-0 mt-2" type="button" id="a11yReset">Reset display settings</button>
-    <p class="small text-body-secondary mt-2 mb-0">Your preferences are saved on this device.</p>
+    <button class="btn btn-link btn-sm px-0 mt-2" type="button" id="a11yReset">{% trans "Reset display settings" %}</button>
+    <p class="small text-body-secondary mt-2 mb-0">{% trans "Your preferences are saved on this device." %}</p>
   </section>
-  <button class="btn btn-primary a11y-trigger" id="displayOptionsToggle" type="button" aria-expanded="false" aria-controls="displayOptionsPanel" aria-label="Open display and reading options">
+  <button class="btn btn-primary a11y-trigger" id="displayOptionsToggle" type="button" aria-expanded="false" aria-controls="displayOptionsPanel" aria-label="{% trans 'Open display and reading options' %}" data-label-open="{% trans 'Open display and reading options' %}" data-label-close="{% trans 'Close display and reading options' %}">
     <i class="bi bi-person-standing" aria-hidden="true"></i>
   </button>
 </div>

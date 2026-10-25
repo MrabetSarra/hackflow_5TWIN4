@@ -67,6 +67,7 @@ class WorkshopForm(_BootstrapMixin, forms.ModelForm):
             'speaker_name', 'speaker_company',
             'topic_tags_raw',       # champ virtuel → topic_tags
             'level', 'mode',
+            'pedagogical_objectives', 'catalog_summary',
             'room', 'meeting_url',
             'replay_url', 'replay_duration', 'available_until', 'video_file',
             'starts_at', 'ends_at',

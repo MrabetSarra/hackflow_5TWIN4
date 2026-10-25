@@ -1,4 +1,5 @@
 {% extends "layouts/base_student.html" %}
+{% load i18n %}
 {% load static %}
 {% block title %}{{ repository.name }} - HackFlow{% endblock %}
 {% block extra_css %}
@@ -26,7 +27,7 @@
     <!-- ── Repo header ── -->
     <div class="repo-header">
         <div class="repo-header__breadcrumb">
-            <a href="{% url 'repositories:list' %}">Repositories</a>
+            <a href="{% url 'repositories:list' %}">{% trans "Repositories" %}</a>
             <span class="text-body-secondary">/</span>
             <span class="fw-semibold text-body">{{ repository.name }}</span>
         </div>
@@ -43,7 +44,7 @@
             <div class="d-flex flex-wrap gap-2">
                 <a class="btn btn-sm btn-outline-secondary rounded-pill d-flex align-items-center gap-1"
                    href="{% url 'repositories:download' repository.slug %}?branch={{ branch|urlencode }}">
-                    <i aria-hidden="true" class="bi bi-file-zip"></i><span class="d-none d-sm-inline">Download ZIP</span>
+                    <i aria-hidden="true" class="bi bi-file-zip"></i><span class="d-none d-sm-inline">{% trans "Download ZIP" %}</span>
                 </a>
                 {% if can_write %}
                     {% if branch in repository.protected_branches or branch == repository.default_branch %}
@@ -73,11 +74,11 @@
         </a>
         <a class="repo-tab btn btn-sm btn-outline-secondary rounded-pill d-inline-flex align-items-center gap-1"
            href="{% url 'repositories:history' repository.slug %}?branch={{ branch|urlencode }}">
-            <i aria-hidden="true" class="bi bi-clock-history"></i>History
+            <i aria-hidden="true" class="bi bi-clock-history"></i>{% trans "History" %}
         </a>
         <a class="repo-tab btn btn-sm btn-outline-secondary rounded-pill d-inline-flex align-items-center gap-1"
            href="{% url 'repositories:compare' repository.slug %}">
-            <i aria-hidden="true" class="bi bi-arrow-left-right"></i>Compare
+            <i aria-hidden="true" class="bi bi-arrow-left-right"></i>{% trans "Compare" %}
         </a>
         {% if can_write %}
         <a class="repo-tab btn btn-sm btn-outline-secondary rounded-pill d-inline-flex align-items-center gap-1"
@@ -99,7 +100,7 @@
             <!-- Branch selector card -->
             <div class="card-modern mb-3">
                 <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
-                    <span class="fw-semibold text-body small"><i aria-hidden="true" class="bi bi-diagram-2 text-primary me-1"></i>Branches</span>
+                    <span class="fw-semibold text-body small"><i aria-hidden="true" class="bi bi-diagram-2 text-primary me-1"></i>{% trans "Branches" %}</span>
                     {% if can_write %}
                     <button class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0" style="font-size:.75rem;" type="button"
                             aria-label="Create a branch" data-bs-toggle="collapse" data-bs-target="#branchCreate">
@@ -120,7 +121,7 @@
                         {% for error in field.errors %}<div id="{{ field.id_for_label }}_errors" class="text-danger small">{{ error }}</div>{% endfor %}
                     </div>
                     {% endfor %}
-                    <button class="btn btn-primary btn-sm rounded-pill px-3" type="submit">Create branch</button>
+                    <button class="btn btn-primary btn-sm rounded-pill px-3" type="submit">{% trans "Create branch" %}</button>
                 </form>
                 {% endif %}
 
@@ -186,7 +187,7 @@
             <!-- File tree -->
             <div class="card-modern">
                 <div class="p-3 border-bottom">
-                    <span class="fw-semibold text-body small"><i aria-hidden="true" class="bi bi-folder2 text-primary me-1"></i>Files
+                    <span class="fw-semibold text-body small"><i aria-hidden="true" class="bi bi-folder2 text-primary me-1"></i>{% trans "Files" %}
                         <span class="repo-branch-badge ms-1">{{ branch }}</span>
                     </span>
                 </div>
@@ -215,7 +216,7 @@
                     </div>
                     <div class="repo-toolbar__right">
                         <a class="btn btn-sm btn-outline-secondary rounded-pill" href="?branch={{ branch|urlencode }}">
-                            <i aria-hidden="true" class="bi bi-x-lg me-1"></i>Close
+                            <i aria-hidden="true" class="bi bi-x-lg me-1"></i>{% trans "Close" %}
                         </a>
                     </div>
                 </div>
@@ -246,7 +247,7 @@
                               maxlength="3000" required placeholder="Leave a comment on this file…">{{ file_comment_state.body }}</textarea>
                     {% if file_comment_state.error %}<div class="text-danger small mb-2" role="alert">{{ file_comment_state.error }}</div>{% endif %}
                     <button class="btn btn-sm btn-outline-primary rounded-pill px-3" type="submit">
-                        <i aria-hidden="true" class="bi bi-send me-1"></i>Comment
+                        <i aria-hidden="true" class="bi bi-send me-1"></i>{% trans "Comment" %}
                     </button>
                 </form>
             </div>
@@ -277,7 +278,7 @@
     <!-- ── Recent activity (like GitHub's recent commits strip) ── -->
     <div class="card-modern mt-4">
         <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
-            <span class="fw-semibold text-body small"><i aria-hidden="true" class="bi bi-activity text-primary me-1"></i>Recent activity</span>
+            <span class="fw-semibold text-body small"><i aria-hidden="true" class="bi bi-activity text-primary me-1"></i>{% trans "Recent activity" %}</span>
             <a href="{% url 'repositories:history' repository.slug %}?branch={{ branch|urlencode }}"
                class="small text-primary text-decoration-none">View all commits <i aria-hidden="true" class="bi bi-arrow-right"></i></a>
         </div>

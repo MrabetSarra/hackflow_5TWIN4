@@ -1,0 +1,5065 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ar\n"
+"Plural-Forms: nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5);\n"
+
+msgid "HackFlow - Plateforme de Gestion de Hackathon Étudiant"
+msgstr "HackFlow - منصة إدارة هاكاثونات الطلاب"
+
+msgid "Inscriptions et préparation en cours"
+msgstr "التسجيل والتحضير جاريان"
+
+msgid "Événement en cours"
+msgstr "الفعالية جارية"
+
+msgid "Événement terminé"
+msgstr "انتهت الفعالية"
+
+msgid "Plateforme de gestion de hackathons"
+msgstr "منصة لإدارة الهاكاثونات"
+
+msgid "Créez votre équipe."
+msgstr "كوّن فريقك."
+
+msgid "Codez votre vision."
+msgstr "حوّل رؤيتك إلى شيفرة."
+
+msgid "Partagez votre projet."
+msgstr "شارك مشروعك."
+
+msgid "Participer au Hackathon"
+msgstr "شارك في الهاكاثون"
+
+msgid "Accéder à mon espace"
+msgstr "الدخول إلى مساحتي"
+
+msgid "Parcours Structuré"
+msgstr "مسار منظّم"
+
+msgid "4 Étapes pour participer"
+msgstr "أربع خطوات للمشاركة"
+
+msgid "Une organisation fluide pour que vous puissiez vous concentrer à 100% sur l'impact de votre projet."
+msgstr "تنظيم سلس يتيح لك التركيز كلياً على أثر مشروعك."
+
+msgid "Étape clé"
+msgstr "خطوة أساسية"
+
+msgid "Algorithme de Matching"
+msgstr "خوارزمية التوفيق بين أعضاء الفرق"
+
+msgid "Trouvez vos alter-ego techniques en quelques clics"
+msgstr "اعثر على زملائك التقنيين ببضع نقرات"
+
+msgid "Des recommandations expliquées"
+msgstr "توصيات واضحة الأسباب"
+
+msgid "Accompagnement HackFlow"
+msgstr "الإرشاد في HackFlow"
+
+msgid "Un espace de mentorat relié à vos équipes"
+msgstr "مساحة إرشاد مرتبطة بفرقكم"
+
+msgid "Ambiance & Esprit Hackathon"
+msgstr "أجواء وروح الهاكاثون"
+
+msgid "Créez, collaborez et présentez votre projet"
+msgstr "ابتكروا وتعاونوا واعرضوا مشروعكم"
+
+msgid "Questions Fréquentes"
+msgstr "الأسئلة الشائعة"
+
+msgid "Tout Ce Que Vous Devez Savoir"
+msgstr "كل ما تحتاج إلى معرفته"
+
+msgid "Rejoignez"
+msgstr "انضم إلى"
+
+msgid "Prêt à rejoindre HackFlow ?"
+msgstr "هل أنت مستعد للانضمام إلى HackFlow؟"
+
+msgid "Créer mon compte maintenant"
+msgstr "أنشئ حسابي الآن"
+
+msgid "Se connecter"
+msgstr "تسجيل الدخول"
+
+msgid "Le Hackathon"
+msgstr "الهاكاثون"
+
+msgid "Déroulement"
+msgstr "المراحل"
+
+msgid "Mentorat"
+msgstr "الإرشاد"
+
+msgid "Connexion"
+msgstr "تسجيل الدخول"
+
+msgid "Inscription"
+msgstr "إنشاء حساب"
+
+msgid "Log In"
+msgstr "تسجيل الدخول"
+
+msgid "Welcome back to HackFlow"
+msgstr "مرحباً بعودتك إلى HackFlow"
+
+msgid "Log in to access your HackFlow workspace."
+msgstr "سجّل الدخول للوصول إلى مساحة عملك في HackFlow."
+
+msgid "Password"
+msgstr "كلمة المرور"
+
+msgid "Forgot password?"
+msgstr "هل نسيت كلمة المرور؟"
+
+msgid "Keep me logged in on this device"
+msgstr "أبقِ تسجيل دخولي محفوظاً على هذا الجهاز"
+
+msgid "Log in"
+msgstr "تسجيل الدخول"
+
+msgid "Not registered for the hackathon yet?"
+msgstr "ألم تسجل في الهاكاثون بعد؟"
+
+msgid "Create an account"
+msgstr "إنشاء حساب"
+
+msgid "Create your account"
+msgstr "أنشئ حسابك"
+
+msgid "I am a student"
+msgstr "أنا طالب"
+
+msgid "Find a team, share your skills, and take part in the hackathon."
+msgstr "اعثر على فريق وشارك مهاراتك وشارك في الهاكاثون."
+
+msgid "Create a student account"
+msgstr "إنشاء حساب طالب"
+
+msgid "Je suis mentor"
+msgstr "أنا مرشد"
+
+msgid "Présentez votre expertise et accompagnez les équipes pendant l’événement."
+msgstr "قدّم خبرتك ورافق الفرق طوال الفعالية."
+
+msgid "Créer un compte mentor"
+msgstr "إنشاء حساب مرشد"
+
+msgid "Already registered?"
+msgstr "هل لديك حساب بالفعل؟"
+
+msgid "Change role"
+msgstr "تغيير الدور"
+
+msgid "Join a team"
+msgstr "انضم إلى فريق"
+
+msgid "Share your expertise"
+msgstr "شارك خبرتك"
+
+msgid "Create your HackFlow account to access your workspace."
+msgstr "أنشئ حساب HackFlow للوصول إلى مساحة عملك."
+
+msgid "{{ role_label }} Registration"
+msgstr "التسجيل بصفة {{ role_label }}"
+
+msgid "{{ role_label }} registration"
+msgstr "التسجيل بصفة {{ role_label }}"
+
+msgid "Create my {{ role_label }} account"
+msgstr "أنشئ حسابي بصفة {{ role_label }}"
+
+msgid "Student workspace navigation"
+msgstr "التنقل في مساحة الطالب"
+
+msgid "My Workspace"
+msgstr "مساحتي"
+
+msgid "Dashboard"
+msgstr "لوحة التحكم"
+
+msgid "My Team"
+msgstr "فريقي"
+
+msgid "Task Management"
+msgstr "إدارة المهام"
+
+msgid "Project Submission"
+msgstr "تسليم المشروع"
+
+msgid "Milestone"
+msgstr "مرحلة رئيسية"
+
+msgid "Repositories"
+msgstr "مستودعات الشيفرة"
+
+msgid "Network & Support"
+msgstr "التواصل والدعم"
+
+msgid "Mes inscriptions"
+msgstr "تسجيلاتي"
+
+msgid "Mes favoris"
+msgstr "مفضلتي"
+
+msgid "Recommandations IA"
+msgstr "توصيات الذكاء الاصطناعي"
+
+msgid "Talent Matching"
+msgstr "مطابقة المواهب"
+
+msgid "Career opportunities"
+msgstr "الفرص المهنية"
+
+msgid "Find a Mentor"
+msgstr "ابحث عن مرشد"
+
+msgid "Settings"
+msgstr "الإعدادات"
+
+msgid "Log out"
+msgstr "تسجيل الخروج"
+
+msgid "Open navigation menu"
+msgstr "فتح قائمة التنقل"
+
+msgid "Final sprint:"
+msgstr "المرحلة النهائية المكثفة:"
+
+msgid "Ended"
+msgstr "انتهى"
+
+msgid "Recent notifications"
+msgstr "الإشعارات الأخيرة"
+
+msgid "Open profile menu"
+msgstr "فتح قائمة الملف الشخصي"
+
+msgid "Gestion Globale"
+msgstr "الإدارة العامة"
+
+msgid "Cockpit Organisateur"
+msgstr "لوحة تحكم المنظم"
+
+msgid "Événement & Évaluation"
+msgstr "الفعالية والتقييم"
+
+msgid "Avis mentors"
+msgstr "آراء المرشدين"
+
+msgid "Annonces & Push"
+msgstr "الإعلانات والإشعارات الفورية"
+
+msgid "Career Opportunities"
+msgstr "الفرص المهنية"
+
+msgid "Grille & Jury Final"
+msgstr "معايير التقييم ولجنة التحكيم النهائية"
+
+msgid "Project Submissions"
+msgstr "تسليمات المشاريع"
+
+msgid "Mon Profil Admin"
+msgstr "ملفي الإداري"
+
+msgid "Menu"
+msgstr "القائمة"
+
+msgid "Hackathon en direct : Phase de sprint"
+msgstr "الهاكاثون مباشر: مرحلة العمل المكثف"
+
+msgid "Diffuser une annonce"
+msgstr "نشر إعلان"
+
+msgid "Alertes Organisateur"
+msgstr "تنبيهات المنظم"
+
+msgid "12 participants sans équipe"
+msgstr "12 مشاركاً بلا فريق"
+
+msgid "Le matching automatique s'exécutera à 15h00."
+msgstr "سيُجرى التوفيق التلقائي عند الساعة 15:00."
+
+msgid "Menu du compte administrateur"
+msgstr "قائمة حساب المسؤول"
+
+msgid "Accompagnement"
+msgstr "الإرشاد"
+
+msgid "Tableau de Bord"
+msgstr "لوحة التحكم"
+
+msgid "Demandes d'Aide"
+msgstr "طلبات المساعدة"
+
+msgid "{{ count }} en attente"
+msgstr "{{ count }} قيد الانتظار"
+
+msgid "Équipes suivies"
+msgstr "الفرق التي تتم متابعتها"
+
+msgid "Soumissions à évaluer"
+msgstr "المشاريع المطلوب تقييمها"
+
+msgid "Suivi & Feedbacks"
+msgstr "المتابعة والملاحظات"
+
+msgid "Assistant IA"
+msgstr "مساعد الذكاء الاصطناعي"
+
+msgid "Retours & Conseils"
+msgstr "الملاحظات والنصائح"
+
+msgid "Métriques IA"
+msgstr "مقاييس الذكاء الاصطناعي"
+
+msgid "Disponible pour mentorat"
+msgstr "متاح للإرشاد"
+
+msgid "Menu du profil"
+msgstr "قائمة الملف الشخصي"
+
+msgid "Mes Équipes"
+msgstr "فرقي"
+
+msgid "Basculer entre thème sombre et clair"
+msgstr "التبديل بين المظهر الداكن والفاتح"
+
+msgid "Changer de thème"
+msgstr "تغيير المظهر"
+
+msgid "Light"
+msgstr "فاتح"
+
+msgid "Dark"
+msgstr "داكن"
+
+msgid "Switch to light theme"
+msgstr "التبديل إلى المظهر الفاتح"
+
+msgid "Switch to dark theme"
+msgstr "التبديل إلى المظهر الداكن"
+
+msgid "Theme"
+msgstr "المظهر"
+
+msgid "Display & reading"
+msgstr "العرض والقراءة"
+
+msgid "Close display and reading options"
+msgstr "إغلاق خيارات العرض والقراءة"
+
+msgid "Text size"
+msgstr "حجم النص"
+
+msgid "Decrease text size"
+msgstr "تصغير النص"
+
+msgid "Reset text size"
+msgstr "إعادة حجم النص إلى الافتراضي"
+
+msgid "Increase text size"
+msgstr "تكبير النص"
+
+msgid "High contrast"
+msgstr "تباين عالٍ"
+
+msgid "More line spacing"
+msgstr "زيادة تباعد الأسطر"
+
+msgid "Underline links"
+msgstr "تسطير الروابط"
+
+msgid "Simple reading font"
+msgstr "خط مبسّط للقراءة"
+
+msgid "Reduce motion"
+msgstr "تقليل الحركة"
+
+msgid "Strong keyboard focus"
+msgstr "إبراز موضع التركيز بلوحة المفاتيح"
+
+msgid "Align text left"
+msgstr "محاذاة النص إلى اليسار"
+
+msgid "Highlight headings"
+msgstr "تمييز العناوين"
+
+msgid "Reset display settings"
+msgstr "إعادة إعدادات العرض إلى الافتراضي"
+
+msgid "Your preferences are saved on this device."
+msgstr "تُحفظ تفضيلاتك على هذا الجهاز."
+
+msgid "Open display and reading options"
+msgstr "فتح خيارات العرض والقراءة"
+
+msgid "Close"
+msgstr "إغلاق"
+
+msgid "Action completed successfully."
+msgstr "اكتمل الإجراء بنجاح."
+
+msgid "Choose language"
+msgstr "اختيار اللغة"
+
+msgid "Demo"
+msgstr "عرض تجريبي"
+
+msgid "Public homepage"
+msgstr "الصفحة الرئيسية العامة"
+
+msgid "Visitor"
+msgstr "زائر"
+
+msgid "Student workspace"
+msgstr "مساحة الطالب"
+
+msgid "Mentor workspace"
+msgstr "مساحة المرشد"
+
+msgid "Mentor"
+msgstr "مرشد"
+
+msgid "Administrator cockpit"
+msgstr "لوحة تحكم المسؤول"
+
+msgid "Toggle theme"
+msgstr "تبديل المظهر"
+
+msgid "Back to dashboard"
+msgstr "العودة إلى لوحة التحكم"
+
+msgid "Page not found"
+msgstr "الصفحة غير موجودة"
+
+msgid "The page you requested could not be found."
+msgstr "تعذر العثور على الصفحة التي طلبتها."
+
+msgid "Something went wrong"
+msgstr "حدث خطأ ما"
+
+msgid "We could not complete your request. Please try again later."
+msgstr "تعذر إكمال طلبك. يُرجى المحاولة مرة أخرى لاحقاً."
+
+msgid "Toggle navigation"
+msgstr "تبديل قائمة التنقل"
+
+msgid "FAQ"
+msgstr "الأسئلة الشائعة"
+
+msgid "Team of five"
+msgstr "فريق من خمسة أشخاص"
+
+msgid "Demo workspaces"
+msgstr "مساحات تجريبية"
+
+msgid "Quick links"
+msgstr "روابط سريعة"
+
+msgid "Hackathon information"
+msgstr "معلومات الهاكاثون"
+
+msgid "University campus & online"
+msgstr "الحرم الجامعي وعبر الإنترنت"
+
+msgid "Registration is open"
+msgstr "التسجيل مفتوح"
+
+msgid "Made with care for students and organizers."
+msgstr "صُممت بعناية للطلاب والمنظمين."
+
+msgid "Academic project developed by a team of five."
+msgstr "مشروع أكاديمي طوره فريق من خمسة أشخاص."
+
+msgid "Close messaging"
+msgstr "إغلاق المراسلة"
+
+msgid "Open messaging"
+msgstr "فتح المراسلة"
+
+msgid "You"
+msgstr "أنت"
+
+msgid "Copilot"
+msgstr "المساعد"
+
+msgid "Draft title"
+msgstr "عنوان المسودة"
+
+msgid "Message"
+msgstr "الرسالة"
+
+msgid "Save as draft"
+msgstr "حفظ كمسودة"
+
+msgid "Organizer assistant"
+msgstr "مساعد المنظم"
+
+msgid "Close copilot"
+msgstr "إغلاق المساعد"
+
+msgid "Copilot conversation"
+msgstr "محادثة المساعد"
+
+msgid "How can I help you?"
+msgstr "كيف يمكنني مساعدتك؟"
+
+msgid "I use hackathon data to prepare a summary and suggested actions."
+msgstr "أستخدم بيانات الهاكاثون لإعداد ملخص واقتراح إجراءات مناسبة."
+
+msgid "Summarize the hackathon status."
+msgstr "لخّص حالة الهاكاثون."
+
+msgid "Summarize the hackathon"
+msgstr "تلخيص الهاكاثون"
+
+msgid "Which teams need help, and why?"
+msgstr "ما الفرق التي تحتاج إلى مساعدة، ولماذا؟"
+
+msgid "Teams to follow up with"
+msgstr "فرق تحتاج إلى متابعة"
+
+msgid "Which teams may miss the deadline?"
+msgstr "ما الفرق التي قد لا تلتزم بالموعد النهائي؟"
+
+msgid "Deadline risks"
+msgstr "مخاطر التأخر عن الموعد"
+
+msgid "Write an announcement reminding everyone of the deadline."
+msgstr "اكتب إعلاناً لتذكير الجميع بالموعد النهائي."
+
+msgid "Write an announcement"
+msgstr "كتابة إعلان"
+
+msgid "Reviewing the data and preparing a response…"
+msgstr "تجري مراجعة البيانات وإعداد الرد…"
+
+msgid "Your message"
+msgstr "رسالتك"
+
+msgid "Write your message…"
+msgstr "اكتب رسالتك…"
+
+msgid "Send"
+msgstr "إرسال"
+
+msgid "Statistics are based on database records."
+msgstr "تستند الإحصاءات إلى سجلات قاعدة البيانات."
+
+msgid "Messaging"
+msgstr "المراسلة"
+
+msgid "Kick-off & Ideation"
+msgstr "انطلاق الهاكاثون وتوليد الأفكار"
+
+msgid "Concept review with a mentor"
+msgstr "مراجعة الفكرة مع مرشد"
+
+msgid "Milestone 1: Architecture & Wireframes"
+msgstr "المرحلة الأولى: بنية النظام والمخططات الأولية"
+
+msgid "Milestone 2: Functional MVP submission"
+msgstr "المرحلة الثانية: تسليم النسخة الأولية العاملة"
+
+msgid "Final Pitch to the Jury"
+msgstr "العرض النهائي أمام لجنة التحكيم"
+
+msgid "Notifications ({{ count }} new)"
+msgstr "الإشعارات ({{ count }} جديدة)"
+
+msgid "In "
+msgstr "خلال "
+
+msgid "In"
+msgstr "خلال"
+
+msgid "Deadline passed"
+msgstr "انقضى الموعد النهائي"
+
+msgid "No deadline set"
+msgstr "لم يُحدد موعد نهائي"
+
+msgid "h"
+msgstr "س"
+
+msgid "min"
+msgstr "د"
+
+msgid "Admin"
+msgstr "المسؤول"
+
+msgid "Désconnexion"
+msgstr "تسجيل الخروج"
+
+msgid "Hackathons"
+msgstr "الهاكاثونات"
+
+msgid "Mon Profil"
+msgstr "ملفي الشخصي"
+
+msgid "Mon Profil Mentor"
+msgstr "ملفي الشخصي كمرشد"
+
+msgid "Navigation mentor"
+msgstr "قائمة تنقل المرشد"
+
+msgid "Notifications"
+msgstr "الإشعارات"
+
+msgid "Paramètres"
+msgstr "الإعدادات"
+
+msgid "Se déconnecter"
+msgstr "تسجيل الخروج"
+
+msgid "Sessions"
+msgstr "الجلسات"
+
+msgid "Student"
+msgstr "طالب"
+
+msgid "Équipes & Projets"
+msgstr "الفرق والمشاريع"
+
+msgid "My Profile"
+msgstr "ملفي الشخصي"
+
+msgid "Déconnexion"
+msgstr "تسجيل الخروج"
+
+msgid "Frequently asked questions"
+msgstr "الأسئلة الشائعة"
+
+msgid "Participants"
+msgstr "المشاركون"
+
+msgid "HackFlow - Student Hackathon Platform"
+msgstr "HackFlow - منصة هاكاثون الطلاب"
+
+msgid "Collaborative student hackathon platform for team matching, mentoring, and project tracking."
+msgstr "منصة تعاونية لهاكاثونات الطلاب لمطابقة الفرق والإرشاد ومتابعة المشاريع."
+
+msgid "HackFlow - Build · Collaborate · Create"
+msgstr "HackFlow - ابتكر · تعاون · أنشئ"
+
+msgid "The collaborative student hackathon platform."
+msgstr "منصة هاكاثون الطلاب التعاونية."
+
+msgid "Skip to main content"
+msgstr "انتقل إلى المحتوى الرئيسي"
+
+msgid "Welcome to your workspace, {{ name }}"
+msgstr "مرحباً بك في مساحة عملك، {{ name }}"
+
+msgid "Get help"
+msgstr "احصل على المساعدة"
+
+msgid "View Tasks"
+msgstr "عرض المهام"
+
+msgid "Project Progress"
+msgstr "تقدم المشروع"
+
+msgid "Hackathon Milestones & Schedule"
+msgstr "مراحل الهاكاثون وجدوله"
+
+msgid "Follow the key stages set by the organizers."
+msgstr "تابع المراحل الرئيسية التي حددها المنظمون."
+
+msgid "48-hour Sprint"
+msgstr "سباق برمجي لمدة 48 ساعة"
+
+msgid "Approved"
+msgstr "تمت الموافقة"
+
+msgid "In progress"
+msgstr "قيد التنفيذ"
+
+msgid "Upcoming"
+msgstr "قادم"
+
+msgid "Latest Staff Announcements"
+msgstr "أحدث إعلانات المنظمين"
+
+msgid "Posted by"
+msgstr "نشره"
+
+msgid "There are no announcements for your event yet."
+msgstr "لا توجد إعلانات لفعاليتك حتى الآن."
+
+msgid "Upcoming Deadlines"
+msgstr "المواعيد النهائية القادمة"
+
+msgid "Manage"
+msgstr "إدارة"
+
+msgid "{{ members }}/{{ maximum }} members"
+msgstr "{{ members }}/{{ maximum }} أعضاء"
+
+msgid "There are"
+msgstr "يتبقى"
+
+msgid "spots"
+msgstr "أماكن"
+
+msgid "left to complete your team."
+msgstr "لإكمال فريقك."
+
+msgid "Find a teammate"
+msgstr "ابحث عن زميل للفريق"
+
+msgid "Hackathon"
+msgstr "الهاكاثون"
+
+msgid "You are on team"
+msgstr "أنت ضمن فريق"
+
+msgid "Espace Mentorat & Accompagnement"
+msgstr "مساحة الإرشاد والدعم"
+
+msgid "Welcome"
+msgstr "مرحباً"
+
+msgid "Expert"
+msgstr "خبير"
+
+msgid "Queue ({{ count }} tickets)"
+msgstr "قائمة الانتظار ({{ count }} تذاكر)"
+
+msgid "View teams"
+msgstr "عرض الفرق"
+
+msgid "Indicators"
+msgstr "المؤشرات"
+
+msgid "Organization announcements"
+msgstr "إعلانات المنظمين"
+
+msgid "ago"
+msgstr "مضت"
+
+msgid "Urgent pending requests"
+msgstr "طلبات عاجلة قيد الانتظار"
+
+msgid "Unassigned tickets, starting with the most urgent."
+msgstr "طلبات لم يتولّها أحد بعد، بدءاً بالأكثر إلحاحاً."
+
+msgid "View the full queue"
+msgstr "عرض قائمة الطلبات كاملةً"
+
+msgid "Without a team"
+msgstr "من دون فريق"
+
+msgid "Table"
+msgstr "الطاولة"
+
+msgid "Take request"
+msgstr "تولّي الطلب"
+
+msgid "No pending requests. All teams are unblocked!"
+msgstr "لا توجد طلبات معلقة. جميع الفرق تتابع عملها!"
+
+msgid "My sessions today"
+msgstr "جلساتي اليوم"
+
+msgid "Team:"
+msgstr "الفريق:"
+
+msgid "Join video call"
+msgstr "الانضمام إلى مكالمة الفيديو"
+
+msgid "new tab"
+msgstr "علامة تبويب جديدة"
+
+msgid "No sessions scheduled for today."
+msgstr "لا توجد جلسات مقررة اليوم."
+
+msgid "Mentor role reminder"
+msgstr "تذكير بدور المرشد"
+
+msgid "Your goal is to guide students without doing the work for them. Help them break down the problem, favor a practical MVP, and prepare them for challenging jury questions!"
+msgstr "هدفك توجيه الطلاب من دون إنجاز العمل نيابةً عنهم. ساعدهم على تقسيم المشكلة، وشجّعهم على بناء نسخة أولية عملية، وهيّئهم لأسئلة لجنة التحكيم الصعبة."
+
+msgid "Organizer cockpit & overview"
+msgstr "لوحة تحكم المنظم والنظرة العامة"
+
+msgid "Supervising {{ name }}"
+msgstr "الإشراف على {{ name }}"
+
+msgid "Supervision based on data recorded in HackFlow."
+msgstr "إشراف يستند إلى البيانات المسجلة في HackFlow."
+
+msgid "CSV export report generated successfully!"
+msgstr "تم إنشاء تقرير تصدير CSV بنجاح!"
+
+msgid "Export data"
+msgstr "تصدير البيانات"
+
+msgid "Publish announcement"
+msgstr "نشر إعلان"
+
+msgid "Team distribution by challenge"
+msgstr "توزيع الفرق حسب التحدي"
+
+msgid "{{ count }} teams ({{ percent }}%)"
+msgstr "{{ count }} فريقاً ({{ percent }}٪)"
+
+msgid "Recent recorded activity"
+msgstr "أحدث الأنشطة المسجلة"
+
+msgid "Recent activity"
+msgstr "النشاط الأخير"
+
+msgid "No activity recorded yet."
+msgstr "لم يُسجل أي نشاط بعد."
+
+msgid "Student dashboard - HackFlow"
+msgstr "لوحة الطالب - HackFlow"
+
+msgid "Mentor dashboard - HackFlow"
+msgstr "لوحة المرشد - HackFlow"
+
+msgid "Organizer cockpit - HackFlow Admin"
+msgstr "لوحة تحكم المنظم - HackFlow"
+
+msgid "Completed tasks"
+msgstr "المهام المكتملة"
+
+msgid "Resolved mentor requests"
+msgstr "طلبات الإرشاد التي تمت معالجتها"
+
+msgid "Open team spots"
+msgstr "الأماكن المتاحة في الفريق"
+
+msgid "Create a team"
+msgstr "أنشئ فريقاً"
+
+msgid "Demandes d'aide en attente"
+msgstr "طلبات المساعدة المعلقة"
+
+msgid "Tickets en cours (moi)"
+msgstr "الطلبات التي أتابعها"
+
+msgid "Évaluations rédigées"
+msgstr "التقييمات التي أعددتها"
+
+msgid "Hackathon data"
+msgstr "بيانات الهاكاثون"
+
+msgid "Équipes"
+msgstr "الفرق"
+
+msgid "Teams in database"
+msgstr "الفرق المسجلة في قاعدة البيانات"
+
+msgid "Étudiants affectés"
+msgstr "الطلاب الموزعون على الفرق"
+
+msgid "%(count)s without a team"
+msgstr "%(count)s بلا فريق"
+
+msgid "Demandes mentor ouvertes"
+msgstr "طلبات الإرشاد المفتوحة"
+
+msgid "%(count)s blocking"
+msgstr "%(count)s تعيق التقدم"
+
+msgid "%(count)s unfinished tasks are past their deadline."
+msgstr "تجاوزت %(count)s مهمة غير مكتملة موعدها النهائي."
+
+msgid "View participants"
+msgstr "عرض المشاركين"
+
+msgid "A member joined %(team)s"
+msgstr "انضم عضو إلى فريق %(team)s"
+
+msgid "Deliverable received for %(team)s"
+msgstr "تم استلام مخرج المشروع لفريق %(team)s"
+
+msgid "HackFlow réunit les participants, les équipes et les mentors dans un espace unique pour organiser le hackathon."
+msgstr "يجمع HackFlow المشاركين والفرق والمرشدين في مساحة واحدة لتنظيم الهاكاثون."
+
+msgid "Participants inscrits"
+msgstr "المشاركون المسجلون"
+
+msgid "Équipes créées"
+msgstr "الفرق المنشأة"
+
+msgid "Mentors actifs"
+msgstr "المرشدون النشطون"
+
+msgid "Places disponibles"
+msgstr "الأماكن المتاحة"
+
+msgid "Créez votre profil"
+msgstr "أنشئ ملفك الشخصي"
+
+msgid "Ajoutez vos compétences, vos rôles préférés et vos disponibilités."
+msgstr "أضف مهاراتك وأدوارك المفضلة وأوقات تفرغك."
+
+msgid "Profil participant"
+msgstr "ملف المشارك"
+
+msgid "Formez une équipe"
+msgstr "كوّن فريقاً"
+
+msgid "Rejoignez une équipe ou consultez les recommandations de composition."
+msgstr "انضم إلى فريق أو اطّلع على توصيات تشكيل الفرق."
+
+msgid "Matching assisté"
+msgstr "مطابقة بمساعدة النظام"
+
+msgid "Organisez le projet"
+msgstr "نظّم المشروع"
+
+msgid "Répartissez les tâches, suivez les jalons et échangez avec vos coéquipiers."
+msgstr "وزّع المهام وتابع المراحل وتواصل مع زملائك في الفريق."
+
+msgid "Espace équipe"
+msgstr "مساحة الفريق"
+
+msgid "Présentez votre projet"
+msgstr "اعرض مشروعك"
+
+msgid "Déposez votre livrable et partagez vos liens avec le jury."
+msgstr "أرسل مخرجات مشروعك وشارك روابطك مع لجنة التحكيم."
+
+msgid "Dépôt de projet"
+msgstr "تسليم المشروع"
+
+msgid "Puis-je participer sans équipe ?"
+msgstr "هل يمكنني المشاركة من دون فريق؟"
+
+msgid "Oui. Créez votre profil et rejoignez une équipe disponible. Les organisateurs peuvent aussi proposer une composition à partir des compétences et préférences renseignées."
+msgstr "نعم. أنشئ ملفك الشخصي وانضم إلى فريق متاح. ويمكن للمنظمين أيضاً اقتراح تشكيل فريق استناداً إلى المهارات والتفضيلات التي تقدمها."
+
+msgid "Comment trouver une équipe qui correspond à mon profil ?"
+msgstr "كيف أجد فريقاً يناسب ملفي الشخصي؟"
+
+msgid "Les équipes peuvent indiquer les compétences recherchées. Le matching tient compte des compétences, rôles préférés, thématiques et disponibilités renseignés."
+msgstr "يمكن للفرق تحديد المهارات التي تبحث عنها. تأخذ المطابقة في الحسبان المهارات والأدوار المفضلة والموضوعات وأوقات التفرغ التي تقدمها."
+
+msgid "Où suivre les informations de l’événement ?"
+msgstr "أين يمكنني متابعة مستجدات الفعالية؟"
+
+msgid "Les annonces publiées pour le hackathon apparaissent dans les espaces des participants. Les dates et le lieu de l’événement sont affichés ci-dessus lorsqu’ils sont configurés."
+msgstr "تظهر إعلانات الهاكاثون في مساحات المشاركين. وتُعرض تواريخ الفعالية ومكانها أعلاه عند تحديدها."
+
+msgid "Comment remettre un projet au jury ?"
+msgstr "كيف أرسل المشروع إلى لجنة التحكيم؟"
+
+msgid "L’équipe peut renseigner sa description, ses liens de démonstration et déposer son archive depuis l’espace de soumission."
+msgstr "يمكن للفريق إضافة وصف المشروع وروابط العرض التوضيحي ثم رفع ملف المشروع المضغوط من مساحة التسليم."
+
+
+msgid "Add or update a team link/document"
+msgstr "إضافة أو تحديث رابط أو مستند للفريق"
+
+
+msgid "Approve"
+msgstr "موافقة"
+
+
+msgid "Assigned mentor:"
+msgstr "الموجه المسؤول:"
+
+
+msgid "Browse the talent pool"
+msgstr "تصفح قائمة المواهب"
+
+
+msgid "Cancel"
+msgstr "إلغاء"
+
+
+msgid "Cancel invitation"
+msgstr "إلغاء الدعوة"
+
+
+msgid "Captain"
+msgstr "قائد الفريق"
+
+
+msgid "Chat together"
+msgstr "الدردشة معاً"
+
+
+msgid "Confirm"
+msgstr "تأكيد"
+
+
+msgid "Confirm team change"
+msgstr "تأكيد تغيير الفريق"
+
+
+msgid "Conversation"
+msgstr "محادثة"
+
+
+msgid "Copy"
+msgstr "نسخ"
+
+
+msgid "Could not load this conversation. Please try again."
+msgstr "تعذر تحميل هذه المحادثة. يُرجى المحاولة مرة أخرى."
+
+
+msgid "Create a new team"
+msgstr "إنشاء فريق جديد"
+
+
+msgid "Create a team to organize your project, invite students, manage tasks, and chat with your teammates in one place."
+msgstr "أنشئ فريقاً لتنظيم مشروعك ودعوة الطلاب وإدارة المهام والتواصل مع زملائك في مكان واحد."
+
+
+msgid "Create team"
+msgstr "إنشاء الفريق"
+
+
+msgid "Create your team"
+msgstr "أنشئ فريقك"
+
+
+msgid "Decline"
+msgstr "رفض"
+
+
+msgid "Delete"
+msgstr "حذف"
+
+
+msgid "Edit"
+msgstr "تعديل"
+
+
+msgid "Edit team"
+msgstr "تعديل الفريق"
+
+
+msgid "Final submission status:"
+msgstr "حالة التسليم النهائي:"
+
+
+msgid "Find a team"
+msgstr "العثور على فريق"
+
+
+msgid "Invitation link copied to clipboard!"
+msgstr "تم نسخ رابط الدعوة."
+
+
+msgid "Invite a member"
+msgstr "دعوة عضو"
+
+
+msgid "Invite a participant"
+msgstr "دعوة مشارك"
+
+
+msgid "Invite members"
+msgstr "دعوة الأعضاء"
+
+
+msgid "Leave request pending"
+msgstr "طلب المغادرة قيد الانتظار"
+
+
+msgid "Leave team"
+msgstr "مغادرة الفريق"
+
+
+msgid "Location:"
+msgstr "الموقع:"
+
+
+msgid "Looking for:"
+msgstr "نبحث عن:"
+
+
+msgid "Make captain"
+msgstr "تعيينه قائداً للفريق"
+
+
+msgid "No project links yet. Add the team's real repository, prototype, or demo link."
+msgstr "لا توجد روابط للمشروع بعد. أضف رابط المستودع أو النموذج الأولي أو العرض الفعلي للفريق."
+
+
+msgid "Open Kanban"
+msgstr "فتح لوحة كانبان"
+
+
+msgid "Open Slot"
+msgstr "مكان متاح"
+
+
+msgid "Or invite by university email:"
+msgstr "أو ادعُ باستخدام البريد الجامعي:"
+
+
+msgid "Pending invitations"
+msgstr "الدعوات المعلقة"
+
+
+msgid "Plan tasks"
+msgstr "تخطيط المهام"
+
+
+msgid "Project Links & Resources"
+msgstr "روابط وموارد المشروع"
+
+
+msgid "Remove"
+msgstr "إزالة"
+
+
+msgid "Request to leave team"
+msgstr "طلب مغادرة الفريق"
+
+
+msgid "Requests to leave the team"
+msgstr "طلبات مغادرة الفريق"
+
+
+msgid "Save for the team"
+msgstr "حفظ للفريق"
+
+
+msgid "Save team"
+msgstr "حفظ الفريق"
+
+
+msgid "Set up your project workspace. You can invite teammates after creating it."
+msgstr "أعد مساحة عمل مشروعك. يمكنك دعوة أعضاء الفريق بعد إنشائها."
+
+
+msgid "Team Information"
+msgstr "معلومات الفريق"
+
+
+msgid "Team roles, responsibilities, and skills."
+msgstr "أدوار الفريق ومسؤولياته ومهاراته."
+
+
+msgid "You are not on a team yet"
+msgstr "لست ضمن فريق بعد"
+
+
+msgid "Your workspace starts here"
+msgstr "تبدأ مساحة عملك من هنا"
+
+
+msgid "spots available"
+msgstr "أماكن متاحة"
+
+
+msgid "Forgot your password?"
+msgstr "هل نسيت كلمة المرور؟"
+
+
+msgid "We?ll send you a verification code that is valid for 10 minutes."
+msgstr "????? ???? ??? ???? ?????? ???? 10 ?????."
+
+
+msgid "If an active account matches this address, you?ll receive a verification code. Check your inbox and spam folder."
+msgstr "??? ??? ??? ?????? ??????? ????? ???? ??????? ??? ????. ???? ?? ????? ?????? ??????? ??? ??????? ???."
+
+
+msgid "Enter verification code"
+msgstr "أدخل رمز التحقق"
+
+
+msgid "Account email address"
+msgstr "البريد الإلكتروني للحساب"
+
+
+msgid "Send code"
+msgstr "إرسال الرمز"
+
+
+msgid "Password updated"
+msgstr "تم تحديث كلمة المرور"
+
+
+msgid "Your new password has been saved. You can log in now."
+msgstr "تم حفظ كلمة المرور الجديدة. يمكنك تسجيل الدخول الآن."
+
+
+msgid "Verify your code"
+msgstr "تحقق من الرمز"
+
+
+msgid "Enter the code you received and choose a new password."
+msgstr "أدخل الرمز الذي استلمته واختر كلمة مرور جديدة."
+
+
+msgid "Reset my password"
+msgstr "إعادة تعيين كلمة المرور"
+
+
+msgid "The information shown here comes from your HackFlow account."
+msgstr "المعلومات المعروضة هنا مأخوذة من حسابك على HackFlow."
+
+
+msgid "Edit my details"
+msgstr "تعديل بياناتي"
+
+
+msgid "Account Information"
+msgstr "معلومات الحساب"
+
+
+msgid "First name"
+msgstr "الاسم الأول"
+
+
+msgid "Email address"
+msgstr "البريد الإلكتروني"
+
+
+msgid "Download CV (PDF)"
+msgstr "تنزيل السيرة الذاتية (PDF)"
+
+
+msgid "No CV uploaded"
+msgstr "?? ??? ??? ???? ?????"
+
+
+msgid "School / organization"
+msgstr "المدرسة / المؤسسة"
+
+
+msgid "Study level"
+msgstr "المستوى الدراسي"
+
+
+msgid "Specialty"
+msgstr "التخصص"
+
+
+msgid "Detected in your CV"
+msgstr "تم اكتشافها في سيرتك الذاتية"
+
+
+msgid "No skills detected yet. CV text is extracted locally, including scanned pages when OCR can read them. You can also add skills in your profile details."
+msgstr "لم يتم اكتشاف مهارات بعد. يُستخرج نص السيرة الذاتية محلياً، بما في ذلك الصفحات المصورة التي يمكن لتقنية OCR قراءتها. يمكنك أيضاً إضافة مهارات إلى ملفك الشخصي."
+
+
+msgid "Team formation preferences"
+msgstr "تفضيلات تشكيل الفريق"
+
+
+msgid "Preferred roles"
+msgstr "الأدوار المفضلة"
+
+
+msgid "Development"
+msgstr "التطوير"
+
+
+msgid "Design / UX"
+msgstr "التصميم / تجربة المستخدم"
+
+
+msgid "Business / Pitch"
+msgstr "الأعمال / العرض التقديمي"
+
+
+msgid "Product"
+msgstr "المنتج"
+
+
+msgid "Published roles ranked against your profile evidence."
+msgstr "الأدوار المنشورة مرتبة حسب الأدلة الموجودة في ملفك الشخصي."
+
+
+msgid "Add your CV to get personalized matches."
+msgstr "أضف سيرتك الذاتية للحصول على مطابقة مخصصة."
+
+
+msgid "Your offers are still available; no score is invented without a readable CV."
+msgstr "لا تزال الفرص متاحة؛ ولا تُحتسب درجة دون سيرة ذاتية مقروءة."
+
+
+msgid "Complete profile"
+msgstr "أكمل الملف الشخصي"
+
+
+msgid "Your CV could not be analyzed."
+msgstr "تعذر تحليل سيرتك الذاتية."
+
+
+msgid "Scanned pages are read locally with OCR. Try a clearer PDF if no text could be recognized."
+msgstr "تُقرأ الصفحات المصورة محلياً باستخدام OCR. جرّب ملف PDF أوضح إذا تعذر التعرف على النص."
+
+
+msgid "Update CV"
+msgstr "تحديث السيرة الذاتية"
+
+
+msgid "CAREER TRACKER"
+msgstr "متتبع المسار المهني"
+
+
+msgid "My applications"
+msgstr "طلباتي"
+
+
+msgid "Keep every opportunity moving. Review your progress and update your next step in one place."
+msgstr "تابع تقدمك في كل فرصة وحدّث خطوتك التالية من مكان واحد."
+
+
+msgid "Explore opportunities"
+msgstr "استكشف الفرص"
+
+
+msgid "Your pipeline"
+msgstr "مسار طلباتك"
+
+
+msgid "All tracked"
+msgstr "كل الفرص المتابعة"
+
+
+msgid "Interviews"
+msgstr "المقابلات"
+
+
+msgid "Accepted"
+msgstr "مقبول"
+
+
+msgid "Create and publish an opportunity for students."
+msgstr "أنشئ فرصة للطلاب وانشرها."
+
+
+msgid "Opportunity basics"
+msgstr "أساسيات الفرصة"
+
+
+msgid "Set the role name, employer and a clear description."
+msgstr "حدد اسم الدور وجهة العمل واكتب وصفاً واضحاً."
+
+
+msgid "Opportunity type"
+msgstr "نوع الفرصة"
+
+
+msgid "Publication status"
+msgstr "حالة النشر"
+
+
+msgid "Describe the role, responsibilities and application process clearly."
+msgstr "اكتب وصفاً واضحاً للدور والمسؤوليات وإجراءات التقديم."
+
+
+msgid "Add weighted evidence criteria. All nonzero weights are normalized to 100% when saved."
+msgstr "أضف معايير أدلة ذات أوزان. تُطبّع جميع الأوزان غير الصفرية إلى ١٠٠٪ عند الحفظ."
+
+
+msgid "Requirement type"
+msgstr "نوع المتطلب"
+
+
+msgid "Assessment details"
+msgstr "تفاصيل التقييم"
+
+
+msgid "Mandatory"
+msgstr "إلزامي"
+
+
+msgid "All opportunities"
+msgstr "كل الفرص"
+
+
+msgid "Saved opportunities"
+msgstr "????? ????????"
+
+
+msgid "Search"
+msgstr "بحث"
+
+
+msgid "All types"
+msgstr "كل الأنواع"
+
+
+msgid "Work arrangement"
+msgstr "نظام العمل"
+
+
+msgid "All arrangements"
+msgstr "كل ترتيبات العمل"
+
+
+msgid "Skills"
+msgstr "المهارات"
+
+
+msgid "Create opportunity"
+msgstr "إنشاء فرصة"
+
+
+msgid "Pending review"
+msgstr "بانتظار المراجعة"
+
+
+msgid "Expired"
+msgstr "منتهي الصلاحية"
+
+
+msgid "Applications"
+msgstr "الطلبات"
+
+
+msgid "Previous"
+msgstr "السابق"
+
+
+msgid "Next"
+msgstr "التالي"
+
+
+msgid "Page of"
+msgstr "?????? ??"
+
+
+msgid "Actions"
+msgstr "الإجراءات"
+
+
+msgid "Page /"
+msgstr "?????? /"
+
+
+msgid "Download ZIP"
+msgstr "تنزيل ZIP"
+
+
+msgid "No project archives yet"
+msgstr "لا توجد أرشيفات للمشاريع بعد"
+
+
+msgid "Uploaded team submissions will appear here for jury review."
+msgstr "ستظهر هنا تسليمات الفرق المرفوعة لمراجعتها من لجنة التحكيم."
+
+
+msgid "No matching submissions"
+msgstr "لا توجد تسليمات مطابقة"
+
+
+msgid "Try another team, project or milestone name."
+msgstr "جرّب اسم فريق أو مشروع أو مرحلة مختلفاً."
+
+
+msgid "No conversations yet. Open your team page to message a member."
+msgstr "لا توجد محادثات بعد. افتح صفحة فريقك لمراسلة أحد الأعضاء."
+
+
+msgid "Start a conversation"
+msgstr "???? ??????"
+
+
+msgid "Private conversation"
+msgstr "محادثة خاصة"
+
+
+msgid "All conversations"
+msgstr "كل المحادثات"
+
+
+msgid "You?re invited to join"
+msgstr "??? ???? ????????"
+
+
+msgid "Join the team workspace to collaborate on tasks and message your teammates."
+msgstr "انضم إلى مساحة عمل الفريق للتعاون على المهام ومراسلة زملائك."
+
+
+msgid "Accept invitation"
+msgstr "قبول الدعوة"
+
+
+msgid "Live Mentoring & Support"
+msgstr "إرشاد ودعم مباشر"
+
+
+msgid "Blocker"
+msgstr "????"
+
+
+msgid "Important"
+msgstr "مهم"
+
+
+msgid "Advice"
+msgstr "نصيحة"
+
+
+msgid "Filter"
+msgstr "تصفية"
+
+
+msgid "Clear filters"
+msgstr "مسح عوامل التصفية"
+
+
+msgid "Reset"
+msgstr "إعادة ضبط"
+
+
+msgid "Compare branches"
+msgstr "مقارنة الفروع"
+
+
+msgid "Choose two branches to see the difference between them."
+msgstr "اختر فرعين لعرض الفروقات بينهما."
+
+
+msgid "These branches are identical ? no differences found."
+msgstr "??????? ????????? ??? ??? ?????? ??? ????????."
+
+
+msgid "Your team's shared code, versioned and organized."
+msgstr "رمز الفريق المشترك منظّم ومحفوظ بإصدارات."
+
+
+msgid "New repository"
+msgstr "مستودع جديد"
+
+
+msgid "Join a team to get started"
+msgstr "انضم إلى فريق للبدء"
+
+
+msgid "Repositories are shared with your team. Join or create a team first."
+msgstr "المستودعات مشتركة مع فريقك. انضم إلى فريق أو أنشئ فريقاً أولاً."
+
+
+msgid "Create a repository to give your team a shared place for project code and version history."
+msgstr "أنشئ مستودعاً ليكون لفريقك مكان مشترك لرمز المشروع وسجل إصداراته."
+
+
+msgid "Create your first repository"
+msgstr "أنشئ مستودعك الأول"
+
+
+msgid "Read-only access to repositories for teams where you have an accepted mentor request."
+msgstr "صلاحية قراءة فقط لمستودعات الفرق التي قُبل طلب إرشادك لها."
+
+
+msgid "No assigned team repositories"
+msgstr "لا توجد مستودعات فرق مسندة"
+
+
+msgid "Repositories appear here once a team assigns you as their mentor through an accepted request."
+msgstr "ستظهر المستودعات هنا عندما تعينك فرقة موجهاً لها بعد قبول طلبك."
+
+
+msgid "Create branch"
+msgstr "إنشاء فرع"
+
+
+msgid "Comment"
+msgstr "تعليق"
+
+
+msgid "Compare"
+msgstr "مقارنة"
+
+
+msgid "Merge requests"
+msgstr "طلبات الدمج"
+
+
+msgid "Merge request"
+msgstr "??? ???"
+
+
+msgid "Branches"
+msgstr "الفروع"
+
+
+msgid "History"
+msgstr "السجل"
+
+
+msgid "Files"
+msgstr "الملفات"
+
+
+msgid "Push to"
+msgstr "رفع إلى"
+
+
+msgid "Choose which binary version to keep:"
+msgstr "اختر النسخة الثنائية التي تريد الاحتفاظ بها:"
+
+
+msgid "No file changes to display."
+msgstr "لا توجد تغييرات في الملفات لعرضها."
+
+
+msgid "No messages yet. Send the first one below."
+msgstr "لا توجد رسائل بعد. أرسل أول رسالة أدناه."
+
+
+msgid "Probl?matique"
+msgstr "??????? ????????"
+
+
+msgid "Objectifs"
+msgstr "الأهداف"
+
+
+msgid "Contraintes"
+msgstr "القيود"
+
+
+msgid "Livrables attendus"
+msgstr "المخرجات المتوقعة"
+
+
+msgid "Consignes sp?cifiques"
+msgstr "??????? ????"
+
+
+msgid "Technologies recommand?es"
+msgstr "???????? ?????? ???"
+
+
+msgid "R?compense"
+msgstr "????????"
+
+
+msgid "?quipes inscrites"
+msgstr "????? ???????"
+
+
+msgid "Inscrit"
+msgstr "مسجل"
+
+
+msgid "Un seul challenge par hackathon"
+msgstr "تحدٍ واحد لكل هاكاثون"
+
+
+msgid "Inscriptions ouvertes"
+msgstr "التسجيل مفتوح"
+
+
+msgid "Inscriptions ferm?es"
+msgstr "??????? ????"
+
+
+msgid "Date limite :"
+msgstr "?????? ???????:"
+
+
+msgid "Voir le challenge"
+msgstr "عرض التحدي"
+
+
+msgid "S'inscrire"
+msgstr "التسجيل"
+
+
+msgid "Voir mon avis"
+msgstr "??? ????????"
+
+
+msgid "Donner un avis sur ce challenge"
+msgstr "???? ???????? ??? ??? ??????"
+
+
+msgid "Aper?u"
+msgstr "???? ????"
+
+
+msgid "Programme"
+msgstr "البرنامج"
+
+
+msgid "Annonces"
+msgstr "?????????"
+
+
+msgid "Ressources"
+msgstr "الموارد"
+
+
+msgid "En cours"
+msgstr "جارٍ"
+
+
+msgid "Termin?"
+msgstr "?????"
+
+
+msgid "? venir"
+msgstr "????"
+
+
+msgid "Le programme sera bient?t disponible."
+msgstr "????? ???????? ?????? ??????."
+
+
+msgid "Aucune annonce active."
+msgstr "لا توجد إعلانات نشطة."
+
+
+msgid "T?l?charger"
+msgstr "?????"
+
+
+msgid "Aucune ressource publi?e."
+msgstr "?? ??? ??? ????? ???."
+
+
+msgid "challenge ? capacit?"
+msgstr "?????? ? ?????"
+
+
+msgid "G?rer"
+msgstr "?????"
+
+
+msgid "Modifier"
+msgstr "تعديل"
+
+
+msgid "Voir le hackathon"
+msgstr "عرض الهاكاثون"
+
+
+msgid "Lieu"
+msgstr "الموقع"
+
+
+msgid "Rechercher"
+msgstr "بحث"
+
+
+msgid "Effacer le rep?re"
+msgstr "??? ???????"
+
+
+msgid "Saisissez une adresse puis cliquez sur ? Rechercher ?, ou placez directement le rep?re sur la carte. Le lieu sera affich? aux ?tudiants et aux mentors."
+msgstr "???? ??????? ????? ??? ???? ?? ?? ??????? ??? ???????. ????? ?????? ?????? ?????????."
+
+
+msgid "Ouvrir dans OpenStreetMap"
+msgstr "فتح في OpenStreetMap"
+
+
+msgid "Retour"
+msgstr "رجوع"
+
+
+msgid "Enregistrer"
+msgstr "حفظ"
+
+
+msgid "Annuler"
+msgstr "إلغاء"
+
+
+msgid "Retour Annuler"
+msgstr "???? ?????"
+
+
+msgid "Supprimer"
+msgstr "حذف"
+
+
+msgid "D?publier"
+msgstr "????? ?????"
+
+
+msgid "Publier"
+msgstr "نشر"
+
+
+msgid "Publier le hackathon"
+msgstr "نشر الهاكاثون"
+
+
+msgid "Publier hackathon + challenges"
+msgstr "نشر الهاكاثون والتحديات"
+
+
+msgid "Nouveau hackathon"
+msgstr "هاكاثون جديد"
+
+
+msgid "Recherche"
+msgstr "بحث"
+
+
+msgid "Track"
+msgstr "المسار"
+
+
+msgid "Tous"
+msgstr "الكل"
+
+
+msgid "Tous les Tracks"
+msgstr "كل المسارات"
+
+
+msgid "Publication"
+msgstr "النشر"
+
+
+msgid "P?riode"
+msgstr "??????"
+
+
+msgid "Toutes"
+msgstr "الكل"
+
+
+msgid "Termin?s"
+msgstr "??????"
+
+
+msgid "Aucun hackathon pour le moment."
+msgstr "لا توجد هاكاثونات حالياً."
+
+
+msgid "Cr?er vos hackathons, leurs challenges et g?rez leur publication."
+msgstr "???? ??????????? ????????? ???? ?????."
+
+
+msgid "Retours et suggestions class?s par Hackathon."
+msgstr "??????? ????????? ????? ??? ?????????."
+
+
+msgid "hackathon(s)"
+msgstr "???????"
+
+
+msgid "Avis concernant"
+msgstr "مراجعة حول"
+
+
+msgid "Hackathons et Challenges"
+msgstr "الهاكاثونات والتحديات"
+
+
+msgid "Challenge"
+msgstr "التحدي"
+
+
+msgid "Filtrer"
+msgstr "تصفية"
+
+
+msgid "Effacer"
+msgstr "مسح"
+
+
+msgid "Ouvrir le Hackathon"
+msgstr "فتح الهاكاثون"
+
+
+msgid "Challenge ? Avis g?n?ral"
+msgstr "?????? ? ??????? ????"
+
+
+msgid "Avis"
+msgstr "مراجعة"
+
+
+msgid "Id?es et suggestions"
+msgstr "????? ?????????"
+
+
+msgid "Aucun avis mentor pour ces filtres."
+msgstr "لا توجد مراجعات من الموجهين تطابق عوامل التصفية."
+
+
+msgid "Modifier l'annonce"
+msgstr "????? ???????"
+
+
+msgid "R?diger une annonce"
+msgstr "????? ?????"
+
+
+msgid "Mettez ? jour votre message"
+msgstr "???? ??????"
+
+
+msgid "Un message clair aide tout le monde ? avancer"
+msgstr "????? ??????? ??????? ?????? ??? ??????"
+
+
+msgid "?v?nement associ?"
+msgstr "???????? ????????"
+
+
+msgid "Assistant de r?daction"
+msgstr "????? ???????"
+
+
+msgid "Public cible"
+msgstr "الفئة المستهدفة"
+
+
+msgid "Sujet et informations ? inclure"
+msgstr "??????? ?????????? ??????? ???????"
+
+
+msgid "Tous les r?les"
+msgstr "?? ???????"
+
+
+msgid "?tudiants"
+msgstr "??????"
+
+
+msgid "Mentors"
+msgstr "الموجهون"
+
+
+msgid "Tous les statuts"
+msgstr "كل الحالات"
+
+
+msgid "En ?quipe"
+msgstr "??? ????"
+
+
+msgid "Sans ?quipe"
+msgstr "???? ????"
+
+
+msgid "Actifs"
+msgstr "نشطة"
+
+
+msgid "Inactifs"
+msgstr "غير نشطين"
+
+
+msgid "Participant"
+msgstr "مشارك"
+
+
+msgid "?tablissement"
+msgstr "???????"
+
+
+msgid "R?le"
+msgstr "?????"
+
+
+msgid "Capitaine"
+msgstr "قائد الفريق"
+
+
+msgid "Membres"
+msgstr "الأعضاء"
+
+
+msgid "Emplacement"
+msgstr "الموقع"
+
+
+msgid "Mentor R?f?rent"
+msgstr "?????? ???????"
+
+
+msgid "Livrable"
+msgstr "التسليم"
+
+
+msgid "Aucune ?quipe n?est enregistr?e pour ce filtre."
+msgstr "?? ???? ??? ????? ???? ??????? ???."
+
+
+msgid "Pr?c?dent"
+msgstr "??????"
+
+
+msgid "Suivant"
+msgstr "التالي"
+
+
+msgid "Page"
+msgstr "??????"
+
+
+msgid "?quipe"
+msgstr "??????"
+
+
+msgid "Statut"
+msgstr "الحالة"
+
+
+msgid "Historique"
+msgstr "السجل"
+
+
+msgid "?v?nements"
+msgstr "?????????"
+
+
+msgid "Localisation"
+msgstr "الموقع"
+
+
+msgid "Challenges"
+msgstr "التحديات"
+
+
+msgid "Inscriptions"
+msgstr "التسجيلات"
+
+
+msgid "Date limite"
+msgstr "الموعد النهائي"
+
+
+msgid "Aucun challenge publi? pour le moment."
+msgstr "?? ??? ??? ?????? ???."
+
+
+msgid "D?roulement du hackathon"
+msgstr "???? ?????????"
+
+
+msgid "Voir plus"
+msgstr "عرض المزيد"
+
+
+msgid "R?glement"
+msgstr "???????"
+
+
+msgid "Prochain rendez-vous"
+msgstr "الموعد القادم"
+
+
+msgid "Conflit d'agenda."
+msgstr "تعارض في الجدول."
+
+
+msgid "Aujourd'hui"
+msgstr "اليوم"
+
+
+msgid "Aucune inscription pour le moment : vos hackathons appara?tront ici."
+msgstr "?? ???? ??????? ???. ????? ?????????? ???."
+
+
+msgid "Voir les d?tails du hackathon"
+msgstr "??? ?????? ?????????"
+
+
+msgid "Annuler l'inscription"
+msgstr "إلغاء التسجيل"
+
+
+msgid "Retirer des favoris"
+msgstr "????? ?? ???????"
+
+
+msgid "Ajouter aux favoris"
+msgstr "????? ??? ???????"
+
+
+msgid "Retrouvez vos Hackathons et Challenges enregistr?s."
+msgstr "???? ??? ??? ??????????? ????????? ????????."
+
+
+msgid "R?initialiser"
+msgstr "????? ???"
+
+
+msgid "Aucun favori ne correspond ? ces filtres."
+msgstr "?? ???? ?????? ????? ????? ???????."
+
+
+msgid "Assistant IA mentor"
+msgstr "مساعد الذكاء الاصطناعي للموجه"
+
+
+msgid "Choisissez un hackathon ou un challenge : l'IA en donne un r?sum? simple, les points cl?s, les difficult?s probables des ?quipes, des questions ? poser et des conseils d'accompagnement."
+msgstr "???? ????????? ?? ?????? ?????? ?????? ????????? ?????? ?????? ??????? ?????? ??????? ?????? ?????? ?????? ???????."
+
+
+msgid "Expliquer le hackathon"
+msgstr "شرح الهاكاثون"
+
+
+msgid "Expliquer le d?fi"
+msgstr "???? ??????"
+
+
+msgid "Aucun challenge publi?."
+msgstr "?? ???? ?????? ??????."
+
+
+msgid "Aucun hackathon publi? pour le moment."
+msgstr "?? ??? ??? ????????? ???."
+
+
+msgid "Analyse IA personnalis?e"
+msgstr "????? ???? ??????? ?????????"
+
+
+msgid "Hackathons recommand?s"
+msgstr "????????? ???? ???"
+
+
+msgid "Challenges class?s pour vous"
+msgstr "?????? ????? ??"
+
+
+msgid "Expliquer avec l'IA"
+msgstr "الشرح بالذكاء الاصطناعي"
+
+
+msgid "Coach IA"
+msgstr "مدرب الذكاء الاصطناعي"
+
+
+msgid "R?sum?, conseils et astuces pour ce challenge"
+msgstr "???? ?????? ???????? ???? ??????"
+
+
+msgid "D?couvrez les hackathons et leurs challenges."
+msgstr "????? ??????????? ?????????."
+
+
+msgid "Tous les hackathons"
+msgstr "كل الهاكاثونات"
+
+
+msgid "Confirmer votre inscription"
+msgstr "تأكيد تسجيلك"
+
+
+msgid "Votre inscription engage votre ?quipe sur ce challenge ; un seul challenge par hackathon est possible."
+msgstr "???? ????? ????? ???? ??????? ?????? ????? ???? ??? ??? ???????."
+
+
+msgid "Confirmer l'inscription"
+msgstr "تأكيد التسجيل"
+
+
+msgid "Annuler mon inscription"
+msgstr "إلغاء تسجيلي"
+
+
+msgid "Voir mon avis Donner un avis"
+msgstr "??? ????????? ? ???? ???????"
+
+
+msgid "Retour au hackathon"
+msgstr "العودة إلى الهاكاثون"
+
+
+msgid "Avis mentor"
+msgstr "مراجعة الموجه"
+
+
+msgid "Votre avis a ?t? envoy?"
+msgstr "?? ????? ????????"
+
+
+msgid "Il est visible par l??quipe organisatrice. Vous ne pouvez pas en cr?er un second pour cette cible."
+msgstr "???? ????? ??????? ??????? ?????. ?? ????? ????? ?????? ???? ???? ??????."
+
+
+msgid "Votre note"
+msgstr "تقييمك"
+
+
+msgid "Retour au Hackathon"
+msgstr "العودة إلى الهاكاثون"
+
+
+msgid "Supprimer mon avis"
+msgstr "حذف مراجعتي"
+
+
+msgid "Votre retour sera transmis ? l??quipe organisatrice et affich? dans la page ? Avis mentors ?."
+msgstr "?????? ???????? ??? ???? ??????? ?????? ?? ???? ??????? ????????."
+
+
+msgid "Envoyer l'avis"
+msgstr "إرسال المراجعة"
+
+
+msgid "Votre calendrier personnel : hackathons et ?tapes de programme de vos challenges."
+msgstr "?????? ?????? ??????????? ??????? ????????."
+
+
+msgid "D?couvrir des hackathons"
+msgstr "?????? ???????????"
+
+
+msgid "New Task"
+msgstr "مهمة جديدة"
+
+
+msgid "Current Sprint"
+msgstr "السبرنت الحالي"
+
+
+msgid "Product Backlog"
+msgstr "قائمة مهام المنتج"
+
+
+msgid "Sprint Backlog"
+msgstr "قائمة مهام السبرنت"
+
+
+msgid "Generate tasks with AI"
+msgstr "إنشاء مهام بالذكاء الاصطناعي"
+
+
+msgid "Edit Task"
+msgstr "تعديل المهمة"
+
+
+msgid "Delete task?"
+msgstr "حذف المهمة؟"
+
+
+msgid "To Do"
+msgstr "للإنجاز"
+
+
+msgid "In Progress"
+msgstr "قيد التنفيذ"
+
+
+msgid "Completed"
+msgstr "مكتمل"
+
+
+msgid "Meet"
+msgstr "Meet"
+
+
+msgid "Team"
+msgstr "??????"
+
+
+msgid "Weight"
+msgstr "الوزن"
+
+
+msgid "Status"
+msgstr "??????"
+
+
+msgid "Active"
+msgstr "نشط"
+
+
+msgid "Inactive"
+msgstr "غير نشط"
+
+
+msgid "Published"
+msgstr "منشور"
+
+
+msgid "Application update"
+msgstr "تحديث الطلب"
+
+
+msgid "Username or email address"
+msgstr "??? ???????? ?? ?????? ??????????"
+
+
+msgid "Your password"
+msgstr "???? ??????"
+
+
+msgid "Last name"
+msgstr "??? ???????"
+
+
+msgid "Username"
+msgstr "اسم المستخدم"
+
+
+msgid "Choose a study level"
+msgstr "???? ??????? ???????"
+
+
+msgid "Bachelor 1 or 2"
+msgstr "????? ?????? ?? ??????? ?????"
+
+
+msgid "Bachelor 3 / University Bachelor of Technology"
+msgstr "????? ??????? ????? / ????????? ????? ???????????"
+
+
+msgid "Master 1"
+msgstr "??????? 1"
+
+
+msgid "Master 2 / Engineering degree"
+msgstr "??????? 2 / ????? ?????"
+
+
+msgid "Other"
+msgstr "أخرى"
+
+
+msgid "About me"
+msgstr "???? ???"
+
+
+msgid "GitHub profile"
+msgstr "??? GitHub ??????"
+
+
+msgid "LinkedIn profile"
+msgstr "??? LinkedIn ??????"
+
+
+msgid "Confirm password"
+msgstr "????? ???? ??????"
+
+
+msgid "Preferred project themes"
+msgstr "موضوعات المشاريع المفضلة"
+
+
+msgid "Availability during the hackathon"
+msgstr "????? ?????? ???? ?????????"
+
+
+msgid "Data / AI"
+msgstr "البيانات / الذكاء الاصطناعي"
+
+
+msgid "Weekdays during the day"
+msgstr "???? ??????? ??????"
+
+
+msgid "Weekday evenings"
+msgstr "أمسيات أيام الأسبوع"
+
+
+msgid "Weekends"
+msgstr "عطلات نهاية الأسبوع"
+
+
+msgid "Flexible"
+msgstr "مرن"
+
+
+msgid "Separate multiple themes with commas (for example: health, climate, education)."
+msgstr "???? ??? ????????? ?????? (????: ?????? ??????? ???????)."
+
+
+msgid "Unspecified availability is treated as unknown."
+msgstr "?????? ?????? ??? ?????? ??? ?????."
+
+
+msgid "Profile photo"
+msgstr "?????? ???????"
+
+
+msgid "CV (PDF)"
+msgstr "?????? ??????? (PDF)"
+
+
+msgid "The selected file does not appear to be a valid PDF."
+msgstr "???? ?? ????? ?????? ??? ????? PDF ?????."
+
+
+msgid "The two passwords do not match."
+msgstr "????? ?????? ??? ?????????."
+
+
+msgid "This username is already taken."
+msgstr "??? ???????? ??? ?????? ??????."
+
+
+msgid "An account already uses this email address."
+msgstr "???? ???? ?????? ??? ?????? ?????????? ??????."
+
+
+msgid "Team name"
+msgstr "??? ??????"
+
+
+msgid "Category"
+msgstr "?????"
+
+
+msgid "Project description"
+msgstr "??? ???????"
+
+
+msgid "Table number"
+msgstr "??? ???????"
+
+
+msgid "Room"
+msgstr "??????"
+
+
+msgid "Skill needed"
+msgstr "??????? ????????"
+
+
+msgid "Invitee email"
+msgstr "???? ?????? ??????????"
+
+
+msgid "This student is already on a team."
+msgstr "??? ?????? ??? ?? ???? ??????."
+
+
+msgid "Resource title"
+msgstr "????? ??????"
+
+
+msgid "Link"
+msgstr "??????"
+
+
+msgid "Document"
+msgstr "مستند"
+
+
+msgid "Resource type"
+msgstr "??? ??????"
+
+
+msgid "Add a valid link or upload a document."
+msgstr "??? ?????? ?????? ?? ???? ???????."
+
+
+msgid "Task title"
+msgstr "????? ??????"
+
+
+msgid "Description"
+msgstr "?????"
+
+
+msgid "Assignee"
+msgstr "???????"
+
+
+msgid "Priority"
+msgstr "????????"
+
+
+msgid "Deadline"
+msgstr "?????? ???????"
+
+
+msgid "Describe a feature or goal for your team..."
+msgstr "??? ???? ?? ????? ??????..."
+
+
+msgid "No sprint selected"
+msgstr "?? ??? ?????? ?????"
+
+
+msgid "Back-End Development & Databases"
+msgstr "????? ??????? ??????? ?????? ????????"
+
+
+msgid "Front-End Development & Frameworks"
+msgstr "????? ??????? ???????? ???? ?????"
+
+
+msgid "AI, LLMs & Machine Learning"
+msgstr "?????? ????????? ???????? ??????? ??????? ?????"
+
+
+msgid "DevOps, Docker & Cloud Deployment"
+msgstr "DevOps ?Docker ?????? ???????"
+
+
+msgid "UI/UX Design & User Experience"
+msgstr "????? ????? ?????? ????????"
+
+
+msgid "Pitch & Presentation Structure"
+msgstr "????? ????? ???????"
+
+
+msgid "Issue / request"
+msgstr "????? / ???"
+
+
+msgid "Area of expertise"
+msgstr "مجال الخبرة"
+
+
+msgid "Urgency"
+msgstr "درجة الاستعجال"
+
+
+msgid "Meeting room link"
+msgstr "???? ???? ????????"
+
+
+msgid "Detailed description"
+msgstr "??? ????"
+
+
+msgid "Repository branch"
+msgstr "??? ????????"
+
+
+msgid "Project ZIP archive"
+msgstr "أرشيف ZIP للمشروع"
+
+
+msgid "Project name"
+msgstr "??? ???????"
+
+
+msgid "Project pitch"
+msgstr "??? ???????"
+
+
+msgid "GitHub / GitLab repository URL"
+msgstr "???? ?????? GitHub / GitLab"
+
+
+msgid "Online demo URL"
+msgstr "???? ????? ???????? ??? ????????"
+
+
+msgid "Demo video URL"
+msgstr "???? ????? ????? ????????"
+
+
+msgid "Pitch deck PDF"
+msgstr "??? ????? ???????? PDF"
+
+
+msgid "HackFlow repository"
+msgstr "?????? HackFlow"
+
+
+msgid "Project summary"
+msgstr "ملخص المشروع"
+
+
+msgid "Choose a branch to freeze for this submission."
+msgstr "???? ????? ??????? ?? ??? ???????."
+
+
+msgid "Write your message?"
+msgstr "???? ???????"
+
+
+msgid "Your new password"
+msgstr "???? ?????? ???????"
+
+
+msgid "Verification code"
+msgstr "??? ??????"
+
+
+msgid "Enter the 6-digit code sent to your email."
+msgstr "???? ????? ??????? ?? 6 ????? ???? ????? ??? ????? ??????????."
+
+
+msgid "Save"
+msgstr "???"
+
+
+msgid "Team Members (%(member_count)s/%(max_members)s)"
+msgstr "أعضاء الفريق: %(member_count)s من %(max_members)s"
+
+
+msgid "Leave %(team_name)s? Transfer captaincy first if other members remain."
+msgstr "?? ???? ?????? %(team_name)s? ???? ??????? ????? ??? ??? ????? ?????."
+
+
+msgid "Request to leave %(team_name)s? The captain will be notified and must approve your request."
+msgstr "?? ???? ??? ?????? %(team_name)s? ???? ????? ?????? ???? ?? ????? ??? ????."
+
+
+msgid "Remove %(member_name)s from the team?"
+msgstr "?? ???? ????? %(member_name)s ?? ???????"
+
+
+msgid "Message %(member_name)s"
+msgstr "?????? %(member_name)s"
+
+
+msgid "Cancel the invitation to %(invite_email)s?"
+msgstr "?? ???? ????? ?????? ??????? ??? %(invite_email)s?"
+
+
+msgid "%(member_name)s wants to leave."
+msgstr "???? %(member_name)s ?????? ??????."
+
+
+msgid "%(team_name)s cover"
+msgstr "???? %(team_name)s"
+
+
+msgid "Direct invitation link to join %(team_name)s:"
+msgstr "???? ???? ????? ???????? ??? %(team_name)s:"
+
+
+msgid "Shared from latest submission ? updated by %(updater)s"
+msgstr "??? ???????? ?? ???? ????? ? ??? ????? ?????? %(updater)s"
+
+
+msgid "Updated by %(updater)s"
+msgstr "??? ????? ?????? %(updater)s"
+
+
+msgid "A mandatory requirement is contradicted by information in your profile. Review the items marked below before applying."
+msgstr "تتعارض معلومة في ملفك الشخصي مع أحد المتطلبات الإلزامية. راجع العناصر المحددة أدناه قبل التقديم."
+
+
+msgid "AI Team Formation"
+msgstr "تشكيل الفرق بالذكاء الاصطناعي"
+
+
+msgid "About this opportunity"
+msgstr "نبذة عن هذه الفرصة"
+
+
+msgid "Activity"
+msgstr "النشاط"
+
+
+msgid "Added"
+msgstr "تمت الإضافة"
+
+
+msgid "All specialties"
+msgstr "كل التخصصات"
+
+
+msgid "All statuses"
+msgstr "كل الحالات"
+
+
+msgid "Analyze project"
+msgstr "تحليل المشروع"
+
+
+msgid "Any status"
+msgstr "أي حالة"
+
+
+msgid "Application status"
+msgstr "حالة الطلب"
+
+
+msgid "Availability"
+msgstr "التوفر"
+
+
+msgid "Back to opportunities"
+msgstr "العودة إلى الفرص"
+
+
+msgid "Cancel editing"
+msgstr "إلغاء التعديل"
+
+
+msgid "Changed files"
+msgstr "الملفات التي تغيرت"
+
+
+msgid "Changes to be merged"
+msgstr "التغييرات المطلوب دمجها"
+
+
+msgid "Click to choose a folder"
+msgstr "انقر لاختيار مجلد"
+
+
+msgid "Confirm and merge"
+msgstr "تأكيد الدمج"
+
+
+msgid "Confirm merge"
+msgstr "تأكيد الدمج"
+
+
+msgid "Contact"
+msgstr "تواصل"
+
+
+msgid "Create one to propose changes from a branch."
+msgstr "أنشئ طلباً لاقتراح تغييرات من فرع."
+
+
+msgid "Deleted"
+msgstr "تم الحذف"
+
+
+msgid "Detailed description of the issue"
+msgstr "وصف تفصيلي للمشكلة"
+
+
+msgid "Download private CV"
+msgstr "تنزيل السيرة الذاتية الخاصة"
+
+
+msgid "Education"
+msgstr "التعليم"
+
+
+msgid "Eligibility"
+msgstr "الأهلية"
+
+
+msgid "Events Overview"
+msgstr "نظرة عامة على الفعاليات"
+
+
+msgid "Every assessment uses explicit evidence from your CV or profile."
+msgstr "يستند كل تقييم إلى أدلة واضحة من سيرتك الذاتية أو ملفك الشخصي."
+
+
+msgid "Evidence:"
+msgstr "الأدلة:"
+
+
+msgid "Experience"
+msgstr "الخبرة"
+
+
+msgid "Filter opportunities"
+msgstr "تصفية الفرص"
+
+
+msgid "Filter profiles"
+msgstr "تصفية الملفات الشخصية"
+
+
+msgid "Find an opportunity"
+msgstr "العثور على فرصة"
+
+
+msgid "Find the skills your team needs or discover projects looking for teammates."
+msgstr "اعثر على المهارات التي يحتاجها فريقك أو اكتشف المشاريع التي تبحث عن أعضاء."
+
+
+msgid "Interview date and time"
+msgstr "تاريخ ووقت المقابلة"
+
+
+msgid "Invite to team"
+msgstr "دعوة إلى الفريق"
+
+
+msgid "Issue / Request"
+msgstr "مشكلة / طلب"
+
+
+msgid "Jury workspace"
+msgstr "مساحة لجنة التحكيم"
+
+
+msgid "Languages"
+msgstr "اللغات"
+
+
+msgid "Loading conversation?"
+msgstr "???? ????? ?????????"
+
+
+msgid "Location"
+msgstr "الموقع"
+
+
+msgid "Manage participants"
+msgstr "إدارة المشاركين"
+
+
+msgid "Mandatory criterion not met"
+msgstr "لم يتحقق المعيار الإلزامي"
+
+
+msgid "Meeting room link (Meet / Discord)"
+msgstr "رابط غرفة الاجتماع (Meet / Discord)"
+
+
+msgid "Member since"
+msgstr "عضو منذ"
+
+
+msgid "Merging"
+msgstr "جارٍ الدمج"
+
+
+msgid "Message to student"
+msgstr "رسالة إلى الطالب"
+
+
+msgid "Modified"
+msgstr "تم التعديل"
+
+
+msgid "Move tasks forward during the sprint."
+msgstr "ادفع المهام إلى الأمام خلال السبرنت."
+
+
+msgid "Needs review"
+msgstr "بحاجة إلى مراجعة"
+
+
+msgid "No comments yet. Start the review discussion below."
+msgstr "لا توجد تعليقات بعد. ابدأ نقاش المراجعة أدناه."
+
+
+msgid "No email address"
+msgstr "لا يوجد بريد إلكتروني"
+
+
+msgid "No merge requests yet"
+msgstr "لا توجد طلبات دمج بعد"
+
+
+msgid "No role preference provided."
+msgstr "لم يتم تحديد دور مفضل."
+
+
+msgid "No student applications yet."
+msgstr "لا توجد طلبات طلاب بعد."
+
+
+msgid "No tracked changes were found in this upload."
+msgstr "لم يتم العثور على تغييرات متتبعة في هذا الملف المرفوع."
+
+
+msgid "No unassigned students found"
+msgstr "لم يتم العثور على طلاب غير مسندين"
+
+
+msgid "Not enough match evidence"
+msgstr "أدلة المطابقة غير كافية"
+
+
+msgid "Not scored"
+msgstr "لم يتم التقييم"
+
+
+msgid "ORGANIZER WORKSPACE"
+msgstr "مساحة عمل المنظم"
+
+
+msgid "OVERVIEW"
+msgstr "نظرة عامة"
+
+
+msgid "Open a merge request"
+msgstr "فتح طلب دمج"
+
+
+msgid "Opportunity catalog"
+msgstr "قائمة الفرص"
+
+
+msgid "PERSONALIZED MATCH"
+msgstr "مطابقة مخصصة"
+
+
+msgid "Pending"
+msgstr "قيد الانتظار"
+
+
+msgid "Preferred skills"
+msgstr "المهارات المفضلة"
+
+
+msgid "Project and eligibility criteria"
+msgstr "معايير المشروع والأهلية"
+
+
+msgid "Project folder"
+msgstr "مجلد المشروع"
+
+
+msgid "Propose, review and merge changes between branches."
+msgstr "اقترح التغييرات بين الفروع وراجعها وادمجها."
+
+
+msgid "Publish clear roles, track interest and keep every listing up to date."
+msgstr "انشر أدواراً واضحة وتابع الاهتمام وحافظ على تحديث كل إعلان."
+
+
+msgid "Request in Progress"
+msgstr "الطلب قيد التنفيذ"
+
+
+msgid "Required for applicants with a reliable match score of at least 50%."
+msgstr "مطلوب للمتقدمين الذين تبلغ درجة المطابقة الموثوقة لديهم ٥٠٪ على الأقل."
+
+
+msgid "Required skills"
+msgstr "المهارات المطلوبة"
+
+
+msgid "Requirement"
+msgstr "متطلب"
+
+
+msgid "Requirement breakdown"
+msgstr "تفاصيل المتطلبات"
+
+
+msgid "Requirements"
+msgstr "المتطلبات"
+
+
+msgid "Requirements demonstrated"
+msgstr "المتطلبات المثبتة"
+
+
+msgid "Resolve conflicts"
+msgstr "حل التعارضات"
+
+
+msgid "Resolve merge conflicts"
+msgstr "حل تعارضات الدمج"
+
+
+msgid "Review changes"
+msgstr "مراجعة التغييرات"
+
+
+msgid "Save and notify student"
+msgstr "حفظ وإشعار الطالب"
+
+
+msgid "Search your catalog"
+msgstr "ابحث في قائمتك"
+
+
+msgid "Select files to upload"
+msgstr "اختر الملفات لرفعها"
+
+
+msgid "Select one ZIP archive or a single file."
+msgstr "اختر أرشيف ZIP واحداً أو ملفاً منفرداً."
+
+
+msgid "Separate must-have skills from preferences."
+msgstr "ميّز المهارات المطلوبة عن المهارات المفضلة."
+
+
+msgid "Share responsibilities, track progress, and spot blockers early."
+msgstr "وزّع المسؤوليات وتابع التقدم واكتشف العوائق مبكراً."
+
+
+msgid "Some mandatory requirements are not demonstrated. This does not prove you lack them; add evidence or confirm with the organizer."
+msgstr "لم تُثبت بعض المتطلبات الإلزامية. هذا لا يعني أنك تفتقر إليها؛ أضف أدلة أو تحقق من المنظم."
+
+
+msgid "Student applications"
+msgstr "طلبات الطلاب"
+
+
+msgid "Submitted projects"
+msgstr "المشاريع المقدمة"
+
+
+msgid "Tasks to plan for this sprint."
+msgstr "المهام المطلوب تخطيطها لهذا السبرنت."
+
+
+msgid "Teams"
+msgstr "الفرق"
+
+
+msgid "The product backlog is empty."
+msgstr "قائمة مهام المنتج فارغة."
+
+
+msgid "This offer has no structured matching requirements. Review the description and apply based on your judgment."
+msgstr "لا تتضمن هذه الفرصة متطلبات مطابقة منظمة. راجع الوصف وقرر التقديم وفق تقديرك."
+
+
+msgid "Total offers"
+msgstr "إجمالي الفرص"
+
+
+msgid "Try another skill filter, or check back when more students are looking for a team."
+msgstr "جرّب تصفية مهارات أخرى أو عد لاحقاً عندما يبحث مزيد من الطلاب عن فريق."
+
+
+msgid "Type"
+msgstr "النوع"
+
+
+msgid "Weekday daytime"
+msgstr "أيام الأسبوع نهاراً"
+
+
+msgid "ZIP archive or single file"
+msgstr "أرشيف ZIP أو ملف واحد"
+
+
+msgid "awaiting publication"
+msgstr "بانتظار النشر"
+
+
+msgid "career opportunities"
+msgstr "الفرص المهنية"
+
+
+msgid "current memberships"
+msgstr "العضويات الحالية"
+
+
+msgid "in your catalog"
+msgstr "في قائمتك"
+
+
+msgid "intended, submitted or in review"
+msgstr "قيد الاهتمام أو التقديم أو المراجعة"
+
+
+msgid "next conversations"
+msgstr "المحادثات القادمة"
+
+
+msgid "offers received"
+msgstr "الفرص المستلمة"
+
+
+msgid "or drag and drop your project folder here"
+msgstr "أو اسحب مجلد مشروعك وأفلته هنا"
+
+
+msgid "overall match"
+msgstr "المطابقة الإجمالية"
+
+
+msgid "past deadline"
+msgstr "انتهى الموعد النهائي"
+
+
+msgid "recorded events"
+msgstr "الفعاليات المسجلة"
+
+
+msgid "student activity"
+msgstr "نشاط الطالب"
+
+
+msgid "tracked"
+msgstr "قيد المتابعة"
+
+
+msgid "uploaded archives"
+msgstr "الأرشيفات المرفوعة"
+
+
+msgid "visible to students"
+msgstr "ظاهرة للطلاب"
+
+
+msgid "Location not specified"
+msgstr "?? ??? ????? ??????"
+
+
+msgid "of requirement weight evaluated"
+msgstr "?? ??? ????????? ?? ??????"
+
+
+msgid "evaluated"
+msgstr "?? ??????"
+
+
+msgid "need more evidence"
+msgstr "????? ??? ??????? ??????"
+
+
+msgid "Eligibility:"
+msgstr "???????:"
+
+
+msgid "weight"
+msgstr "?????"
+
+
+msgid "Ways to strengthen your profile"
+msgstr "طرق لتعزيز ملفك الشخصي"
+
+
+msgid "Add your CV to see a personalized score."
+msgstr "??? ????? ??????? ?????? ??? ????? ????."
+
+
+msgid "No text could be recognized in your CV."
+msgstr "????? ??????? ??? ?? ?? ?? ????? ???????."
+
+
+msgid "Your CV could not be read."
+msgstr "?????? ????? ????? ???????."
+
+
+msgid "Scanned pages are processed locally with OCR. A clear PDF helps improve recognition; no score is fabricated when evidence is unavailable."
+msgstr "تُعالج الصفحات المصورة محلياً باستخدام OCR. يساعد ملف PDF الواضح على تحسين التعرف على النص، ولا تُختلق درجة عند غياب الأدلة."
+
+
+msgid "Go to profile"
+msgstr "الانتقال إلى الملف الشخصي"
+
+
+msgid "Ready to apply?"
+msgstr "هل أنت مستعد للتقديم؟"
+
+
+msgid "Compatibility helps you review fit; it is not a hiring decision."
+msgstr "تساعدك نسبة التوافق على تقييم الملاءمة، لكنها لا تمثل قرار توظيف."
+
+
+msgid "Unsave opportunity"
+msgstr "????? ?? ????? ????????"
+
+
+msgid "Save opportunity"
+msgstr "حفظ الفرصة"
+
+
+msgid "Application already submitted"
+msgstr "تم تقديم الطلب مسبقاً"
+
+
+msgid "Your CV and application are in the tracker. You can follow updates there."
+msgstr "سيرتك الذاتية وطلبك موجودان في المتتبع. يمكنك متابعة التحديثات هناك."
+
+
+msgid "View my applications"
+msgstr "عرض طلباتي"
+
+
+msgid "Your private profile CV will be used. You do not need to upload it again."
+msgstr "ستُستخدم سيرتك الذاتية الخاصة الموجودة في ملفك. لا حاجة لرفعها مرة أخرى."
+
+
+msgid "Portfolio URL (optional)"
+msgstr "رابط معرض الأعمال (اختياري)"
+
+
+msgid "Note (optional)"
+msgstr "ملاحظة (اختيارية)"
+
+
+msgid "Reapply through HackFlow"
+msgstr "????? ??????? ??? HackFlow"
+
+
+msgid "Apply through HackFlow"
+msgstr "??????? ??? HackFlow"
+
+
+msgid "Add your CV to your profile before applying through HackFlow."
+msgstr "أضف سيرتك الذاتية إلى ملفك الشخصي قبل التقديم عبر HackFlow."
+
+
+msgid "Add CV to profile"
+msgstr "إضافة السيرة الذاتية إلى الملف الشخصي"
+
+
+msgid "Apply on employer site"
+msgstr "التقديم على موقع جهة العمل"
+
+
+msgid "Private note (optional)"
+msgstr "ملاحظة خاصة (اختيارية)"
+
+
+msgid "Track my intention to apply"
+msgstr "متابعة رغبتي في التقديم"
+
+
+msgid "The organizer has not added an application link yet."
+msgstr "لم يضف المنظم رابطاً للتقديم بعد."
+
+
+msgid "Search title or company"
+msgstr "???? ?? ???? ????? ?? ????"
+
+
+msgid "Updated most recently first"
+msgstr "الأحدث تحديثاً أولاً"
+
+
+msgid "Updated"
+msgstr "?? ???????"
+
+
+msgid "Eligible for interview review"
+msgstr "???? ???????? ?????? ??????"
+
+
+msgid "The organizer will post the interview date and updates here."
+msgstr "سينشر المنظم موعد المقابلة والتحديثات هنا."
+
+
+msgid "Below the 50% consideration threshold"
+msgstr "??? ?? ??? ????? ?????? 50?"
+
+
+msgid "This application is not selected for interview consideration based on the current match."
+msgstr "لم يتم اختيار هذا الطلب للمقابلة بناءً على المطابقة الحالية."
+
+
+msgid "Eligibility not yet determined"
+msgstr "لم يتم تحديد الأهلية بعد"
+
+
+msgid "There is not enough readable CV or profile evidence to calculate a reliable match."
+msgstr "لا توجد معلومات مقروءة كافية من السيرة الذاتية أو الملف الشخصي لحساب مطابقة موثوقة."
+
+
+msgid "Interview"
+msgstr "مقابلة"
+
+
+msgid "scheduled for"
+msgstr "المجدولة في"
+
+
+msgid "date to be confirmed by the organizer."
+msgstr "يُحدد الموعد لاحقاً من قبل المنظم."
+
+
+msgid "Organizer update:"
+msgstr "تحديث المنظم:"
+
+
+msgid "Withdraw"
+msgstr "سحب الطلب"
+
+
+msgid "View opportunity"
+msgstr "??? ??????"
+
+
+msgid "No applications match these filters"
+msgstr "?? ???? ????? ????? ????? ???????"
+
+
+msgid "Your tracker is ready"
+msgstr "????? ???????? ?????"
+
+
+msgid "Try another search or clear the filters."
+msgstr "???? ????? ??? ?? ???? ????? ???????."
+
+
+msgid "Save an opportunity or start an application to see your progress here."
+msgstr "???? ???? ?? ???? ????? ??????? ????? ???."
+
+
+msgid "Browse opportunities"
+msgstr "تصفح الفرص"
+
+
+msgid "Application pages"
+msgstr "????? ???????"
+
+
+msgid "of"
+msgstr "??"
+
+
+msgid "Edit profile"
+msgstr "تعديل الملف الشخصي"
+
+
+msgid "Not provided."
+msgstr "غير مقدم."
+
+
+msgid "Online Presence"
+msgstr "الحضور عبر الإنترنت"
+
+
+msgid "Profile Photo and CV"
+msgstr "الصورة الشخصية والسيرة الذاتية"
+
+
+msgid "Photo: JPG, PNG, or WebP, up to 5 MB. CV: PDF, up to 10 MB."
+msgstr "الصورة: JPG أو PNG أو WebP، بحد أقصى ٥ ميغابايت. السيرة الذاتية: PDF بحد أقصى ١٠ ميغابايت."
+
+
+msgid "Save files"
+msgstr "حفظ الملفات"
+
+
+msgid "Final Project Submission & Deliverables"
+msgstr "التسليم النهائي للمشروع ومخرجاته"
+
+
+msgid "Provide all information required for the hackathon jury to evaluate your project."
+msgstr "أدخل جميع المعلومات التي تحتاج إليها لجنة الهاكاثون لتقييم مشروعك."
+
+
+msgid "Deadline:"
+msgstr "?????? ???????:"
+
+
+msgid "Submission milestone"
+msgstr "مرحلة التسليم"
+
+
+msgid "Select"
+msgstr "اختيار"
+
+
+msgid "Current status:"
+msgstr "الحالة الحالية:"
+
+
+msgid "The submission period is closed. You can no longer upload files or change your submission. You can update this form until the deadline."
+msgstr "????? ???? ???????. ?? ??? ??????? ??? ??????? ?? ????? ???????. ????? ????? ??? ??????? ??? ?????? ???????."
+
+
+msgid "Estimated time remaining:"
+msgstr "الوقت المتبقي التقديري:"
+
+
+msgid "Submission locked after the deadline until a deadline is configured."
+msgstr "?????? ??????? ??? ?????? ??????? ??? ??????."
+
+
+msgid "1. General Overview"
+msgstr "١. نظرة عامة"
+
+
+msgid "Official project name"
+msgstr "اسم المشروع الرسمي"
+
+
+msgid "Challenge / Selected theme"
+msgstr "التحدي / الموضوع المختار"
+
+
+msgid "Short pitch (150 words max)"
+msgstr "عرض موجز (١٥٠ كلمة كحد أقصى)"
+
+
+msgid "Generate editable summary from repository"
+msgstr "إنشاء ملخص قابل للتعديل من المستودع"
+
+
+msgid "The description is written from the README, the file structure and the commit messages, and the technology stack is detected from the repository files, so it lists only what the project really uses. Review and edit it before submitting."
+msgstr "يُنشأ الوصف من ملف README وبنية الملفات ورسائل الالتزام، وتُكتشف التقنيات من ملفات المستودع لعرض ما يستخدمه المشروع فعلياً. راجعه وعدّله قبل الإرسال."
+
+
+msgid "2. Links & Technical Repositories"
+msgstr "٢. الروابط والمستودعات التقنية"
+
+
+msgid "Blocked by a technical issue or need feedback on your product? Ask a mentor for help."
+msgstr "هل واجهت مشكلة تقنية أو تحتاج إلى ملاحظات حول منتجك؟ اطلب المساعدة من موجه."
+
+
+msgid "mentors online"
+msgstr "?????? ??????"
+
+
+msgid "Edit Help Request"
+msgstr "????? ??? ????????"
+
+
+msgid "New Help Request"
+msgstr "??? ?????? ????"
+
+
+msgid "Blocking"
+msgstr "معطّل"
+
+
+msgid "Save request changes"
+msgstr "??? ?????????"
+
+
+msgid "Send help request"
+msgstr "????? ??? ????????"
+
+
+msgid "Edit request"
+msgstr "تعديل الطلب"
+
+
+msgid "Cancel request"
+msgstr "إلغاء الطلب"
+
+
+msgid "Assigned to:"
+msgstr "مسند إلى:"
+
+
+msgid "Join meeting"
+msgstr "الانضمام إلى الاجتماع"
+
+
+msgid "Past Sessions"
+msgstr "الجلسات السابقة"
+
+
+msgid "This request date has passed."
+msgstr "????? ???? ??? ?????."
+
+
+msgid "Cancel help request"
+msgstr "إلغاء طلب المساعدة"
+
+
+msgid "Keep request"
+msgstr "الإبقاء على الطلب"
+
+
+msgid "Messages"
+msgstr "الرسائل"
+
+
+msgid "Your private conversations with other students."
+msgstr "محادثاتك الخاصة مع الطلاب الآخرين."
+
+
+msgid "Conversation with"
+msgstr "?????? ??"
+
+
+msgid "Team Invitation"
+msgstr "???? ???????? ??? ????"
+
+
+msgid "Invitation from"
+msgstr "???? ??"
+
+
+msgid "No tasks here."
+msgstr "لا توجد مهام هنا."
+
+
+msgid "Urgent"
+msgstr "عاجل"
+
+
+msgid "In Review"
+msgstr "قيد المراجعة"
+
+
+msgid "Review"
+msgstr "مراجعة"
+
+
+msgid "Add to sprint"
+msgstr "إضافة إلى السبرنت"
+
+
+msgid "Agile Scrum Management Sprint Kanban Board"
+msgstr "???? ?????? ?????? Agile Scrum"
+
+
+msgid "task(s) in the sprint"
+msgstr "???? ?? ???????"
+
+
+msgid "Demandes d'Aide des ?quipes"
+msgstr "Demandes d?aide des ?quipes"
+
+
+msgid "Prenez en charge un ticket, d?bloquez l'?quipe puis marquez-le comme r?solu."
+msgstr "Prenez en charge une demande, d?bloquez l??quipe puis marquez-la comme r?solue."
+
+
+msgid "ticket en attente"
+msgstr "demande en attente"
+
+
+msgid "File d'attente"
+msgstr "قائمة الانتظار"
+
+
+msgid "Mes tickets en cours"
+msgstr "Mes demandes en cours"
+
+
+msgid "Mes tickets r?solus"
+msgstr "Mes demandes r?solues"
+
+
+msgid "Demand? par"
+msgstr "Demand? par"
+
+
+msgid "Cr?? il y a"
+msgstr "Cr?? il y a"
+
+
+msgid "R?solution :"
+msgstr "R?solution :"
+
+
+msgid "Rejoindre la salle visio"
+msgstr "الانضمام إلى غرفة الاجتماع المرئي"
+
+
+msgid "nouvel onglet"
+msgstr "nouvel onglet"
+
+
+msgid "Prendre en charge"
+msgstr "تولي الطلب"
+
+
+msgid "Planifier une session"
+msgstr "جدولة جلسة"
+
+
+msgid "Transf?rer"
+msgstr "Transf?rer"
+
+
+msgid "Marquer r?solu"
+msgstr "Marquer comme r?solu"
+
+
+msgid "Mes Sessions"
+msgstr "Mes sessions"
+
+
+msgid "Sessions de Mentorat"
+msgstr "Sessions de mentorat"
+
+
+msgid "Planifiez vos rendez-vous avec les ?quipes ; elles sont notifi?es automatiquement."
+msgstr "Planifiez vos rendez-vous avec les ?quipes ; elles sont averties automatiquement."
+
+
+msgid "Pass?es / annul?es"
+msgstr "Pass?es / annul?es"
+
+
+msgid "Aucune session ? venir."
+msgstr "Aucune session ? venir."
+
+
+msgid "Aucune session pass?e."
+msgstr "Aucune session pass?e."
+
+
+msgid "Nouvelle session"
+msgstr "Nouvelle session"
+
+
+msgid "Modifier la session"
+msgstr "Modifier la session"
+
+
+msgid "Champ obligatoire. Indiquez au moins un lien visio ou un lieu."
+msgstr "حقل مطلوب. أدخل رابط اجتماع مرئي أو موقعاً."
+
+
+msgid "Planifier et pr?venir l'?quipe"
+msgstr "Planifier et pr?venir l??quipe"
+
+
+msgid "Confirmer la suppression"
+msgstr "تأكيد الحذف"
+
+
+msgid "Voulez-vous vraiment supprimer ? Cette action est d?finitive."
+msgstr "Voulez-vous vraiment supprimer cet ?l?ment ? Cette action est d?finitive."
+
+
+msgid "Supprimer d?finitivement"
+msgstr "Supprimer d?finitivement"
+
+
+msgid "M?triques du Tri IA"
+msgstr "M?triques du tri IA"
+
+
+msgid "Mod?le local"
+msgstr "Mod?le local"
+
+
+msgid "Indicateurs en direct"
+msgstr "المؤشرات المباشرة"
+
+
+msgid "Tickets analys?s"
+msgstr "Tickets analys?s"
+
+
+msgid "Latence m?diane"
+msgstr "Latence m?diane"
+
+
+msgid "Accord IA / mentors sur la cat?gorie"
+msgstr "Accord IA / mentors sur la cat?gorie"
+
+
+msgid "Accord sur l'urgence"
+msgstr "التوافق على درجة الاستعجال"
+
+
+msgid "?valuation sur le jeu de test ?tiquet?"
+msgstr "?valuation sur le jeu de test ?tiquet?"
+
+
+msgid "Cat?gorie"
+msgstr "Cat?gorie"
+
+
+msgid "Urgence"
+msgstr "درجة الاستعجال"
+
+
+msgid "?quipes & Projets"
+msgstr "?quipes et projets"
+
+
+msgid "Suivez les ?quipes que vous accompagnez, rep?rez celles qui ont besoin d'aide."
+msgstr "Suivez les ?quipes que vous accompagnez et rep?rez celles qui ont besoin d?aide."
+
+
+msgid "Mes ?quipes"
+msgstr "Mes ?quipes"
+
+
+msgid "Suivie"
+msgstr "قيد المتابعة"
+
+
+msgid "Avancement"
+msgstr "Avancement"
+
+
+msgid "membre"
+msgstr "membre"
+
+
+msgid "demande d'aide"
+msgstr "demande d?aide"
+
+
+msgid "Sprint actif"
+msgstr "السبرنت النشط"
+
+
+msgid "Ne plus suivre"
+msgstr "إلغاء المتابعة"
+
+
+msgid "Suivre"
+msgstr "متابعة"
+
+
+msgid "Aucune ?quipe ne correspond ? ces crit?res."
+msgstr "Aucune ?quipe ne correspond ? ces crit?res."
+
+
+msgid "Mes ?valuations"
+msgstr "Mes ?valuations"
+
+
+msgid "Retours & ?valuations"
+msgstr "Retours et ?valuations"
+
+
+msgid "Vos ?valuations multi-crit?res des projets soumis, ? partager avec les ?quipes."
+msgstr "Vos ?valuations multicrit?res des projets soumis, ? partager avec les ?quipes."
+
+
+msgid "?valuer une soumission"
+msgstr "?valuer une soumission"
+
+
+msgid "? partager"
+msgstr "? partager"
+
+
+msgid "Partag?es"
+msgstr "Partag?es"
+
+
+msgid "?quipe :"
+msgstr "?quipe :"
+
+
+msgid "Partag?e"
+msgstr "Partag?e"
+
+
+msgid "Non partag?e"
+msgstr "Non partag?e"
+
+
+msgid "Pitch :"
+msgstr "Pitch :"
+
+
+msgid "Voir"
+msgstr "عرض"
+
+
+msgid "Aucune ?valuation pour le moment."
+msgstr "Aucune ?valuation pour le moment."
+
+
+msgid "Voir les soumissions ? ?valuer"
+msgstr "Voir les soumissions ? ?valuer"
+
+
+msgid "?valuation de"
+msgstr "?valuation de"
+
+
+msgid "Jalon :"
+msgstr "Jalon :"
+
+
+msgid "Partag?e le"
+msgstr "Partag?e le"
+
+
+msgid "Notes par crit?re"
+msgstr "Notes par crit?re"
+
+
+msgid "Crit?re"
+msgstr "Crit?re"
+
+
+msgid "Poids"
+msgstr "الوزن"
+
+
+msgid "Note"
+msgstr "الدرجة"
+
+
+msgid "Commentaire"
+msgstr "تعليق"
+
+
+msgid "Aucune note."
+msgstr "لا توجد درجة."
+
+
+msgid "Appr?ciation g?n?rale"
+msgstr "Appr?ciation g?n?rale"
+
+
+msgid "Pr?paration au pitch :"
+msgstr "Pr?paration au pitch :"
+
+
+msgid "Partager avec l'?quipe"
+msgstr "Partager avec l??quipe"
+
+
+msgid "?valuer Modifier l'?valuation"
+msgstr "?valuer / modifier l??valuation"
+
+
+msgid "Rappel de la soumission"
+msgstr "تذكير بالتسليم"
+
+
+msgid "D?p?t"
+msgstr "D?p?t"
+
+
+msgid "D?mo"
+msgstr "D?mo"
+
+
+msgid "Vid?o"
+msgstr "Vid?o"
+
+
+msgid "Grille de jugement"
+msgstr "معايير التحكيم"
+
+
+msgid "Total pond?r? :"
+msgstr "Total pond?r? :"
+
+
+msgid "Enregistrer l'?valuation"
+msgstr "Enregistrer l??valuation"
+
+
+msgid "Appliquer"
+msgstr "تطبيق"
+
+
+msgid "Soumissions des ?quipes et ?tat de mon ?valuation"
+msgstr "Soumissions des ?quipes et ?tat de mon ?valuation"
+
+
+msgid "Soumissions de Projet"
+msgstr "Soumissions de projets"
+
+
+msgid "?valuez les livrables des ?quipes selon la grille de jugement (avis consultatif, le jury d?cide)."
+msgstr "?valuez les livrables selon la grille de jugement. Votre avis est consultatif, le jury d?cide."
+
+
+msgid "Mes ?quipes suivies uniquement"
+msgstr "Mes ?quipes suivies uniquement"
+
+
+msgid "Jalon"
+msgstr "مرحلة"
+
+
+msgid "Livrables"
+msgstr "التسليمات"
+
+
+msgid "Ma note"
+msgstr "درجتي"
+
+
+msgid "Action"
+msgstr "إجراء"
+
+
+msgid "Voir mon ?valuation"
+msgstr "Voir mon ?valuation"
+
+
+msgid "Noter"
+msgstr "تقييم"
+
+
+msgid "Aucune soumission ? ?valuer pour le moment."
+msgstr "Aucune soumission ? ?valuer pour le moment."
+
+
+msgid "Suivre cette ?quipe"
+msgstr "Suivre cette ?quipe"
+
+
+msgid "Demandes d'aide de l'?quipe"
+msgstr "Demandes d?aide de l??quipe"
+
+
+msgid "Aucune demande d'aide pour cette ?quipe."
+msgstr "Aucune demande d?aide pour cette ?quipe."
+
+
+msgid "Mes sessions avec l'?quipe"
+msgstr "Mes sessions avec l??quipe"
+
+
+msgid "Aucune session planifi?e avec cette ?quipe."
+msgstr "Aucune session planifi?e avec cette ?quipe."
+
+
+msgid "Aucun membre."
+msgstr "لا يوجد أعضاء."
+
+
+msgid "Derni?re soumission"
+msgstr "Derni?re soumission"
+
+
+msgid "D?p?t de code"
+msgstr "D?p?t de code"
+
+
+msgid "D?mo en ligne"
+msgstr "D?mo en ligne"
+
+
+msgid "Mentors qui suivent l'?quipe"
+msgstr "Mentors qui suivent l??quipe"
+
+
+msgid "Analyse IA en cours?"
+msgstr "Analyse IA en cours?"
+
+
+msgid "Analyse IA indisponible :"
+msgstr "Analyse IA indisponible :"
+
+
+msgid "Relancer l'analyse"
+msgstr "إعادة التحليل"
+
+
+msgid "Suggestion IA"
+msgstr "اقتراح الذكاء الاصطناعي"
+
+
+msgid "Corrig?e par"
+msgstr "Corrig?e par"
+
+
+msgid "L'?tudiant a indiqu?"
+msgstr "L??tudiant a indiqu?"
+
+
+msgid "Mentor sugg?r? :"
+msgstr "Mentor sugg?r? :"
+
+
+msgid "Corriger la suggestion"
+msgstr "تصحيح الاقتراح"
+
+
+msgid "Dates de l??v?nement"
+msgstr "?????? ????????"
+
+
+msgid "?v?nement ? venir"
+msgstr "?????? ?????"
+
+
+msgid "Les informations seront publi?es ici par l?organisateur."
+msgstr "????? ?????? ??????? ???????? ???."
+
+
+msgid "?v?nement en cours"
+msgstr "?????? ?????"
+
+
+msgid "Prochaine ?dition"
+msgstr "?????? ???????"
+
+
+msgid "?v?nement termin?"
+msgstr "????? ????????"
+
+
+msgid "?quipes HackFlow"
+msgstr "??? HackFlow"
+
+
+msgid "Les ?quipes appara?tront ici apr?s leur cr?ation."
+msgstr "????? ????? ??? ??? ???????."
+
+
+msgid "Capacit? de l??quipe"
+msgstr "??? ??????"
+
+
+msgid "Recherche :"
+msgstr "???? ??:"
+
+
+msgid "Consultez les besoins d?clar?s par les ?quipes."
+msgstr "???? ???????? ???? ???? ???? ?????."
+
+
+msgid "Participer"
+msgstr "المشاركة"
+
+
+msgid "Les recommandations s?appuient sur les comp?tences, r?les pr?f?r?s, th?matiques, disponibilit?s renseign?es et places restantes dans les ?quipes de l??v?nement."
+msgstr "???? ???????? ?? ???????? ???????? ???????? ??????? ?????????? ??????? ???????? ??????? ?? ?????."
+
+
+msgid "L?organisateur examine les comp?tences manquantes et valide lui-m?me les affectations propos?es."
+msgstr "????? ?????? ???????? ??????? ?????? ????? ????????? ???????? ?????."
+
+
+msgid "Donn?es actuelles de l??v?nement"
+msgstr "?????? ???????? ???????"
+
+
+msgid "profil avec comp?tences ou pr?f?rences ? participant sans ?quipe."
+msgstr "????? ????? ????? ?????? ?? ??????? ? ??????? ??? ????."
+
+
+msgid "Renseigner mes comp?tences"
+msgstr "??? ???????"
+
+
+msgid "?quipes de l??v?nement"
+msgstr "??? ????????"
+
+
+msgid "place libre"
+msgstr "???? ????"
+
+
+msgid "Donn?es actuelles"
+msgstr "???????? ???????"
+
+
+msgid "Aucune ?quipe n?est encore enregistr?e pour cet ?v?nement."
+msgstr "?? ???? ?? ??? ?? ??? ???????? ???."
+
+
+msgid "Les participants peuvent d?crire leur besoin et suivre les ?changes depuis leur espace."
+msgstr "???? ????????? ??? ?? ???????? ??????? ????????? ?? ????? ?????."
+
+
+msgid "Rejoignez un ?cosyst?me bienveillant con?u pour faire d?coller vos comp?tences."
+msgstr "???? ??? ????? ???? ?????? ??? ????? ???????."
+
+
+msgid "Trouvez vos co?quipiers"
+msgstr "???? ??? ????? ?????"
+
+
+msgid "Renseignez vos comp?tences et rejoignez une ?quipe selon ses places et besoins affich?s."
+msgstr "??? ??????? ????? ??? ???? ????? ??????? ??????? ?????????? ???????."
+
+
+msgid "Organisez les t?ches, ?changez avec l??quipe et suivez les jalons li?s au hackathon."
+msgstr "???? ?????? ?????? ?? ????? ????? ????? ?????????."
+
+
+msgid "Pr?parez le jury"
+msgstr "????? ????? ???????"
+
+
+msgid "D?posez votre archive, ajoutez les liens utiles et consultez les retours de l??quipe organisatrice."
+msgstr "???? ????? ?????? ???? ??????? ??????? ????? ??????? ???? ???????."
+
+
+msgid "Annonce"
+msgstr "إعلان"
+
+
+msgid "Total"
+msgstr "الإجمالي"
+
+
+msgid "Publi?es"
+msgstr "??????"
+
+
+msgid "Urgentes"
+msgstr "عاجلة"
+
+
+msgid "Programm?es"
+msgstr "??????"
+
+
+msgid "Brouillons"
+msgstr "المسودات"
+
+
+msgid "Cette semaine"
+msgstr "هذا الأسبوع"
+
+
+msgid "?v?nement actif :"
+msgstr "???????? ??????:"
+
+
+msgid "Le brouillon ne sera pas publi? automatiquement : utilisez ? Ins?rer dans l?annonce ?, relisez-le, puis cliquez sur ? Publier ?."
+msgstr "?? ????? ??????? ????????. ?????? ?? ??????? ??????? ?? ???? ??? ???."
+
+
+msgid "?quipes sans d?p?t pour le dernier jalon"
+msgstr "????? ???? ?? ????? ??????? ???????"
+
+
+msgid "Pr?cisez le sujet et les informations ? communiquer."
+msgstr "??? ??????? ?????????? ??????? ???????."
+
+
+msgid "Professionnel"
+msgstr "احترافي"
+
+
+msgid "Chaleureux"
+msgstr "ودود"
+
+
+msgid "Direct"
+msgstr "مباشر"
+
+
+msgid "Enthousiaste"
+msgstr "متحمس"
+
+
+msgid "Format"
+msgstr "التنسيق"
+
+
+msgid "Sujet"
+msgstr "???????"
+
+
+msgid "Enregistrer en brouillon"
+msgstr "??? ??????"
+
+
+msgid "Aucune annonce"
+msgstr "?? ???? ???????"
+
+
+msgid "?quipes"
+msgstr "?????"
+
+
+msgid "Nouvel ?v?nement"
+msgstr "?????? ?????"
+
+
+msgid "au total"
+msgstr "إجمالاً"
+
+
+msgid "actifs aujourd'hui"
+msgstr "نشطة اليوم"
+
+
+msgid "inscriptions ouvertes"
+msgstr "التسجيلات مفتوحة"
+
+
+msgid "sur tous les ?v?nements"
+msgstr "?? ???? ?????????"
+
+
+msgid "Progression globale des jalons"
+msgstr "التقدم العام للمراحل"
+
+
+msgid "jalons termin?s"
+msgstr "????? ??????"
+
+
+msgid "Dates"
+msgstr "التواريخ"
+
+
+msgid "Inscriptions / ?quipes"
+msgstr "????????? / ?????"
+
+
+msgid "inscrits ? ?quipes"
+msgstr "?????? ? ???"
+
+
+msgid "?tudiants ? mentors"
+msgstr "???? ? ??????"
+
+
+msgid "Aucun ?v?nement cr?? pour le moment."
+msgstr "?? ??? ????? ??????? ???."
+
+
+msgid "Modifier l'?v?nement"
+msgstr "????? ????????"
+
+
+msgid "Cr?er un ?v?nement"
+msgstr "????? ??????"
+
+
+msgid "Participant profile"
+msgstr "??? ???????"
+
+
+msgid "Profile ID"
+msgstr "????? ????? ??????"
+
+
+msgid "Deactivate"
+msgstr "?????"
+
+
+msgid "Reactivate"
+msgstr "????? ???????"
+
+
+msgid "Last seen"
+msgstr "??? ????"
+
+
+msgid "No sign-in recorded"
+msgstr "?? ??? ????? ????"
+
+
+msgid "Activity history"
+msgstr "سجل النشاط"
+
+
+msgid "Recorded milestones from this participant?s account"
+msgstr "??????? ??????? ?? ???? ??? ???????"
+
+
+msgid "events"
+msgstr "???????"
+
+
+msgid "Only account creation is recorded so far. New team, project, support and career events will appear here when available."
+msgstr "المسجل حالياً هو إنشاء الحساب فقط. ستظهر هنا أنشطة الفرق والمشاريع والدعم والمسار المهني عند توفرها."
+
+
+msgid "Profile overview"
+msgstr "نظرة عامة على الملف الشخصي"
+
+
+msgid "Core account details"
+msgstr "بيانات الحساب الأساسية"
+
+
+msgid "Skills and preferences"
+msgstr "المهارات والتفضيلات"
+
+
+msgid "Used to recommend a balanced team composition"
+msgstr "يُستخدم لاقتراح تشكيل فريق متوازن"
+
+
+msgid "No skills listed yet."
+msgstr "لم تُدرج مهارات بعد."
+
+
+msgid "Roles:"
+msgstr "الأدوار:"
+
+
+msgid "Project themes:"
+msgstr "موضوعات المشروع:"
+
+
+msgid "Not provided"
+msgstr "??? ????"
+
+
+msgid "Organizer validation"
+msgstr "?????? ??????"
+
+
+msgid "Review team compositions and missing roles before saving assignments."
+msgstr "???? ????? ????? ???????? ??????? ??? ??? ?????????."
+
+
+msgid "Team Formation"
+msgstr "????? ?????"
+
+
+msgid "G?n?rer une proposition"
+msgstr "????? ??????"
+
+
+msgid "Le score combine besoins de comp?tences (40 %), compl?mentarit? des r?les (25 %), pr?f?rences (20 %), disponibilit?s (10 %) et ?quilibre de capacit? (5 %). Les crit?res absents sont neutres. La proposition ne modifie rien avant validation."
+msgstr "???? ??????? ??? ???????? ???????? (40?) ?????? ??????? (25?) ?????????? (20?) ??????? (10?) ?????? ????? (5?). ???????? ??????? ??????? ??? ????? ????????? ??? ????????."
+
+
+msgid "?tudiants sans ?quipe"
+msgstr "???? ??? ????"
+
+
+msgid "Affectations propos?es"
+msgstr "????????? ????????"
+
+
+msgid "Resteraient sans ?quipe"
+msgstr "?????? ??? ????"
+
+
+msgid "Capacit? insuffisante :"
+msgstr "????? ??? ?????:"
+
+
+msgid "ces ?tudiants n?ont pas ?t? affect?s dans la proposition."
+msgstr "?? ??? ????? ????? ?????? ?? ??? ????????."
+
+
+msgid "Composition propos?e :"
+msgstr "??????? ???????:"
+
+
+msgid "Capacit? atteinte"
+msgstr "?????? ?????"
+
+
+msgid "Compatibilit?"
+msgstr "???????"
+
+
+msgid "Aucune nouvelle affectation recommand?e ? cette ?quipe."
+msgstr "?? ????? ???????? ?????? ???? ??????."
+
+
+msgid "? compl?ter :"
+msgstr "????? ???????:"
+
+
+msgid "Comp?tence :"
+msgstr "???????:"
+
+
+msgid "R?le :"
+msgstr "?????:"
+
+
+msgid "Aucun manque prioritaire d?tect?"
+msgstr "?? ??? ?????? ????? ??? ??????"
+
+
+msgid "Aucune ?quipe n?est disponible pour cette ?dition."
+msgstr "?? ???? ??? ????? ???? ??????."
+
+
+msgid "AI triage metrics"
+msgstr "?????? ??? ?????? ?????????"
+
+
+msgid "via Ollama : il propose une cat?gorie, une urgence et un r?sum? pour chaque demande d'aide. Le mentor garde la d?cision et peut corriger la suggestion."
+msgstr "??? Ollama: ????? ??? ????? ??????? ??????? ??? ??? ??????. ???? ?????? ?????? ?????? ????? ????????."
+
+
+msgid "Accord sur l?urgence"
+msgstr "التوافق على درجة الاستعجال"
+
+
+msgid "tickets analys?s sur"
+msgstr "????? ?? ??????? ??"
+
+
+msgid "g?n?r? le"
+msgstr "????? ???????"
+
+
+msgid "commande"
+msgstr "الأمر"
+
+
+msgid "accuracy"
+msgstr "?????"
+
+
+msgid "F1 macro"
+msgstr "????? F1 ?????"
+
+
+msgid "Latence ? chaud p50 / p95"
+msgstr "??? ????????? ?????? p50 / p95"
+
+
+msgid "D?marrage ? froid :"
+msgstr "??? ??????? ??????:"
+
+
+msgid "Cat?gorie Urgence : pr?cision, rappel, F1 et matrice de confusion"
+msgstr "????? ??????????: ????? ?????????? ?F1 ??????? ????????"
+
+
+msgid "Lignes = classe r?elle, colonnes = classe pr?dite (diagonale = bonnes r?ponses)."
+msgstr "?????? = ????? ???????? ??????? = ????? ???????? (????? = ???????? ???????)."
+
+
+msgid "M?triques par classe et matrice de confusion"
+msgstr "?????? ?? ??? ??????? ????????"
+
+
+msgid "Analyse en cours"
+msgstr "جارٍ التحليل"
+
+
+msgid "Annonce des r?sultats"
+msgstr "????? ???????"
+
+
+msgid "Annul?"
+msgstr "????"
+
+
+msgid "Annul?e"
+msgstr "?????"
+
+
+msgid "Apprenticeship / work-study"
+msgstr "تدريب مهني / دراسة مع عمل"
+
+
+msgid "Archived"
+msgstr "مؤرشف"
+
+
+msgid "Archiv?"
+msgstr "?????"
+
+
+msgid "Atelier technique"
+msgstr "ورشة تقنية"
+
+
+msgid "Automatique (ticket ou session)"
+msgstr "تلقائي (طلب أو جلسة)"
+
+
+msgid "Autre"
+msgstr "أخرى"
+
+
+msgid "Avanc?"
+msgstr "?????"
+
+
+msgid "Brouillon"
+msgstr "مسودة"
+
+
+msgid "Choisie par le mentor"
+msgstr "اختيار الموجه"
+
+
+msgid "Closed"
+msgstr "مغلق"
+
+
+msgid "Cl?ture"
+msgstr "??????"
+
+
+msgid "Coach IA ?tudiant"
+msgstr "???? ?????? ?????"
+
+
+msgid "Confirm?e"
+msgstr "?????"
+
+
+msgid "Consignes"
+msgstr "التعليمات"
+
+
+msgid "Declined"
+msgstr "مرفوض"
+
+
+msgid "Documentation"
+msgstr "التوثيق"
+
+
+msgid "Done"
+msgstr "منجز"
+
+
+msgid "Draft"
+msgstr "مسودة"
+
+
+msgid "D?but du d?veloppement"
+msgstr "????? ???????"
+
+
+msgid "D?butant"
+msgstr "?????"
+
+
+msgid "D?lib?ration"
+msgstr "????????"
+
+
+msgid "D?monstrations"
+msgstr "?????? ?????????"
+
+
+msgid "Education / qualification"
+msgstr "التعليم / المؤهلات"
+
+
+msgid "En attente"
+msgstr "قيد الانتظار"
+
+
+msgid "En bonne voie"
+msgstr "يسير على نحو جيد"
+
+
+msgid "Entry-level"
+msgstr "مبتدئ"
+
+
+msgid "Everyone"
+msgstr "الجميع"
+
+
+msgid "Explication mentor"
+msgstr "شرح الموجه"
+
+
+msgid "Failed"
+msgstr "فشل"
+
+
+msgid "Figma"
+msgstr "Figma"
+
+
+msgid "Gel du code"
+msgstr "تجميد الشفرة"
+
+
+msgid "GitHub"
+msgstr "GitHub"
+
+
+msgid "Graduate"
+msgstr "خريج"
+
+
+msgid "High"
+msgstr "مرتفع"
+
+
+msgid "Hybrid"
+msgstr "هجين"
+
+
+msgid "In review"
+msgstr "قيد المراجعة"
+
+
+msgid "Indisponible"
+msgstr "غير متاح"
+
+
+msgid "Info"
+msgstr "معلومات"
+
+
+msgid "Information"
+msgstr "معلومات"
+
+
+msgid "Informations Wi-Fi"
+msgstr "معلومات Wi-Fi"
+
+
+msgid "Inscriptions closes"
+msgstr "التسجيل مغلق"
+
+
+msgid "Intention to apply"
+msgstr "نية التقديم"
+
+
+msgid "Interm?diaire"
+msgstr "?????"
+
+
+msgid "Internship"
+msgstr "تدريب"
+
+
+msgid "Jeu de donn?es"
+msgstr "?????? ??????"
+
+
+msgid "Job"
+msgstr "وظيفة"
+
+
+msgid "Jury et mentors"
+msgstr "لجنة التحكيم والموجهون"
+
+
+msgid "Jury uniquement"
+msgstr "لجنة التحكيم فقط"
+
+
+msgid "Language"
+msgstr "اللغة"
+
+
+msgid "Lien API"
+msgstr "رابط API"
+
+
+msgid "Location / work arrangement"
+msgstr "الموقع / نظام العمل"
+
+
+msgid "Mentors uniquement"
+msgstr "الموجهون فقط"
+
+
+msgid "Merged"
+msgstr "تم الدمج"
+
+
+msgid "Needs revision"
+msgstr "يحتاج إلى تعديل"
+
+
+msgid "No extractable text"
+msgstr "لا يوجد نص قابل للاستخراج"
+
+
+msgid "Normal"
+msgstr "عادي"
+
+
+msgid "Not specified"
+msgstr "غير محدد"
+
+
+msgid "On-site"
+msgstr "في الموقع"
+
+
+msgid "Open"
+msgstr "مفتوح"
+
+
+msgid "Other eligibility"
+msgstr "أهلية أخرى"
+
+
+msgid "Ouverture"
+msgstr "الافتتاح"
+
+
+msgid "Pas pr?t"
+msgstr "??? ????"
+
+
+msgid "Permanence de mentorat"
+msgstr "جلسة إرشاد مفتوحة"
+
+
+msgid "Planifi?e"
+msgstr "??????"
+
+
+msgid "Planned"
+msgstr "مخطط له"
+
+
+msgid "Preferred"
+msgstr "مفضل"
+
+
+msgid "Project experience"
+msgstr "خبرة المشاريع"
+
+
+msgid "Pr?t"
+msgstr "????"
+
+
+msgid "Publi?"
+msgstr "?????"
+
+
+msgid "Ready"
+msgstr "جاهز"
+
+
+msgid "Recommandations ?tudiant"
+msgstr "?????? ??????"
+
+
+msgid "Rejected"
+msgstr "مرفوض"
+
+
+msgid "Remote"
+msgstr "عن بُعد"
+
+
+msgid "Required"
+msgstr "مطلوب"
+
+
+msgid "Resolved"
+msgstr "تم الحل"
+
+
+msgid "Running"
+msgstr "جارٍ"
+
+
+msgid "R?daction de challenge"
+msgstr "????? ??????"
+
+
+msgid "R?daction de hackathon"
+msgstr "????? ?????????"
+
+
+msgid "Starter kit"
+msgstr "حزمة البداية"
+
+
+msgid "Students"
+msgstr "الطلاب"
+
+
+msgid "Submitted"
+msgstr "تم التسليم"
+
+
+msgid "Team captains"
+msgstr "قادة الفرق"
+
+
+msgid "Template"
+msgstr "قالب"
+
+
+msgid "Termin?e"
+msgstr "??????"
+
+
+msgid "To do"
+msgstr "قيد التنفيذ"
+
+
+msgid "Under review"
+msgstr "قيد المراجعة"
+
+
+msgid "Unreadable PDF"
+msgstr "ملف PDF غير مقروء"
+
+
+msgid "Withdrawn"
+msgstr "تم السحب"
+
+
+msgid "?chou?e"
+msgstr "????"
+
+
+msgid "?valuation"
+msgstr "???????"
+
+msgid "Supervision de l'Ensemble des Équipes"
+msgstr "الإشراف على الفرق"
+
+msgid "Contrôle des collectifs, mentors référents, tables et états de soumission des projets."
+msgstr "راجع الفرق والموجهين والطاولات وحالة تسليم المشاريع."
+
+msgid "actif"
+msgstr "نشط"
+
+msgid "équipe"
+msgstr "فريق"
+
+msgid "Défi / Thématique"
+msgstr "التحدي / الموضوع"
+
+msgid "Mentor Référent"
+msgstr "الموجه المسؤول"
+
+msgid "Voir les dépôts"
+msgstr "عرض المستودعات"
+
+msgid "Ouvrir l’espace jury"
+msgstr "فتح مساحة لجنة التحكيم"
+
+msgid "Aucune équipe n’est enregistrée pour ce filtre."
+msgstr "لا توجد فرق مسجلة لهذا المرشح."
+
+msgid "Déroulement du hackathon"
+msgstr "جدول الهاكاثون"
+
+msgid "Cliquez sur une étape pour la définir comme étape actuelle"
+msgstr "اختر مرحلة لتعيينها كمرحلة حالية"
+
+msgid "Les inscriptions se ferment automatiquement à la date limite d'inscription ou au début du hackathon."
+msgstr "يُغلق التسجيل تلقائياً عند الموعد النهائي أو عند بدء الهاكاثون."
+
+msgid "Ouvertes"
+msgstr "مفتوحة"
+
+msgid "Fermées"
+msgstr "مغلقة"
+
+msgid "Ouvrez un challenge pour gérer son programme, ses annonces et ses ressources."
+msgstr "افتح تحدياً لإدارة برنامجه وإعلاناته وموارده."
+
+msgid "Nouveau challenge"
+msgstr "تحدٍ جديد"
+
+msgid "équipe(s) inscrite(s)"
+msgstr "فريق مسجل"
+
+msgid "Gérer"
+msgstr "إدارة"
+
+msgid "Dépublier"
+msgstr "إلغاء النشر"
+
+msgid "Aucun challenge. Créez-en un pour démarrer."
+msgstr "لا توجد تحديات بعد. أنشئ تحدياً للبدء."
+
+msgid "Métriques du Tri IA"
+msgstr "مقاييس فرز الذكاء الاصطناعي"
+
+msgid "Tickets analysés"
+msgstr "الطلبات التي تم تحليلها"
+
+msgid "échec"
+msgstr "فشل"
+
+msgid "Latence médiane"
+msgstr "متوسط زمن الاستجابة"
+
+msgid "Accord IA / mentors sur la catégorie"
+msgstr "توافق الذكاء الاصطناعي والموجهين على الفئة"
+
+msgid "correction"
+msgstr "تصحيح"
+
+msgid "Évaluation sur le jeu de test étiqueté"
+msgstr "التقييم على مجموعة الاختبار المصنفة"
+
+msgid "tickets analysés sur"
+msgstr "طلبات تم تحليلها من"
+
+msgid "généré le"
+msgstr "تاريخ الإنشاء"
+
+msgid "Catégorie"
+msgstr "الفئة"
+
+msgid "précision"
+msgstr "الدقة"
+
+msgid "rappel"
+msgstr "الاسترجاع"
+
+msgid "et matrice de confusion"
+msgstr "ومصفوفة الالتباس"
+
+msgid "Lignes = classe réelle, colonnes = classe prédite (diagonale = bonnes réponses)."
+msgstr "تمثل الصفوف الفئات الفعلية والأعمدة الفئات المتوقعة (القطر للإجابات الصحيحة)."
+
+msgid "Métriques par classe et matrice de confusion"
+msgstr "المقاييس حسب الفئة ومصفوفة الالتباس"
+
+msgid "Classe"
+msgstr "الفئة"
+
+msgid "Support"
+msgstr "الدعم"
+
+msgid "Aucun rapport d'évaluation"
+msgstr "لا يوجد تقرير تقييم"
+
+msgid "Project submissions"
+msgstr "تسليمات المشاريع"
+
+msgid "Review the teams’ latest project archives and download a submission when you’re ready."
+msgstr "راجع أحدث أرشيفات الفرق ونزّل التسليم عند الاستعداد."
+
+msgid "The submission period is closed. You can no longer upload files or change your submission."
+msgstr "انتهت فترة التسليم. لم يعد بإمكانك رفع الملفات أو تعديل التسليم."
+
+msgid "You can update this form until the deadline."
+msgstr "يمكنك تعديل هذا النموذج حتى الموعد النهائي."
+
+msgid "Select a HackFlow repository version"
+msgstr "اختر إصداراً من مستودع HackFlow"
+
+msgid "No HackFlow repository"
+msgstr "لا يوجد مستودع HackFlow"
+
+msgid "Branch to freeze"
+msgstr "الفرع المراد تثبيته"
+
+msgid "GitHub / GitLab Repository URL"
+msgstr "رابط مستودع GitHub / GitLab"
+
+msgid "Online Demo URL (Staging / Production)"
+msgstr "رابط العرض المباشر (الاختبار / الإنتاج)"
+
+msgid "Demo Video URL (Loom, YouTube, Vimeo)"
+msgstr "رابط فيديو العرض (Loom أو YouTube أو Vimeo)"
+
+msgid "A 3-minute video showing the use case and live functionality."
+msgstr "فيديو مدته 3 دقائق يوضح حالة الاستخدام والوظائف المباشرة."
+
+msgid "3. Project Files"
+msgstr "3. ملفات المشروع"
+
+msgid "No ZIP archive uploaded yet"
+msgstr "لم يتم رفع ملف ZIP بعد"
+
+msgid "The repository must be public or shared with the judges."
+msgstr "يجب أن يكون المستودع عاماً أو مشاركاً مع لجنة التحكيم."
+
+msgid "Working prototype accessible without a complicated sign-in"
+msgstr "نموذج أولي يعمل ويمكن الوصول إليه دون تسجيل دخول معقد"
+
+msgid "AI project description"
+msgstr "وصف المشروع بالذكاء الاصطناعي"
+
+msgid "Analyzing your project files with Ollama…"
+msgstr "جارٍ تحليل ملفات المشروع باستخدام Ollama…"
+
+msgid "Auto-ignored paths"
+msgstr "المسارات المستثناة تلقائياً"
+
+msgid "Upload mode"
+msgstr "طريقة الرفع"
+
+msgid "Keep missing files"
+msgstr "الاحتفاظ بالملفات غير المرفوعة"
+
+msgid "Replace everything"
+msgstr "استبدال الكل"
+
+msgid "Complete merge"
+msgstr "إكمال الدمج"
+
+msgid "Save progress"
+msgstr "حفظ التقدم"
+
+msgid "— Choose a version —"
+msgstr "— اختر إصداراً —"
+
+msgid "Keep source"
+msgstr "الاحتفاظ بالمصدر"
+
+msgid "Keep target"
+msgstr "الاحتفاظ بالهدف"
+
+msgid "spot(s) available"
+msgstr "أماكن متاحة"
+
+
+msgid "Team Members"
+msgstr "أعضاء الفريق"
+
+msgid "No project links yet. Add the team?s real repository, prototype, or demo link."
+msgstr "?? ???? ????? ??????? ???. ??? ???? ???????? ?? ??????? ?????? ?? ????? ?????? ??????."
+
+
+msgid "Loading conversation…"
+msgstr "جارٍ تحميل المحادثة…"
+
+msgid "No project links yet. Add the team’s real repository, prototype, or demo link."
+msgstr "لا توجد روابط للمشروع بعد. أضف رابط المستودع أو النموذج الأولي أو العرض الفعلي للفريق."
+
+
+msgid "Aujourd’hui"
+msgstr "اليوم"
+
+
+msgid "Envoyer l’avis"
+msgstr "إرسال المراجعة"
+
+msgid "Expliquer avec l’IA"
+msgstr "الشرح بالذكاء الاصطناعي"
+
+msgid "File d’attente"
+msgstr "قائمة الانتظار"
+
+msgid "No student applications yet"
+msgstr "لا توجد طلبات طلاب بعد"
+
+msgid "Relancer l’analyse"
+msgstr "إعادة التحليل"
+
+
+msgid "actifs aujourd’hui"
+msgstr "نشطة اليوم"
+
+
+msgid "Annonce des résultats"
+msgstr "إعلان النتائج"
+
+msgid "Annulé"
+msgstr "ملغى"
+
+msgid "Annulée"
+msgstr "ملغاة"
+
+msgid "Archivé"
+msgstr "مؤرشف"
+
+msgid "Avancé"
+msgstr "متقدم"
+
+msgid "Clôture"
+msgstr "الختام"
+
+msgid "Coach IA étudiant"
+msgstr "مدرب الطالب بالذكاء الاصطناعي"
+
+msgid "Confirmée"
+msgstr "مؤكد"
+
+msgid "Début du développement"
+msgstr "بداية التطوير"
+
+msgid "Débutant"
+msgstr "مبتدئ"
+
+msgid "Délibération"
+msgstr "المداولات"
+
+msgid "Démonstrations"
+msgstr "العروض التوضيحية"
+
+msgid "Intermédiaire"
+msgstr "متوسط"
+
+msgid "Jeu de données"
+msgstr "مجموعة بيانات"
+
+msgid "Pas prêt"
+msgstr "غير جاهز"
+
+msgid "Planifiée"
+msgstr "مجدول"
+
+msgid "Prêt"
+msgstr "جاهز"
+
+msgid "Publié"
+msgstr "منشور"
+
+msgid "Recommandations étudiant"
+msgstr "توصيات للطالب"
+
+msgid "Règlement"
+msgstr "القواعد"
+
+msgid "Rédaction de challenge"
+msgstr "كتابة تحدٍ"
+
+msgid "Rédaction de hackathon"
+msgstr "كتابة هاكاثون"
+
+msgid "Terminé"
+msgstr "منتهٍ"
+
+msgid "Terminée"
+msgstr "منتهية"
+
+msgid "Échouée"
+msgstr "فشلت"
+
+msgid "Évaluation"
+msgstr "تقييم"

@@ -1,4 +1,5 @@
 {% extends "layouts/base_student.html" %}
+{% load i18n %}
 {% load static %}
 {% block title %}Merge requests · {{ repository.name }} - HackFlow{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'repositories/repositories.css' %}?v={{ repositories_css_version }}">{% endblock %}
@@ -9,17 +10,17 @@
 
     <!-- Header -->
     <div class="repo-header">
-        <div class="repo-header__breadcrumb">            <a href="{% url 'repositories:list' %}">Repositories</a>
+        <div class="repo-header__breadcrumb">            <a href="{% url 'repositories:list' %}">{% trans "Repositories" %}</a>
             <span class="text-body-secondary">/</span>
             <a href="{% url 'repositories:detail' repository.slug %}">{{ repository.name }}</a>
             <span class="text-body-secondary">/</span>
-            <span class="fw-semibold text-body">Merge requests</span>
+            <span class="fw-semibold text-body">{% trans "Merge requests" %}</span>
         </div>
         <div class="repo-header__name mt-1">
             <i aria-hidden="true" class="bi bi-shuffle text-primary"></i>
-            <span>Merge requests</span>
+            <span>{% trans "Merge requests" %}</span>
         </div>
-        <p class="text-body-secondary small mt-1 mb-0">Propose, review and merge changes between branches.</p>
+        <p class="text-body-secondary small mt-1 mb-0">{% trans "Propose, review and merge changes between branches." %}</p>
     </div>
 
     <div class="row g-4 mt-0">
@@ -69,7 +70,7 @@
                         {% elif item.status == 'closed' %}
                         <span class="mr-badge-closed">Closed</span>
                         {% elif item.status == 'approved' %}
-                        <span class="mr-badge-approved">Approved</span>
+                        <span class="mr-badge-approved">{% trans "Approved" %}</span>
                         {% else %}
                         <span class="mr-badge-open">Open</span>
                         {% endif %}
@@ -78,8 +79,8 @@
                 {% empty %}
                 <div class="p-5 text-center">
                     <span class="repository-empty-icon mx-auto mb-3 d-inline-flex"><i aria-hidden="true" class="bi bi-diagram-2"></i></span>
-                    <h6 class="fw-bold text-body mb-1">No merge requests yet</h6>
-                    <p class="text-body-secondary small mb-0">Create one to propose changes from a branch.</p>
+                    <h6 class="fw-bold text-body mb-1">{% trans "No merge requests yet" %}</h6>
+                    <p class="text-body-secondary small mb-0">{% trans "Create one to propose changes from a branch." %}</p>
                 </div>
                 {% endfor %}
             </div>
@@ -90,7 +91,7 @@
             <div class="card-modern">
                 <div class="p-3 border-bottom">
                     <span class="fw-semibold text-body small">
-                        <i aria-hidden="true" class="bi bi-plus-circle text-primary me-1"></i>Open a merge request
+                        <i aria-hidden="true" class="bi bi-plus-circle text-primary me-1"></i>{% trans "Open a merge request" %}
                     </span>
                 </div>
                 <div class="p-4">

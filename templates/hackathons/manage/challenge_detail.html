@@ -1,3 +1,4 @@
+{% load i18n %}
 <div class="mb-4">
     <a href="{% url 'hackathons:hackathon_manage' h.pk %}" class="small text-decoration-none"><i class="bi bi-arrow-left me-1"></i>{{ h.title }}</a>
 </div>
@@ -13,17 +14,17 @@
             <p class="text-body-secondary mb-0">{{ challenge.short_description }}</p>
         </div>
         <div class="d-flex flex-wrap gap-2 align-self-start">
-            <a href="{% url 'hackathons:challenge_edit' h.pk challenge.pk %}" class="btn btn-outline-secondary rounded-pill px-4"><i class="bi bi-pencil me-1"></i>Modifier</a>
+            <a href="{% url 'hackathons:challenge_edit' h.pk challenge.pk %}" class="btn btn-outline-secondary rounded-pill px-4"><i class="bi bi-pencil me-1"></i>{% trans "Modifier" %}</a>
             <form method="post" action="{% url 'hackathons:challenge_status' h.pk challenge.pk %}">{% csrf_token %}
                 {% if challenge.status == 'published' %}<input type="hidden" name="action" value="unpublish"><button class="btn btn-warning rounded-pill px-4" onclick="return confirm('Dépublier ce challenge ?')"><i class="bi bi-eye-slash me-1"></i>Dépublier</button>
-                {% else %}<input type="hidden" name="action" value="publish"><button class="btn btn-success rounded-pill px-4" onclick="return confirm('Publier ce challenge ?')"><i class="bi bi-eye me-1"></i>Publier</button>{% endif %}
+                {% else %}<input type="hidden" name="action" value="publish"><button class="btn btn-success rounded-pill px-4" onclick="return confirm('Publier ce challenge ?')"><i class="bi bi-eye me-1"></i>{% trans "Publier" %}</button>{% endif %}
             </form>
-            <a href="{% url 'hackathons:challenge_delete' h.pk challenge.pk %}" class="btn btn-outline-danger rounded-pill px-4"><i class="bi bi-trash me-1"></i>Supprimer</a>
+            <a href="{% url 'hackathons:challenge_delete' h.pk challenge.pk %}" class="btn btn-outline-danger rounded-pill px-4"><i class="bi bi-trash me-1"></i>{% trans "Supprimer" %}</a>
         </div>
     </div>
     <div class="row g-4 mt-2">
         <div class="col-md-6"><div class="p-3 rounded-3 bg-body-tertiary"><div class="small text-body-secondary">Équipes inscrites</div><div class="h4 fw-bold mb-0">{{ challenge.slots_used }}</div></div></div>
-        <div class="col-md-6"><div class="p-3 rounded-3 bg-body-tertiary"><div class="small text-body-secondary">Date limite</div><div class="h6 fw-bold mb-0 mt-2">{{ challenge.deadline|date:"d/m/Y H:i" }}</div></div></div>
+        <div class="col-md-6"><div class="p-3 rounded-3 bg-body-tertiary"><div class="small text-body-secondary">{% trans "Date limite" %}</div><div class="h6 fw-bold mb-0 mt-2">{{ challenge.deadline|date:"d/m/Y H:i" }}</div></div></div>
     </div>
 </section>
 
@@ -31,7 +32,7 @@
     <ul class="nav hf-pills gap-1 mb-4 flex-wrap" id="manage-tabs" role="tablist">
         <li class="nav-item"><button class="nav-link active" id="tab-overview" data-bs-toggle="pill" data-bs-target="#pane-overview" type="button" role="tab">Aperçu</button></li>
         {% for s in sections %}<li class="nav-item"><button class="nav-link" id="tab-{{ s.kind }}" data-bs-toggle="pill" data-bs-target="#pane-{{ s.kind }}" type="button" role="tab"><i class="bi {{ s.icon }} me-1"></i>{{ s.label }} <span class="badge bg-body-secondary text-body-secondary rounded-pill">{{ s.items|length }}</span></button></li>{% endfor %}
-        <li class="nav-item"><button class="nav-link" id="tab-registrations" data-bs-toggle="pill" data-bs-target="#pane-registrations" type="button" role="tab"><i class="bi bi-people me-1"></i>Inscriptions <span class="badge bg-body-secondary text-body-secondary rounded-pill">{{ registrations|length }}</span></button></li>
+        <li class="nav-item"><button class="nav-link" id="tab-registrations" data-bs-toggle="pill" data-bs-target="#pane-registrations" type="button" role="tab"><i class="bi bi-people me-1"></i>{% trans "Inscriptions" %} <span class="badge bg-body-secondary text-body-secondary rounded-pill">{{ registrations|length }}</span></button></li>
     </ul>
 
     <div class="tab-content">
@@ -49,7 +50,7 @@
 
         <div class="tab-pane fade" id="pane-registrations" role="tabpanel">
             <div class="table-responsive"><table class="table align-middle mb-0">
-                <thead><tr><th scope="col">Participant</th><th scope="col">Équipe</th><th scope="col">Date</th><th scope="col">Statut</th><th scope="col">Annulée le</th></tr></thead>
+                <thead><tr><th scope="col">{% trans "Participant" %}</th><th scope="col">Équipe</th><th scope="col">Date</th><th scope="col">{% trans "Statut" %}</th><th scope="col">Annulée le</th></tr></thead>
                 <tbody>
                 {% for r in registrations %}
                 <tr><td>{{ r.user.get_full_name|default:r.user.username }}</td><td>{{ r.team.name|default:"—" }}</td><td>{{ r.registered_at|date:"d/m/Y H:i" }}</td>

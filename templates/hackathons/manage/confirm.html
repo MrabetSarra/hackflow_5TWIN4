@@ -1,10 +1,11 @@
+{% load i18n %}
 <div class="card-modern p-4 p-lg-5 mx-auto" style="max-width: 580px;">
     <h1 class="h3 fw-bold mb-3"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>{{ title }}</h1>
     <p class="mb-3">Élément concerné : <strong>{{ object_label }}</strong></p>
     {% if warning %}<div class="alert {% if blocked %}alert-warning{% else %}alert-danger{% endif %}">{{ warning }}</div>{% endif %}
     <form method="post" class="d-flex gap-2 mt-4">
         {% csrf_token %}
-        {% if not blocked %}<button type="submit" class="btn btn-danger rounded-pill px-4">Confirmer la suppression</button>{% endif %}
+        {% if not blocked %}<button type="submit" class="btn btn-danger rounded-pill px-4">{% trans "Confirmer la suppression" %}</button>{% endif %}
         <a href="{{ back_href }}" class="btn btn-outline-secondary rounded-pill px-4">{% if blocked %}Retour{% else %}Annuler{% endif %}</a>
     </form>
 </div>

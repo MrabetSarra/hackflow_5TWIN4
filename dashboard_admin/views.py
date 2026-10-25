@@ -10,6 +10,7 @@ from django.db.models.functions import Coalesce
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.utils.translation import gettext as _t
 from django.utils.dateparse import parse_date
 from django.views.decorators.http import require_POST
 
@@ -78,23 +79,23 @@ def dashboard(request):
     challenges_stats = [{**item, 'percent': round(item['count'] * 100 / total_category_teams)} for item in categories]
     placed_pct = round(facts['etudiants_affectes'] * 100 / facts['participants_inscrits']) if facts['participants_inscrits'] else 0
     kpis = [
-        {'label': 'Participants inscrits', 'value': facts['participants_inscrits'], 'icon': 'bi-people-fill', 'color': 'primary', 'sub': 'Données du hackathon'},
-        {'label': 'Équipes', 'value': facts['equipes'], 'icon': 'bi-diagram-3-fill', 'color': 'success', 'sub': 'Équipes en base'},
-        {'label': 'Étudiants affectés', 'value': f"{placed_pct}%", 'icon': 'bi-pie-chart-fill', 'color': 'accent', 'sub': f"{facts['etudiants_sans_equipe']} sans équipe"},
-        {'label': 'Demandes mentor ouvertes', 'value': facts['demandes_mentorat_ouvertes'], 'icon': 'bi-headset', 'color': 'warning', 'sub': f"{facts['demandes_bloquantes_ouvertes']} bloquante(s)"},
+        {'label': _t('Participants inscrits'), 'value': facts['participants_inscrits'], 'icon': 'bi-people-fill', 'color': 'primary', 'sub': _t('Hackathon data')},
+        {'label': _t('Équipes'), 'value': facts['equipes'], 'icon': 'bi-diagram-3-fill', 'color': 'success', 'sub': _t('Teams in database')},
+        {'label': _t('Étudiants affectés'), 'value': f"{placed_pct}%", 'icon': 'bi-pie-chart-fill', 'color': 'accent', 'sub': _t('%(count)s without a team') % {'count': facts['etudiants_sans_equipe']}},
+        {'label': _t('Demandes mentor ouvertes'), 'value': facts['demandes_mentorat_ouvertes'], 'icon': 'bi-headset', 'color': 'warning', 'sub': _t('%(count)s blocking') % {'count': facts['demandes_bloquantes_ouvertes']}},
     ]
     pending_alerts = []
     if facts['taches_en_retard']:
-        pending_alerts.append({'msg': f"{facts['taches_en_retard']} tâche(s) non terminée(s) ont dépassé leur échéance.", 'action': 'Voir les équipes', 'url': '/cockpit/teams/', 'urgent': True})
+        pending_alerts.append({'msg': _t('%(count)s unfinished tasks are past their deadline.') % {'count': facts['taches_en_retard']}, 'action': _t('View teams'), 'url': '/cockpit/teams/', 'urgent': True})
     if facts['etudiants_sans_equipe']:
-        pending_alerts.append({'msg': f"{facts['etudiants_sans_equipe']} étudiant(s) inscrit(s) n’ont pas d’équipe.", 'action': 'Voir les participants', 'url': '/cockpit/participants/?status=unassigned', 'urgent': False})
+        pending_alerts.append({'msg': _t('%(count)s registered participants do not have a team.') % {'count': facts['etudiants_sans_equipe']}, 'action': _t('View participants'), 'url': '/cockpit/participants/?status=unassigned', 'urgent': False})
 
     live_activity = []
     team_queryset = Team.objects.filter(hackathon=active_hackathon) if active_hackathon else Team.objects.all()
     for membership in TeamMembership.objects.filter(team__in=team_queryset).select_related('team').order_by('-joined_at')[:3]:
-        live_activity.append({'at': membership.joined_at, 'event': f'Un membre a rejoint {membership.team.name}', 'icon': 'bi-people-fill', 'color': 'success'})
+        live_activity.append({'at': membership.joined_at, 'event': _t('A member joined %(team)s') % {'team': membership.team.name}, 'icon': 'bi-people-fill', 'color': 'success'})
     for submission in Submission.objects.filter(team__in=team_queryset).exclude(submitted_at__isnull=True).select_related('team').order_by('-submitted_at')[:3]:
-        live_activity.append({'at': submission.submitted_at, 'event': f'Livrable reçu pour {submission.team.name}', 'icon': 'bi-cloud-check-fill', 'color': 'primary'})
+        live_activity.append({'at': submission.submitted_at, 'event': _t('Deliverable received for %(team)s') % {'team': submission.team.name}, 'icon': 'bi-cloud-check-fill', 'color': 'primary'})
     live_activity.sort(key=lambda item: item['at'], reverse=True)
     for activity in live_activity:
         activity['time'] = timezone.localtime(activity['at']).strftime('%d/%m %H:%M')

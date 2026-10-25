@@ -307,6 +307,7 @@ class AccountViewCoverageTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Profile photo unavailable')
         self.assertContains(response, 'onerror="this.hidden=true;this.nextElementSibling.hidden=false;"')
+        self.assertContains(response, "nextElementSibling.style.display='inline-flex'")
 
 
 class TwoFactorAuthenticationTests(TestCase):

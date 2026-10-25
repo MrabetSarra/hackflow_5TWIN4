@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.core.validators import FileExtensionValidator
+from django.utils.translation import gettext_lazy as _
 
 from .models import AITaskJob, DirectMessage, MentorRequest, Resource, Sprint, Submission, Task, Team, TeamInvitation
 
@@ -47,8 +48,8 @@ class TeamForm(StyledModelForm):
     class Meta:
         model = Team
         fields = ['name', 'category', 'description', 'table_number', 'room', 'seeking_skill']
-        labels = {'name': 'Team name', 'category': 'Category', 'description': 'Project description',
-                  'table_number': 'Table number', 'room': 'Room', 'seeking_skill': 'Skill needed'}
+        labels = {'name': _('Team name'), 'category': _('Category'), 'description': _('Project description'),
+                  'table_number': _('Table number'), 'room': _('Room'), 'seeking_skill': _('Skill needed')}
         widgets = {'description': forms.Textarea(attrs={'rows': 3})}
 
 
@@ -56,7 +57,7 @@ class InvitationForm(StyledModelForm):
     class Meta:
         model = TeamInvitation
         fields = ['email']
-        labels = {'email': 'Invitee email'}
+        labels = {'email': _('Invitee email')}
 
     def __init__(self, *args, team=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -66,7 +67,7 @@ class InvitationForm(StyledModelForm):
         email = self.cleaned_data['email'].lower()
         user = User.objects.filter(email__iexact=email, role='student').first()
         if user and user.team_memberships.exists():
-            raise forms.ValidationError('This student is already on a team.')
+            raise forms.ValidationError(_('This student is already on a team.'))
         self.invited_user = user
         return email
 
@@ -75,12 +76,12 @@ class ResourceForm(StyledModelForm):
     class Meta:
         model = Resource
         fields = ['title', 'url', 'document', 'kind']
-        labels = {'title': 'Resource title', 'url': 'Link', 'document': 'Document', 'kind': 'Resource type'}
+        labels = {'title': _('Resource title'), 'url': _('Link'), 'document': _('Document'), 'kind': _('Resource type')}
 
     def clean(self):
         cleaned_data = super().clean()
         if not cleaned_data.get('url') and not cleaned_data.get('document'):
-            self.add_error('url', 'Add a valid link or upload a document.')
+            self.add_error('url', _('Add a valid link or upload a document.'))
         return cleaned_data
 
 
@@ -88,8 +89,8 @@ class TaskForm(StyledModelForm):
     class Meta:
         model = Task
         fields = ['title', 'description', 'category', 'assignee', 'priority', 'deadline']
-        labels = {'title': 'Task title', 'description': 'Description', 'category': 'Category',
-                  'assignee': 'Assignee', 'priority': 'Priority', 'deadline': 'Deadline'}
+        labels = {'title': _('Task title'), 'description': _('Description'), 'category': _('Category'),
+                  'assignee': _('Assignee'), 'priority': _('Priority'), 'deadline': _('Deadline')}
         widgets = {
             'description': forms.Textarea(attrs={'rows': 4}),
             'deadline': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
@@ -103,9 +104,9 @@ class TaskForm(StyledModelForm):
 class AITaskJobForm(AccessibleFormMixin, forms.Form):
     prompt = forms.CharField(max_length=1000, widget=forms.Textarea(attrs={
         'rows': 4, 'maxlength': 1000, 'class': 'form-control w-100',
-        'placeholder': 'Describe a feature or goal for your team...',
+        'placeholder': _('Describe a feature or goal for your team...'),
     }))
-    sprint = forms.ModelChoiceField(queryset=Sprint.objects.none(), required=False, empty_label='No sprint selected',
+    sprint = forms.ModelChoiceField(queryset=Sprint.objects.none(), required=False, empty_label=_('No sprint selected'),
                                       widget=forms.Select(attrs={'class': 'form-select w-100'}))
 
     def __init__(self, *args, team=None, **kwargs):
@@ -115,37 +116,37 @@ class AITaskJobForm(AccessibleFormMixin, forms.Form):
 
 class MentorRequestForm(StyledModelForm):
     category = forms.ChoiceField(choices=[
-        ('Back-End Development & Databases', 'Back-End Development & Databases'),
-        ('Front-End Development & Frameworks', 'Front-End Development & Frameworks'),
-        ('AI, LLMs & Machine Learning', 'AI, LLMs & Machine Learning'),
-        ('DevOps, Docker & Cloud Deployment', 'DevOps, Docker & Cloud Deployment'),
-        ('UI/UX Design & User Experience', 'UI/UX Design & User Experience'),
-        ('Pitch & Presentation Structure', 'Pitch & Presentation Structure'),
+        ('Back-End Development & Databases', _('Back-End Development & Databases')),
+        ('Front-End Development & Frameworks', _('Front-End Development & Frameworks')),
+        ('AI, LLMs & Machine Learning', _('AI, LLMs & Machine Learning')),
+        ('DevOps, Docker & Cloud Deployment', _('DevOps, Docker & Cloud Deployment')),
+        ('UI/UX Design & User Experience', _('UI/UX Design & User Experience')),
+        ('Pitch & Presentation Structure', _('Pitch & Presentation Structure')),
     ])
 
     class Meta:
         model = MentorRequest
         fields = ['subject', 'category', 'urgency', 'meeting_url', 'description']
-        labels = {'subject': 'Issue / request', 'category': 'Area of expertise', 'urgency': 'Urgency',
-                  'meeting_url': 'Meeting room link', 'description': 'Detailed description'}
+        labels = {'subject': _('Issue / request'), 'category': _('Area of expertise'), 'urgency': _('Urgency'),
+                  'meeting_url': _('Meeting room link'), 'description': _('Detailed description')}
 
 
 class SubmissionForm(StyledModelForm):
-    repository_branch = forms.CharField(required=False, max_length=100, label='Repository branch',
+    repository_branch = forms.CharField(required=False, max_length=100, label=_('Repository branch'),
         widget=forms.TextInput(attrs={'placeholder': 'main'}))
     file = forms.FileField(
         required=False,
         validators=[FileExtensionValidator(['zip'])],
-        label='Project ZIP archive',
+        label=_('Project ZIP archive'),
     )
 
     class Meta:
         model = Submission
         fields = ['project_name', 'category', 'description', 'project_summary', 'github_url', 'demo_url', 'video_url', 'file', 'repository']
-        labels = {'project_name': 'Project name', 'category': 'Challenge', 'description': 'Project pitch',
-                  'github_url': 'GitHub / GitLab repository URL', 'demo_url': 'Online demo URL',
-                  'video_url': 'Demo video URL', 'file': 'Pitch deck PDF', 'repository': 'HackFlow repository',
-                  'project_summary': 'Project summary'}
+        labels = {'project_name': _('Project name'), 'category': _('Challenge'), 'description': _('Project pitch'),
+                  'github_url': _('GitHub / GitLab repository URL'), 'demo_url': _('Online demo URL'),
+                  'video_url': _('Demo video URL'), 'file': _('Pitch deck PDF'), 'repository': _('HackFlow repository'),
+                  'project_summary': _('Project summary')}
 
     def __init__(self, *args, team=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -159,7 +160,7 @@ class SubmissionForm(StyledModelForm):
     def clean(self):
         cleaned = super().clean()
         if cleaned.get('repository') and not cleaned.get('repository_branch'):
-            self.add_error('repository_branch', 'Choose a branch to freeze for this submission.')
+            self.add_error('repository_branch', _('Choose a branch to freeze for this submission.'))
         if not cleaned.get('repository'):
             cleaned['repository_branch'] = ''
         return cleaned

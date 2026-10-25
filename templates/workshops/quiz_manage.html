@@ -1,0 +1,181 @@
+{% extends workshop_base_template %}
+{% load static %}
+
+{% block title %}Gérer le quiz — {{ workshop.title }} — HackFlow{% endblock %}
+
+{% block student_content %}
+<div class="container-fluid px-4 py-4">
+
+  <div class="row justify-content-center">
+    <div class="col-12 col-xl-8">
+
+      <!-- Breadcrumb -->
+      <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{% url 'workshops:list' %}">Ateliers</a></li>
+          <li class="breadcrumb-item"><a href="{{ workshop.get_absolute_url }}">{{ workshop.title|truncatechars:30 }}</a></li>
+          <li class="breadcrumb-item active">Gérer le quiz</li>
+        </ol>
+      </nav>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-info text-white py-3 d-flex justify-content-between align-items-center">
+          <h4 class="mb-0 fw-bold">
+            <i class="bi bi-question-circle me-2"></i>Quiz : {{ workshop.title }}
+          </h4>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-light btn-sm" onclick="document.getElementById('generate-quiz-form').classList.toggle('d-none')">
+              <i class="bi bi-magic me-1"></i>Générer via Ollama
+            </button>
+            <a href="{% url 'workshops:quiz_question_add' workshop.pk %}" class="btn btn-light btn-sm">
+              <i class="bi bi-plus-circle me-1"></i>Ajouter une question
+            </a>
+          </div>
+        </div>
+
+        <div class="card-body p-4">
+          <!-- Formulaire génération IA -->
+          <div id="generate-quiz-form" class="d-none mb-4 p-3 bg-light rounded border">
+            <h6 class="fw-bold mb-3">Générer des questions avec IA (llama3.2)</h6>
+            <form id="generate-quiz-ajax" class="row g-3">
+              <div class="col-6">
+                <label class="form-label fw-semibold">Nombre de questions</label>
+                <input type="number" name="num_questions" class="form-control" value="5" min="1" max="20">
+              </div>
+              <div class="col-6 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                  <i class="bi bi-robot me-1"></i>Générer
+                </button>
+              </div>
+            </form>
+            <div id="generate-quiz-result" class="mt-3"></div>
+          </div>
+
+          {% if questions %}
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead>
+                <tr>
+                  <th style="width:5%">#</th>
+                  <th>Question</th>
+                  <th class="text-center" style="width:15%">Bonne réponse</th>
+                  <th class="text-end" style="width:20%">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for q in questions %}
+                <tr>
+                  <td class="fw-semibold">{{ forloop.counter }}</td>
+                  <td>{{ q.question }}</td>
+                  <td class="text-center">
+                    {% if q.correct_index == 0 %}A{% elif q.correct_index == 1 %}B{% elif q.correct_index == 2 %}C{% else %}D{% endif %}
+                  </td>
+                  <td class="text-end">
+                    <a href="{% url 'workshops:quiz_question_edit' workshop.pk q.pk %}" class="btn btn-sm btn-outline-primary">
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                    <form method="post" action="{% url 'workshops:quiz_question_delete' workshop.pk q.pk %}" class="d-inline">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-outline-danger"
+                              onclick="return confirm('Supprimer cette question ?')">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center py-5">
+            <i class="bi bi-question-circle display-1 text-body-secondary mb-3"></i>
+            <h5>Aucune question configurée</h5>
+            <p class="text-body-secondary">Ajoutez des questions de quiz pour valider la compréhension des étudiants.</p>
+            <a href="{% url 'workshops:quiz_question_add' workshop.pk %}" class="btn btn-info">
+              <i class="bi bi-plus-circle me-1"></i>Ajouter une question
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+<script>
+(function() {
+  const form = document.getElementById('generate-quiz-ajax');
+  const resultDiv = document.getElementById('generate-quiz-result');
+  if (!form) return;
+
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = form.querySelector('button[type="submit"]');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Génération…';
+    resultDiv.innerHTML = '';
+
+    const numQuestions = form.querySelector('input[name="num_questions"]').value;
+    const addUrl = "{% url 'workshops:quiz_question_add' workshop.pk %}";
+
+    try {
+      const resp = await fetch("{% url 'workshops:api_generate_quiz' workshop.pk %}", {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ num_questions: parseInt(numQuestions) }),
+      });
+      const data = await resp.json();
+
+      if (!data.ok) {
+        resultDiv.innerHTML = '<div class="alert alert-danger">' + (data.error || 'Erreur') + '</div>';
+        return;
+      }
+
+      const questions = data.questions;
+      if (!questions || questions.length === 0) {
+        resultDiv.innerHTML = '<div class="alert alert-warning">Aucune question générée.</div>';
+        return;
+      }
+
+      let html = '<div class="alert alert-success">' + questions.length + ' question(s) générée(s) par IA.</div>';
+      html += '<div class="list-group">';
+      questions.forEach((q, idx) => {
+        const opts = q.options || ['', '', '', ''];
+        const params = new URLSearchParams({
+          question: q.question || '',
+          option_a: opts[0] || '',
+          option_b: opts[1] || '',
+          option_c: opts[2] || '',
+          option_d: opts[3] || '',
+          correct_index: q.correct != null ? q.correct : 0,
+          explication: q.explication || '',
+        });
+        html += '<div class="list-group-item">';
+        html += '<div class="d-flex w-100 justify-content-between align-items-start">';
+        html += '<div><strong>Q' + (idx + 1) + ':</strong> ' + (q.question || '') + '</div>';
+        html += '<a href="' + addUrl + '?' + params.toString() + '" class="btn btn-sm btn-primary">Enregistrer cette question</a>';
+        html += '</div>';
+        if (q.explication) {
+          html += '<small class="text-muted d-block mt-1">Explication : ' + q.explication + '</small>';
+        }
+        html += '</div>';
+      });
+      html += '</div>';
+      resultDiv.innerHTML = html;
+    } catch (err) {
+      resultDiv.innerHTML = '<div class="alert alert-danger">Impossible de contacter Ollama (localhost:11434).</div>';
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  });
+})();
+</script>

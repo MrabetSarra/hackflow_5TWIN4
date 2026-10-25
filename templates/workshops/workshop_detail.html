@@ -83,6 +83,34 @@
           <!-- Description -->
           <p class="text-body lh-lg">{{ workshop.description|linebreaksbr }}</p>
 
+          <!-- Suggestions pédagogiques (IA) -->
+          {% if workshop.pedagogical_objectives %}
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body bg-light">
+              <h6 class="fw-bold text-body-secondary text-uppercase small mb-3">
+                <i class="bi bi-list-task me-1"></i>Objectifs pédagogiques
+              </h6>
+              <ul class="list-unstyled mb-0">
+                {% for obj in workshop.pedagogical_objectives.splitlines %}
+                {% if obj.strip %}
+                <li class="mb-2">
+                  <i class="bi bi-arrow-right text-primary me-2"></i>{{ obj.strip }}
+                </li>
+                {% endif %}
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- Résumé catalogue -->
+          {% if workshop.catalog_summary %}
+          <div class="alert alert-info border-0 shadow-sm mb-4">
+            <i class="bi bi-text-center me-2"></i>
+            <strong>Résumé :</strong> {{ workshop.catalog_summary }}
+          </div>
+          {% endif %}
+
           {% if request.user.role == 'student' %}
           <form method="post" action="{% url 'workshops:favorite' workshop.pk %}" class="mb-3">
             {% csrf_token %}
@@ -125,7 +153,8 @@
       <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
           <h5 class="fw-bold mb-3"><i class="bi bi-camera-video-fill text-primary me-2"></i>Lien de connexion</h5>
-          {% if meeting_url %}
+          {% if can_access_meeting %}
+            {% if meeting_url %}
             <div class="alert alert-primary d-flex align-items-center gap-3 mb-0">
               <i class="bi bi-link-45deg fs-4"></i>
               <div>
@@ -136,22 +165,29 @@
                 </a>
               </div>
             </div>
+            {% else %}
+            <div class="alert alert-secondary d-flex align-items-center gap-2 mb-0">
+              <i class="bi bi-link me-1"></i>
+              <span>Lien de connexion non configuré pour cet atelier.</span>
+            </div>
+            {% endif %}
           {% else %}
             <div class="alert alert-secondary d-flex align-items-center gap-2 mb-0">
               <i class="bi bi-lock-fill"></i>
-              <span>Le lien de connexion est disponible uniquement après réservation.</span>
+              <span>Réservez cet atelier pour accéder au lien de connexion.</span>
             </div>
           {% endif %}
         </div>
       </div>
       {% endif %}
 
-      {# RECORDED : Lecteur replay #}
+      {# RECORDED : Lecteur replay — réservé (étudiant) ou libre (admin/mentor) #}
       {% if workshop.mode == 'recorded' %}
       <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
           <h5 class="fw-bold mb-3"><i class="bi bi-play-circle-fill text-secondary me-2"></i>Replay vidéo</h5>
-          {% if replay_accessible %}
+          {% if can_access_replay %}
+            {% if replay_accessible %}
             {% if booking.replay_progress < 100 %}
             <div class="mb-3">
               <div class="d-flex justify-content-between small mb-1">
@@ -203,13 +239,19 @@
             {% endif %}
           {% else %}
             <div class="alert alert-secondary d-flex align-items-center gap-2 mb-0">
+              <i class="bi bi-play me-1"></i>
+              <span>Contenu vidéo non configuré pour cet atelier.</span>
+            </div>
+          {% endif %}
+          {% else %}
+            <div class="alert alert-secondary d-flex align-items-center gap-2 mb-0">
               <i class="bi bi-lock-fill"></i>
               <span>Réservez cet atelier pour accéder au replay.</span>
             </div>
           {% endif %}
 
           <!-- Quiz de compréhension (replay uniquement) -->
-          {% if workshop.mode == 'recorded' and replay_accessible %}
+          {% if workshop.mode == 'recorded' and can_access_replay and replay_accessible %}
           <div class="card border-0 shadow-sm mt-4">
             <div class="card-header bg-info text-white py-3">
               <h5 class="mb-0 fw-bold"><i class="bi bi-question-circle me-2"></i>Quiz de compréhension</h5>
@@ -222,6 +264,11 @@
               <a href="{% url 'workshops:quiz' workshop.pk %}" class="btn btn-info rounded-pill px-4">
                 <i class="bi bi-play-circle me-1"></i>Passer le quiz
               </a>
+              {% if can_manage %}
+              <a href="{% url 'workshops:quiz_manage' workshop.pk %}" class="btn btn-outline-secondary rounded-pill px-4 ms-2">
+                <i class="bi bi-gear me-1"></i>Gérer
+              </a>
+              {% endif %}
             </div>
           </div>
           {% endif %}

@@ -1,3 +1,4 @@
+{% load i18n %}
 {# Variable attendue : challenge #}
 {% if challenge.description %}<p class="mb-4 fs-6" style="line-height: 1.8;">{{ challenge.description|linebreaksbr }}</p>{% endif %}
 
@@ -10,19 +11,19 @@
     {% endif %}
     {% if challenge.objectives %}
     <div class="col-md-6"><div class="hf-tile">
-        <div class="d-flex align-items-center gap-3 mb-3"><span class="hf-icon bg-success-subtle text-success"><i class="bi bi-bullseye"></i></span><h2 class="h6 fw-bold mb-0">Objectifs</h2></div>
+        <div class="d-flex align-items-center gap-3 mb-3"><span class="hf-icon bg-success-subtle text-success"><i class="bi bi-bullseye"></i></span><h2 class="h6 fw-bold mb-0">{% trans "Objectifs" %}</h2></div>
         <p class="hf-text">{{ challenge.objectives|linebreaksbr }}</p>
     </div></div>
     {% endif %}
     {% if challenge.constraints %}
     <div class="col-md-6"><div class="hf-tile">
-        <div class="d-flex align-items-center gap-3 mb-3"><span class="hf-icon bg-warning-subtle text-warning-emphasis"><i class="bi bi-shield-check"></i></span><h2 class="h6 fw-bold mb-0">Contraintes</h2></div>
+        <div class="d-flex align-items-center gap-3 mb-3"><span class="hf-icon bg-warning-subtle text-warning-emphasis"><i class="bi bi-shield-check"></i></span><h2 class="h6 fw-bold mb-0">{% trans "Contraintes" %}</h2></div>
         <p class="hf-text">{{ challenge.constraints|linebreaksbr }}</p>
     </div></div>
     {% endif %}
     {% if challenge.deliverables %}
     <div class="col-md-6"><div class="hf-tile">
-        <div class="d-flex align-items-center gap-3 mb-3"><span class="hf-icon bg-info-subtle text-info-emphasis"><i class="bi bi-box-seam"></i></span><h2 class="h6 fw-bold mb-0">Livrables attendus</h2></div>
+        <div class="d-flex align-items-center gap-3 mb-3"><span class="hf-icon bg-info-subtle text-info-emphasis"><i class="bi bi-box-seam"></i></span><h2 class="h6 fw-bold mb-0">{% trans "Livrables attendus" %}</h2></div>
         <p class="hf-text">{{ challenge.deliverables|linebreaksbr }}</p>
     </div></div>
     {% endif %}

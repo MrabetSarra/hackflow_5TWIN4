@@ -192,6 +192,12 @@
                    title="Voir">
                   <i class="bi bi-eye-fill"></i>
                 </a>
+                {% if ws.mode == 'recorded' %}
+                <a href="{% url 'workshops:quiz_manage' ws.pk %}"
+                   class="btn btn-sm btn-outline-info rounded-pill px-2" title="Gérer le quiz">
+                  <i class="bi bi-question-circle"></i>
+                </a>
+                {% endif %}
                 <a href="{% url 'workshops:edit' ws.pk %}"
                    class="btn btn-sm btn-outline-warning rounded-pill px-2" title="Modifier">
                   <i class="bi bi-pencil-fill"></i>
