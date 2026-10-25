@@ -1,4 +1,5 @@
 {% extends "layouts/base_mentor.html" %}
+{% load mentor_tags %}
 {% load announcement_format %}
 
 {% block title %}Tableau de Bord Mentor - HackFlow{% endblock %}
@@ -114,7 +115,7 @@
                     <article class="p-3 rounded-3 border bg-body-tertiary">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-mono">{{ sess.starts_at|time:"H\hi" }} - {{ sess.ends_at|time:"H\hi" }}</span>
-                            <span class="badge bg-success-subtle text-success">{{ sess.get_status_display }}</span>
+                            <span class="badge {{ sess.status|status_badge }}">{{ sess.get_status_display }}</span>
                         </div>
                         <h3 class="h6 fw-bold text-body mb-1">Équipe : {{ sess.team.name }}</h3>
                         <p class="small text-body-secondary mb-3">{{ sess.topic }}</p>

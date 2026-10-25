@@ -1,4 +1,5 @@
 {% extends "layouts/base_mentor.html" %}
+{% load mentor_tags %}
 
 {% block title %}{{ team.name }} - Espace Mentor - HackFlow{% endblock %}
 
@@ -58,7 +59,7 @@
                             <strong class="small">{{ req.subject }}</strong>
                             <div class="small text-body-secondary">{{ req.ticket_id }} • il y a {{ req.created_at|timesince }}{% if req.mentor %} • {{ req.mentor.get_full_name|default:req.mentor.username }}{% endif %}</div>
                         </div>
-                        <span class="badge bg-body-secondary text-body">{{ req.get_status_display }}</span>
+                        <span class="badge {{ req.status|status_badge }}">{{ req.get_status_display }}</span>
                     </li>
                     {% empty %}
                     <li class="text-body-secondary small">Aucune demande d'aide pour cette équipe.</li>
@@ -75,7 +76,7 @@
                             <strong class="small">{{ sess.topic }}</strong>
                             <div class="small text-body-secondary">{{ sess.starts_at|date:"d/m/Y H:i" }} – {{ sess.ends_at|time:"H:i" }}</div>
                         </div>
-                        <span class="badge bg-body-secondary text-body">{{ sess.get_status_display }}</span>
+                        <span class="badge {{ sess.status|status_badge }}">{{ sess.get_status_display }}</span>
                     </li>
                     {% empty %}
                     <li class="text-body-secondary small">Aucune session planifiée avec cette équipe.</li>
@@ -103,7 +104,7 @@
             <section class="card-modern p-4" aria-labelledby="submission-title">
                 <h2 id="submission-title" class="h5 fw-bold text-body mb-3">Dernière soumission</h2>
                 {% if submission %}
-                <p class="small mb-1"><strong>{{ submission.milestone.title }}</strong> — {{ submission.get_status_display }}</p>
+                <p class="small mb-1"><strong>{{ submission.milestone.title }}</strong> <span class="badge {{ submission.status|status_badge }} ms-1">{{ submission.get_status_display }}</span></p>
                 <ul class="list-unstyled small mb-0">
                     {% if submission.github_url %}<li><a href="{{ submission.github_url }}" target="_blank" rel="noopener noreferrer">Dépôt de code<span class="visually-hidden"> (nouvel onglet)</span></a></li>{% endif %}
                     {% if submission.demo_url %}<li><a href="{{ submission.demo_url }}" target="_blank" rel="noopener noreferrer">Démo en ligne<span class="visually-hidden"> (nouvel onglet)</span></a></li>{% endif %}

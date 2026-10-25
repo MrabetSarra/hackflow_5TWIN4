@@ -512,3 +512,12 @@ class EvaluationViewTests(MentorViewsTestBase):
         self.client.force_login(self.other_mentor)
         self.create(scores=(1, 1, 1, 1))
         self.assertEqual(MentorEvaluation.objects.count(), 2)
+
+
+class StatusBadgeTests(TestCase):
+    def test_status_colors(self):
+        from .templatetags.mentor_tags import status_badge
+        self.assertIn('bg-success-subtle', status_badge('confirmed'))
+        self.assertIn('text-danger-emphasis', status_badge('cancelled'))
+        self.assertIn('bg-warning-subtle', status_badge('pending'))
+        self.assertIn('bg-secondary-subtle', status_badge('inconnu'))
