@@ -286,3 +286,99 @@ class SidebarTests(AIBase):
             self.client.force_login(user)
             body = self.client.get(reverse(page_name)).content.decode()
             self.assertEqual(body.count(f'href="{reverse(link_name)}" class="nav-link-item'), 1, link_name)
+
+
+def fake_png():
+    from io import BytesIO
+    from PIL import Image
+    out = BytesIO()
+    Image.new('RGB', (1024, 1024), (30, 120, 90)).save(out, 'PNG')
+    return out.getvalue()
+
+
+class BannerTests(AIBase):
+    def setUp(self):
+        super().setUp()
+        import shutil
+        import tempfile
+        from django.test import override_settings
+        self.media = tempfile.mkdtemp()
+        override = override_settings(MEDIA_ROOT=self.media)
+        override.enable()
+        self.addCleanup(override.disable)
+        self.addCleanup(shutil.rmtree, self.media, True)
+        env = mock.patch.dict(os.environ, {'HF_API_TOKEN': 'hf_test_token', 'HF_IMAGE_FALLBACK': ''})
+        env.start()
+        self.addCleanup(env.stop)
+        self.client.force_login(self.org)
+        self.url = reverse('hackathons:banner_generate')
+
+    def test_generate_returns_resized_jpeg_and_uses_prompt(self):
+        from PIL import Image
+        from django.core.files.storage import default_storage
+        with mock.patch('hackathons.images._request_image', return_value=fake_png()) as call:
+            body = self.client.post(self.url, {'title': 'GreenTech Challenge', 'track': 'Ecologie'}).json()
+        self.assertIn('GreenTech Challenge', call.call_args[0][0])
+        self.assertRegex(body['name'], r'^hackathons/banners/generated/[0-9a-f]{32}\.jpg$')
+        with default_storage.open(body['name']) as stored:
+            self.assertEqual(Image.open(stored).size, (1280, 720))
+
+    def test_errors_are_friendly_and_secret_is_not_leaked(self):
+        self.assertEqual(self.client.post(self.url, {'title': 'ab'}).status_code, 400)
+        with mock.patch.dict(os.environ, {'HF_API_TOKEN': ''}):
+            response = self.client.post(self.url, {'title': 'GreenTech Challenge'})
+        self.assertEqual(response.status_code, 502)
+        self.assertIn('HF_API_TOKEN', response.json()['error'])
+        with mock.patch('hackathons.images._request_image', return_value=b'not an image'):
+            response = self.client.post(self.url, {'title': 'GreenTech Challenge'})
+        self.assertEqual(response.status_code, 502)
+        self.assertNotIn('hf_test_token', response.content.decode())
+
+    def test_only_organizers_can_generate(self):
+        self.client.force_login(self.student)
+        self.assertEqual(self.client.post(self.url, {'title': 'GreenTech Challenge'}).status_code, 403)
+
+    def test_fallback_used_when_huggingface_fails(self):
+        from hackathons import images
+        with mock.patch.dict(os.environ, {'HF_IMAGE_FALLBACK': 'pollinations'}), \
+                mock.patch('hackathons.images._request_image', side_effect=images.ImageError('Crédit épuisé.')), \
+                mock.patch('hackathons.images._request_fallback', return_value=fake_png()) as fallback:
+            response = self.client.post(self.url, {'title': 'GreenTech Challenge'})
+        self.assertEqual(response.status_code, 200)
+        fallback.assert_called_once()
+
+    def test_generated_banner_is_saved_with_hackathon_and_upload_wins(self):
+        from datetime import timedelta
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from django.utils import timezone
+        with mock.patch('hackathons.images._request_image', return_value=fake_png()):
+            name = self.client.post(self.url, {'title': 'GreenTech Challenge'}).json()['name']
+        start = timezone.localtime() + timedelta(days=10)
+        data = {
+            'name': 'Banner Jam', 'track_name': 'GreenTech', 'location': 'Tunis',
+            'starts_at': start.strftime('%Y-%m-%dT%H:%M'), 'ends_at': (start + timedelta(days=2)).strftime('%Y-%m-%dT%H:%M'),
+            'generated_banner': name,
+        }
+        self.client.post(reverse('hackathons:hackathon_create'), data)
+        self.assertEqual(self.h.__class__.objects.get(event__name='Banner Jam').banner.name, name)
+
+        upload = SimpleUploadedFile('mine.png', fake_png(), content_type='image/png')
+        self.client.post(reverse('hackathons:hackathon_create'), {**data, 'name': 'Upload Jam', 'banner': upload})
+        stored = self.h.__class__.objects.get(event__name='Upload Jam').banner.name
+        self.assertTrue(stored.startswith('hackathons/banners/') and 'generated' not in stored)
+
+    def test_forged_generated_banner_path_is_rejected(self):
+        from datetime import timedelta
+        from django.utils import timezone
+        start = timezone.localtime() + timedelta(days=10)
+        data = {
+            'name': 'Forged Jam', 'track_name': 'GreenTech', 'location': 'Tunis',
+            'starts_at': start.strftime('%Y-%m-%dT%H:%M'), 'ends_at': (start + timedelta(days=2)).strftime('%Y-%m-%dT%H:%M'),
+            'generated_banner': '../../db.sqlite3',
+        }
+        response = self.client.post(reverse('hackathons:hackathon_create'), data)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(self.h.__class__.objects.filter(event__name='Forged Jam').exists())
+
+    def test_form_shows_banner_ai_button(self):
+        self.assertContains(self.client.get(reverse('hackathons:hackathon_create')), 'hf-banner-generate')

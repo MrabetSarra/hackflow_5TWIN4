@@ -1,11 +1,15 @@
+import re
 from datetime import datetime, timedelta
 
 from django import forms
+from django.core.files.storage import default_storage
+from django.core.files.uploadedfile import UploadedFile
 from django.utils import timezone
 
 from accounts.models import User
 from student.models import Hackathon
 
+from .images import GENERATED_NAME_RE
 from .models import (
     Challenge, FlashAnnouncement, HackathonProfile, HackathonResource,
     MentorFeedback,
@@ -90,6 +94,7 @@ class HackathonForm(BaseStyledForm):
     registration_deadline = dt_field("Date limite d'inscription", required=False)
     latitude = forms.FloatField(required=False, min_value=-90, max_value=90, widget=forms.HiddenInput)
     longitude = forms.FloatField(required=False, min_value=-180, max_value=180, widget=forms.HiddenInput)
+    generated_banner = forms.CharField(required=False, widget=forms.HiddenInput)
 
     class Meta:
         model = HackathonProfile
@@ -118,6 +123,12 @@ class HackathonForm(BaseStyledForm):
 
     def clean_track_name(self):
         return _clean_text(self.cleaned_data.get('track_name'), 'Le track', 2)
+
+    def clean_generated_banner(self):
+        name = (self.cleaned_data.get('generated_banner') or '').strip()
+        if name and not (re.match(GENERATED_NAME_RE, name) and default_storage.exists(name)):
+            raise forms.ValidationError('L’image générée est introuvable : générez-la à nouveau.')
+        return name
 
     def clean(self):
         data = super().clean()
@@ -148,6 +159,9 @@ class HackathonForm(BaseStyledForm):
         event.starts_at, event.ends_at = cd['starts_at'], cd['ends_at']
         event.save()
         profile.event = event
+        generated = cd.get('generated_banner')
+        if generated and not isinstance(cd.get('banner'), UploadedFile):
+            profile.banner.name = generated
         profile.track = Track.objects.filter(name__iexact=cd['track_name']).first() or Track.objects.create(
             name=cd['track_name'])
         profile.save()

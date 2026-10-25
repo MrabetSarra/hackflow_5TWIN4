@@ -26,6 +26,7 @@ urlpatterns = [
     path('ia/jobs/<int:job_id>/feedback/', ai.ai_feedback, name='ai_feedback'),
     path('ia/recommandations/', ai.ai_recommendations, name='ai_recommendations'),
     path('ia/mentor/', ai.ai_mentor, name='ai_mentor'),
+    path('ia/banniere/', ai.banner_generate, name='banner_generate'),
 
     # Organisateurs
     path('manage/hackathons/', v.hackathon_list, name='hackathon_list'),

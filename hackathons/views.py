@@ -118,7 +118,7 @@ def hackathon_form(request, pk=None):
     return page(request, 'hackathons/manage/form.html', {
         'form': form, 'title': 'Modifier le hackathon' if profile else 'Nouveau hackathon', 'multipart': True,
         'back_href': back, 'track_suggestions': Track.objects.order_by('name').values_list('name', flat=True),
-        'map_picker': True, 'ai_config': HACKATHON_AI_CONFIG,
+        'map_picker': True, 'ai_config': HACKATHON_AI_CONFIG, 'banner_ai': True,
     })
 
 

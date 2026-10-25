@@ -2,6 +2,8 @@
 import logging
 
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
+from django.core.files.storage import default_storage
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -10,6 +12,7 @@ from django.views.decorators.http import require_GET, require_POST
 from accounts.decorators import role_required
 
 from . import ai_services as services
+from . import images
 from .ai_prompts import clip
 from .models import AIJob, Challenge, HackathonProfile, Registration
 from .views import page
@@ -24,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 PUBLISHED = HackathonProfile.Status.PUBLISHED
 RECOMMENDATION_LIMIT = 8
+BANNER_REQUESTS_PER_HOUR = 10
 
 
 # ------------------------------------------------------------ Construction des charges utiles
@@ -199,3 +203,25 @@ def ai_mentor(request):
         h.public_challenges = [c for c in h.challenges.all() if c.status == Challenge.Status.PUBLISHED]
     return page(request, 'hackathons/public/ai_mentor.html', {'hackathons': hackathons})
 
+
+
+@role_required('admin', 'organization')
+@require_POST
+def banner_generate(request):
+    """Génère une bannière Stable Diffusion (Hugging Face) à partir du titre saisi ; retourne son aperçu."""
+    title = clip(request.POST.get('title'), 160)
+    if len(title) < 3:
+        return JsonResponse({'error': 'Saisissez d’abord un titre d’au moins 3 caractères.'}, status=400)
+    key = f'hf-banner:{request.user.pk}'
+    used = cache.get(key, 0)
+    if used >= BANNER_REQUESTS_PER_HOUR:
+        return JsonResponse({'error': 'Limite de générations d’images atteinte pour cette heure.'}, status=429)
+    prompt = images.build_prompt(
+        title, clip(request.POST.get('track'), 120), clip(request.POST.get('summary'), 300),
+        clip(request.POST.get('instructions'), 300))
+    try:
+        name = images.generate_banner(prompt)
+    except images.ImageError as exc:
+        return JsonResponse({'error': str(exc)}, status=502)
+    cache.set(key, used + 1, 3600)
+    return JsonResponse({'name': name, 'url': default_storage.url(name)})
