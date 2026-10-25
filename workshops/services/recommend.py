@@ -117,11 +117,11 @@ def recommend(user, workshops, top_n: int = 6) -> list:
         profile_skills = user.skills if isinstance(user.skills, list) else []
         for workshop in workshop_list:
             score = _default_score(workshop, profile_skills)
-            workshop.ai_score = score
-            if score > 0:
-                workshop.ai_reason = 'Recommandé selon votre profil et centres d\'intérêt'
-            else:
-                workshop.ai_reason = ''
+            workshop.ai_score = max(10, score)  # Score minimum de 10 pour affichage
+            workshop.ai_reason = (
+                'Recommandé selon votre profil et centres d\'intérêt'
+                if score > 0 else 'Atelier suggéré pour découvrir de nouveaux thèmes'
+            )
         workshop_list.sort(key=lambda w: getattr(w, 'ai_score', 0), reverse=True)
         return workshop_list[:top_n] if len(workshop_list) > top_n else workshop_list
 
@@ -146,8 +146,8 @@ def recommend(user, workshops, top_n: int = 6) -> list:
                 terms[j] for j in ws_indices & profile_indices
             ][:3]
 
-            # Pas de bonus artificiel : 0 % signifie réellement 0 %.
-            workshop.ai_score = min(99, round(raw_score * 100))
+            # Score minimum pour affichage, raison par défaut si aucun terme croisé
+            workshop.ai_score = max(10, min(99, round(raw_score * 100)))
             if workshop.ai_score and matched_terms:
                 workshop.ai_reason = (
                     f'Parce que tu maîtrises {", ".join(matched_terms)}'
@@ -155,7 +155,7 @@ def recommend(user, workshops, top_n: int = 6) -> list:
             elif workshop.ai_score:
                 workshop.ai_reason = 'Recommandé selon ton profil'
             else:
-                workshop.ai_reason = ''
+                workshop.ai_reason = 'Atelier suggéré pour découvrir de nouveaux thèmes'
 
     # Amélioration IA : si Ollama est disponible, régénérer les explications
     # de manière plus naturelle et personnalisée.
