@@ -6,6 +6,8 @@ whitenoise>=6.9,<7
 celery>=5.4,<6
 redis>=5,<6
 Pillow
+cloudinary==1.44.1
+django-cloudinary-storage==0.3.0
 pdfminer.six>=20231228,<20270101
 PyMuPDF>=1.24,<2
 rapidocr>=3.10,<4

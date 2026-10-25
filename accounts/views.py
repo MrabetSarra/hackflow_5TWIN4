@@ -2,6 +2,7 @@ import logging
 import secrets
 from datetime import timedelta
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from django.contrib.auth import get_user_model, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
@@ -11,7 +12,7 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.contrib import messages
 from django.db import transaction
-from django.http import FileResponse, Http404
+from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -238,14 +239,42 @@ def profile_view(request):
     if request.method == 'POST' and form.is_valid():
         old_photo = request.user.profile_photo
         old_cv = request.user.cv
-        profile_user = form.save()
+        photo_uploaded = bool(request.FILES.get('profile_photo'))
+        try:
+            profile_user = form.save()
+            if photo_uploaded:
+                # Resolve the URL now so storage/configuration failures cannot look like a
+                # successful upload followed by a broken image on the next page load.
+                photo_url = profile_user.profile_photo.url
+        except Exception as error:
+            logger.error(
+                'Profile asset upload failed (user_id=%s, error_type=%s)',
+                request.user.pk, type(error).__name__,
+            )
+            return HttpResponse(
+                'Your image or file could not be uploaded. Please try again.', status=503,
+            )
+        if photo_uploaded:
+            storage = profile_user.profile_photo.storage
+            logger.info(
+                'Profile photo upload succeeded (user_id=%s, storage_backend=%s, url_host=%s)',
+                profile_user.pk,
+                f'{storage.__class__.__module__}.{storage.__class__.__name__}',
+                urlsplit(photo_url).hostname or 'relative',
+            )
         cv_changed = bool(profile_user.cv and (not old_cv or old_cv.name != profile_user.cv.name))
         if old_photo and old_photo.name != profile_user.profile_photo.name:
-            old_photo.delete(save=False)
+            try:
+                old_photo.delete(save=False)
+            except Exception as error:
+                logger.warning('Old profile photo cleanup failed (user_id=%s, error_type=%s)', profile_user.pk, type(error).__name__)
         if old_cv and old_cv.name != profile_user.cv.name:
             from career_opportunities.models import CareerApplication
             if not CareerApplication.objects.filter(cv=old_cv.name).exists():
-                old_cv.delete(save=False)
+                try:
+                    old_cv.delete(save=False)
+                except Exception as error:
+                    logger.warning('Old private CV cleanup failed (user_id=%s, error_type=%s)', profile_user.pk, type(error).__name__)
         if cv_changed and profile_user.role == 'student':
             from career_opportunities.services.cv_analysis import analyze_student_cv
             analysis = analyze_student_cv(profile_user)
@@ -272,9 +301,14 @@ def profile_view(request):
 def download_cv_view(request):
     if not request.user.cv:
         raise Http404
-    return FileResponse(
-        request.user.cv.open('rb'),
-        as_attachment=True,
-        filename=Path(request.user.cv.name).name,
-        content_type='application/pdf',
-    )
+    try:
+        file_handle = request.user.cv.open('rb')
+    except Exception as error:
+        logger.error('Private CV download failed (user_id=%s, error_type=%s)', request.user.pk, type(error).__name__)
+        return HttpResponse('File storage is temporarily unavailable.', status=503)
+    response = FileResponse(file_handle, as_attachment=True,
+                            filename=Path(request.user.cv.name).name,
+                            content_type='application/pdf')
+    response['Cache-Control'] = 'private, no-store'
+    response['X-Content-Type-Options'] = 'nosniff'
+    return response

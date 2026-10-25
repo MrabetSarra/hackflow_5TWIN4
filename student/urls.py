@@ -6,6 +6,7 @@ app_name = 'student'
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
     path('team/', views.team_detail, name='team_detail'),
+    path('team/resources/<int:resource_id>/download/', views.download_team_resource, name='download_team_resource'),
     path('matching/', views.skills_matching, name='skills_matching'),
     path('tasks/', views.tasks_kanban, name='tasks_kanban'),
     path('tasks/ai/<int:job_id>/', views.ai_task_job_status, name='ai_task_job_status'),

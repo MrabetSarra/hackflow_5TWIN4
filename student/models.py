@@ -220,7 +220,9 @@ class Resource(models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='resources')
     title = models.CharField(max_length=140)
     url = models.URLField(blank=True)
-    document = models.FileField(upload_to='team_resources/', blank=True)
+    document = models.FileField(
+        upload_to='team_resources/', storage=PrivateCVStorage(), blank=True,
+    )
     kind = models.CharField(max_length=12, choices=Kind.choices, default=Kind.OTHER)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
 
