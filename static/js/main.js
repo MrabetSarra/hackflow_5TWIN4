@@ -51,17 +51,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 3. Toggle de la Sidebar Mobile
   const sidebarToggle = document.getElementById('sidebarToggle');
-  const sidebar = document.querySelector('.app-sidebar');
+  const sidebar = document.getElementById('workspaceSidebar');
   if (sidebarToggle && sidebar) {
+    const isMobileSidebar = () => window.matchMedia('(max-width: 991.98px)').matches;
+    const setSidebarOpen = (open) => {
+      sidebar.classList.toggle('show', open);
+      sidebarToggle.setAttribute('aria-expanded', String(open));
+      sidebar.inert = isMobileSidebar() && !open;
+    };
+
+    setSidebarOpen(false);
     sidebarToggle.addEventListener('click', (e) => {
       e.stopPropagation();
-      sidebar.classList.toggle('show');
+      setSidebarOpen(!sidebar.classList.contains('show'));
     });
 
     document.addEventListener('click', (e) => {
       if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target) && sidebar.classList.contains('show')) {
-        sidebar.classList.remove('show');
+        setSidebarOpen(false);
       }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && sidebar.classList.contains('show')) {
+        setSidebarOpen(false);
+        sidebarToggle.focus();
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      if (!isMobileSidebar()) setSidebarOpen(false);
+      else sidebar.inert = !sidebar.classList.contains('show');
     });
   }
 

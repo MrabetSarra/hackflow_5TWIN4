@@ -22,9 +22,9 @@
   --bs-heading-color: #0f172a;
 
   /* Palette Primaire */
-  --hf-primary: #6366f1;
-  --hf-primary-rgb: 99, 102, 241;
-  --hf-primary-hover: #4f46e5;
+  --hf-primary: #4f46e5;
+  --hf-primary-rgb: 79, 70, 229;
+  --hf-primary-hover: #4338ca;
   --hf-secondary: #8b5cf6;
   --hf-accent: #06b6d4;
 
@@ -1104,7 +1104,6 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
 
 .emoji-choice:hover,
 .emoji-choice:focus-visible {
-  outline: none;
   background: var(--bs-primary-bg-subtle);
 }
 
@@ -1270,4 +1269,15 @@ html.a11y-highlight-headings main h1, html.a11y-highlight-headings main h2, html
   .a11y-widget { right: .75rem; bottom: .75rem; }
   .a11y-trigger span { display: none; }
   .a11y-trigger { width: 48px; height: 48px; justify-content: center; padding: 0; }
+}
+
+/* Clear focus ring for keyboard users, in both themes. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid #1d4ed8 !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 2px #fff !important;
+}
+[data-bs-theme="dark"] :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline-color: #ffbf47 !important;
+  box-shadow: 0 0 0 2px #090d16 !important;
 }

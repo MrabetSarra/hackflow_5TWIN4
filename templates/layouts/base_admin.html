@@ -4,7 +4,7 @@
 {% block layout %}
 <div class="dashboard-wrapper">
     <!-- Sidebar Admin Adaptative -->
-    <aside class="app-sidebar shadow-sm">
+    <aside class="app-sidebar shadow-sm" id="workspaceSidebar" aria-label="Navigation organisateur">
         <div class="p-4 border-bottom border-light-subtle d-flex align-items-center justify-content-between">
             <a href="{% url 'dashboard_admin:dashboard' %}" class="d-flex align-items-center gap-2 text-decoration-none">
                 <img src="{% static 'images/hackflow-mark.png' %}" alt="" width="44" height="32" style="object-fit: contain;">
@@ -15,7 +15,7 @@
             </span>
         </div>
 
-        <div class="py-3 flex-grow-1 overflow-y-auto">
+        <nav aria-label="Navigation principale organisateur" class="py-3 flex-grow-1 overflow-y-auto">
             <div class="sidebar-heading">Gestion Globale</div>
             <a href="{% url 'dashboard_admin:dashboard' %}" class="nav-link-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                 <i class="bi bi-speedometer"></i>
@@ -67,7 +67,7 @@
                 <i class="bi bi-person-gear"></i>
                 <span>Mon Profil Admin</span>
             </a>
-        </div>
+        </nav>
 
         <div class="p-3 border-top border-light-subtle bg-body-tertiary">
             <div class="d-flex align-items-center gap-3">
@@ -88,8 +88,8 @@
         <!-- Topbar Admin -->
         <header class="app-topbar justify-content-between">
             <div class="d-flex align-items-center gap-3">
-                <button class="btn btn-outline-secondary d-lg-none p-1 px-2" id="sidebarToggle" type="button" aria-label="Menu">
-                    <i class="bi bi-list fs-4"></i>
+                <button class="btn btn-outline-secondary d-lg-none p-1 px-2" id="sidebarToggle" type="button" aria-label="Ouvrir ou fermer la navigation" aria-controls="workspaceSidebar" aria-expanded="false">
+                    <i class="bi bi-list fs-4" aria-hidden="true"></i>
                 </button>
                 <div class="d-flex align-items-center gap-2 bg-body-tertiary text-body border px-3 py-1 rounded-pill small fw-semibold font-mono">
                     <span class="badge bg-danger rounded-circle p-1"> </span>
@@ -146,7 +146,7 @@
         </header>
 
         <!-- Main Content Body -->
-        <main class="p-3 p-md-4 flex-grow-1">
+        <main id="main-content" class="p-3 p-md-4 flex-grow-1">
             {% block admin_content %}{% block profile_content %}{% endblock %}{% endblock %}
         </main>
     </div>
