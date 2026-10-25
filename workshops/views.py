@@ -1391,9 +1391,23 @@ def workshop_quiz_question_add(request, pk):
             messages.success(request, 'Question ajoutée avec succès.')
             return redirect('workshops:quiz_manage', pk=pk)
 
+    # Pré-remplissage depuis les paramètres GET (génération IA)
+    prefill = None
+    if request.GET.get('question'):
+        prefill = type('obj', (object,), {
+            'question': request.GET.get('question', ''),
+            'option_a': request.GET.get('option_a', ''),
+            'option_b': request.GET.get('option_b', ''),
+            'option_c': request.GET.get('option_c', ''),
+            'option_d': request.GET.get('option_d', ''),
+            'correct_index': int(request.GET.get('correct_index', 0)),
+            'explication': request.GET.get('explication', ''),
+        })()
+
     return render(request, 'workshops/quiz_question_form.html', {
         'workshop': ws,
         'action': 'Ajouter',
+        'question': prefill,
         'workshop_base_template': _workshop_base_template(request.user),
     })
 
