@@ -20,7 +20,10 @@
         <div class="col-lg-4">
             <section class="card-modern p-4 text-center h-100">
                 {% if profile_user.profile_photo %}
-                    <img src="{{ profile_user.profile_photo.url }}" alt="Photo of {{ profile_user.get_full_name }}" class="rounded-circle mb-3" width="96" height="96" style="object-fit: cover;">
+                    <img src="{{ profile_user.profile_photo.url }}" alt="Photo of {{ profile_user.get_full_name }}" class="rounded-circle mb-3" width="96" height="96" style="object-fit: cover;" onerror="this.hidden=true;this.nextElementSibling.hidden=false;">
+                    <div hidden role="img" aria-label="Profile photo unavailable" class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center fw-bold fs-2 mb-3" style="width: 96px; height: 96px;">
+                        {{ profile_user.first_name|first|upper }}{{ profile_user.last_name|first|upper }}
+                    </div>
                 {% else %}
                     <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center fw-bold fs-2 mb-3" style="width: 96px; height: 96px;">
                         {{ profile_user.first_name|first|upper }}{{ profile_user.last_name|first|upper }}

@@ -4,7 +4,9 @@ from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Count, Q
-from django.http import FileResponse, Http404
+import logging
+
+from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -16,6 +18,8 @@ from .models import ApplicationHistory, CareerApplication, CareerRequirement, Op
 from .services.matching import calculate_match, calculate_matches
 from .services.cv_analysis import analyze_student_cv
 from student.models import Notification
+
+logger = logging.getLogger(__name__)
 
 
 @never_cache
@@ -324,8 +328,9 @@ def organizer_application_cv(request, pk):
         raise Http404
     try:
         file_handle = application.cv.open('rb')
-    except OSError as exc:
-        raise Http404 from exc
+    except Exception as error:
+        logger.error('Career application CV download failed (application_id=%s, error_type=%s)', application.pk, type(error).__name__)
+        return HttpResponse('File storage is temporarily unavailable.', status=503)
     response = FileResponse(file_handle, content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="application-cv.pdf"'
     response['X-Content-Type-Options'] = 'nosniff'

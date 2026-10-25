@@ -262,3 +262,48 @@ class AccountViewCoverageTests(TestCase):
         user.refresh_from_db()
         self.assertEqual(user.school, 'New School')
         self.assertEqual(self.client.get(reverse('accounts:download_cv')).status_code, 404)
+
+    @patch('accounts.views.ProfileAssetsForm')
+    def test_profile_asset_storage_failure_is_reported_without_exposing_error(self, form_class):
+        user = self.create_user(username='profile-upload-failure')
+        self.client.force_login(user)
+        form_class.return_value.is_valid.return_value = True
+        form_class.return_value.save.side_effect = RuntimeError('secret-bearing provider response')
+
+        response = self.client.post(reverse('accounts:profile'), {'form_type': 'assets'})
+
+        self.assertEqual(response.status_code, 503)
+        self.assertNotContains(response, 'secret-bearing provider response', status_code=503)
+        self.assertContains(response, 'could not be uploaded', status_code=503)
+
+    @patch('accounts.views.ProfileAssetsForm')
+    def test_successful_profile_photo_upload_logs_backend_without_logging_url(self, form_class):
+        user = self.create_user(username='profile-upload-success')
+        user.profile_photo = 'profile_photos/new-photo.jpg'
+        user.save(update_fields=['profile_photo'])
+        self.client.force_login(user)
+        form_class.return_value.is_valid.return_value = True
+        form_class.return_value.save.return_value = user
+
+        with self.assertLogs('accounts.views', level='INFO') as captured:
+            response = self.client.post(reverse('accounts:profile'), {
+                'form_type': 'assets',
+                'profile_photo': SimpleUploadedFile('new-photo.jpg', b'photo-bytes'),
+            })
+
+        self.assertRedirects(response, reverse('accounts:profile'))
+        self.assertIn('Profile photo upload succeeded', captured.output[0])
+        self.assertIn('storage_backend=', captured.output[0])
+        self.assertNotIn('/media/', captured.output[0])
+
+    def test_missing_legacy_profile_photo_shows_initials_fallback(self):
+        user = self.create_user(username='profile-missing-photo')
+        user.profile_photo = 'profile_photos/IMG_20230511_115501_159.jpg'
+        user.save(update_fields=['profile_photo'])
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('accounts:profile'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Profile photo unavailable')
+        self.assertContains(response, 'onerror="this.hidden=true;this.nextElementSibling.hidden=false;"')
