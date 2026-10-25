@@ -1,4 +1,4 @@
-﻿from html.parser import HTMLParser
+from html.parser import HTMLParser
 import tempfile
 from pathlib import Path
 
