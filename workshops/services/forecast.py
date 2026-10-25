@@ -139,7 +139,7 @@ def _ollama_forecast(workshop) -> dict | None:
             'fill_proba': round(fill, 2),
             'noshow_proba': round(noshow, 2),
             'alert': alert,
-            '_source': 'ollama',
+            'source': 'ollama',
         }
     except (json.JSONDecodeError, ValueError, KeyError) as exc:
         logger.warning("Réponse Ollama non parseable : %s", exc)
@@ -206,7 +206,7 @@ def _heuristic_forecast(workshop) -> dict:
         'fill_proba': fill_proba,
         'noshow_proba': noshow_proba,
         'alert': alert,
-        '_source': 'heuristic',
+        'source': 'heuristic',
     }
 
 
