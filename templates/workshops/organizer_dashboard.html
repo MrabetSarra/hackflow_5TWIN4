@@ -210,7 +210,11 @@
                 <span class="small text-body-secondary" title="Prédiction IA">
                   {% for pk, fc in forecasts.items %}
                     {% if pk == ws.pk %}
-                      {{ fc.fill_proba|floatformat:0 }}% remplissage
+                      <span class="fw-semibold">{{ fc.fill_proba|floatformat:0 }}%</span>
+                      remplissage
+                      <span class="badge bg-info text-dark fs-7 px-1 py-0.5 ms-1" title="Source IA">
+                        {% if fc._source == 'ollama' %}Ollama{% else %}Heuristique{% endif %}
+                      </span>
                     {% endif %}
                   {% endfor %}
                 </span>

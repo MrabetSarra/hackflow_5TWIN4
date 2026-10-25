@@ -1,53 +1,158 @@
 """
 workshops/services/forecast.py
-================================
-IA 3 — Prédiction de remplissage et des no-shows.
+==============================
+IA — Prédiction de remplissage et des no-shows.
 
 Stratégie :
-  - Si ≥ 5 ateliers passés disponibles → entraîne un modèle Ridge ou
-    RandomForest sur les features extraites.
-  - Sinon → règle heuristique simple (fallback).
+  1. Si Ollama est disponible (modèle llama3.2) → prédiction générative basée
+     sur les caractéristiques de l'atelier (mode, niveau, capacité, jour, heure).
+  2. Sinon → règle heuristique avec taux de base pour éviter d'afficher 0%.
 
 Features utilisées :
-  hours_remaining   : heures avant le début
-  fill_rate_now     : taux de remplissage actuel (0-1)
-  weekday           : jour de la semaine (0=lundi)
-  hour_of_day       : heure de début
-  mode_enc          : encodage du mode (onsite=0, online=1, recorded=2)
-  level_enc         : encodage du niveau (beginner=0, intermediate=1, advanced=2)
+  hours_remaining : heures avant le début
+  fill_rate_now   : taux de remplissage actuel (0-1)
+  weekday         : jour de la semaine (0=lundi)
+  hour_of_day     : heure de début
+  mode_enc        : encodage du mode (onsite=0, online=1, recorded=2)
+  level_enc       : encodage du niveau (beginner=0, intermediate=1, advanced=2)
 
 Sorties :
   fill_proba   : probabilité (0-1) que l'atelier soit complet
   noshow_proba : probabilité estimée de no-show
   alert        : message d'alerte textuel si fill_proba > 0.75
 
-Aucune clé API requise.
+Aucune clé API requise — Ollama fonctionne 100% hors ligne sur localhost:11434.
 """
 
 from __future__ import annotations
 
+import json
 import logging
+from urllib import request
+from urllib.error import URLError, HTTPError
 
 from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
+OLLAMA_BASE = "http://localhost:11434"
+OLLAMA_MODEL = "llama3.2"
+OLLAMA_TIMEOUT = 20  # secondes
+
 _MODE_ENC  = {'onsite': 0, 'online': 1, 'recorded': 2}
 _LEVEL_ENC = {'beginner': 0, 'intermediate': 1, 'advanced': 2}
 
+# Taux de remplissage de base pour un atelier neuf sans réservation
+# (évite d'afficher 0% systématiquement)
+BASELINE_FILL = 0.20
+
+
+# ---------------------------------------------------------------------------
+# Ollama — prédiction générative
+# ---------------------------------------------------------------------------
+
+def _ollama_generate(prompt: str, model: str = OLLAMA_MODEL, temperature: float = 0.3) -> str | None:
+    """Envoie un prompt à Ollama et retourne le texte généré, ou None."""
+    payload = {
+        "model": model,
+        "prompt": prompt,
+        "stream": False,
+        "options": {"temperature": temperature, "num_predict": 200},
+    }
+    data = json.dumps(payload).encode("utf-8")
+    req = request.Request(
+        f"{OLLAMA_BASE}/api/generate",
+        data=data,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with request.urlopen(req, timeout=OLLAMA_TIMEOUT) as resp:
+            body = resp.read().decode("utf-8")
+            result = json.loads(body)
+            return (result.get("response") or "").strip()
+    except (URLError, HTTPError, OSError, json.JSONDecodeError) as exc:
+        logger.warning("Ollama indisponible pour la prévision IA : %s", exc)
+        return None
+
+
+def _ollama_available() -> bool:
+    """Vérifie qu'Ollama répond et que le modèle llama3.2 est chargé."""
+    try:
+        req = request.Request(f"{OLLAMA_BASE}/api/tags", method="GET")
+        with request.urlopen(req, timeout=5) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            models = [m.get("name", "") for m in data.get("models", [])]
+            return any(OLLAMA_MODEL in m for m in models)
+    except Exception:
+        return False
+
+
+def _ollama_forecast(workshop) -> dict | None:
+    """
+    Demande à Ollama (llama3.2) une prédiction de remplissage pour l'atelier.
+    Retourne un dict {'fill_proba', 'noshow_proba', 'alert'} ou None.
+    """
+    now = timezone.now()
+    delta = workshop.starts_at - now
+    hours_remaining = max(0.0, delta.total_seconds() / 3600)
+
+    prompt = (
+        "Tu es un analyste de données spécialisé dans l'événementiel et la formation. "
+        "Estime le taux de remplissage (0 à 100%) et le taux de no-show (0 à 100%) "
+        "pour un atelier avec les caractéristiques suivantes :\n"
+        f"- Titre : {workshop.title}\n"
+        f"- Mode : {workshop.mode} (présentiel / en ligne / vidéo enregistrée)\n"
+        f"- Niveau : {getattr(workshop, 'level', 'débutant')}\n"
+        f"- Capacité : {workshop.capacity or 'illimitée'} places\n"
+        f"- Date/heure de début : {workshop.starts_at.strftime('%d/%m/%Y %H:%M')}\n"
+        f"- Heures restantes avant le début : {int(hours_remaining)}h\n"
+        f"- Réservations actuelles : {workshop.confirmed_count}\n"
+        f"\nRéponds UNIQUEMENT au format JSON suivant, sans aucun texte avant ou après :\n"
+        '{ "fill_proba": <nombre 0-100>, "noshow_proba": <nombre 0-100>, "raison": "explication courte en français" }'
+    )
+
+    generated = _ollama_generate(prompt)
+    if not generated:
+        return None
+
+    # Extraire le JSON de la réponse (Ollama peut ajouter du texte autour)
+    try:
+        start = generated.find('{')
+        end = generated.rfind('}') + 1
+        if start == -1 or end == 0:
+            return None
+        data = json.loads(generated[start:end])
+        fill = float(data.get('fill_proba', 0)) / 100.0
+        noshow = float(data.get('noshow_proba', 5)) / 100.0
+        fill = max(0.0, min(0.99, fill))
+        noshow = max(0.0, min(0.99, noshow))
+
+        alert = None
+        if fill > 0.75 and 0 <= hours_remaining < 24:
+            alert = (
+                f'⚠️ {round(fill * 100)}% de risque que '
+                f'«{workshop.title}» soit complet dans {int(hours_remaining)}h.'
+            )
+
+        return {
+            'fill_proba': round(fill, 2),
+            'noshow_proba': round(noshow, 2),
+            'alert': alert,
+            '_source': 'ollama',
+        }
+    except (json.JSONDecodeError, ValueError, KeyError) as exc:
+        logger.warning("Réponse Ollama non parseable : %s", exc)
+        return None
+
+
+# ---------------------------------------------------------------------------
+# Heuristique (fallback)
+# ---------------------------------------------------------------------------
 
 def _static_features(workshop) -> list[float]:
-    """
-    Vecteur de features indépendantes du moment présent.
-
-    Important : ces features sont identiques pour un atelier passé et pour
-    un atelier futur, ce qui rend l'entraînement cohérent avec la prédiction
-    (les anciennes features « heures restantes » valaient toujours 0 pour
-    les ateliers passés, ce qui rendait le modèle inexploitable).
-    """
     duration = workshop.ends_at - workshop.starts_at
     duration_h = max(0.0, duration.total_seconds() / 3600)
-
     return [
         float(workshop.capacity or 0),
         float(workshop.starts_at.weekday()),
@@ -60,9 +165,8 @@ def _static_features(workshop) -> list[float]:
 
 def _heuristic_forecast(workshop) -> dict:
     """
-    Fallback heuristique quand pas assez de données historiques.
-    Basé sur le taux actuel et le temps restant, avec un taux de base
-    pour les ateliers qui n'ont pas encore de réservations.
+    Fallback heuristique. Applique un taux de base (20%) pour les ateliers
+    sans réservation afin d'éviter d'afficher 0% systématiquement.
     """
     now = timezone.now()
     delta = workshop.starts_at - now
@@ -73,114 +177,54 @@ def _heuristic_forecast(workshop) -> dict:
 
     fill_now = workshop.confirmed_count / workshop.capacity if workshop.capacity else 0.0
 
-    # Taux de base pour les ateliers sans réservation (évite d'afficher 0%)
-    BASELINE_FILL = 0.15  # 15% de remplissage attendu par défaut
-    if fill_now == 0 and hours_remaining > 0:
+    # Taux de base pour atelier neuf (pas de réservation encore)
+    if fill_now == 0:
         fill_now = BASELINE_FILL
 
-    # Projection linéaire
+    # Projection : le taux de remplissage augmente à mesure que l'atelier approche
     if hours_remaining > 0:
-        speed = fill_now / max(1, 24 * 7 - hours_remaining)
-        projected = fill_now + speed * hours_remaining
+        # Facteur temps : influence maximale à 72h, puis stabilise
+        time_factor = min(1.0, hours_remaining / 72.0)
+        # On projette vers un remplissage cible de 80% si l'atelier est loin
+        target_fill = 0.80
+        projected = fill_now + (target_fill - fill_now) * time_factor * 0.4
     else:
         projected = fill_now
 
-    fill_proba   = min(0.99, round(projected, 2))
+    fill_proba = min(0.99, round(projected, 2))
     noshow_proba = 0.10 if workshop.mode == 'onsite' else 0.05
 
     alert = None
     if fill_proba > 0.75 and 0 <= hours_remaining < 24:
         alert = (
             f'⚠️ {round(fill_proba * 100)}% de risque que '
-            f'«{workshop.title}» soit complet dans '
-            f'{int(hours_remaining)}h — envisagez une session 2.'
+            f'«{workshop.title}» soit complet dans {int(hours_remaining)}h — '
+            f'envisagez une session 2.'
         )
 
     return {
-        'fill_proba':   fill_proba,
+        'fill_proba': fill_proba,
         'noshow_proba': noshow_proba,
-        'alert':        alert,
+        'alert': alert,
+        '_source': 'heuristic',
     }
 
 
-def _ml_forecast(workshop, past_workshops) -> dict:
-    """
-    Prédiction par modèle ML entraîné sur les ateliers passés.
-    Utilise Ridge (rapide) avec fallback RandomForest si Ridge R²<0.
-    """
-    try:
-        from sklearn.linear_model import Ridge
-        from sklearn.preprocessing import StandardScaler
-        import numpy as np
-    except ImportError:
-        return _heuristic_forecast(workshop)
-
-    X_train, y_fill, y_noshow = [], [], []
-
-    for pw in past_workshops:
-        if pw.capacity == 0:
-            continue
-        feat = _static_features(pw)
-        actual_fill = min(1.0, max(0.0, pw.attendee_count / pw.capacity))
-        noshow_rate = 1 - (pw.attendee_count / max(1, pw.confirmed_count))
-        noshow_rate = min(1.0, max(0.0, noshow_rate))
-        X_train.append(feat)
-        y_fill.append(actual_fill)
-        y_noshow.append(noshow_rate)
-
-    if len(X_train) < 3:
-        return _heuristic_forecast(workshop)
-
-    try:
-        import numpy as np
-        X = np.array(X_train)
-        scaler = StandardScaler()
-        X_scaled = scaler.fit_transform(X)
-
-        model_fill   = Ridge(alpha=1.0)
-        model_noshow = Ridge(alpha=1.0)
-        model_fill.fit(X_scaled, y_fill)
-        model_noshow.fit(X_scaled, y_noshow)
-
-        x_pred = scaler.transform([_static_features(workshop)])
-        fill_proba   = float(np.clip(model_fill.predict(x_pred)[0], 0, 1))
-        noshow_proba = float(np.clip(model_noshow.predict(x_pred)[0], 0, 1))
-
-        alert = None
-        delta = workshop.starts_at - timezone.now()
-        hours_remaining = delta.total_seconds() / 3600
-        if fill_proba > 0.75 and 0 <= hours_remaining < 48:
-            alert = (
-                f'⚠️ {round(fill_proba * 100)}% de risque que '
-                f'«{workshop.title}» soit complet dans '
-                f'{int(hours_remaining)}h.'
-            )
-
-        return {
-            'fill_proba':   round(fill_proba, 2),
-            'noshow_proba': round(noshow_proba, 2),
-            'alert':        alert,
-        }
-
-    except Exception as exc:
-        logger.warning('Erreur ML forecast : %s', exc)
-        return _heuristic_forecast(workshop)
-
+# ---------------------------------------------------------------------------
+# Point d'entrée principal
+# ---------------------------------------------------------------------------
 
 def forecast(workshop) -> dict:
     """
-    Point d'entrée principal.
     Retourne un dict : {'fill_proba', 'noshow_proba', 'alert'}.
+    Préfère Ollama si disponible, sinon fallback heuristique.
     """
-    from workshops.models import Workshop as WS
+    # 1. Essayer Ollama d'abord
+    if _ollama_available():
+        result = _ollama_forecast(workshop)
+        if result is not None:
+            return result
+        logger.warning("Ollama disponible mais prédiction échouée, passage en heuristique.")
 
-    now = timezone.now()
-    past = list(
-        WS.objects.filter(ends_at__lt=now, capacity__gt=0)
-        .exclude(pk=workshop.pk)
-        .order_by('-ends_at')[:50]
-    )
-
-    if len(past) >= 5:
-        return _ml_forecast(workshop, past)
+    # 2. Fallback heuristique corrigé
     return _heuristic_forecast(workshop)
