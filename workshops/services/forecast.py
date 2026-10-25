@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 
 OLLAMA_BASE = "http://localhost:11434"
 OLLAMA_MODEL = "llama3.2"
-OLLAMA_TIMEOUT = 20  # secondes
+OLLAMA_TIMEOUT = 5  # secondes (réduit pour ne pas bloquer le dashboard)
 
 _MODE_ENC  = {'onsite': 0, 'online': 1, 'recorded': 2}
 _LEVEL_ENC = {'beginner': 0, 'intermediate': 1, 'advanced': 2}
