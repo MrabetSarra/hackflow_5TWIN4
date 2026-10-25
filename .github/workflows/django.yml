@@ -69,8 +69,17 @@ jobs:
       - name: Run Django tests
         run: coverage run manage.py test 2>&1 | tee test-output.txt
 
-      - name: Report coverage (minimum 70%)
-        run: coverage report --fail-under=70 | tee coverage-report.txt
+      - name: Export Cobertura coverage report
+        if: always()
+        run: |
+          if [ -f .coverage ]; then
+            coverage xml -o coverage.xml
+          else
+            echo "Coverage data is unavailable."
+          fi
+
+      - name: Report coverage (minimum 80%)
+        run: coverage report --fail-under=80 | tee coverage-report.txt
 
       - name: Write test and coverage summary
         if: always()
@@ -117,7 +126,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: hackflow-coverage-html
-          path: htmlcov/
+          path: |
+            htmlcov/
+            coverage.xml
           if-no-files-found: warn
 
   deploy:

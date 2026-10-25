@@ -173,12 +173,35 @@ python manage.py test
 Generate coverage reports with:
 
 ```bash
+coverage erase
 coverage run manage.py test
-coverage report --fail-under=70
+coverage report --fail-under=80
+coverage xml -o coverage.xml
 coverage html
 ```
 
-The HTML report is written to `htmlcov/`. CI enforces 70% coverage and uploads that report as an artifact.
+The HTML report is written to `htmlcov/`; `coverage.xml` is the Cobertura report read by SonarQube. Coverage uses relative file paths so the report can be imported when the scanner runs in Docker. CI enforces 80% coverage and uploads both reports.
+
+For a local SonarQube server on port 9000, activate the virtual environment, create the `HackFlow` project in SonarQube, then generate a fresh report and run the scanner from the repository root:
+
+```powershell
+coverage erase
+coverage run manage.py test
+coverage xml -o coverage.xml
+
+$env:SONAR_HOST_URL = 'http://host.docker.internal:9000'
+$secureToken = Read-Host 'Local SonarQube token' -AsSecureString
+$env:SONAR_TOKEN = [System.Net.NetworkCredential]::new('', $secureToken).Password
+
+docker run --rm `
+  -e SONAR_HOST_URL `
+  -e SONAR_TOKEN `
+  -v "${PWD}:/usr/src" `
+  sonarsource/sonar-scanner-cli
+
+Remove-Item Env:SONAR_TOKEN
+Remove-Variable secureToken
+```
 
 ## Environment variables
 
