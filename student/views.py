@@ -6,7 +6,7 @@ from datetime import timedelta
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
-from django.http import FileResponse, HttpResponse, HttpResponseBadRequest, JsonResponse
+from django.http import FileResponse, Http404, HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.db import transaction
 from django.db.models import Count, Q
 from django.core.exceptions import ValidationError
@@ -41,6 +41,30 @@ def _safe_pk(value):
     except (TypeError, ValueError):
         return None
     return parsed if parsed > 0 else None
+
+
+def _submission_file_display(submission):
+    """Read file metadata once, representing missing/unavailable storage safely."""
+    if not submission or not submission.file:
+        return {'name': '', 'size': None, 'missing': False, 'unavailable': False}
+    name = submission.file.name
+    try:
+        size = submission.file.size
+    except FileNotFoundError:
+        return {'name': name, 'size': None, 'missing': True, 'unavailable': False}
+    except _submission_storage_errors() as error:
+        logger.warning(
+            'Submission file metadata unavailable (submission_id=%s, error_type=%s)',
+            submission.pk, type(error).__name__,
+        )
+        return {'name': name, 'size': None, 'missing': False, 'unavailable': True}
+    return {'name': name, 'size': size, 'missing': False, 'unavailable': False}
+
+
+def _submission_storage_errors():
+    import requests
+    from cloudinary.exceptions import Error as CloudinaryError
+    return (CloudinaryError, requests.exceptions.RequestException, OSError)
 
 
 def _user_initials(user):
@@ -776,6 +800,7 @@ def project_submission(request):
         form = SubmissionForm(instance=submission, team=team)
     now = timezone.now()
     is_locked = not deadline or deadline <= now
+    file_display = _submission_file_display(submission)
     context = {'submission': {'status': submission.get_status_display() if submission else 'Draft',
         'deadline': deadline, 'is_locked': is_locked,
         'time_left': deadline if deadline and deadline > now else None,
@@ -786,8 +811,8 @@ def project_submission(request):
         'github_url': submission.github_url if submission else '', 'demo_url': submission.demo_url if submission else '',
         'repository': submission.repository if submission else None, 'repository_commit': submission.repository_commit if submission else '',
         'video_url': submission.video_url if submission else '',
-        'slide_file': submission.file.name if submission and submission.file else '',
-        'file_size': submission.file.size if submission and submission.file else None},
+        'slide_file': file_display['name'], 'file_size': file_display['size'],
+        'file_missing': file_display['missing'], 'file_unavailable': file_display['unavailable']},
         'form': form, 'milestones': milestones, 'selected_milestone': milestone,
         'submission_history': team.submissions.select_related('milestone', 'repository').order_by('-updated_at') if team else [],
         'repositories': team.repositories.all() if team else []}
@@ -797,6 +822,12 @@ def project_submission(request):
 @role_required('admin', 'organization', 'mentor')
 def jury_submissions(request):
     submissions = Submission.objects.exclude(file='').select_related('team', 'milestone').order_by('-submitted_at', '-updated_at')
+    for submission in submissions:
+        file_display = _submission_file_display(submission)
+        submission.display_file_name = file_display['name']
+        submission.display_file_size = file_display['size']
+        submission.file_missing = file_display['missing']
+        submission.file_unavailable = file_display['unavailable']
     template = 'dashboard_admin/submissions.html' if request.user.role in ('admin', 'organization') else 'mentor/submissions.html'
     return render(request, template, {'submissions': submissions})
 
@@ -805,12 +836,13 @@ def jury_submissions(request):
 def download_submission(request, submission_id):
     submission = get_object_or_404(Submission.objects.select_related('team'), pk=submission_id)
     if not submission.file:
-        from django.http import Http404
         raise Http404('This submission does not contain an uploaded file.')
     filename = submission.file.name.rsplit('/', 1)[-1]
     try:
         file_handle = submission.file.open('rb')
-    except Exception as error:
+    except FileNotFoundError:
+        raise Http404('This submission file is no longer available.')
+    except _submission_storage_errors() as error:
         logger.error(
             'Submission download failed (submission_id=%s, error_type=%s)',
             submission.pk, type(error).__name__,
