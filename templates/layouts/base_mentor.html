@@ -22,26 +22,26 @@
 
         <nav aria-label="Navigation principale mentor" class="py-3 flex-grow-1 overflow-y-auto">
             <div class="sidebar-heading">{% trans "Accompagnement" %}</div>
-            <a href="{% url 'mentor:dashboard' %}" class="nav-link-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+            <a href="{% url 'mentor:dashboard' %}" class="nav-link-item {% if request.resolver_match.namespace == 'mentor' and request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                 <i class="bi bi-speedometer2"></i>
                 <span>{% trans "Tableau de Bord" %}</span>
             </a>
-            <a href="{% url 'mentor:help_requests' %}" class="nav-link-item {% if request.resolver_match.url_name == 'help_requests' %}active{% endif %}">
+            <a href="{% url 'mentor:help_requests' %}" class="nav-link-item {% if request.resolver_match.namespace == 'mentor' and request.resolver_match.url_name == 'help_requests' %}active{% endif %}">
                 <i class="bi bi-bell-fill"></i>
                 <span>{% trans "Demandes d'Aide" %}</span>
                 {% if mentor_nav.pending %}<span class="badge bg-danger ms-auto rounded-pill px-2 py-0" style="font-size: 0.7rem;">{% blocktrans with count=mentor_nav.pending %}{{ count }} en attente{% endblocktrans %}</span>{% endif %}
             </a>
-            <a href="{% url 'mentor:teams_list' %}" class="nav-link-item {% if request.resolver_match.url_name == 'teams_list' or request.resolver_match.url_name == 'team_detail' %}active{% endif %}">
+            <a href="{% url 'mentor:teams_list' %}" class="nav-link-item {% if request.resolver_match.namespace == 'mentor' and request.resolver_match.url_name in mentor_nav.team_pages %}active{% endif %}">
                 <i class="bi bi-collection-fill"></i>
                 <span>{% trans "Équipes & Projets" %}</span>
                 <span class="badge bg-secondary-subtle text-secondary ms-auto rounded-pill px-2 py-0" style="font-size: 0.7rem;" title="{% trans 'Équipes suivies' %}">{{ mentor_nav.followed }}</span>
             </a>
 
-            <a href="{% url 'mentor:sessions_list' %}" class="nav-link-item {% if request.resolver_match.url_name in 'sessions_list session_create session_update session_delete' %}active{% endif %}">
+            <a href="{% url 'mentor:sessions_list' %}" class="nav-link-item {% if request.resolver_match.namespace == 'mentor' and request.resolver_match.url_name in mentor_nav.session_pages %}active{% endif %}">
                 <i class="bi bi-calendar-event" aria-hidden="true"></i>
                 <span>{% trans "Sessions" %}</span>
             </a>
-            <a href="{% url 'mentor:submissions' %}" class="nav-link-item {% if request.resolver_match.url_name == 'submissions' or request.resolver_match.url_name == 'evaluation_create' %}active{% endif %}">
+            <a href="{% url 'mentor:submissions' %}" class="nav-link-item {% if request.resolver_match.namespace == 'mentor' and request.resolver_match.url_name in mentor_nav.submission_pages %}active{% endif %}">
                 <i class="bi bi-file-earmark-zip-fill" aria-hidden="true"></i>
                 <span>{% trans "Soumissions à évaluer" %}</span>
             </a>
@@ -65,7 +65,7 @@
                 <i class="bi bi-stars"></i>
                 <span>{% trans "Assistant IA" %}</span>
             </a>
-            <a href="{% url 'mentor:evaluations' %}" class="nav-link-item {% if request.resolver_match.url_name in 'evaluations evaluation_detail evaluation_update evaluation_delete' %}active{% endif %}">
+            <a href="{% url 'mentor:evaluations' %}" class="nav-link-item {% if request.resolver_match.namespace == 'mentor' and request.resolver_match.url_name in mentor_nav.evaluation_pages %}active{% endif %}">
                 <i class="bi bi-pencil-square"></i>
                 <span>{% trans "Retours & Conseils" %}</span>
             </a>
@@ -115,37 +115,6 @@
                     <span>{{ mentor_nav.pending }} demande{{ mentor_nav.pending|pluralize }} en attente</span>
                 </a>
                 {% endif %}
-
-                <!-- Notifications -->
-                <div class="dropdown">
-                    <button class="btn btn-light position-relative rounded-circle p-2 border" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="{% trans 'Notifications' %}" aria-label="{% trans 'Notifications' %}">
-                        <i class="bi bi-bell-fill text-secondary"></i>
-                        {% if mentor_notification_count > 0 %}
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
-                            {{ mentor_notification_count }}
-                        </span>
-                        {% endif %}
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" style="width: 320px; max-height: 400px; overflow-y: auto;">
-                        <li class="p-2 border-bottom fw-bold small text-muted">{% trans "Notifications" %}</li>
-                        {% for notif in mentor_notifications %}
-                        <li>
-                            <a class="dropdown-item p-2 rounded-2 small text-wrap d-flex gap-2 align-items-start" href="{{ notif.url|default:'#' }}">
-                                <i class="bi {{ notif.icon|default:'bi-bell-fill' }} text-primary fs-5"></i>
-                                <div>
-                                    <div class="fw-semibold">{{ notif.title }}</div>
-                                    <div class="text-muted" style="font-size: 0.78rem;">{{ notif.message }}</div>
-                                </div>
-                            </a>
-                        </li>
-                        {% empty %}
-                        <li class="p-3 text-center text-muted small">
-                            <i class="bi bi-bell-slash text-muted fs-4 d-block mb-1"></i>
-                            {% trans "Aucune notification" %}
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
 
                 <!-- Menu Profil -->
                 <div class="dropdown">
