@@ -1,3 +1,4 @@
+{% load i18n %}
 <article class="card-modern overflow-hidden">
     <div class="p-4">
         <div class="d-flex flex-column flex-md-row justify-content-between gap-4">
@@ -5,9 +6,9 @@
                 <div class="d-flex flex-wrap gap-2 mb-3">
                     <span class="badge bg-{{ c.difficulty_color }}-subtle text-{{ c.difficulty_color }}-emphasis rounded-pill px-3 py-2 fw-medium">{{ c.get_difficulty_display }}</span>
                     {% if is_student %}
-                        {% if c.pk in mine %}<span class="badge bg-success rounded-pill px-3 py-2 fw-medium"><i class="bi bi-check-lg me-1"></i>Inscrit</span>
-                        {% elif has_registration %}<span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-3 py-2 fw-medium">Un seul challenge par hackathon</span>
-                        {% elif c.registration_open %}<span class="badge bg-success-subtle text-success-emphasis rounded-pill px-3 py-2 fw-medium">Inscriptions ouvertes</span>
+                        {% if c.pk in mine %}<span class="badge bg-success rounded-pill px-3 py-2 fw-medium"><i class="bi bi-check-lg me-1"></i>{% trans "Inscrit" %}</span>
+                        {% elif has_registration %}<span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-3 py-2 fw-medium">{% trans "Un seul challenge par hackathon" %}</span>
+                        {% elif c.registration_open %}<span class="badge bg-success-subtle text-success-emphasis rounded-pill px-3 py-2 fw-medium">{% trans "Inscriptions ouvertes" %}</span>
                         {% else %}<span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-3 py-2 fw-medium">Inscriptions fermées</span>{% endif %}
                     {% endif %}
                 </div>
@@ -25,10 +26,10 @@
                 </form>
                 {% endif %}
                 <button class="btn btn-outline-primary rounded-pill px-4" type="button" data-bs-toggle="collapse" data-bs-target="#challenge-{{ c.pk }}" aria-expanded="false" aria-controls="challenge-{{ c.pk }}">
-                    <i class="bi bi-chevron-down me-1"></i>Voir le challenge
+                    <i class="bi bi-chevron-down me-1"></i>{% trans "Voir le challenge" %}
                 </button>
                 {% if is_student and c.registration_open and not has_registration %}
-                <a href="{% url 'hackathons:challenge_register' c.pk %}" class="btn btn-primary rounded-pill px-4">S'inscrire</a>
+                <a href="{% url 'hackathons:challenge_register' c.pk %}" class="btn btn-primary rounded-pill px-4">{% trans "S'inscrire" %}</a>
                 {% endif %}
             </div>
         </div>

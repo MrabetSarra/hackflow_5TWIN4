@@ -2,11 +2,12 @@ from django.conf import settings
 from django.db import models
 from django.utils.text import slugify
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 
 class Repository(models.Model):
     class Provider(models.TextChoices):
-        GITHUB = 'github', 'GitHub'
+        GITHUB = 'github', _('GitHub')
 
     team = models.ForeignKey('student.Team', on_delete=models.CASCADE, related_name='repositories')
     name = models.CharField(max_length=100)
@@ -42,11 +43,11 @@ class Repository(models.Model):
 
 class MergeRequest(models.Model):
     class Status(models.TextChoices):
-        OPEN = 'open', 'Open'
-        APPROVED = 'approved', 'Approved'
-        REJECTED = 'rejected', 'Rejected'
-        MERGED = 'merged', 'Merged'
-        CLOSED = 'closed', 'Closed'
+        OPEN = 'open', _('Open')
+        APPROVED = 'approved', _('Approved')
+        REJECTED = 'rejected', _('Rejected')
+        MERGED = 'merged', _('Merged')
+        CLOSED = 'closed', _('Closed')
 
     repository = models.ForeignKey(Repository, on_delete=models.CASCADE, related_name='merge_requests')
     title = models.CharField(max_length=160)

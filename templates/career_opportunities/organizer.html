@@ -1,4 +1,5 @@
-﻿{% extends 'layouts/base_admin.html' %}
+{% extends 'layouts/base_admin.html' %}
+{% load i18n %}
 {% block admin_content %}
 <style>
 .career-admin{--ca-ink:#18233b;--ca-muted:#718096;--ca-line:#e8edf4;color:var(--ca-ink)}
@@ -9,41 +10,59 @@
 .career-stat-icon{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;font-size:1.05rem}.career-offer{border:1px solid var(--ca-line);border-radius:1.1rem;background:#fff;transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease}.career-offer:hover{border-color:#d5ddf0;box-shadow:0 12px 30px rgba(22,35,64,.07);transform:translateY(-1px)}
 .career-brandmark{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;flex:0 0 auto;color:#4b5fd1;background:#eff2ff;font-size:1.2rem}.career-admin .form-control,.career-admin .form-select{min-height:44px;border-color:#e2e8f0}.career-admin .form-control:focus,.career-admin .form-select:focus{border-color:#8796ef;box-shadow:0 0 0 .2rem rgba(82,98,210,.12)}
 .career-filter-link{border-radius:999px;padding:.45rem .9rem;text-decoration:none;color:#68758a;background:#f3f5f9;font-size:.85rem}.career-filter-link.active{color:#fff;background:#4457c4}.career-empty{border:1px dashed #d9e0eb;border-radius:1.2rem;background:#fff}
+[data-bs-theme="dark"] .career-admin{--ca-ink:#e8edf8;--ca-muted:#a4b0c4;--ca-line:rgba(148,163,184,.18);color:var(--ca-ink)}
+[data-bs-theme="dark"] .career-hero{color:#f8fafc;background:radial-gradient(circle at 82% 8%,rgba(99,102,241,.2),transparent 32%),linear-gradient(120deg,#111827 0%,#141c31 58%,#1b2140 100%);border-color:rgba(148,163,184,.2);box-shadow:0 16px 40px rgba(0,0,0,.22)}
+[data-bs-theme="dark"] .career-hero h1{color:#f8fafc!important}[data-bs-theme="dark"] .career-hero p{color:#aab7cc!important}
+[data-bs-theme="dark"] .career-hero .career-workspace-badge{background:rgba(129,140,248,.12)!important;color:#c7d2fe!important;border-color:rgba(165,180,252,.25)!important}
+[data-bs-theme="dark"] .career-hero .btn-light,[data-bs-theme="dark"] .career-admin .btn-light{color:#e6eaf4;background:#202a3d;border-color:rgba(148,163,184,.25)}
+[data-bs-theme="dark"] .career-hero .btn-light:hover,[data-bs-theme="dark"] .career-admin .btn-light:hover{color:#fff;background:#2c3852;border-color:rgba(165,180,252,.4)}
+[data-bs-theme="dark"] .career-hero .btn-outline-light{color:#c7d2fe!important;border-color:rgba(165,180,252,.45)!important}
+[data-bs-theme="dark"] .career-hero .btn-outline-light:hover{color:#fff!important;background:#4f46e5!important;border-color:#4f46e5!important}
+[data-bs-theme="dark"] .career-stat,[data-bs-theme="dark"] .career-offer,[data-bs-theme="dark"] .career-empty,[data-bs-theme="dark"] .career-admin .card{color:var(--ca-ink);background:#111827;border-color:var(--ca-line)!important}
+[data-bs-theme="dark"] .career-stat:hover,[data-bs-theme="dark"] .career-offer:hover{border-color:rgba(129,140,248,.4)!important;box-shadow:0 14px 32px rgba(0,0,0,.28)}
+[data-bs-theme="dark"] .career-brandmark{color:#a5b4fc;background:rgba(99,102,241,.15)}
+[data-bs-theme="dark"] .career-admin .text-secondary{color:var(--ca-muted)!important}
+[data-bs-theme="dark"] .career-admin .input-group-text{color:#aab7cc!important;background:#172033!important;border-color:rgba(148,163,184,.22)!important}
+[data-bs-theme="dark"] .career-admin .form-control,[data-bs-theme="dark"] .career-admin .form-select{border-color:rgba(148,163,184,.25)}
+[data-bs-theme="dark"] .career-filter-link{color:#bac5d8;background:#1b2537}
+[data-bs-theme="dark"] .career-filter-link:hover{color:#fff;background:#29364f}
+[data-bs-theme="dark"] .career-filter-link.active{color:#fff;background:#4f46e5}
+[data-bs-theme="dark"] .career-admin .text-bg-light{color:#cbd5e1!important;background:#273247!important}
 @media(max-width:767.98px){.career-offer-actions{width:100%;justify-content:space-between}.career-offer-actions .btn{flex:1}.career-hero-actions{width:100%}.career-hero-actions .btn{flex:1}}
 </style>
 <div class="container-fluid career-admin py-2">
   <section class="career-hero p-4 p-lg-5 mb-4">
     <div class="position-relative" style="z-index:1;max-width:760px">
-      <span class="career-workspace-badge badge rounded-pill px-3 py-2 mb-3"><i class="bi bi-briefcase me-1"></i> ORGANIZER WORKSPACE</span>
+      <span class="career-workspace-badge badge rounded-pill px-3 py-2 mb-3"><i class="bi bi-briefcase me-1"></i> {% trans "ORGANIZER WORKSPACE" %}</span>
       <div class="d-flex flex-wrap justify-content-between align-items-end gap-4">
-        <div><h1 class="display-6 fw-bold mb-2">Career opportunities</h1><p class="mb-0">Publish clear roles, track interest and keep every listing up to date.</p></div>
-        <div class="career-hero-actions d-flex gap-2"><a class="btn btn-light rounded-pill fw-semibold px-4" href="{% url 'dashboard_admin:career_create' %}"><i class="bi bi-plus-lg me-1"></i>Create opportunity</a><a class="btn btn-outline-light rounded-pill px-4" href="{% url 'dashboard_admin:career_applications' %}"><i class="bi bi-people me-1"></i>Applications</a></div>
+        <div><h1 class="display-6 fw-bold mb-2">{% trans "Career opportunities" %}</h1><p class="mb-0">{% trans "Publish clear roles, track interest and keep every listing up to date." %}</p></div>
+        <div class="career-hero-actions d-flex gap-2"><a class="btn btn-light rounded-pill fw-semibold px-4" href="{% url 'dashboard_admin:career_create' %}"><i class="bi bi-plus-lg me-1"></i>{% trans "Create opportunity" %}</a><a class="btn btn-outline-light rounded-pill px-4" href="{% url 'dashboard_admin:career_applications' %}"><i class="bi bi-people me-1"></i>{% trans "Applications" %}</a></div>
       </div>
     </div>
   </section>
 
   <div class="row g-3 mb-4">
-    <div class="col-6 col-xl"><div class="career-stat p-3 p-lg-4 h-100"><div class="d-flex justify-content-between align-items-center"><span class="small text-secondary">Total offers</span><span class="career-stat-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-briefcase"></i></span></div><div class="fs-2 fw-bold mt-2">{{ stats.total }}</div><div class="small text-secondary">in your catalog</div></div></div>
-    <div class="col-6 col-xl"><div class="career-stat p-3 p-lg-4 h-100"><div class="d-flex justify-content-between align-items-center"><span class="small text-secondary">Published</span><span class="career-stat-icon bg-success bg-opacity-10 text-success"><i class="bi bi-broadcast"></i></span></div><div class="fs-2 fw-bold mt-2">{{ stats.active }}</div><div class="small text-secondary">visible to students</div></div></div>
-    <div class="col-6 col-xl"><div class="career-stat p-3 p-lg-4 h-100"><div class="d-flex justify-content-between align-items-center"><span class="small text-secondary">Pending review</span><span class="career-stat-icon bg-warning bg-opacity-10 text-warning"><i class="bi bi-hourglass-split"></i></span></div><div class="fs-2 fw-bold mt-2">{{ stats.pending }}</div><div class="small text-secondary">awaiting publication</div></div></div>
-    <div class="col-6 col-xl"><div class="career-stat p-3 p-lg-4 h-100"><div class="d-flex justify-content-between align-items-center"><span class="small text-secondary">Expired</span><span class="career-stat-icon bg-secondary bg-opacity-10 text-secondary"><i class="bi bi-calendar-x"></i></span></div><div class="fs-2 fw-bold mt-2">{{ stats.expired }}</div><div class="small text-secondary">past deadline</div></div></div>
-    <div class="col-12 col-xl"><div class="career-stat p-3 p-lg-4 h-100"><div class="d-flex justify-content-between align-items-center"><span class="small text-secondary">Applications</span><span class="career-stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-person-check"></i></span></div><div class="fs-2 fw-bold mt-2">{{ stats.applications }}</div><div class="small text-secondary">student activity</div></div></div>
+    <div class="col-6 col-xl"><div class="career-stat p-3 p-lg-4 h-100"><div class="d-flex justify-content-between align-items-center"><span class="small text-secondary">{% trans "Total offers" %}</span><span class="career-stat-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-briefcase"></i></span></div><div class="fs-2 fw-bold mt-2">{{ stats.total }}</div><div class="small text-secondary">{% trans "in your catalog" %}</div></div></div>
+    <div class="col-6 col-xl"><div class="career-stat p-3 p-lg-4 h-100"><div class="d-flex justify-content-between align-items-center"><span class="small text-secondary">{% trans "Published" %}</span><span class="career-stat-icon bg-success bg-opacity-10 text-success"><i class="bi bi-broadcast"></i></span></div><div class="fs-2 fw-bold mt-2">{{ stats.active }}</div><div class="small text-secondary">{% trans "visible to students" %}</div></div></div>
+    <div class="col-6 col-xl"><div class="career-stat p-3 p-lg-4 h-100"><div class="d-flex justify-content-between align-items-center"><span class="small text-secondary">{% trans "Pending review" %}</span><span class="career-stat-icon bg-warning bg-opacity-10 text-warning"><i class="bi bi-hourglass-split"></i></span></div><div class="fs-2 fw-bold mt-2">{{ stats.pending }}</div><div class="small text-secondary">{% trans "awaiting publication" %}</div></div></div>
+    <div class="col-6 col-xl"><div class="career-stat p-3 p-lg-4 h-100"><div class="d-flex justify-content-between align-items-center"><span class="small text-secondary">{% trans "Expired" %}</span><span class="career-stat-icon bg-secondary bg-opacity-10 text-secondary"><i class="bi bi-calendar-x"></i></span></div><div class="fs-2 fw-bold mt-2">{{ stats.expired }}</div><div class="small text-secondary">{% trans "past deadline" %}</div></div></div>
+    <div class="col-12 col-xl"><div class="career-stat p-3 p-lg-4 h-100"><div class="d-flex justify-content-between align-items-center"><span class="small text-secondary">{% trans "Applications" %}</span><span class="career-stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-person-check"></i></span></div><div class="fs-2 fw-bold mt-2">{{ stats.applications }}</div><div class="small text-secondary">{% trans "student activity" %}</div></div></div>
   </div>
 
   <section class="card border-0 shadow-sm rounded-4 p-3 p-lg-4 mb-3">
     <form method="get" class="row g-2 align-items-end">
-      <div class="col-lg-7"><label for="career-search" class="form-label small fw-semibold">Search your catalog</label><div class="input-group"><span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-secondary"></i></span><input id="career-search" class="form-control border-start-0" name="q" value="{{ query }}" placeholder="Title, company or description"></div></div>
-      <div class="col-md-8 col-lg-3"><label for="career-status" class="form-label small fw-semibold">Publication status</label><select id="career-status" class="form-select" name="status"><option value="">All statuses</option>{% for value,label in status_choices %}<option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
-      <div class="col-md-4 col-lg-2 d-flex gap-2"><button class="btn btn-primary flex-grow-1"><i class="bi bi-funnel me-1"></i>Filter</button><a class="btn btn-light" href="{% url 'dashboard_admin:career_dashboard' %}" aria-label="Reset filters"><i class="bi bi-arrow-counterclockwise"></i></a></div>
+      <div class="col-lg-7"><label for="career-search" class="form-label small fw-semibold">{% trans "Search your catalog" %}</label><div class="input-group"><span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-secondary"></i></span><input id="career-search" class="form-control border-start-0" name="q" value="{{ query }}" placeholder="Title, company or description"></div></div>
+      <div class="col-md-8 col-lg-3"><label for="career-status" class="form-label small fw-semibold">{% trans "Publication status" %}</label><select id="career-status" class="form-select" name="status"><option value="">{% trans "All statuses" %}</option>{% for value,label in status_choices %}<option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+      <div class="col-md-4 col-lg-2 d-flex gap-2"><button class="btn btn-primary flex-grow-1"><i class="bi bi-funnel me-1"></i>{% trans "Filter" %}</button><a class="btn btn-light" href="{% url 'dashboard_admin:career_dashboard' %}" aria-label="Reset filters"><i class="bi bi-arrow-counterclockwise"></i></a></div>
     </form>
     <div class="d-flex flex-wrap gap-2 mt-3" aria-label="Quick status filters">
       <a class="career-filter-link {% if not status_filter %}active{% endif %}" href="?q={{ query|urlencode }}">All <span class="opacity-75">{{ stats.total }}</span></a>
-      <a class="career-filter-link {% if status_filter == 'published' %}active{% endif %}" href="?q={{ query|urlencode }}&amp;status=published">Published <span class="opacity-75">{{ stats.active }}</span></a>
-      <a class="career-filter-link {% if status_filter == 'review' %}active{% endif %}" href="?q={{ query|urlencode }}&amp;status=review">Pending <span class="opacity-75">{{ stats.pending }}</span></a>
+      <a class="career-filter-link {% if status_filter == 'published' %}active{% endif %}" href="?q={{ query|urlencode }}&amp;status=published">{% trans "Published" %} <span class="opacity-75">{{ stats.active }}</span></a>
+      <a class="career-filter-link {% if status_filter == 'review' %}active{% endif %}" href="?q={{ query|urlencode }}&amp;status=review">{% trans "Pending" %} <span class="opacity-75">{{ stats.pending }}</span></a>
     </div>
   </section>
 
-  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"><h2 class="h5 fw-bold mb-0">Opportunity catalog</h2><span class="small text-secondary">{{ page_obj.paginator.count }} result{{ page_obj.paginator.count|pluralize }}</span></div>
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"><h2 class="h5 fw-bold mb-0">{% trans "Opportunity catalog" %}</h2><span class="small text-secondary">{{ page_obj.paginator.count }} result{{ page_obj.paginator.count|pluralize }}</span></div>
   <div class="d-grid gap-3">
     {% for item in opportunities %}
       <article class="career-offer p-3 p-lg-4">
@@ -51,12 +70,12 @@
           <div class="career-brandmark"><i class="bi bi-building"></i></div>
           <div class="flex-grow-1 min-w-0">
             <div class="d-flex flex-wrap align-items-center gap-2 mb-1"><h3 class="h5 fw-bold mb-0">{{ item.title }}</h3>
-              {% if item.status == 'published' %}<span class="badge rounded-pill text-bg-success-subtle text-success"><i class="bi bi-check-circle me-1"></i>Published</span>
-              {% elif item.status == 'review' %}<span class="badge rounded-pill text-bg-warning-subtle text-warning-emphasis"><i class="bi bi-hourglass-split me-1"></i>Pending review</span>
+              {% if item.status == 'published' %}<span class="badge rounded-pill text-bg-success-subtle text-success"><i class="bi bi-check-circle me-1"></i>{% trans "Published" %}</span>
+              {% elif item.status == 'review' %}<span class="badge rounded-pill text-bg-warning-subtle text-warning-emphasis"><i class="bi bi-hourglass-split me-1"></i>{% trans "Pending review" %}</span>
               {% elif item.status == 'draft' %}<span class="badge rounded-pill text-bg-light text-secondary">Draft</span>
               {% elif item.status == 'archived' %}<span class="badge rounded-pill text-bg-secondary-subtle text-secondary">Archived</span>
               {% else %}<span class="badge rounded-pill text-bg-danger-subtle text-danger">{{ item.get_status_display }}</span>{% endif %}
-              {% if item.is_expired %}<span class="badge rounded-pill text-bg-danger-subtle text-danger">Expired</span>{% endif %}
+              {% if item.is_expired %}<span class="badge rounded-pill text-bg-danger-subtle text-danger">{% trans "Expired" %}</span>{% endif %}
             </div>
             <div class="text-secondary fw-medium">{{ item.company }} <span class="mx-1">·</span> {{ item.get_opportunity_type_display }}</div>
             <div class="d-flex flex-wrap gap-3 small text-secondary mt-2">
@@ -69,9 +88,9 @@
         </div>
       </article>
     {% empty %}
-      <div class="career-empty text-center p-5"><div class="career-brandmark mx-auto mb-3"><i class="bi bi-briefcase"></i></div><h3 class="h5 fw-bold">{% if query or status_filter %}No opportunities match these filters{% else %}Your catalog is ready{% endif %}</h3><p class="text-secondary mb-4">{% if query or status_filter %}Try a different search or clear your filters.{% else %}Create your first offer to make it visible to students.{% endif %}</p><div class="d-flex justify-content-center gap-2"><a class="btn btn-primary rounded-pill px-4" href="{% url 'dashboard_admin:career_create' %}"><i class="bi bi-plus-lg me-1"></i>Create opportunity</a>{% if query or status_filter %}<a class="btn btn-light rounded-pill px-4" href="{% url 'dashboard_admin:career_dashboard' %}">Clear filters</a>{% endif %}</div></div>
+      <div class="career-empty text-center p-5"><div class="career-brandmark mx-auto mb-3"><i class="bi bi-briefcase"></i></div><h3 class="h5 fw-bold">{% if query or status_filter %}No opportunities match these filters{% else %}Your catalog is ready{% endif %}</h3><p class="text-secondary mb-4">{% if query or status_filter %}Try a different search or clear your filters.{% else %}Create your first offer to make it visible to students.{% endif %}</p><div class="d-flex justify-content-center gap-2"><a class="btn btn-primary rounded-pill px-4" href="{% url 'dashboard_admin:career_create' %}"><i class="bi bi-plus-lg me-1"></i>{% trans "Create opportunity" %}</a>{% if query or status_filter %}<a class="btn btn-light rounded-pill px-4" href="{% url 'dashboard_admin:career_dashboard' %}">{% trans "Clear filters" %}</a>{% endif %}</div></div>
     {% endfor %}
   </div>
-  {% if page_obj.paginator.num_pages > 1 %}<nav class="d-flex justify-content-between align-items-center my-4" aria-label="Opportunity pages"><span class="small text-secondary">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span><div class="btn-group">{% if page_obj.has_previous %}<a class="btn btn-sm btn-outline-secondary" href="?q={{ query|urlencode }}&amp;status={{ status_filter|urlencode }}&amp;page={{ page_obj.previous_page_number }}">Previous</a>{% endif %}{% if page_obj.has_next %}<a class="btn btn-sm btn-outline-secondary" href="?q={{ query|urlencode }}&amp;status={{ status_filter|urlencode }}&amp;page={{ page_obj.next_page_number }}">Next</a>{% endif %}</div></nav>{% endif %}
+  {% if page_obj.paginator.num_pages > 1 %}<nav class="d-flex justify-content-between align-items-center my-4" aria-label="Opportunity pages"><span class="small text-secondary">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span><div class="btn-group">{% if page_obj.has_previous %}<a class="btn btn-sm btn-outline-secondary" href="?q={{ query|urlencode }}&amp;status={{ status_filter|urlencode }}&amp;page={{ page_obj.previous_page_number }}">{% trans "Previous" %}</a>{% endif %}{% if page_obj.has_next %}<a class="btn btn-sm btn-outline-secondary" href="?q={{ query|urlencode }}&amp;status={{ status_filter|urlencode }}&amp;page={{ page_obj.next_page_number }}">{% trans "Next" %}</a>{% endif %}</div></nav>{% endif %}
 </div>
 {% endblock %}

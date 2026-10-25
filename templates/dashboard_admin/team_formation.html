@@ -1,9 +1,10 @@
 {% extends "layouts/base_admin.html" %}
+{% load i18n %}
 {% block title %}Team Formation · HackFlow{% endblock %}
 {% block admin_content %}
 <div class="container-fluid px-0">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-        <div><a href="{% url 'dashboard_admin:participants' %}" class="small text-decoration-none"><i class="bi bi-arrow-left me-1"></i>Participants</a><h1 class="h3 fw-bold mt-2 mb-1">AI Team Formation</h1><p class="text-secondary small mb-0">{{ plan.hackathon_name|default:'Édition active' }} · équipes équilibrées selon compétences, rôles préférés, thématiques et disponibilités.</p></div>
+        <div><a href="{% url 'dashboard_admin:participants' %}" class="small text-decoration-none"><i class="bi bi-arrow-left me-1"></i>{% trans "Participants" %}</a><h1 class="h3 fw-bold mt-2 mb-1">{% trans "AI Team Formation" %}</h1><p class="text-secondary small mb-0">{{ plan.hackathon_name|default:'Édition active' }} · équipes équilibrées selon compétences, rôles préférés, thématiques et disponibilités.</p></div>
         <form method="post">{% csrf_token %}<input type="hidden" name="action" value="generate"><button class="btn btn-primary rounded-pill px-4"><i class="bi bi-stars me-1"></i>Générer une proposition</button></form>
     </div>
 

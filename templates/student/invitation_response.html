@@ -1,4 +1,5 @@
 {% extends "layouts/base_student.html" %}
+{% load i18n %}
 
 {% block title %}Team Invitation - HackFlow{% endblock %}
 
@@ -10,10 +11,10 @@
         </span>
         <h1 class="fw-bold text-body mb-2">You’re invited to join {{ invitation.team.name }}</h1>
         <p class="text-body-secondary mb-1">Invitation from {{ invitation.invited_by.get_full_name|default:invitation.invited_by.username }}</p>
-        {% if invitation.team.description %}<p class="text-body-secondary mb-4">{{ invitation.team.description }}</p>{% else %}<p class="text-body-secondary mb-4">Join the team workspace to collaborate on tasks and message your teammates.</p>{% endif %}
+        {% if invitation.team.description %}<p class="text-body-secondary mb-4">{{ invitation.team.description }}</p>{% else %}<p class="text-body-secondary mb-4">{% trans "Join the team workspace to collaborate on tasks and message your teammates." %}</p>{% endif %}
         <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
-            <form method="post" action="{% url 'student:respond_invitation' invitation.token 'accept' %}">{% csrf_token %}<button type="submit" class="btn btn-primary px-4"><i aria-hidden="true" class="bi bi-check-circle me-1"></i>Accept invitation</button></form>
-            <form method="post" action="{% url 'student:respond_invitation' invitation.token 'decline' %}">{% csrf_token %}<button type="submit" class="btn btn-outline-secondary px-4">Decline</button></form>
+            <form method="post" action="{% url 'student:respond_invitation' invitation.token 'accept' %}">{% csrf_token %}<button type="submit" class="btn btn-primary px-4"><i aria-hidden="true" class="bi bi-check-circle me-1"></i>{% trans "Accept invitation" %}</button></form>
+            <form method="post" action="{% url 'student:respond_invitation' invitation.token 'decline' %}">{% csrf_token %}<button type="submit" class="btn btn-outline-secondary px-4">{% trans "Decline" %}</button></form>
         </div>
     </section>
 </div>

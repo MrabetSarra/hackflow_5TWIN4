@@ -14,6 +14,7 @@ from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.translation import gettext as _t
 from django.utils.text import slugify
 try:
     from kombu.exceptions import OperationalError as CeleryOperationalError
@@ -78,9 +79,9 @@ def dashboard(request):
         'team': team, 'hackathon': hackathon, 'timeline': timeline, 'upcoming_deadlines': deadlines,
         'progress': progress, 'completed_tasks': completed, 'total_tasks': total, 'resolved_requests': resolved,
         'stats': [
-            {'label': 'Completed tasks', 'value': f'{completed}/{total}', 'icon': 'bi-check2-square', 'color': 'success'},
-            {'label': 'Resolved mentor requests', 'value': resolved, 'icon': 'bi-headset', 'color': 'primary'},
-            {'label': 'Open team spots', 'value': f'{team.places_left}' if team else 'Create a team', 'icon': 'bi-person-plus', 'color': 'warning'},
+            {'label': _t('Completed tasks'), 'value': f'{completed}/{total}', 'icon': 'bi-check2-square', 'color': 'success'},
+            {'label': _t('Resolved mentor requests'), 'value': resolved, 'icon': 'bi-headset', 'color': 'primary'},
+            {'label': _t('Open team spots'), 'value': f'{team.places_left}' if team else _t('Create a team'), 'icon': 'bi-person-plus', 'color': 'warning'},
         ],
         'recent_announcements': [{'title': announcement.title, 'body': announcement.body,
                                   'author': announcement.author, 'time': announcement.published_at,

@@ -1,4 +1,5 @@
 {% extends "layouts/base_student.html" %}
+{% load i18n %}
 {% load static %}
 {% block title %}Confirm merge · {{ repository.name }} - HackFlow{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'repositories/repositories.css' %}?v={{ repositories_css_version }}">{% endblock %}
@@ -9,22 +10,22 @@
 
     <!-- Header -->
     <div class="repo-header">
-        <div class="repo-header__breadcrumb">            <a href="{% url 'repositories:list' %}">Repositories</a>
+        <div class="repo-header__breadcrumb">            <a href="{% url 'repositories:list' %}">{% trans "Repositories" %}</a>
             <span class="text-body-secondary">/</span>
             <a href="{% url 'repositories:detail' repository.slug %}">{{ repository.name }}</a>
             <span class="text-body-secondary">/</span>
-            <a href="{% url 'repositories:merge_requests' repository.slug %}">Merge requests</a>
+            <a href="{% url 'repositories:merge_requests' repository.slug %}">{% trans "Merge requests" %}</a>
             <span class="text-body-secondary">/</span>
             <a href="{% url 'repositories:merge_request' repository.slug merge_request.pk %}">#{{ merge_request.pk }}</a>
             <span class="text-body-secondary">/</span>
-            <span class="fw-semibold text-body">Confirm merge</span>
+            <span class="fw-semibold text-body">{% trans "Confirm merge" %}</span>
         </div>
         <div class="repo-header__name mt-1">
             <i aria-hidden="true" class="bi bi-check2-circle text-primary"></i>
-            <span>Confirm merge</span>
+            <span>{% trans "Confirm merge" %}</span>
         </div>
         <p class="text-body-secondary small mt-1 mb-0">
-            Merging <code class="repo-branch-badge">{{ merge_request.source_branch }}</code>
+            {% trans "Merging" %} <code class="repo-branch-badge">{{ merge_request.source_branch }}</code>
             <i aria-hidden="true" class="bi bi-arrow-right mx-1"></i>
             <code class="repo-branch-badge">{{ merge_request.target_branch }}</code>
         </p>
@@ -37,7 +38,7 @@
             <div class="card-modern overflow-hidden">
                 <div class="repo-toolbar" style="border-radius:.75rem .75rem 0 0;">
                     <span class="fw-semibold text-body small">
-                        <i aria-hidden="true" class="bi bi-file-diff text-primary me-1"></i>Changes to be merged
+                        <i aria-hidden="true" class="bi bi-file-diff text-primary me-1"></i>{% trans "Changes to be merged" %}
                     </span>
                 </div>
                 <div class="p-3">
@@ -70,7 +71,7 @@
                     </div>
                     <div class="d-flex flex-column gap-2">
                         <button class="btn btn-primary btn-sm rounded-pill w-100" type="submit">
-                            <i aria-hidden="true" class="bi bi-check2-circle me-1"></i>Confirm and merge
+                            <i aria-hidden="true" class="bi bi-check2-circle me-1"></i>{% trans "Confirm and merge" %}
                         </button>
                         <a href="{% url 'repositories:merge_request' repository.slug merge_request.pk %}"
                            class="btn btn-outline-secondary btn-sm rounded-pill w-100">

@@ -1,7 +1,8 @@
+{% load i18n %}
 {% include "hackathons/_ai_client.html" %}
 
 <section class="card-modern p-4 p-lg-5 mb-5" style="background: linear-gradient(135deg, var(--bs-primary-bg-subtle), var(--bs-body-bg) 70%);">
-    <span class="badge bg-primary-subtle text-primary-emphasis rounded-pill px-3 py-2 mb-3"><i class="bi bi-stars me-1"></i>Assistant IA mentor</span>
+    <span class="badge bg-primary-subtle text-primary-emphasis rounded-pill px-3 py-2 mb-3"><i class="bi bi-stars me-1"></i>{% trans "Assistant IA mentor" %}</span>
     <h1 class="h2 fw-bold mb-2">Comprendre un hackathon ou un défi en quelques secondes</h1>
     <p class="text-body-secondary mb-0" style="max-width: 680px;">Choisissez un hackathon ou un challenge : l'IA en donne un résumé simple, les points clés, les difficultés probables des équipes, des questions à poser et des conseils d'accompagnement.</p>
 </section>
@@ -11,7 +12,7 @@
     <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
         <div><span class="badge bg-body-secondary text-body-secondary rounded-pill mb-2">{{ h.track.name }}</span><h2 class="h4 fw-bold mb-1">{{ h.title }}</h2><p class="text-body-secondary small mb-0">{{ h.short_description }}</p></div>
         <div class="align-self-md-start d-flex gap-2">
-            <button type="button" class="btn text-white rounded-pill px-4 hf-explain-btn" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);" data-bs-toggle="modal" data-bs-target="#hf-explain-modal"><i class="bi bi-stars me-1"></i>Expliquer le hackathon</button>
+            <button type="button" class="btn text-white rounded-pill px-4 hf-explain-btn" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);" data-bs-toggle="modal" data-bs-target="#hf-explain-modal"><i class="bi bi-stars me-1"></i>{% trans "Expliquer le hackathon" %}</button>
             <a class="btn btn-outline-primary rounded-pill px-4" href="{% url 'hackathons:hackathon_detail' h.slug %}">Ouvrir</a>
         </div>
     </div>

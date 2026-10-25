@@ -1,7 +1,7 @@
 {% extends "layouts/base_student.html" %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}My Team - {{ team.name }} - HackFlow{% endblock %}
+{% block title %}{% trans "My Team" %} - {{ team.name }} - HackFlow{% endblock %}
 
 {% block student_content %}
 <div class="container-fluid px-0">
@@ -21,17 +21,17 @@
                 </div>
             </div>
             <div class="col-lg-7">
-                <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 mb-3"><i aria-hidden="true" class="bi bi-stars me-1"></i>Your workspace starts here</span>
-                <h1 class="display-6 fw-bold text-body mb-3">You are not on a team yet</h1>
-                <p class="text-body-secondary fs-5 mb-4">Create a team to organize your project, invite students, manage tasks, and chat with your teammates in one place.</p>
+                <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 mb-3"><i aria-hidden="true" class="bi bi-stars me-1"></i>{% trans "Your workspace starts here" %}</span>
+                <h1 class="display-6 fw-bold text-body mb-3">{% trans "You are not on a team yet" %}</h1>
+                <p class="text-body-secondary fs-5 mb-4">{% trans "Create a team to organize your project, invite students, manage tasks, and chat with your teammates in one place." %}</p>
                 <div class="d-flex flex-wrap gap-2">
-                    <button type="button" class="btn btn-primary btn-lg rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#createTeamModal"><i aria-hidden="true" class="bi bi-plus-circle me-2"></i>Create a new team</button>
-                    <a href="{% url 'student:skills_matching' %}" class="btn btn-outline-secondary btn-lg rounded-pill px-4"><i aria-hidden="true" class="bi bi-search me-2"></i>Find a team</a>
+                    <button type="button" class="btn btn-primary btn-lg rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#createTeamModal"><i aria-hidden="true" class="bi bi-plus-circle me-2"></i>{% trans "Create a new team" %}</button>
+                    <a href="{% url 'student:skills_matching' %}" class="btn btn-outline-secondary btn-lg rounded-pill px-4"><i aria-hidden="true" class="bi bi-search me-2"></i>{% trans "Find a team" %}</a>
                 </div>
                 <div class="d-flex flex-wrap gap-4 mt-4 pt-4 border-top text-body-secondary small">
-                    <span><i aria-hidden="true" class="bi bi-kanban text-primary me-2"></i>Plan tasks</span>
-                    <span><i aria-hidden="true" class="bi bi-chat-dots text-primary me-2"></i>Chat together</span>
-                    <span><i aria-hidden="true" class="bi bi-person-plus text-primary me-2"></i>Invite members</span>
+                    <span><i aria-hidden="true" class="bi bi-kanban text-primary me-2"></i>{% trans "Plan tasks" %}</span>
+                    <span><i aria-hidden="true" class="bi bi-chat-dots text-primary me-2"></i>{% trans "Chat together" %}</span>
+                    <span><i aria-hidden="true" class="bi bi-person-plus text-primary me-2"></i>{% trans "Invite members" %}</span>
                 </div>
             </div>
         </div>
@@ -59,12 +59,12 @@
                 </div>
 
                 <div class="d-flex flex-wrap gap-2">
-                        {% if can_manage %}<button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#editTeamModal"><i aria-hidden="true" class="bi bi-pencil-square me-1"></i>Edit team</button><button class="btn btn-outline-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#inviteModal">
-                        <i aria-hidden="true" class="bi bi-person-plus-fill me-1"></i>Invite a member
+                        {% if can_manage %}<button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#editTeamModal"><i aria-hidden="true" class="bi bi-pencil-square me-1"></i>{% trans "Edit team" %}</button><button class="btn btn-outline-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#inviteModal">
+                        <i aria-hidden="true" class="bi bi-person-plus-fill me-1"></i>{% trans "Invite a member" %}
                         </button>{% endif %}
-                    {% if can_manage %}<button type="button" class="btn btn-outline-danger rounded-pill px-3" data-team-confirm data-action="leave_team" data-message="Leave {{ team.name }}? Transfer captaincy first if other members remain." data-bs-toggle="modal" data-bs-target="#teamConfirmationModal"><i aria-hidden="true" class="bi bi-box-arrow-left me-1"></i>Leave team</button>{% elif team.has_pending_leave_request %}<button type="button" class="btn btn-outline-secondary rounded-pill px-3" disabled><i aria-hidden="true" class="bi bi-hourglass-split me-1"></i>Leave request pending</button>{% else %}<button type="button" class="btn btn-outline-danger rounded-pill px-3" data-team-confirm data-action="leave_team" data-message="Request to leave {{ team.name }}? The captain will be notified and must approve your request." data-bs-toggle="modal" data-bs-target="#teamConfirmationModal"><i aria-hidden="true" class="bi bi-box-arrow-left me-1"></i>Request to leave team</button>{% endif %}
+                    {% if can_manage %}<button type="button" class="btn btn-outline-danger rounded-pill px-3" data-team-confirm data-action="leave_team" data-message="{% blocktrans with team_name=team.name %}Leave {{ team_name }}? Transfer captaincy first if other members remain.{% endblocktrans %}" data-bs-toggle="modal" data-bs-target="#teamConfirmationModal"><i aria-hidden="true" class="bi bi-box-arrow-left me-1"></i>{% trans "Leave team" %}</button>{% elif team.has_pending_leave_request %}<button type="button" class="btn btn-outline-secondary rounded-pill px-3" disabled><i aria-hidden="true" class="bi bi-hourglass-split me-1"></i>{% trans "Leave request pending" %}</button>{% else %}<button type="button" class="btn btn-outline-danger rounded-pill px-3" data-team-confirm data-action="leave_team" data-message="{% blocktrans with team_name=team.name %}Request to leave {{ team_name }}? The captain will be notified and must approve your request.{% endblocktrans %}" data-bs-toggle="modal" data-bs-target="#teamConfirmationModal"><i aria-hidden="true" class="bi bi-box-arrow-left me-1"></i>{% trans "Request to leave team" %}</button>{% endif %}
                     <a href="{% url 'student:tasks_kanban' %}" class="btn btn-primary shadow-sm">
-                        <i aria-hidden="true" class="bi bi-kanban-fill me-1"></i>Open Kanban
+                        <i aria-hidden="true" class="bi bi-kanban-fill me-1"></i>{% trans "Open Kanban" %}
                     </a>
                 </div>
             </div>
@@ -77,11 +77,11 @@
             <div class="card-modern p-4 mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
                     <div>
-                        <h5 class="fw-bold text-dark mb-1">Team Members ({{ team.member_count }}/{{ team.max_members }})</h5>
-                        <p class="text-muted small mb-0">Team roles, responsibilities, and skills.</p>
+                        <h5 class="fw-bold text-dark mb-1">{% blocktrans with member_count=team.member_count max_members=team.max_members %}Team Members ({{ member_count }}/{{ max_members }}){% endblocktrans %}</h5>
+                        <p class="text-muted small mb-0">{% trans "Team roles, responsibilities, and skills." %}</p>
                     </div>
                     <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">
-                        {{ team.places_left }} spot(s) available
+                        {{ team.places_left }} {% trans "spots available" %}
                     </span>
                 </div>
 
@@ -95,7 +95,7 @@
                                     <h6 class="fw-bold mb-0 text-dark">{{ member.name }}</h6>
                                     {% if member.is_leader %}
                                     <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill small py-0 px-2" style="font-size: 0.68rem;">
-                                        <i aria-hidden="true" class="bi bi-star-fill me-1"></i>Captain
+                                        <i aria-hidden="true" class="bi bi-star-fill me-1"></i>{% trans "Captain" %}
                                     </span>
                                     {% endif %}
                                 </div>
@@ -110,10 +110,10 @@
 
                         <div class="d-flex flex-wrap align-items-center gap-2 ms-auto ms-sm-0">
                             {% if can_manage and not member.is_leader %}
-                            <form method="post">{% csrf_token %}<input type="hidden" name="action" value="transfer_captain"><input type="hidden" name="member_id" value="{{ member.id }}"><button class="btn btn-sm btn-outline-primary rounded-pill px-3" type="submit">Make captain</button></form>
-                            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" data-team-confirm data-action="remove_member" data-target-id="{{ member.id }}" data-member-name="{{ member.name }}" data-message="Remove {{ member.name }} from the team?" data-bs-toggle="modal" data-bs-target="#teamConfirmationModal">Remove</button>
+                            <form method="post">{% csrf_token %}<input type="hidden" name="action" value="transfer_captain"><input type="hidden" name="member_id" value="{{ member.id }}"><button class="btn btn-sm btn-outline-primary rounded-pill px-3" type="submit">{% trans "Make captain" %}</button></form>
+                            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" data-team-confirm data-action="remove_member" data-target-id="{{ member.id }}" data-member-name="{{ member.name }}" data-message="{% blocktrans with member_name=member.name %}Remove {{ member_name }} from the team?{% endblocktrans %}" data-bs-toggle="modal" data-bs-target="#teamConfirmationModal">{% trans "Remove" %}</button>
                             {% endif %}
-                            {% if member.id != request.user.id %}<a href="{% url 'student:conversation' member.id %}" class="btn btn-sm btn-light border js-open-team-conversation" data-conversation-url="{% url 'student:conversation' member.id %}?partial=1" data-recipient-name="{{ member.name }}" title="Message {{ member.name }}" aria-label="Message {{ member.name }}">
+                            {% if member.id != request.user.id %}<a href="{% url 'student:conversation' member.id %}" class="btn btn-sm btn-light border js-open-team-conversation" data-conversation-url="{% url 'student:conversation' member.id %}?partial=1" data-recipient-name="{{ member.name }}" title="{% blocktrans with member_name=member.name %}Message {{ member_name }}{% endblocktrans %}" aria-label="{% blocktrans with member_name=member.name %}Message {{ member_name }}{% endblocktrans %}">
                                 <i aria-hidden="true" class="bi bi-chat-text"></i>
                             </a>{% endif %}
                         </div>
@@ -122,22 +122,22 @@
 
                     {% if can_manage and pending_invitations %}
                     <div class="pt-3 border-top">
-                        <h6 class="fw-semibold text-dark mb-2">Pending invitations</h6>
+                        <h6 class="fw-semibold text-dark mb-2">{% trans "Pending invitations" %}</h6>
                         {% for invitation in pending_invitations %}
-                        <div class="d-flex align-items-center justify-content-between gap-2 py-2 border-bottom"><span class="small text-muted">{{ invitation.email }}</span><button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" data-team-confirm data-action="cancel_invitation" data-target-id="{{ invitation.pk }}" data-message="Cancel the invitation to {{ invitation.email }}?" data-bs-toggle="modal" data-bs-target="#teamConfirmationModal">Cancel invitation</button></div>
+                        <div class="d-flex align-items-center justify-content-between gap-2 py-2 border-bottom"><span class="small text-muted">{{ invitation.email }}</span><button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" data-team-confirm data-action="cancel_invitation" data-target-id="{{ invitation.pk }}" data-message="{% blocktrans with invite_email=invitation.email %}Cancel the invitation to {{ invite_email }}?{% endblocktrans %}" data-bs-toggle="modal" data-bs-target="#teamConfirmationModal">{% trans "Cancel invitation" %}</button></div>
                         {% endfor %}
                     </div>
                     {% endif %}
 
                     {% if can_manage and pending_leave_requests %}
                     <div class="pt-3 border-top">
-                        <h6 class="fw-semibold text-dark mb-2">Requests to leave the team</h6>
+                        <h6 class="fw-semibold text-dark mb-2">{% trans "Requests to leave the team" %}</h6>
                         {% for leave_request in pending_leave_requests %}
                         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 py-2 border-bottom">
-                            <span class="small text-muted">{{ leave_request.member.get_full_name|default:leave_request.member.username }} wants to leave.</span>
+                            <span class="small text-muted">{% blocktrans with member_name=leave_request.member.get_full_name|default:leave_request.member.username %}{{ member_name }} wants to leave.{% endblocktrans %}</span>
                             <div class="d-flex gap-2">
-                                <form method="post">{% csrf_token %}<input type="hidden" name="action" value="approve_leave_request"><input type="hidden" name="leave_request_id" value="{{ leave_request.pk }}"><button class="btn btn-sm btn-success rounded-pill px-3" type="submit">Approve</button></form>
-                                <form method="post">{% csrf_token %}<input type="hidden" name="action" value="decline_leave_request"><input type="hidden" name="leave_request_id" value="{{ leave_request.pk }}"><button class="btn btn-sm btn-outline-danger rounded-pill px-3" type="submit">Decline</button></form>
+                                <form method="post">{% csrf_token %}<input type="hidden" name="action" value="approve_leave_request"><input type="hidden" name="leave_request_id" value="{{ leave_request.pk }}"><button class="btn btn-sm btn-success rounded-pill px-3" type="submit">{% trans "Approve" %}</button></form>
+                                <form method="post">{% csrf_token %}<input type="hidden" name="action" value="decline_leave_request"><input type="hidden" name="leave_request_id" value="{{ leave_request.pk }}"><button class="btn btn-sm btn-outline-danger rounded-pill px-3" type="submit">{% trans "Decline" %}</button></form>
                             </div>
                         </div>
                         {% endfor %}
@@ -148,13 +148,13 @@
                     <div class="p-4 rounded-3 border border-2 border-dashed border-primary border-opacity-50 bg-primary bg-opacity-10 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
                         <div>
                             <div class="d-flex align-items-center gap-2 mb-1">
-                                <span class="badge bg-primary text-white rounded-pill">Open Slot #{{ team.slot_number }}</span>
-                                <strong class="text-primary">Looking for:</strong>
+                                <span class="badge bg-primary text-white rounded-pill">{% trans "Open Slot" %} #{{ team.slot_number }}</span>
+                                <strong class="text-primary">{% trans "Looking for:" %}</strong>
                             </div>
                             <p class="small text-muted mb-0">{{ team.seeking_skill }}</p>
                         </div>
                         <a href="{% url 'student:skills_matching' %}" class="btn btn-primary btn-sm rounded-pill px-3 flex-shrink-0">
-                            <i aria-hidden="true" class="bi bi-search me-1"></i>Browse the talent pool
+                            <i aria-hidden="true" class="bi bi-search me-1"></i>{% trans "Browse the talent pool" %}
                         </a>
                     </div>
                 </div>
@@ -164,7 +164,7 @@
         <!-- Right column: project links and resources -->
         <div class="col-lg-4">
             <div class="card-modern p-4 mb-4">
-                <h5 class="fw-bold text-dark mb-3"><i aria-hidden="true" class="bi bi-link-45deg text-primary me-2"></i>Project Links & Resources</h5>
+                <h5 class="fw-bold text-dark mb-3"><i aria-hidden="true" class="bi bi-link-45deg text-primary me-2"></i>{% trans "Project Links & Resources" %}</h5>
                 <div class="d-flex flex-column gap-3">
                     {% for repository in repositories %}<a href="{% url 'repositories:detail' repository.slug %}" class="p-3 rounded-3 border text-decoration-none text-body d-flex align-items-center justify-content-between"><span><i aria-hidden="true" class="bi bi-git text-primary me-2"></i><strong>{{ repository.name }}</strong><span class="d-block small text-body-secondary">HackFlow repository · {{ repository.default_branch }}</span></span><i aria-hidden="true" class="bi bi-arrow-up-right"></i></a>{% endfor %}
                     {% for link in team.project_links %}<a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" class="p-3 rounded-3 border text-decoration-none text-dark d-flex align-items-center justify-content-between gap-3 hover-bg-light" style="width: 100%; min-width: 0; overflow: hidden;">
@@ -173,7 +173,7 @@
                             <div class="flex-grow-1" style="min-width: 0; overflow: hidden;">
                                 <div class="fw-bold small">{{ link.title }}</div>
                                 <div class="text-muted small text-truncate w-100 d-block" style="font-size: 0.75rem; max-width: 100%;" title="{{ link.url }}">{{ link.url }}</div>
-                                <div class="text-body-secondary" style="font-size: 0.68rem; overflow-wrap: anywhere;">Shared from latest submission · updated by {{ link.updated_by }}</div>
+                                <div class="text-body-secondary" style="font-size: 0.68rem; overflow-wrap: anywhere;">{% blocktrans with updater=link.updated_by %}Shared from latest submission · updated by {{ updater }}{% endblocktrans %}</div>
                             </div>
                         </div>
                         <i aria-hidden="true" class="bi bi-box-arrow-up-right text-muted flex-shrink-0"></i>
@@ -184,34 +184,34 @@
                             <div>
                                     <div class="fw-bold small">{{ resource.title }}</div>
                                     <div class="text-muted small text-truncate" style="font-size: 0.75rem;">{{ resource.url|default:resource.document.name }}</div>
-                                    {% if resource.created_by %}<div class="text-body-secondary" style="font-size: 0.68rem;">Updated by {{ resource.created_by.get_full_name|default:resource.created_by.username }}</div>{% endif %}
+                                    {% if resource.created_by %}<div class="text-body-secondary" style="font-size: 0.68rem;">{% blocktrans with updater=resource.created_by.get_full_name|default:resource.created_by.username %}Updated by {{ updater }}{% endblocktrans %}</div>{% endif %}
                             </div>
                         </div>
                         <i aria-hidden="true" class="bi bi-box-arrow-up-right text-muted"></i>
-                    </a>{% if can_edit_resources %}<div class="d-flex justify-content-end gap-2"><a href="?edit_resource={{ resource.pk }}#resourceModal" class="btn btn-sm btn-outline-secondary">Edit</a><form method="post">{% csrf_token %}<input type="hidden" name="action" value="delete_resource"><input type="hidden" name="resource_id" value="{{ resource.pk }}"><button class="btn btn-sm btn-outline-danger" type="submit">Delete</button></form></div>{% endif %}{% empty %}{% if not team.project_links %}<span class="small text-body-secondary">No project links yet. Add the team's real repository, prototype, or demo link.</span>{% endif %}{% endfor %}
+                    </a>{% if can_edit_resources %}<div class="d-flex justify-content-end gap-2"><a href="?edit_resource={{ resource.pk }}#resourceModal" class="btn btn-sm btn-outline-secondary">{% trans "Edit" %}</a><form method="post">{% csrf_token %}<input type="hidden" name="action" value="delete_resource"><input type="hidden" name="resource_id" value="{{ resource.pk }}"><button class="btn btn-sm btn-outline-danger" type="submit">{% trans "Delete" %}</button></form></div>{% endif %}{% empty %}{% if not team.project_links %}<span class="small text-body-secondary">{% trans "No project links yet. Add the team's real repository, prototype, or demo link." %}</span>{% endif %}{% endfor %}
                 </div>
 
                 <div class="pt-3 border-top mt-3 text-center">
                     {% if can_edit_resources %}<button class="btn btn-sm btn-outline-secondary w-100 rounded-pill" data-bs-toggle="modal" data-bs-target="#resourceModal">
-                        <i aria-hidden="true" class="bi bi-plus-lg me-1"></i>Add or update a team link/document
+                        <i aria-hidden="true" class="bi bi-plus-lg me-1"></i>{% trans "Add or update a team link/document" %}
                     </button>{% endif %}
                 </div>
             </div>
 
             <!-- Team Settings -->
             <div class="card-modern p-4">
-                <h6 class="fw-bold text-dark mb-3">Team Information</h6>
+                <h6 class="fw-bold text-dark mb-3">{% trans "Team Information" %}</h6>
                 <ul class="list-unstyled small text-muted d-flex flex-column gap-2 mb-0">
                     <li class="d-flex justify-content-between">
-                        <span>Location:</span>
+                        <span>{% trans "Location:" %}</span>
                         <strong class="text-dark">{{ team.table_number }}</strong>
                     </li>
                     <li class="d-flex justify-content-between">
-                        <span>Assigned mentor:</span>
+                        <span>{% trans "Assigned mentor:" %}</span>
                         <strong class="text-primary">{{ team.mentor_name }}</strong>
                     </li>
                     <li class="d-flex justify-content-between">
-                        <span>Final submission status:</span>
+                        <span>{% trans "Final submission status:" %}</span>
                         <span class="badge bg-warning text-dark">{{ team.submission_status }}</span>
                     </li>
                 </ul>
@@ -226,13 +226,13 @@
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
         <div class="modal-content card-modern border-0">
             <div class="modal-header border-bottom">
-                <h5 class="modal-title fw-bold" id="createTeamModalLabel"><i aria-hidden="true" class="bi bi-people-fill text-primary me-2"></i>Create your team</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title fw-bold" id="createTeamModalLabel"><i aria-hidden="true" class="bi bi-people-fill text-primary me-2"></i>{% trans "Create your team" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
             </div>
             <form id="createTeamForm" method="post" class="modal-body p-4">
                 {% csrf_token %}<input type="hidden" name="action" value="create_team">
                 {% for error in create_form.non_field_errors %}<div role="alert" class="alert alert-danger">{{ error }}</div>{% endfor %}
-                <p class="text-body-secondary small mb-4">Set up your project workspace. You can invite teammates after creating it.</p>
+                <p class="text-body-secondary small mb-4">{% trans "Set up your project workspace. You can invite teammates after creating it." %}</p>
                 {% for field in create_form %}
                 <div class="mb-3">
                     <label for="{{ field.id_for_label }}" class="form-label small fw-semibold">{{ field.label }}</label>
@@ -242,8 +242,8 @@
                 {% endfor %}
             </form>
             <div class="modal-footer border-top">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" form="createTeamForm" class="btn btn-primary px-4"><i aria-hidden="true" class="bi bi-check-circle me-1"></i>Create team</button>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+                <button type="submit" form="createTeamForm" class="btn btn-primary px-4"><i aria-hidden="true" class="bi bi-check-circle me-1"></i>{% trans "Create team" %}</button>
             </div>
         </div>
     </div>
@@ -256,23 +256,23 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content card-modern border-0">
             <div class="modal-header border-bottom">
-                <h5 class="modal-title fw-bold" id="inviteModalLabel"><i aria-hidden="true" class="bi bi-person-plus-fill text-primary me-2"></i>Invite a participant</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title fw-bold" id="inviteModalLabel"><i aria-hidden="true" class="bi bi-person-plus-fill text-primary me-2"></i>{% trans "Invite a participant" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
             </div>
             <div class="modal-body p-4">
-                <form method="post" novalidate>{% csrf_token %}<input type="hidden" name="action" value="invite"><label class="form-label small fw-semibold">Direct invitation link to join {{ team.name }} :</label>
+                <form method="post" novalidate>{% csrf_token %}<input type="hidden" name="action" value="invite"><label class="form-label small fw-semibold">{% blocktrans with team_name=team.name %}Direct invitation link to join {{ team_name }}:{% endblocktrans %}</label>
                 <div class="input-group mb-4">
                     <input type="text" class="form-control font-mono small" value="{{ invitation_link }}" readonly>
-                    <button class="btn btn-primary" type="button" data-demo-toast="Invitation link copied to clipboard!">
-                        <i aria-hidden="true" class="bi bi-clipboard me-1"></i>Copy
+                    <button class="btn btn-primary" type="button" data-demo-toast="{% trans 'Invitation link copied to clipboard!' %}">
+                        <i aria-hidden="true" class="bi bi-clipboard me-1"></i>{% trans "Copy" %}
                     </button>
                 </div>
 
-                <label for="{{ invitation_form.email.id_for_label }}" class="form-label small fw-semibold">Or invite by university email:</label>
+                <label for="{{ invitation_form.email.id_for_label }}" class="form-label small fw-semibold">{% trans "Or invite by university email:" %}</label>
                 <div class="input-group">
                     {{ invitation_form.email }}
                     <button class="btn btn-outline-primary" type="submit">
-                        Send
+                        {% trans "Send" %}
                     </button>
                 </div>
                 {% for error in invitation_form.email.errors %}<div id="{{ invitation_form.email.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}
@@ -287,32 +287,34 @@
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
         <div class="modal-content card-modern border-0">
             <div class="modal-header border-bottom">
-                <h5 class="modal-title fw-bold" id="teamConversationModalLabel"><i aria-hidden="true" class="bi bi-chat-dots-fill text-primary me-2"></i>Conversation</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title fw-bold" id="teamConversationModalLabel"><i aria-hidden="true" class="bi bi-chat-dots-fill text-primary me-2"></i>{% trans "Conversation" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
             </div>
-            <div class="modal-body p-4" id="teamConversationModalBody">
-                <div class="text-center text-body-secondary py-5" role="status"><span class="spinner-border spinner-border-sm me-2"></span>Loading conversation…</div>
-            </div>
+            <div class="modal-body p-4" id="teamConversationModalBody"></div>
         </div>
     </div>
 </div>
+<template id="teamConversationLoading"><div class="text-center text-body-secondary py-5" role="status"><span class="spinner-border spinner-border-sm me-2"></span>{% trans "Loading conversation…" %}</div></template>
+<template id="teamConversationLoadError"><p class="alert alert-danger mb-0">{% trans "Could not load this conversation. Please try again." %}</p></template>
 <script>
 const initTeamConversationPopup = () => {
     const modalElement = document.getElementById('teamConversationModal');
     const modalBody = document.getElementById('teamConversationModalBody');
     const modalTitle = document.getElementById('teamConversationModalLabel');
+    const loadingTemplate = document.getElementById('teamConversationLoading');
+    const errorTemplate = document.getElementById('teamConversationLoadError');
     if (!modalElement || !modalBody || !window.bootstrap) return;
 
     const modal = window.bootstrap.Modal.getOrCreateInstance(modalElement);
     const loadConversation = async (url) => {
-        modalBody.innerHTML = '<div class="text-center text-body-secondary py-5" role="status"><span class="spinner-border spinner-border-sm me-2"></span>Loading conversation…</div>';
+        modalBody.replaceChildren(loadingTemplate.content.cloneNode(true));
         try {
             const response = await fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}, credentials: 'same-origin'});
-            if (!response.ok) throw new Error('Unable to load conversation');
+            if (!response.ok) throw new Error(response.statusText);
             modalBody.innerHTML = await response.text();
             scrollToLatestMessage();
         } catch (error) {
-            modalBody.innerHTML = '<p class="alert alert-danger mb-0">Could not load this conversation. Please try again.</p>';
+            modalBody.replaceChildren(errorTemplate.content.cloneNode(true));
         }
     };
     const scrollToLatestMessage = () => {
@@ -364,25 +366,25 @@ if (document.readyState === 'loading') {
     initTeamConversationPopup();
 }
 </script>
-{% if team and can_edit_resources %}<div class="modal fade{% if show_resource_modal %} show d-block{% endif %}" id="resourceModal" tabindex="-1" aria-labelledby="resourceModalLabel" aria-hidden="{% if show_resource_modal %}false{% else %}true{% endif %}" role="dialog" aria-modal="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content card-modern border-0"><form method="post" enctype="multipart/form-data">{% csrf_token %}<input type="hidden" name="action" value="{% if resource_form.instance.pk %}resource_edit{% else %}resource{% endif %}"><input type="hidden" name="resource_id" value="{{ resource_form.instance.pk|default:'' }}"><div class="modal-header border-bottom"><h5 class="modal-title fw-bold" id="resourceModalLabel">{% if resource_form.instance.pk %}Update team link/document{% else %}Add a team link/document{% endif %}</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body p-4">{% for field in resource_form %}<div class="mb-3"><label for="{{ field.id_for_label }}" class="form-label small fw-semibold">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div id="{{ field.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}</div>{% endfor %}{% for error in resource_form.non_field_errors %}<div id="{{ field.id_for_label }}_errors" class="text-danger small">{{ error }}</div>{% endfor %}</div><div class="modal-footer border-top"><button class="btn btn-primary" type="submit">Save for the team</button></div></form></div></div></div>{% if show_resource_modal %}<div class="modal-backdrop fade show"></div>{% endif %}{% endif %}
+{% if team and can_edit_resources %}<div class="modal fade{% if show_resource_modal %} show d-block{% endif %}" id="resourceModal" tabindex="-1" aria-labelledby="resourceModalLabel" aria-hidden="{% if show_resource_modal %}false{% else %}true{% endif %}" role="dialog" aria-modal="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content card-modern border-0"><form method="post" enctype="multipart/form-data">{% csrf_token %}<input type="hidden" name="action" value="{% if resource_form.instance.pk %}resource_edit{% else %}resource{% endif %}"><input type="hidden" name="resource_id" value="{{ resource_form.instance.pk|default:'' }}"><div class="modal-header border-bottom"><h5 class="modal-title fw-bold" id="resourceModalLabel">{% if resource_form.instance.pk %}Update team link/document{% else %}Add a team link/document{% endif %}</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button></div><div class="modal-body p-4">{% for field in resource_form %}<div class="mb-3"><label for="{{ field.id_for_label }}" class="form-label small fw-semibold">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div id="{{ field.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}</div>{% endfor %}{% for error in resource_form.non_field_errors %}<div id="{{ field.id_for_label }}_errors" class="text-danger small">{{ error }}</div>{% endfor %}</div><div class="modal-footer border-top"><button class="btn btn-primary" type="submit">{% trans "Save for the team" %}</button></div></form></div></div></div>{% if show_resource_modal %}<div class="modal-backdrop fade show"></div>{% endif %}{% endif %}
 {% if team and can_manage %}
 <div class="modal fade{% if show_edit_team_modal %} show d-block{% endif %}" id="editTeamModal" tabindex="-1" aria-labelledby="editTeamModalLabel" aria-hidden="{% if show_edit_team_modal %}false{% else %}true{% endif %}" role="dialog" aria-modal="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg"><div class="modal-content card-modern border-0">
-        <div class="modal-header border-bottom"><h5 class="modal-title fw-bold" id="editTeamModalLabel"><i aria-hidden="true" class="bi bi-pencil-square text-primary me-2"></i>Edit team</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-header border-bottom"><h5 class="modal-title fw-bold" id="editTeamModalLabel"><i aria-hidden="true" class="bi bi-pencil-square text-primary me-2"></i>{% trans "Edit team" %}</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button></div>
         <form id="editTeamForm" method="post" class="modal-body p-4" novalidate>{% csrf_token %}<input type="hidden" name="action" value="edit_team">
             {% for error in team_edit_form.non_field_errors %}<div role="alert" class="alert alert-danger">{{ error }}</div>{% endfor %}
             {% for field in team_edit_form %}<div class="mb-3"><label for="{{ field.id_for_label }}" class="form-label small fw-semibold">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div id="{{ field.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}</div>{% endfor %}
         </form>
-        <div class="modal-footer border-top"><button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">Cancel</button><button type="submit" form="editTeamForm" class="btn btn-primary rounded-pill px-3">Save team</button></div>
+        <div class="modal-footer border-top"><button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">{% trans "Cancel" %}</button><button type="submit" form="editTeamForm" class="btn btn-primary rounded-pill px-3">{% trans "Save team" %}</button></div>
     </div></div>
 </div>
 {% if show_edit_team_modal %}<div class="modal-backdrop fade show"></div>{% endif %}
 {% endif %}
 {% if team %}
 <div class="modal fade" id="teamConfirmationModal" tabindex="-1" aria-labelledby="teamConfirmationTitle" aria-hidden="true" role="dialog" aria-modal="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content card-modern border-0">
-    <div class="modal-header border-bottom"><h5 class="modal-title fw-bold" id="teamConfirmationTitle">Confirm team change</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+    <div class="modal-header border-bottom"><h5 class="modal-title fw-bold" id="teamConfirmationTitle">{% trans "Confirm team change" %}</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button></div>
     <form method="post" id="teamConfirmationForm">{% csrf_token %}<input type="hidden" name="action" value=""><input type="hidden" name="member_id" value=""><input type="hidden" name="invitation_id" value="">
-        <div class="modal-body"><p class="mb-0" id="teamConfirmationMessage"></p></div><div class="modal-footer border-top"><button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-danger rounded-pill px-3">Confirm</button></div>
+        <div class="modal-body"><p class="mb-0" id="teamConfirmationMessage"></p></div><div class="modal-footer border-top"><button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">{% trans "Cancel" %}</button><button type="submit" class="btn btn-danger rounded-pill px-3">{% trans "Confirm" %}</button></div>
     </form>
 </div></div></div>
 <script>

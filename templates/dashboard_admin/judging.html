@@ -1,4 +1,6 @@
 {% extends "layouts/base_admin.html" %}
+{% load i18n %}
+{% load i18n_content %}
 {% block title %}Jury et analyse des projets - HackFlow{% endblock %}
 {% block admin_content %}
 <style>
@@ -19,7 +21,7 @@
   <div class="alert alert-info border-0 rounded-4 d-flex gap-3 align-items-start mb-4"><i class="bi bi-info-circle-fill fs-5"></i><div><strong>L’IA assiste le jury ; elle ne décide pas du gagnant.</strong><div class="small mt-1">L’analyse cite les éléments soumis et les points à vérifier. Les jurés gardent la responsabilité des notes et de la décision finale.</div></div></div>
 
   <section class="card-modern p-4 mb-4">
-    <div class="mb-3"><h2 class="h5 fw-bold mb-1">Grille de jugement</h2><p class="small text-secondary mb-0">Critères pondérés repris de la grille actuelle.</p></div>
+    <div class="mb-3"><h2 class="h5 fw-bold mb-1">{% trans "Grille de jugement" %}</h2><p class="small text-secondary mb-0">Critères pondérés repris de la grille actuelle.</p></div>
     <div class="row g-2">{% for criterion in judging_rubric %}<div class="col-sm-6 col-xl-3"><div class="border rounded-3 p-3 h-100 d-flex justify-content-between align-items-center gap-2"><span class="small fw-semibold">{{ criterion.label }}</span><span class="badge rounded-pill bg-primary-subtle text-primary">{{ criterion.weight }}%</span></div></div>{% endfor %}</div>
   </section>
 
@@ -30,7 +32,7 @@
       <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
         <div class="flex-grow-1">
           <div class="d-flex flex-wrap align-items-center gap-2 mb-2"><h3 class="h5 fw-bold mb-0">{{ submission.project_name|default:submission.team.project_name|default:submission.team.name }}</h3><span class="badge rounded-pill bg-secondary-subtle text-secondary">{{ submission.get_status_display }}</span>{% if submission.category or submission.team.category %}<span class="badge rounded-pill bg-light text-body border">{{ submission.category|default:submission.team.category }}</span>{% endif %}</div>
-          <div class="small text-secondary mb-2"><i class="bi bi-people me-1"></i>{{ submission.team.name }} <span class="mx-1">·</span>{{ submission.milestone.title }}{% if submission.submitted_at %}<span class="mx-1">·</span>Soumis le {{ submission.submitted_at|date:'d/m/Y H:i' }}{% endif %}</div>
+          <div class="small text-secondary mb-2"><i class="bi bi-people me-1"></i>{{ submission.team.name }} <span class="mx-1">·</span>{{ submission.milestone.title|localized_milestone }}{% if submission.submitted_at %}<span class="mx-1">·</span>Soumis le {{ submission.submitted_at|date:'d/m/Y H:i' }}{% endif %}</div>
           <p class="mb-3">{{ submission.description|default:submission.team.project_pitch|default:'Aucune description fournie.'|truncatechars:360 }}</p>
           <div class="d-flex flex-wrap gap-2 small">
             {% if submission.github_url %}<a class="btn btn-sm btn-outline-secondary rounded-pill" href="{{ submission.github_url }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-github me-1"></i>Code source</a>{% endif %}

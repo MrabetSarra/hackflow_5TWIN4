@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.translation import gettext as _t
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
@@ -90,14 +91,14 @@ def dashboard(request):
                       .select_related('team'))
 
     stats = [
-        {'label': 'Équipes suivies', 'value': MentorAssignment.objects.filter(mentor=mentor).count(),
+        {'label': _t('Équipes suivies'), 'value': MentorAssignment.objects.filter(mentor=mentor).count(),
          'icon': 'bi-people-fill', 'color': 'primary'},
-        {'label': "Demandes d'aide en attente", 'value': pending.count(),
+        {'label': _t("Demandes d'aide en attente"), 'value': pending.count(),
          'icon': 'bi-bell-fill', 'color': 'warning'},
-        {'label': 'Tickets en cours (moi)',
+        {'label': _t('Tickets en cours (moi)'),
          'value': MentorRequest.objects.filter(mentor=mentor, status=MentorRequest.Status.ACCEPTED).count(),
          'icon': 'bi-headset', 'color': 'success'},
-        {'label': 'Évaluations rédigées', 'value': MentorEvaluation.objects.filter(mentor=mentor).count(),
+        {'label': _t('Évaluations rédigées'), 'value': MentorEvaluation.objects.filter(mentor=mentor).count(),
          'icon': 'bi-pencil-square', 'color': 'accent'},
     ]
     # Annonces de l'organisation destinées aux mentors (fonctionnalité du module admin).

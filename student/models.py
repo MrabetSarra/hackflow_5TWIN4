@@ -6,6 +6,7 @@ from django.utils import timezone
 import zipfile
 
 from accounts.storage import PrivateCVStorage
+from django.utils.translation import gettext_lazy as _
 
 
 def validate_submission_zip(upload):
@@ -53,9 +54,9 @@ class HackathonRegistration(models.Model):
 
 class Milestone(models.Model):
     class Status(models.TextChoices):
-        UPCOMING = 'upcoming', 'Upcoming'
-        ACTIVE = 'active', 'In progress'
-        DONE = 'done', 'Approved'
+        UPCOMING = 'upcoming', _('Upcoming')
+        ACTIVE = 'active', _('In progress')
+        DONE = 'done', _('Approved')
 
     hackathon = models.ForeignKey(Hackathon, on_delete=models.CASCADE, related_name='milestones')
     title = models.CharField(max_length=180)
@@ -73,15 +74,15 @@ class Milestone(models.Model):
 
 class Announcement(models.Model):
     class Audience(models.TextChoices):
-        ALL = 'all', 'Everyone'
-        STUDENTS = 'students', 'Students'
-        MENTORS = 'mentors', 'Mentors'
-        CAPTAINS = 'captains', 'Team captains'
+        ALL = 'all', _('Everyone')
+        STUDENTS = 'students', _('Students')
+        MENTORS = 'mentors', _('Mentors')
+        CAPTAINS = 'captains', _('Team captains')
 
     class Priority(models.TextChoices):
-        INFO = 'info', 'Info'
-        IMPORTANT = 'important', 'Important'
-        URGENT = 'urgent', 'Urgent'
+        INFO = 'info', _('Info')
+        IMPORTANT = 'important', _('Important')
+        URGENT = 'urgent', _('Urgent')
 
     hackathon = models.ForeignKey(Hackathon, on_delete=models.CASCADE, related_name='announcements')
     title = models.CharField(max_length=220)
@@ -156,9 +157,9 @@ class TeamMembership(models.Model):
 
 class TeamLeaveRequest(models.Model):
     class Status(models.TextChoices):
-        PENDING = 'pending', 'Pending'
-        APPROVED = 'approved', 'Approved'
-        DECLINED = 'declined', 'Declined'
+        PENDING = 'pending', _('Pending')
+        APPROVED = 'approved', _('Approved')
+        DECLINED = 'declined', _('Declined')
 
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='leave_requests')
     member = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='team_leave_requests')
@@ -176,9 +177,9 @@ class TeamLeaveRequest(models.Model):
 
 class Sprint(models.Model):
     class Status(models.TextChoices):
-        PLANNED = 'planned', 'Planned'
-        ACTIVE = 'active', 'In progress'
-        COMPLETED = 'completed', 'Completed'
+        PLANNED = 'planned', _('Planned')
+        ACTIVE = 'active', _('In progress')
+        COMPLETED = 'completed', _('Completed')
 
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='sprints')
     name = models.CharField(max_length=100)
@@ -196,9 +197,9 @@ class Sprint(models.Model):
 
 class TeamInvitation(models.Model):
     class Status(models.TextChoices):
-        PENDING = 'pending', 'Pending'
-        ACCEPTED = 'accepted', 'Accepted'
-        DECLINED = 'declined', 'Declined'
+        PENDING = 'pending', _('Pending')
+        ACCEPTED = 'accepted', _('Accepted')
+        DECLINED = 'declined', _('Declined')
 
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='invitations')
     invited_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, related_name='team_invitations')
@@ -211,11 +212,11 @@ class TeamInvitation(models.Model):
 
 class Resource(models.Model):
     class Kind(models.TextChoices):
-        GITHUB = 'github', 'GitHub'
-        FIGMA = 'figma', 'Figma'
-        DEMO = 'demo', 'Demo'
-        DOCUMENT = 'document', 'Document'
-        OTHER = 'other', 'Other'
+        GITHUB = 'github', _('GitHub')
+        FIGMA = 'figma', _('Figma')
+        DEMO = 'demo', _('Demo')
+        DOCUMENT = 'document', _('Document')
+        OTHER = 'other', _('Other')
 
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='resources')
     title = models.CharField(max_length=140)
@@ -229,14 +230,14 @@ class Resource(models.Model):
 
 class Task(models.Model):
     class Status(models.TextChoices):
-        TODO = 'todo', 'To do'
-        IN_PROGRESS = 'in_progress', 'In progress'
-        REVIEW = 'review', 'In review'
-        DONE = 'done', 'Done'
+        TODO = 'todo', _('To do')
+        IN_PROGRESS = 'in_progress', _('In progress')
+        REVIEW = 'review', _('In review')
+        DONE = 'done', _('Done')
 
     class Priority(models.TextChoices):
-        NORMAL = 'normal', 'Normal'
-        HIGH = 'high', 'High'
+        NORMAL = 'normal', _('Normal')
+        HIGH = 'high', _('High')
 
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='tasks')
     sprint = models.ForeignKey(Sprint, on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')
@@ -254,10 +255,10 @@ class Task(models.Model):
 
 class AITaskJob(models.Model):
     class Status(models.TextChoices):
-        PENDING = 'pending', 'Pending'
-        RUNNING = 'running', 'Running'
-        DONE = 'done', 'Done'
-        FAILED = 'failed', 'Failed'
+        PENDING = 'pending', _('Pending')
+        RUNNING = 'running', _('Running')
+        DONE = 'done', _('Done')
+        FAILED = 'failed', _('Failed')
 
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='ai_task_jobs')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='ai_task_jobs')
@@ -275,10 +276,10 @@ class AITaskJob(models.Model):
 
 class Submission(models.Model):
     class Status(models.TextChoices):
-        DRAFT = 'draft', 'Draft'
-        SUBMITTED = 'submitted', 'Submitted'
-        APPROVED = 'approved', 'Approved'
-        REVISION = 'revision', 'Needs revision'
+        DRAFT = 'draft', _('Draft')
+        SUBMITTED = 'submitted', _('Submitted')
+        APPROVED = 'approved', _('Approved')
+        REVISION = 'revision', _('Needs revision')
 
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='submissions')
     milestone = models.ForeignKey(Milestone, on_delete=models.CASCADE, related_name='submissions')
@@ -311,14 +312,14 @@ class Submission(models.Model):
 
 class MentorRequest(models.Model):
     class Status(models.TextChoices):
-        PENDING = 'pending', 'Pending'
-        ACCEPTED = 'accepted', 'Accepted'
-        RESOLVED = 'resolved', 'Resolved'
+        PENDING = 'pending', _('Pending')
+        ACCEPTED = 'accepted', _('Accepted')
+        RESOLVED = 'resolved', _('Resolved')
 
     class Urgency(models.TextChoices):
-        BLOCKING = 'blocking', 'Blocking'
-        IMPORTANT = 'important', 'Important'
-        NORMAL = 'normal', 'Advice'
+        BLOCKING = 'blocking', _('Blocking')
+        IMPORTANT = 'important', _('Important')
+        NORMAL = 'normal', _('Advice')
 
     student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='mentor_requests')
     team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True, related_name='mentor_requests')

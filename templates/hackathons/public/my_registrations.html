@@ -1,3 +1,4 @@
+{% load i18n %}
 <style>
   .hf-cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
   .hf-cal-head { text-align: center; font-size: .8rem; font-weight: 600; color: var(--bs-secondary-color); padding: .25rem 0; }
@@ -13,7 +14,7 @@
 
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
     <div>
-        <h1 class="h2 fw-bold mb-1">Mes inscriptions</h1>
+        <h1 class="h2 fw-bold mb-1">{% trans "Mes inscriptions" %}</h1>
         <p class="text-body-secondary mb-0">Votre calendrier personnel : hackathons et étapes de programme de vos challenges.</p>
     </div>
     <a href="{% url 'hackathons:catalog' %}" class="btn btn-outline-primary rounded-pill px-4"><i class="bi bi-search me-1"></i>Découvrir des hackathons</a>
@@ -22,7 +23,7 @@
 {% if agenda.next_up %}
 <div class="card-modern p-4 mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
     <div>
-        <div class="small text-body-secondary mb-1"><i class="bi bi-stars me-1 text-primary"></i>Prochain rendez-vous</div>
+        <div class="small text-body-secondary mb-1"><i class="bi bi-stars me-1 text-primary"></i>{% trans "Prochain rendez-vous" %}</div>
         <a href="{{ agenda.next_up.url }}" class="h5 fw-bold text-decoration-none">{{ agenda.next_up.title }}</a>
     </div>
     <div class="text-center px-4 py-3 rounded-4 bg-primary-subtle">
@@ -33,7 +34,7 @@
 {% endif %}
 
 {% for warning in agenda.conflicts %}
-<div class="alert alert-warning d-flex align-items-center gap-3" role="alert"><i class="bi bi-exclamation-triangle fs-4"></i><div><strong>Conflit d'agenda.</strong> {{ warning }}</div></div>
+<div class="alert alert-warning d-flex align-items-center gap-3" role="alert"><i class="bi bi-exclamation-triangle fs-4"></i><div><strong>{% trans "Conflit d'agenda." %}</strong> {{ warning }}</div></div>
 {% endfor %}
 
 <section class="card-modern p-4 p-lg-5 mb-5">
@@ -41,7 +42,7 @@
         <h2 class="h4 fw-bold mb-0">{{ agenda.month_label }}</h2>
         <div class="d-flex gap-2">
             <a class="btn btn-outline-secondary rounded-pill px-3" href="?month={{ agenda.prev_month }}" aria-label="Mois précédent"><i class="bi bi-chevron-left"></i></a>
-            {% if not agenda.is_current_month %}<a class="btn btn-outline-primary rounded-pill px-3" href="{% url 'hackathons:my_registrations' %}">Aujourd'hui</a>{% endif %}
+            {% if not agenda.is_current_month %}<a class="btn btn-outline-primary rounded-pill px-3" href="{% url 'hackathons:my_registrations' %}">{% trans "Aujourd'hui" %}</a>{% endif %}
             <a class="btn btn-outline-secondary rounded-pill px-3" href="?month={{ agenda.next_month }}" aria-label="Mois suivant"><i class="bi bi-chevron-right"></i></a>
         </div>
     </div>
@@ -64,9 +65,9 @@
     </div>
 
     <div class="d-flex flex-wrap gap-4 small text-body-secondary mt-4">
-        <span><span class="badge bg-primary-subtle text-primary-emphasis me-1">&nbsp;</span>Hackathon</span>
+        <span><span class="badge bg-primary-subtle text-primary-emphasis me-1">&nbsp;</span>{% trans "Hackathon" %}</span>
         <span><span class="badge bg-info-subtle text-info-emphasis me-1">&nbsp;</span>Étape du programme</span>
-        <span><span class="badge border border-primary me-1">&nbsp;</span>Aujourd'hui</span>
+        <span><span class="badge border border-primary me-1">&nbsp;</span>{% trans "Aujourd'hui" %}</span>
     </div>
     {% if not agenda.has_events %}<p class="text-center text-body-secondary mt-4 mb-0">Aucune inscription pour le moment : vos hackathons apparaîtront ici.</p>{% endif %}
 </section>
@@ -86,17 +87,17 @@
             <div class="modal-footer border-0 pt-0 justify-content-between">
                 <a href="#" id="hf-event-link" class="btn btn-primary rounded-pill px-4"><i class="bi bi-eye me-1"></i>Voir les détails du hackathon</a>
                 <form method="post" id="hf-event-cancel" class="m-0">{% csrf_token %}
-                    <button type="submit" class="btn btn-outline-danger rounded-pill px-4"><i class="bi bi-trash me-1"></i>Annuler l'inscription</button>
+                    <button type="submit" class="btn btn-outline-danger rounded-pill px-4"><i class="bi bi-trash me-1"></i>{% trans "Annuler l'inscription" %}</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-<h2 class="h4 fw-bold mb-3">Historique</h2>
+<h2 class="h4 fw-bold mb-3">{% trans "Historique" %}</h2>
 <div class="card-modern overflow-hidden">
     <div class="table-responsive"><table class="table align-middle mb-0">
-        <thead><tr><th scope="col" class="ps-4">Hackathon</th><th scope="col">Challenge</th><th scope="col">Équipe</th><th scope="col">Date</th><th scope="col">Statut</th><th scope="col" class="pe-4"><span class="visually-hidden">Actions</span></th></tr></thead>
+        <thead><tr><th scope="col" class="ps-4">{% trans "Hackathon" %}</th><th scope="col">{% trans "Challenge" %}</th><th scope="col">Équipe</th><th scope="col">Date</th><th scope="col">{% trans "Statut" %}</th><th scope="col" class="pe-4"><span class="visually-hidden">{% trans "Actions" %}</span></th></tr></thead>
         <tbody>
         {% for r in registrations %}
         <tr>
@@ -105,7 +106,7 @@
             <td>{{ r.team.name|default:"—" }}</td>
             <td>{{ r.registered_at|date:"d/m/Y H:i" }}</td>
             <td><span class="badge bg-{{ r.status_color }}-subtle text-{{ r.status_color }}-emphasis rounded-pill">{{ r.get_status_display }}</span></td>
-            <td class="pe-4 text-end">{% if r.status == 'confirmed' %}<form method="post" action="{% url 'hackathons:registration_cancel' r.pk %}">{% csrf_token %}<button class="btn btn-sm btn-outline-danger rounded-pill" onclick="return confirm('Annuler cette inscription ?')">Annuler</button></form>{% endif %}</td>
+            <td class="pe-4 text-end">{% if r.status == 'confirmed' %}<form method="post" action="{% url 'hackathons:registration_cancel' r.pk %}">{% csrf_token %}<button class="btn btn-sm btn-outline-danger rounded-pill" onclick="return confirm('Annuler cette inscription ?')">{% trans "Annuler" %}</button></form>{% endif %}</td>
         </tr>
         {% empty %}<tr><td colspan="6" class="text-center text-muted py-5">Vous n'avez aucune inscription.</td></tr>{% endfor %}
         </tbody>
