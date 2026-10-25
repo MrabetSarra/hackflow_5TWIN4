@@ -1,0 +1,84 @@
+{% extends "layouts/base_public.html" %}
+{% load static %}
+
+{% block title %}Choisir votre rôle - HackFlow{% endblock %}
+
+{% block public_content %}
+<div class="py-5 bg-gradient-subtle min-vh-100 d-flex align-items-center">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="text-center mb-4">
+                    <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 mb-3">
+                        <i class="bi bi-shield-check me-1"></i>Connexion {{ provider|title }} validée
+                    </span>
+                    <h1 class="fw-bold text-body">Finalisez votre inscription</h1>
+                    <p class="text-body-secondary">
+                        Bienvenue <strong>{{ user_info.first_name|default:user_info.username }}</strong> (<code>{{ user_info.email }}</code>) !<br>
+                        Choisissez le rôle qui correspond à votre profil pour accéder à votre espace personnalisé.
+                    </p>
+                </div>
+
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show small" role="alert">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post" class="row g-4 justify-content-center">
+                    {% csrf_token %}
+
+                    <div class="col-md-6">
+                        <div class="card-modern p-4 h-100 d-flex flex-column justify-content-between border border-primary border-opacity-25 hover-shadow">
+                            <div>
+                                <div class="stat-icon stat-icon-primary mb-3">
+                                    <i aria-hidden="true" class="bi bi-mortarboard-fill fs-2"></i>
+                                </div>
+                                <h2 class="h4 fw-bold text-body">Espace Étudiant</h2>
+                                <p class="text-body-secondary small mb-4">
+                                    Participez aux hackathons, trouvez une équipe, collaborez sur des projets et développez vos compétences.
+                                </p>
+                            </div>
+                            <button type="submit" name="role" value="student" class="btn btn-primary w-100 py-2 fw-semibold">
+                                <i class="bi bi-person-check me-2"></i>Continuer en tant qu'Étudiant
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card-modern p-4 h-100 d-flex flex-column justify-content-between border border-accent border-opacity-25 hover-shadow">
+                            <div>
+                                <div class="stat-icon stat-icon-accent mb-3">
+                                    <i aria-hidden="true" class="bi bi-lightbulb-fill fs-2"></i>
+                                </div>
+                                <h2 class="h4 fw-bold text-body">Espace Mentor</h2>
+                                <p class="text-body-secondary small mb-4">
+                                    Accompagnez et guidez les équipes, partagez votre expertise technique ou métier, et évaluez les projets.
+                                </p>
+                            </div>
+                            <button type="submit" name="role" value="mentor" class="btn btn-outline-primary w-100 py-2 fw-semibold">
+                                <i class="bi bi-person-badge me-2"></i>Continuer en tant que Mentor
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="p-3 bg-body-tertiary rounded-3 mt-4 text-center border">
+                    <div class="small text-body-secondary">
+                        <i class="bi bi-shield-lock-fill text-muted me-1"></i>
+                        <strong>Sécurité HackFlow :</strong> Seuls les comptes <em>Étudiant</em> et <em>Mentor</em> peuvent être créés en libre-service. Les privilèges <em>Administrateur</em> sont strictement protégés et réservés à l'équipe interne.
+                    </div>
+                </div>
+
+                <div class="text-center mt-3">
+                    <a href="{% url 'accounts:login' %}" class="small text-decoration-none text-muted">
+                        <i class="bi bi-arrow-left me-1"></i>Annuler et revenir à la connexion
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

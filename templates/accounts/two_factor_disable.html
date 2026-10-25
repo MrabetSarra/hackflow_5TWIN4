@@ -1,0 +1,64 @@
+{% extends layout_template %}
+{% load static %}
+
+{% block title %}Désactiver le 2FA - HackFlow{% endblock %}
+
+{% block profile_content %}
+<div class="container-fluid px-0">
+    <div class="mb-4 d-flex justify-content-between align-items-center gap-3">
+        <div>
+            <h1 class="fw-bold text-body mb-1">Désactiver l'authentification à deux facteurs</h1>
+            <p class="text-body-secondary small mb-0">La désactivation réduit le niveau de sécurité de votre compte.</p>
+        </div>
+        <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Retour au profil
+        </a>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        <div class="col-lg-7">
+            <div class="card-modern p-4 p-md-5 mb-4 shadow-sm border-danger border-opacity-25">
+                <div class="d-flex align-items-center gap-3 border-bottom pb-3 mb-4">
+                    <div class="rounded-circle bg-danger bg-opacity-10 text-danger d-inline-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                        <i class="bi bi-shield-x fs-3"></i>
+                    </div>
+                    <div>
+                        <h2 class="h5 fw-bold mb-0 text-danger">Confirmer la désactivation du 2FA</h2>
+                        <span class="small text-body-secondary">Cette action supprimera votre configuration d'application d'authentification et tous vos codes de secours.</span>
+                    </div>
+                </div>
+
+                <div class="alert alert-danger bg-danger bg-opacity-10 border-danger border-opacity-25 small mb-4">
+                    <i class="bi bi-exclamation-octagon-fill me-2"></i>
+                    <strong>Attention :</strong> Une fois le 2FA désactivé, seul votre mot de passe sera nécessaire pour accéder à votre compte HackFlow.
+                </div>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <div class="mb-4">
+                        <label for="{{ form.password.id_for_label }}" class="form-label fw-semibold">{{ form.password.label }}</label>
+                        {{ form.password }}
+                        {% if form.password.help_text %}
+                            <div class="form-text small mt-1">{{ form.password.help_text }}</div>
+                        {% endif %}
+                        {% for error in form.password.errors %}
+                            <div id="{{ form.password.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-danger px-4">
+                            <i class="bi bi-shield-x me-1"></i>Désactiver le 2FA
+                        </button>
+                        <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

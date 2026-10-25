@@ -1,0 +1,140 @@
+{% extends layout_template %}
+{% load static %}
+
+{% block title %}Configurer le 2FA - HackFlow{% endblock %}
+
+{% block profile_content %}
+<div class="container-fluid px-0">
+    <div class="mb-4 d-flex justify-content-between align-items-center gap-3">
+        <div>
+            <h1 class="fw-bold text-body mb-1">Authentification à deux facteurs (2FA)</h1>
+            <p class="text-body-secondary small mb-0">Renforcez la sécurité de votre compte HackFlow avec une application d'authentification.</p>
+        </div>
+        <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Retour au profil
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }}" role="status">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card-modern p-4 p-md-5 mb-4">
+                <div class="d-flex align-items-center gap-3 border-bottom pb-3 mb-4">
+                    <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                        <i class="bi bi-qr-code fs-4"></i>
+                    </div>
+                    <div>
+                        <h2 class="h5 fw-bold mb-0">Activation de l'application d'authentification</h2>
+                        <span class="small text-body-secondary">Compatible avec Google Authenticator, Microsoft Authenticator, 1Password, Authy...</span>
+                    </div>
+                </div>
+
+                <div class="row g-4 align-items-center mb-4">
+                    <div class="col-md-5 text-center">
+                        <div class="p-3 bg-white border rounded-4 d-inline-block shadow-sm">
+                            <img src="data:image/png;base64,{{ qr_b64 }}" alt="QR Code 2FA" width="190" height="190" style="image-rendering: pixelated; max-width: 100%; height: auto;">
+                        </div>
+                        <div class="small text-body-secondary mt-2">Scannez ce QR Code avec votre téléphone</div>
+                    </div>
+
+                    <div class="col-md-7">
+                        <h3 class="h6 fw-bold mb-2">Instructions pas à pas :</h3>
+                        <ol class="small text-body-secondary ps-3 mb-3">
+                            <li class="mb-2">Ouvrez votre application d'authentification préférée sur votre smartphone.</li>
+                            <li class="mb-2">Ajoutez un nouveau compte et scannez le QR code affiché ci-contre.</li>
+                            <li class="mb-2">Si vous ne pouvez pas scanner le QR code, saisissez la clé secrète manuellement.</li>
+                            <li>Entrez ci-dessous le code à 6 chiffres généré par l'application pour valider l'activation.</li>
+                        </ol>
+
+                        <div class="p-3 bg-body-tertiary rounded-3 border">
+                            <label class="form-label small fw-semibold text-body mb-1">Clé de configuration secrète :</label>
+                            <div class="d-flex align-items-center justify-content-between gap-2">
+                                <code class="fs-6 fw-bold text-primary text-break font-monospace" id="secretKeyText">{{ secret_formatted }}</code>
+                                <button type="button" class="btn btn-sm btn-outline-primary text-nowrap" id="copySecretBtn" onclick="copySecretKey()">
+                                    <i class="bi bi-clipboard me-1"></i>Copier
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <div class="mb-4 col-md-8 mx-auto text-center">
+                        <label for="{{ form.code.id_for_label }}" class="form-label fw-bold mb-2">{{ form.code.label }}</label>
+                        {{ form.code }}
+                        {% if form.code.help_text %}
+                            <div class="form-text small mt-2">{{ form.code.help_text }}</div>
+                        {% endif %}
+                        {% for error in form.code.errors %}
+                            <div id="{{ form.code.id_for_label }}_errors" class="text-danger small mt-2">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-flex justify-content-center gap-2">
+                        <button type="submit" class="btn btn-primary px-4 py-2">
+                            <i class="bi bi-shield-check me-2"></i>Activer la protection 2FA
+                        </button>
+                        <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary px-3 py-2">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card-modern p-4 mb-4">
+                <h3 class="h6 fw-bold mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-shield-shaded text-primary"></i>Pourquoi activer le 2FA ?
+                </h3>
+                <p class="small text-body-secondary mb-3">
+                    L'authentification à deux facteurs renforce considérablement la sécurité de votre compte HackFlow en demandant une preuve d'identité supplémentaire lors de chaque connexion.
+                </p>
+                <div class="p-3 bg-body-tertiary rounded-3 small">
+                    <ul class="list-unstyled mb-0 d-flex flex-column gap-2 text-body-secondary">
+                        <li class="d-flex align-items-start gap-2">
+                            <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                            <span>Protection contre le vol de mot de passe.</span>
+                        </li>
+                        <li class="d-flex align-items-start gap-2">
+                            <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                            <span>Codes éphémères renouvelés toutes les 30 secondes.</span>
+                        </li>
+                        <li class="d-flex align-items-start gap-2">
+                            <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                            <span>Codes de secours fournis en cas de perte de téléphone.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copySecretKey() {
+    const rawSecret = "{{ secret }}";
+    navigator.clipboard.writeText(rawSecret).then(function() {
+        const btn = document.getElementById('copySecretBtn');
+        btn.innerHTML = '<i class="bi bi-check2 me-1"></i>Copié !';
+        btn.classList.remove('btn-outline-primary');
+        btn.classList.add('btn-success');
+        setTimeout(() => {
+            btn.innerHTML = '<i class="bi bi-clipboard me-1"></i>Copier';
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-primary');
+        }, 2000);
+    });
+}
+</script>
+{% endblock %}
