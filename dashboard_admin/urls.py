@@ -5,6 +5,7 @@ app_name = 'dashboard_admin'
 
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
+    path('export.csv', views.dashboard_export, name='dashboard_export'),
     path('copilot/ask/', views.copilot_ask, name='copilot_ask'),
     path('announcements/generate/', views.generate_announcement, name='announcement_generate'),
     path('participants/', views.participants, name='participants'),

@@ -555,3 +555,17 @@ class AnnouncementAndJuryServiceCoverageTests(TestCase):
     def test_project_evaluation_reports_unreachable_backend(self, _urlopen_mock):
         with self.assertRaises(ProjectEvaluationError):
             analyze_project_submission(self.submission_stub())
+
+    def test_dashboard_export_csv(self):
+        admin = get_user_model().objects.create_user(username='export-admin', password='password123', role='organization')
+        self.client.login(username='export-admin', password='password123')
+        url = reverse('dashboard_admin:dashboard_export')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/csv; charset=utf-8')
+        self.assertIn('hackflow-dashboard-', response['Content-Disposition'])
+        content = response.content.decode('utf-8')
+        self.assertIn('RAPPORT SYNTHÈSE HACKFLOW', content)
+        self.assertIn('INDICATEURS CLÉS (KPIS)', content)
+        self.assertIn('ÉQUIPES ET PROJETS', content)
+        self.assertIn('PARTICIPANTS (ÉTUDIANTS & MENTORS)', content)

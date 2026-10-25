@@ -78,11 +78,40 @@ def dashboard(request):
     total_category_teams = sum(item['count'] for item in categories) or 1
     challenges_stats = [{**item, 'percent': round(item['count'] * 100 / total_category_teams)} for item in categories]
     placed_pct = round(facts['etudiants_affectes'] * 100 / facts['participants_inscrits']) if facts['participants_inscrits'] else 0
+    User = get_user_model()
+    mentors_count = User.objects.filter(role='mentor', is_active=True).count()
     kpis = [
-        {'label': _t('Participants inscrits'), 'value': facts['participants_inscrits'], 'icon': 'bi-people-fill', 'color': 'primary', 'sub': _t('Hackathon data')},
-        {'label': _t('Équipes'), 'value': facts['equipes'], 'icon': 'bi-diagram-3-fill', 'color': 'success', 'sub': _t('Teams in database')},
-        {'label': _t('Étudiants affectés'), 'value': f"{placed_pct}%", 'icon': 'bi-pie-chart-fill', 'color': 'accent', 'sub': _t('%(count)s without a team') % {'count': facts['etudiants_sans_equipe']}},
-        {'label': _t('Demandes mentor ouvertes'), 'value': facts['demandes_mentorat_ouvertes'], 'icon': 'bi-headset', 'color': 'warning', 'sub': _t('%(count)s blocking') % {'count': facts['demandes_bloquantes_ouvertes']}},
+        {
+            'label': _t('Participants inscrits'),
+            'value': facts['participants_inscrits'],
+            'icon': 'bi-people-fill',
+            'color': 'primary',
+            'sub': _t('%(count)s étudiants · %(mentors)s mentors') % {
+                'count': facts['participants_inscrits'],
+                'mentors': mentors_count,
+            },
+        },
+        {
+            'label': _t('Équipes'),
+            'value': facts['equipes'],
+            'icon': 'bi-diagram-3-fill',
+            'color': 'success',
+            'sub': _t('%(members)s membre(s) affecté(s)') % {'members': facts['etudiants_affectes']},
+        },
+        {
+            'label': _t('Étudiants affectés'),
+            'value': f"{placed_pct}%",
+            'icon': 'bi-pie-chart-fill',
+            'color': 'accent',
+            'sub': _t('%(count)s sans équipe') % {'count': facts['etudiants_sans_equipe']},
+        },
+        {
+            'label': _t('Demandes mentor ouvertes'),
+            'value': facts['demandes_mentorat_ouvertes'],
+            'icon': 'bi-headset',
+            'color': 'warning',
+            'sub': _t('%(count)s bloquante(s)') % {'count': facts['demandes_bloquantes_ouvertes']} if facts['demandes_bloquantes_ouvertes'] else _t('%(mentors)s mentors disponibles') % {'mentors': mentors_count},
+        },
     ]
     pending_alerts = []
     if facts['taches_en_retard']:
@@ -528,6 +557,63 @@ def participants_export(request):
             row['name'], row['email'], row['school'], row['role'],
             ', '.join(row['team_names']) or 'Aucune', ', '.join(row['skills']), row['status'],
         ])
+    return response
+
+
+@role_required('admin', 'organization')
+def dashboard_export(request):
+    """Export complete hackathon dashboard data (KPIs, teams, and participants) as CSV."""
+    facts, active_hackathon = build_hackathon_snapshot()
+    hackathon_slug = active_hackathon.name.lower().replace(' ', '-') if active_hackathon else 'hackflow'
+    now = timezone.now()
+    now_str = now.strftime('%Y%m%d_%H%M')
+
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="hackflow-dashboard-{hackathon_slug}-{now_str}.csv"'
+    response.write('\ufeff')
+    writer = csv.writer(response)
+
+    writer.writerow(['=== RAPPORT SYNTHÈSE HACKFLOW ==='])
+    writer.writerow(['Événement', active_hackathon.name if active_hackathon else 'Tous les événements'])
+    if active_hackathon:
+        writer.writerow(['Édition', active_hackathon.edition or '—'])
+        writer.writerow(['Date de début', timezone.localtime(active_hackathon.starts_at).strftime('%d/%m/%Y %H:%M')])
+        writer.writerow(['Date de fin', timezone.localtime(active_hackathon.ends_at).strftime('%d/%m/%Y %H:%M')])
+    writer.writerow(['Généré le', timezone.localtime(now).strftime('%d/%m/%Y %H:%M')])
+    writer.writerow([])
+
+    writer.writerow(['=== INDICATEURS CLÉS (KPIS) ==='])
+    writer.writerow(['Indicateur', 'Valeur', 'Détails'])
+    User = get_user_model()
+    mentors_count = User.objects.filter(role='mentor', is_active=True).count()
+    placed_pct = round(facts['etudiants_affectes'] * 100 / facts['participants_inscrits']) if facts['participants_inscrits'] else 0
+    writer.writerow(['Participants inscrits (étudiants)', facts['participants_inscrits'], f'{mentors_count} mentors actifs'])
+    writer.writerow(['Équipes', facts['equipes'], f'{facts["etudiants_affectes"]} membre(s) affecté(s)'])
+    writer.writerow(['Étudiants affectés', f'{placed_pct}%', f'{facts["etudiants_sans_equipe"]} sans équipe'])
+    writer.writerow(['Demandes mentor ouvertes', facts['demandes_mentorat_ouvertes'], f'{facts["demandes_bloquantes_ouvertes"]} bloquante(s)'])
+    writer.writerow([])
+
+    writer.writerow(['=== ÉQUIPES ET PROJETS ==='])
+    writer.writerow(['Nom de l’équipe', 'Défi / Thématique', 'Capitaine', 'Membres', 'Capacité Max', 'Statut Livrable', 'Projet'])
+    team_queryset = Team.objects.filter(hackathon=active_hackathon) if active_hackathon else Team.objects.all()
+    team_queryset = team_queryset.select_related('captain').prefetch_related('memberships__user', 'submissions')
+    for team in team_queryset.order_by('name'):
+        members_count = team.memberships.count()
+        captain_name = (team.captain.get_full_name() or team.captain.username) if team.captain else '—'
+        latest_sub = max(team.submissions.all(), key=lambda s: (s.updated_at, s.pk), default=None)
+        sub_status = latest_sub.get_status_display() if latest_sub else 'Aucun livrable'
+        proj_name = (latest_sub.project_name if latest_sub else team.project_name) or '—'
+        writer.writerow([team.name, team.category or 'Général', captain_name, members_count, team.max_members, sub_status, proj_name])
+    writer.writerow([])
+
+    writer.writerow(['=== PARTICIPANTS (ÉTUDIANTS & MENTORS) ==='])
+    writer.writerow(['Nom complet', 'Nom d’utilisateur', 'E-mail', 'Rôle', 'Établissement', 'Compétences', 'Équipe(s)', 'Statut'])
+    for row in _participant_rows({}):
+        user = row['user']
+        team_str = ', '.join(row['team_names']) or 'Aucune'
+        skills_str = ', '.join(row['skills']) or (user.specialty or '—')
+        writer.writerow([row['name'], user.username, row['email'], row['role'], row['school'] or '—', skills_str, team_str, row['status']])
+
     return response
 
 

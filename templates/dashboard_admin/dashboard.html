@@ -11,9 +11,9 @@
             <p class="text-muted small mb-0">{% if active_hackathon %}{% blocktrans with name=active_hackathon.name %}Supervising {{ name }}{% endblocktrans %}{% if active_hackathon.edition %} · {{ active_hackathon.edition }}{% endif %}.{% else %}{% trans "Supervision based on data recorded in HackFlow." %}{% endif %}</p>
         </div>
         <div class="d-flex gap-2">
-            <button class="btn btn-outline-primary btn-sm rounded-pill px-3" data-demo-toast="{% trans 'CSV export report generated successfully!' %}">
+            <a href="{% url 'dashboard_admin:dashboard_export' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3 d-flex align-items-center">
                 <i class="bi bi-download me-1"></i>{% trans "Export data" %}
-            </button>
+            </a>
             <a href="{% url 'dashboard_admin:announcements' %}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm d-flex align-items-center gap-2">
                 <i class="bi bi-broadcast"></i> {% trans "Publish announcement" %}
             </a>

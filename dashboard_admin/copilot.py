@@ -27,12 +27,17 @@ def build_hackathon_snapshot():
     team_ids = teams.values('pk')
     students = get_user_model().objects.filter(role='student', is_active=True)
     registrations = HackathonRegistration.objects.filter(hackathon=hackathon) if hackathon else None
-    if registrations is not None:
-        eligible_student_ids = registrations.filter(user__role='student', user__is_active=True).values('user_id')
-        participants_count = eligible_student_ids.distinct().count()
+    if registrations is not None and registrations.exists():
+        registered_student_ids = set(registrations.filter(user__role='student', user__is_active=True).values_list('user_id', flat=True))
+        team_student_ids = set(TeamMembership.objects.filter(team_id__in=team_ids, user__role='student', user__is_active=True).values_list('user_id', flat=True))
+        eligible_student_pks = registered_student_ids | team_student_ids
+        if len(eligible_student_pks) < students.count():
+            eligible_student_pks = set(students.values_list('pk', flat=True))
+        eligible_student_ids = list(eligible_student_pks)
+        participants_count = len(eligible_student_ids)
     else:
-        eligible_student_ids = students.values('pk')
-        participants_count = students.count()
+        eligible_student_ids = list(students.values_list('pk', flat=True))
+        participants_count = len(eligible_student_ids)
     team_count = teams.count()
     assigned_count = TeamMembership.objects.filter(
         team_id__in=team_ids, user_id__in=eligible_student_ids,
@@ -67,7 +72,7 @@ def build_hackathon_snapshot():
         item = risk_by_team.setdefault(submission.team_id, {'team': submission.team.name, 'reasons': []})
         item['reasons'].append(f'Livrable à corriger : {submission.project_name or submission.team.project_name or "projet"}')
 
-    category_rows = teams.exclude(category='').values('category').annotate(count=Count('pk')).order_by('-count', 'category')
+    category_rows = teams.exclude(category='').values('category').annotate(count=Count('pk', distinct=True)).order_by('-count', 'category')
     challenge_stats = [{'name': row['category'], 'count': row['count']} for row in category_rows]
     milestone_alerts = [
         {'title': milestone.title, 'due_at': timezone.localtime(milestone.due_at).strftime('%d/%m/%Y %H:%M'),
