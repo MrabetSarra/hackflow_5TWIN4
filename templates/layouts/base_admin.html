@@ -108,23 +108,32 @@
 
                 <!-- Notifications -->
                 <div class="dropdown">
-                    <button class="btn btn-light position-relative rounded-circle p-2 border" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{% trans 'Notifications' %}">
+                    <button class="btn btn-light position-relative rounded-circle p-2 border" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{% trans 'Notifications' %}" title="{% trans 'Notifications' %}">
                         <i class="bi bi-bell-fill text-secondary"></i>
+                        {% if admin_notification_count > 0 %}
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
-                            5
+                            {{ admin_notification_count }}
                         </span>
+                        {% endif %}
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" style="width: 320px;">
-                        <li class="p-2 border-bottom fw-bold small text-muted">{% trans "Alertes Organisateur" %}</li>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" style="width: 320px; max-height: 400px; overflow-y: auto;">
+                        <li class="p-2 border-bottom fw-bold small text-muted">{% trans "Alertes & Notifications" %}</li>
+                        {% for alert in admin_alerts %}
                         <li>
-                            <a class="dropdown-item p-2 rounded-2 small text-wrap d-flex gap-2 align-items-start" href="#">
-                                <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
+                            <a class="dropdown-item p-2 rounded-2 small text-wrap d-flex gap-2 align-items-start" href="{{ alert.url|default:'#' }}">
+                                <i class="bi {{ alert.icon|default:'bi-info-circle-fill' }} {{ alert.color|default:'text-primary' }} fs-5"></i>
                                 <div>
-                                    <div class="fw-semibold">{% trans "12 participants sans équipe" %}</div>
-                                    <div class="text-muted" style="font-size: 0.78rem;">{% trans "Le matching automatique s'exécutera à 15h00." %}</div>
+                                    <div class="fw-semibold">{{ alert.title }}</div>
+                                    <div class="text-muted" style="font-size: 0.78rem;">{{ alert.message }}</div>
                                 </div>
                             </a>
                         </li>
+                        {% empty %}
+                        <li class="p-3 text-center text-muted small">
+                            <i class="bi bi-check2-circle text-success fs-4 d-block mb-1"></i>
+                            {% trans "Aucune alerte en attente" %}
+                        </li>
+                        {% endfor %}
                     </ul>
                 </div>
 

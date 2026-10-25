@@ -116,6 +116,37 @@
                 </a>
                 {% endif %}
 
+                <!-- Notifications -->
+                <div class="dropdown">
+                    <button class="btn btn-light position-relative rounded-circle p-2 border" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="{% trans 'Notifications' %}" aria-label="{% trans 'Notifications' %}">
+                        <i class="bi bi-bell-fill text-secondary"></i>
+                        {% if mentor_notification_count > 0 %}
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
+                            {{ mentor_notification_count }}
+                        </span>
+                        {% endif %}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" style="width: 320px; max-height: 400px; overflow-y: auto;">
+                        <li class="p-2 border-bottom fw-bold small text-muted">{% trans "Notifications" %}</li>
+                        {% for notif in mentor_notifications %}
+                        <li>
+                            <a class="dropdown-item p-2 rounded-2 small text-wrap d-flex gap-2 align-items-start" href="{{ notif.url|default:'#' }}">
+                                <i class="bi {{ notif.icon|default:'bi-bell-fill' }} text-primary fs-5"></i>
+                                <div>
+                                    <div class="fw-semibold">{{ notif.title }}</div>
+                                    <div class="text-muted" style="font-size: 0.78rem;">{{ notif.message }}</div>
+                                </div>
+                            </a>
+                        </li>
+                        {% empty %}
+                        <li class="p-3 text-center text-muted small">
+                            <i class="bi bi-bell-slash text-muted fs-4 d-block mb-1"></i>
+                            {% trans "Aucune notification" %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
                 <!-- Menu Profil -->
                 <div class="dropdown">
                     <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-expanded="false">

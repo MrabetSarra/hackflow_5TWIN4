@@ -33,24 +33,7 @@
         </div>
       </section>
 
-      <section class="card career-editor-card border-0 shadow-sm rounded-4 mb-4">
-        <div class="card-body p-4 p-lg-5">
-          <div class="career-section-heading"><span class="career-section-number">02b</span><div><h2 class="h5 fw-bold mb-1">{% trans "Project and eligibility criteria" %}</h2><p class="small text-secondary mb-0">{% trans "Add weighted evidence criteria. All nonzero weights are normalized to 100% when saved." %}</p></div></div>
-          {{ requirement_formset.management_form }}
-          {% if requirement_formset.non_form_errors %}<div class="alert alert-danger mt-3">{{ requirement_formset.non_form_errors }}</div>{% endif %}
-          <div class="row g-3 mt-1">
-            {% for req in requirement_formset %}
-              <div class="col-lg-6"><div class="border rounded-3 p-3 h-100">
-                {% for hidden in req.hidden_fields %}{{ hidden }}{% endfor %}
-                <div class="mb-2"><label class="form-label small" for="{{ req.kind.id_for_label }}">{% trans "Requirement type" %}</label>{{ req.kind }}{% for error in req.kind.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
-                <div class="mb-2"><label class="form-label small" for="{{ req.name.id_for_label }}">{% trans "Requirement" %}</label>{{ req.name }}{% for error in req.name.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>
-                <div class="mb-2"><label class="form-label small" for="{{ req.description.id_for_label }}">{% trans "Assessment details" %}</label>{{ req.description }}</div>
-                <div class="d-flex align-items-center gap-3"><div class="flex-grow-1"><label class="form-label small" for="{{ req.weight.id_for_label }}">{% trans "Weight" %}</label>{{ req.weight }}{% for error in req.weight.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div><div class="form-check mt-3">{{ req.mandatory }}<label class="form-check-label small" for="{{ req.mandatory.id_for_label }}">{% trans "Mandatory" %}</label></div>{% if req.DELETE %}<div class="form-check mt-3">{{ req.DELETE }}<label class="form-check-label small" for="{{ req.DELETE.id_for_label }}">{% trans "Remove" %}</label></div>{% endif %}</div>
-              </div></div>
-            {% endfor %}
-          </div>
-        </div>
-      </section>
+      <div class="d-none">{{ requirement_formset.management_form }}</div>
 
       <section class="card career-editor-card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-body p-4 p-lg-5">

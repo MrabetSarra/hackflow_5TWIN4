@@ -169,7 +169,7 @@ class CareerRequirementForm(forms.ModelForm):
 
 
 CareerRequirementFormSet = inlineformset_factory(Opportunity, CareerRequirement, form=CareerRequirementForm,
-    extra=3, can_delete=True, max_num=30, validate_max=True)
+    extra=0, can_delete=True, max_num=30, validate_max=True)
 
 class ApplicationForm(forms.ModelForm):
     class Meta:
