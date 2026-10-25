@@ -1225,3 +1225,88 @@ def _issue_certificate(workshop, booking):
         )
     except IntegrityError:
         pass  # Déjà existant (race condition)
+
+
+# ---------------------------------------------------------------------------
+# Quiz de compréhension (mode replay)
+# ---------------------------------------------------------------------------
+
+@login_required
+def workshop_quiz(request, pk):
+    """Affiche le quiz d'un atelier enregistré pour un étudiant inscrit."""
+    ws = get_object_or_404(Workshop, pk=pk)
+    if ws.mode != Workshop.Mode.RECORDED:
+        messages.error(request, 'Le quiz est uniquement disponible pour les ateliers en replay.')
+        return redirect('workshops:detail', slug=ws.slug)
+
+    booking = get_object_or_404(Booking, workshop=ws, user=request.user,
+                                status__in=['confirmed', 'attended'])
+    questions = list(ws.quiz_questions.all())
+
+    context = {
+        'workshop': ws,
+        'booking': booking,
+        'questions': questions,
+    }
+    return render(request, 'workshops/quiz.html', context)
+
+
+@login_required
+@require_POST
+def workshop_quiz_submit(request, pk):
+    """Traite la soumission du quiz et calcule le score."""
+    ws = get_object_or_404(Workshop, pk=pk)
+    questions = list(ws.quiz_questions.all())
+
+    if not questions:
+        messages.error(request, 'Aucune question de quiz configurée pour cet atelier.')
+        return redirect('workshops:detail', slug=ws.slug)
+
+    score = 0
+    results = []
+    for q in questions:
+        user_answer = request.POST.get(f'question_{q.pk}')
+        correct = q.options()[q.correct_index]
+        is_correct = (user_answer is not None and int(user_answer) == q.correct_index)
+        if is_correct:
+            score += 1
+        results.append({
+            'question': q,
+            'user_answer': user_answer,
+            'correct_answer': correct,
+            'is_correct': is_correct,
+            'explanation': q.explanation,
+        })
+
+    percentage = round(100 * score / len(questions))
+
+    # Marquer l'atelier comme complété si score >= 80%
+    booking = get_object_or_404(Booking, workshop=ws, user=request.user,
+                                status__in=['confirmed', 'attended'])
+    if percentage >= 80 and booking.status != 'attended':
+        booking.status = 'attended'
+        booking.attended_at = timezone.now()
+        booking.save(update_fields=['status', 'attended_at'])
+        messages.success(
+            request,
+            f'Quiz réussi avec {score}/{len(questions)} ({percentage}%) ! '
+            f'Présence validée et certificat disponible.'
+        )
+    else:
+        messages.warning(
+            request,
+            f'Quiz : {score}/{len(questions)} ({percentage}%). '
+            f'Il faut 80% pour valider la présence.'
+        )
+
+    context = {
+        'workshop': ws,
+        'booking': booking,
+        'questions': questions,
+        'results': results,
+        'score': score,
+        'total': len(questions),
+        'percentage': percentage,
+        'passed': percentage >= 80,
+    }
+    return render(request, 'workshops/quiz_result.html', context)

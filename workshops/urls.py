@@ -51,6 +51,12 @@ urlpatterns = [
     path('<int:pk>/complete/', views.replay_complete, name='replay_complete'),
 
     # ---------------------------------------------------------------
+    # Quiz de compréhension (replay)
+    # ---------------------------------------------------------------
+    path('<int:pk>/quiz/', views.workshop_quiz, name='quiz'),
+    path('<int:pk>/quiz/submit/', views.workshop_quiz_submit, name='quiz_submit'),
+
+    # ---------------------------------------------------------------
     # Certificats
     # ---------------------------------------------------------------
     path('verify/<str:code>/', views.verify_certificate, name='verify'),
@@ -71,6 +77,11 @@ urlpatterns = [
     path('api/recommend/', api.api_recommend, name='api_recommend'),
     path('api/<int:pk>/seats/', api.api_seats, name='api_seats'),
     path('api/generate-description/', api.api_generate_description, name='api_generate_description'),
+    path('api/generate-titles/', api.api_generate_titles, name='api_generate_titles'),
+    path('api/generate-objectives/', api.api_generate_objectives, name='api_generate_objectives'),
+    path('api/generate-summary/', api.api_generate_summary, name='api_generate_summary'),
+    path('api/explain-recommendation/', api.api_explain_recommendation, name='api_explain_recommendation'),
+    path('api/<int:pk>/generate-quiz/', api.api_generate_quiz, name='api_generate_quiz'),
 
     # ---------------------------------------------------------------
     # Détail — EN DERNIER (slug peut matcher n'importe quoi)

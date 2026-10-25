@@ -207,6 +207,24 @@
               <span>Réservez cet atelier pour accéder au replay.</span>
             </div>
           {% endif %}
+
+          <!-- Quiz de compréhension (replay uniquement) -->
+          {% if workshop.mode == 'recorded' and replay_accessible %}
+          <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-info text-white py-3">
+              <h5 class="mb-0 fw-bold"><i class="bi bi-question-circle me-2"></i>Quiz de compréhension</h5>
+            </div>
+            <div class="card-body">
+              <p class="text-body-secondary small">
+                Validez votre compréhension de l'atelier avec un quiz à choix multiples.
+                Un score de 80% minimum valide votre présence et débloque votre certificat.
+              </p>
+              <a href="{% url 'workshops:quiz' workshop.pk %}" class="btn btn-info rounded-pill px-4">
+                <i class="bi bi-play-circle me-1"></i>Passer le quiz
+              </a>
+            </div>
+          </div>
+          {% endif %}
         </div>
       </div>
       {% endif %}

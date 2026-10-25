@@ -602,3 +602,46 @@ class WorkshopActivity(models.Model):
 
     def __str__(self):
         return f'[{self.kind}] {self.workshop} — {self.user}'
+
+
+# ---------------------------------------------------------------------------
+# WorkshopQuiz  (quiz de compréhension pour les ateliers en replay)
+# ---------------------------------------------------------------------------
+
+class WorkshopQuiz(models.Model):
+    """Question de quiz liée à un atelier en mode replay."""
+
+    workshop = models.ForeignKey(
+        Workshop, on_delete=models.CASCADE,
+        related_name='quiz_questions', verbose_name='Atelier')
+    question = models.TextField(verbose_name='Question')
+    option_a = models.CharField(max_length=200, verbose_name='Option A')
+    option_b = models.CharField(max_length=200, verbose_name='Option B')
+    option_c = models.CharField(max_length=200, verbose_name='Option C')
+    option_d = models.CharField(max_length=200, verbose_name='Option D')
+    correct_index = models.PositiveSmallIntegerField(
+        default=0,
+        help_text='Index de la bonne réponse (0=A, 1=B, 2=C, 3=D)',
+        verbose_name='Index bonne réponse')
+    explanation = models.TextField(
+        blank=True, verbose_name='Explication de la bonne réponse')
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL, null=True,
+        related_name='created_quiz_questions',
+        verbose_name='Créé par')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Question de quiz'
+        verbose_name_plural = 'Questions de quiz'
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f'Q: {self.question[:50]}...'
+
+    def options(self):
+        return [self.option_a, self.option_b, self.option_c, self.option_d]
+
+    def correct_option(self):
+        return self.options()[self.correct_index]

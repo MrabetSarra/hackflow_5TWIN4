@@ -52,6 +52,13 @@
                 <label class="form-label fw-semibold">Titre <span class="text-danger">*</span></label>
                 {{ form.title }}
                 {% if form.title.errors %}<div class="text-danger small mt-1">{{ form.title.errors|join:", " }}</div>{% endif %}
+                <div class="d-grid gap-2 mt-2">
+                  <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" id="btn-gen-titles">
+                    <i class="bi bi-magic me-1"></i>Générer des titres avec IA
+                  </button>
+                  <div id="ai-titles-list" class="d-none mt-2"></div>
+                  <small class="form-text text-muted" id="ai-titles-status"></small>
+                </div>
               </div>
               <div class="col-12 col-md-6">
                 <label class="form-label fw-semibold">Intervenant <span class="text-danger">*</span></label>
@@ -70,6 +77,14 @@
                   <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" id="btn-gen-desc">
                     <i class="bi bi-magic me-1"></i>Générer la description avec IA
                   </button>
+                  <button type="button" class="btn btn-outline-info btn-sm rounded-pill" id="btn-gen-objectives">
+                    <i class="bi bi-list-task me-1"></i>Objectifs pédagogiques
+                  </button>
+                  <button type="button" class="btn btn-outline-info btn-sm rounded-pill" id="btn-gen-summary">
+                    <i class="bi bi-text-center me-1"></i>Résumé catalogue
+                  </button>
+                  <div id="ai-objectives-list" class="d-none mt-2"></div>
+                  <div id="ai-summary-box" class="d-none mt-2 p-3 bg-light rounded"></div>
                   <small class="form-text text-muted" id="ai-status"></small>
                 </div>
               </div>
@@ -217,62 +232,183 @@
       modeSelect.addEventListener('change', toggleModeFields);
       toggleModeFields();
 
-      // ── Génération de description via Ollama (IA) ──
-      const btn = document.getElementById('btn-gen-desc');
-      const status = document.getElementById('ai-status');
-      const descField = document.querySelector('textarea[name="description"], input[name="description"]');
+      // ── Helpers IA ──
       const titleField = document.querySelector('input[name="title"]');
+      const descField = document.querySelector('textarea[name="description"], input[name="description"]');
       const tagsField = document.querySelector('input[name="topic_tags_raw"]');
       const speakerField = document.querySelector('input[name="speaker_name"]');
       const levelField = document.querySelector('select[name="level"]');
 
-      if (!btn || !descField) return;
-
-      btn.addEventListener('click', async function () {
-        const title = (titleField && titleField.value.trim()) || '';
-        if (!title) {
-          status.textContent = 'Veuillez saisir un titre d\'atelier d\'abord.';
-          status.className = 'form-text text-danger';
-          return;
-        }
-
-        btn.disabled = true;
-        btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Génération en cours…';
-        status.textContent = '';
-
-        const tagsRaw = (tagsField && tagsField.value.trim()) || '';
-        const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
-        const speaker = (speakerField && speakerField.value.trim()) || '';
-        const level = (levelField && levelField.value) || 'Débutant';
-
+      async function callAI(endpoint, body, onSuccess, onError) {
+        const status = document.getElementById('ai-status');
         try {
-          const resp = await fetch("{% url 'workshops:api_generate_description' %}", {
+          const resp = await fetch(endpoint, {
             method: 'POST',
             headers: {
               'X-CSRFToken': '{{ csrf_token }}',
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ title, tags, speaker, level }),
+            body: JSON.stringify(body),
           });
-
           const data = await resp.json();
-
-          if (data.ok && data.description) {
-            descField.value = data.description;
-            status.textContent = 'Description générée par IA (llama3.2).';
-            status.className = 'form-text text-success';
+          if (data.ok) {
+            onSuccess(data);
+            status.textContent = '';
+            status.className = 'form-text text-muted';
           } else {
-            status.textContent = data.error || 'Échec de la génération.';
-            status.className = 'form-text text-danger';
+            onError(data.error || 'Échec de la génération.');
           }
         } catch (err) {
-          status.textContent = 'Impossible de contacter Ollama (localhost:11434).';
-          status.className = 'form-text text-danger';
-        } finally {
-          btn.disabled = false;
-          btn.innerHTML = '<i class="bi bi-magic me-1"></i>Générer la description avec IA';
+          onError('Impossible de contacter Ollama (localhost:11434).');
         }
-      });
+      }
+
+      function setStatus(msg, cls = 'text-danger') {
+        const status = document.getElementById('ai-status');
+        status.textContent = msg;
+        status.className = 'form-text ' + cls;
+      }
+
+      // ── 1. Génération de titres ──
+      const btnTitles = document.getElementById('btn-gen-titles');
+      const titlesList = document.getElementById('ai-titles-list');
+      const titlesStatus = document.getElementById('ai-titles-status');
+
+      if (btnTitles && titleField) {
+        btnTitles.addEventListener('click', async function () {
+          const theme = titleField.value.trim();
+          if (!theme) {
+            setStatus('Veuillez saisir un thème de titre d\'abord.');
+            return;
+          }
+          btnTitles.disabled = true;
+          btnTitles.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Génération…';
+          titlesList.classList.add('d-none');
+          titlesList.innerHTML = '';
+
+          await callAI("{% url 'workshops:api_generate_titles' %}", {
+            theme: theme,
+            audience: (speakerField && speakerField.value.trim()) || '',
+            level: (levelField && levelField.value) || 'Débutant',
+          }, (data) => {
+            titlesList.classList.remove('d-none');
+            titlesList.innerHTML = data.titles.map(t =>
+              `<button type="button" class="btn btn-outline-secondary btn-sm mt-1" onclick="document.querySelector('input[name=\\'title\\']').value='${t.replace(/'/g, "\\'")}'; this.closest('.d-none').classList.add('d-none')">${t}</button>`
+            ).join('');
+            titlesStatus.textContent = `${data.titles.length} titre(s) généré(s) par IA (llama3.2).`;
+            titlesStatus.className = 'form-text text-success';
+          }, (err) => {
+            titlesStatus.textContent = err;
+            titlesStatus.className = 'form-text text-danger';
+          });
+          btnTitles.disabled = false;
+          btnTitles.innerHTML = '<i class="bi bi-magic me-1"></i>Générer des titres avec IA';
+        });
+      }
+
+      // ── 2. Génération de description ──
+      const btnDesc = document.getElementById('btn-gen-desc');
+
+      if (btnDesc && descField) {
+        btnDesc.addEventListener('click', async function () {
+          const title = (titleField && titleField.value.trim()) || '';
+          if (!title) {
+            setStatus('Veuillez saisir un titre d\'atelier d\'abord.');
+            return;
+          }
+          btnDesc.disabled = true;
+          btnDesc.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Génération en cours…';
+          setStatus('');
+
+          const tagsRaw = (tagsField && tagsField.value.trim()) || '';
+          const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+          const speaker = (speakerField && speakerField.value.trim()) || '';
+          const level = (levelField && levelField.value) || 'Débutant';
+
+          await callAI("{% url 'workshops:api_generate_description' %}", {
+            title, tags, speaker, level,
+          }, (data) => {
+            descField.value = data.description;
+            setStatus('Description générée par IA (llama3.2).', 'text-success');
+          }, (err) => {
+            setStatus(err);
+          });
+          btnDesc.disabled = false;
+          btnDesc.innerHTML = '<i class="bi bi-magic me-1"></i>Générer la description avec IA';
+        });
+      }
+
+      // ── 3. Génération d'objectifs pédagogiques ──
+      const btnObjectives = document.getElementById('btn-gen-objectives');
+      const objectivesList = document.getElementById('ai-objectives-list');
+
+      if (btnObjectives && descField) {
+        btnObjectives.addEventListener('click', async function () {
+          const title = (titleField && titleField.value.trim()) || '';
+          if (!title) {
+            setStatus('Veuillez saisir un titre d\'atelier d\'abord.');
+            return;
+          }
+          btnObjectives.disabled = true;
+          btnObjectives.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Génération…';
+          objectivesList.classList.add('d-none');
+          objectivesList.innerHTML = '';
+          setStatus('');
+
+          const tagsRaw = (tagsField && tagsField.value.trim()) || '';
+          const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+          const level = (levelField && levelField.value) || 'Débutant';
+
+          await callAI("{% url 'workshops:api_generate_objectives' %}", {
+            title, level, tags,
+          }, (data) => {
+            objectivesList.classList.remove('d-none');
+            objectivesList.innerHTML = '<strong>Objectifs pédagogiques proposés :</strong><ul class="list-unstyled small mt-2">' +
+              data.objectives.map(o => `<li><i class="bi bi-check-circle text-success me-1"></i>${o}</li>`).join('') +
+              '</ul>';
+            setStatus(`${data.objectives.length} objectif(s) généré(s) par IA (llama3.2).`, 'text-success');
+          }, (err) => {
+            setStatus(err);
+          });
+          btnObjectives.disabled = false;
+          btnObjectives.innerHTML = '<i class="bi bi-list-task me-1"></i>Objectifs pédagogiques';
+        });
+      }
+
+      // ── 4. Génération de résumé catalogue ──
+      const btnSummary = document.getElementById('btn-gen-summary');
+      const summaryBox = document.getElementById('ai-summary-box');
+
+      if (btnSummary && descField) {
+        btnSummary.addEventListener('click', async function () {
+          const title = (titleField && titleField.value.trim()) || '';
+          if (!title) {
+            setStatus('Veuillez saisir un titre d\'atelier d\'abord.');
+            return;
+          }
+          btnSummary.disabled = true;
+          btnSummary.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Génération…';
+          summaryBox.classList.add('d-none');
+          summaryBox.innerHTML = '';
+          setStatus('');
+
+          const tagsRaw = (tagsField && tagsField.value.trim()) || '';
+          const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+          const level = (levelField && levelField.value) || 'Débutant';
+
+          await callAI("{% url 'workshops:api_generate_summary' %}", {
+            title, description: descField.value, level,
+          }, (data) => {
+            summaryBox.classList.remove('d-none');
+            summaryBox.innerHTML = '<strong>Résumé pour le catalogue :</strong><p class="small mb-0 mt-2">' + data.summary + '</p>';
+            setStatus('Résumé généré par IA (llama3.2).', 'text-success');
+          }, (err) => {
+            setStatus(err);
+          });
+          btnSummary.disabled = false;
+          btnSummary.innerHTML = '<i class="bi bi-text-center me-1"></i>Résumé catalogue';
+        });
+      }
     })();
   </script>
 {% endblock %}

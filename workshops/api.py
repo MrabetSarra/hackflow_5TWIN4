@@ -116,3 +116,163 @@ def api_generate_description(request):
 
     description = generate_workshop_description(title, tags, speaker, level)
     return JsonResponse({'ok': True, 'description': description})
+
+
+@login_required
+@require_POST
+def api_generate_titles(request):
+    """
+    Génère 3 titres d'atelier via Ollama.
+    Body JSON : {theme, audience, level}
+    Retourne : {titles: [...], ok, error?}
+    """
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'ok': False, 'error': 'Requête invalide.'}, status=400)
+
+    theme = payload.get('theme', '').strip()
+    audience = payload.get('audience', '').strip()
+    level = payload.get('level', 'Débutant')
+
+    if not theme:
+        return JsonResponse({'ok': False, 'error': 'Le thème est requis.'}, status=400)
+
+    from .services.ollama_ai import generate_workshop_titles, is_ollama_available
+
+    if not is_ollama_available():
+        return JsonResponse({
+            'ok': False,
+            'error': 'Ollama est indisponible ou le modèle llama3.2 n\'est pas chargé.',
+        }, status=503)
+
+    titles = generate_workshop_titles(theme, audience, level)
+    return JsonResponse({'ok': True, 'titles': titles})
+
+
+@login_required
+@require_POST
+def api_generate_objectives(request):
+    """
+    Génère des objectifs pédagogiques via Ollama.
+    Body JSON : {title, level, tags}
+    Retourne : {objectives: [...], ok, error?}
+    """
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'ok': False, 'error': 'Requête invalide.'}, status=400)
+
+    title = payload.get('title', '').strip()
+    level = payload.get('level', 'Débutant')
+    tags = payload.get('tags', [])
+
+    if not title:
+        return JsonResponse({'ok': False, 'error': 'Le titre est requis.'}, status=400)
+
+    from .services.ollama_ai import generate_pedagogical_objectives, is_ollama_available
+
+    if not is_ollama_available():
+        return JsonResponse({
+            'ok': False,
+            'error': 'Ollama est indisponible ou le modèle llama3.2 n\'est pas chargé.',
+        }, status=503)
+
+    objectives = generate_pedagogical_objectives(title, level, tags)
+    return JsonResponse({'ok': True, 'objectives': objectives})
+
+
+@login_required
+@require_POST
+def api_generate_summary(request):
+    """
+    Génère un résumé court d'atelier via Ollama.
+    Body JSON : {title, description, level}
+    Retourne : {summary, ok, error?}
+    """
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'ok': False, 'error': 'Requête invalide.'}, status=400)
+
+    title = payload.get('title', '').strip()
+    description = payload.get('description', '').strip()
+    level = payload.get('level', 'Débutant')
+
+    if not title:
+        return JsonResponse({'ok': False, 'error': 'Le titre est requis.'}, status=400)
+
+    from .services.ollama_ai import generate_workshop_summary, is_ollama_available
+
+    if not is_ollama_available():
+        return JsonResponse({
+            'ok': False,
+            'error': 'Ollama est indisponible ou le modèle llama3.2 n\'est pas chargé.',
+        }, status=503)
+
+    summary = generate_workshop_summary(title, description, level)
+    return JsonResponse({'ok': True, 'summary': summary})
+
+
+@login_required
+@require_POST
+def api_explain_recommendation(request):
+    """
+    Génère une explication personnalisée de recommandation via Ollama.
+    Body JSON : {workshop_title, matched_terms, user_profile}
+    Retourne : {explanation, ok, error?}
+    """
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'ok': False, 'error': 'Requête invalide.'}, status=400)
+
+    workshop_title = payload.get('workshop_title', '').strip()
+    matched_terms = payload.get('matched_terms', [])
+    user_profile = payload.get('user_profile', '').strip()
+
+    if not workshop_title:
+        return JsonResponse({'ok': False, 'error': 'Le titre de l\'atelier est requis.'}, status=400)
+
+    from .services.ollama_ai import explain_recommendation, is_ollama_available
+
+    if not is_ollama_available():
+        return JsonResponse({
+            'ok': False,
+            'error': 'Ollama est indisponible ou le modèle llama3.2 n\'est pas chargé.',
+        }, status=503)
+
+    explanation = explain_recommendation(workshop_title, matched_terms, user_profile)
+    return JsonResponse({'ok': True, 'explanation': explanation})
+
+
+@login_required
+@require_POST
+def api_generate_quiz(request, pk):
+    """
+    Génère un quiz de compréhension pour un atelier enregistré via Ollama.
+    Body JSON : {num_questions}
+    Retourne : {questions: [...], ok, error?}
+    """
+    ws = get_object_or_404(Workshop, pk=pk)
+
+    if ws.mode != Workshop.Mode.RECORDED:
+        return JsonResponse({'ok': False, 'error': 'Le quiz est uniquement disponible pour les ateliers en mode replay.'}, status=400)
+
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'ok': False, 'error': 'Requête invalide.'}, status=400)
+
+    num_questions = int(payload.get('num_questions', 5))
+
+    from .services.ollama_ai import generate_quiz_questions, is_ollama_available
+
+    if not is_ollama_available():
+        return JsonResponse({
+            'ok': False,
+            'error': 'Ollama est indisponible ou le modèle llama3.2 n\'est pas chargé.',
+        }, status=503)
+
+    questions = generate_quiz_questions(ws.title, ws.description or '', ws.level, num_questions)
+    return JsonResponse({'ok': True, 'questions': questions})

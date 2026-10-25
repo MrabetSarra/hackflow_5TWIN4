@@ -140,9 +140,25 @@ def recommend(user, workshops, top_n: int = 6) -> list:
             else:
                 workshop.ai_reason = ''
 
-    except Exception as exc:
-        logger.error('Erreur recommandation TF-IDF : %s', exc)
-        _reset_scores(workshop_list)
+    # Amélioration IA : si Ollama est disponible, régénérer les explications
+    # de manière plus naturelle et personnalisée.
+    try:
+        from .ollama_ai import explain_recommendation, is_ollama_available
+        if is_ollama_available():
+            for workshop in workshop_list:
+                if not getattr(workshop, 'ai_score', 0):
+                    continue
+                idx = workshop_list.index(workshop)
+                if idx >= matrix.shape[0]:
+                    continue
+                ws_indices = set(matrix[idx].nonzero()[1])
+                terms = tfidf.get_feature_names_out()
+                matched = [terms[j] for j in (ws_indices & profile_indices)][:3]
+                explanation = explain_recommendation(workshop.title, matched, profile_text)
+                if explanation:
+                    workshop.ai_reason = explanation
+    except Exception:
+        pass  # Ollama non disponible → on garde l'explication TF-IDF simple
 
     # Tri décroissant par score
     workshop_list.sort(key=lambda w: getattr(w, 'ai_score', 0), reverse=True)
