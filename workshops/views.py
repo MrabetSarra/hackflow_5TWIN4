@@ -1103,6 +1103,8 @@ def organizer_dashboard(request):
         workshop__in=workshops
     ).count()
 
+    now = timezone.now()
+
     return render(request, 'workshops/organizer_dashboard.html', {
         'workshops':       workshops,
         'total_confirmed': total_confirmed,
