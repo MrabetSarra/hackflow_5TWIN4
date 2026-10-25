@@ -1,3 +1,4 @@
+{% load i18n %}
 {% include "hackathons/_ai_client.html" %}
 
 <section class="card-modern p-4 p-lg-5 mb-4" style="background: linear-gradient(135deg, var(--bs-primary-bg-subtle), var(--bs-body-bg) 70%);">
@@ -51,7 +52,7 @@
                 <div class="d-flex flex-wrap gap-2 mb-2">
                     <span class="badge bg-body-secondary text-body-secondary rounded-pill">{{ item.challenge.hackathon.title }}</span>
                     <span class="badge bg-{{ item.challenge.difficulty_color }}-subtle text-{{ item.challenge.difficulty_color }}-emphasis rounded-pill">{{ item.challenge.get_difficulty_display }}</span>
-                    {% if item.challenge.pk in registered %}<span class="badge bg-success rounded-pill">Inscrit</span>{% endif %}
+                    {% if item.challenge.pk in registered %}<span class="badge bg-success rounded-pill">{% trans "Inscrit" %}</span>{% endif %}
                 </div>
                 <h3 class="h5 fw-bold mb-1">{{ item.challenge.title }}</h3>
                 {% if item.challenge.short_description %}<p class="text-body-secondary small mb-2">{{ item.challenge.short_description }}</p>{% endif %}
@@ -64,8 +65,8 @@
                 <div class="h3 fw-bold {% if item.score >= 60 %}text-success{% elif item.score >= 30 %}text-primary{% else %}text-body-secondary{% endif %} mb-1">{{ item.score }}%</div>
                 <div class="progress mb-3" style="height: 6px;" role="progressbar" aria-label="Compatibilité" aria-valuenow="{{ item.score }}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar {% if item.score >= 60 %}bg-success{% endif %}" style="width: {{ item.score }}%;"></div></div>
                 <div class="d-flex flex-md-column gap-2">
-                    <button type="button" class="btn btn-sm text-white rounded-pill px-3 hf-coach-btn" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);" data-bs-toggle="modal" data-bs-target="#hf-coach-modal"><i class="bi bi-stars me-1"></i>Expliquer avec l'IA</button>
-                    <a href="{% url 'hackathons:challenge_detail' item.challenge.pk %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Voir le challenge</a>
+                    <button type="button" class="btn btn-sm text-white rounded-pill px-3 hf-coach-btn" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);" data-bs-toggle="modal" data-bs-target="#hf-coach-modal"><i class="bi bi-stars me-1"></i>{% trans "Expliquer avec l'IA" %}</button>
+                    <a href="{% url 'hackathons:challenge_detail' item.challenge.pk %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">{% trans "Voir le challenge" %}</a>
                 </div>
             </div>
         </div>
@@ -78,7 +79,7 @@
         <div class="modal-content rounded-4 border-0 shadow">
             <div class="modal-header border-0 pb-0">
                 <div class="d-flex align-items-center gap-3"><span class="hf-icon text-white" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);"><i class="bi bi-stars"></i></span>
-                    <div><h2 class="modal-title h5 fw-bold mb-0" id="hf-coach-title">Coach IA</h2><div class="small text-body-secondary">Résumé, conseils et astuces pour ce challenge</div></div></div>
+                    <div><h2 class="modal-title h5 fw-bold mb-0" id="hf-coach-title">{% trans "Coach IA" %}</h2><div class="small text-body-secondary">Résumé, conseils et astuces pour ce challenge</div></div></div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
             </div>
             <div class="modal-body" id="hf-coach-output" aria-live="polite"></div>

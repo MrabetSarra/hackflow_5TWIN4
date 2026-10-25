@@ -1,18 +1,19 @@
+{% load i18n %}
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
-    <div><h1 class="h2 fw-bold mb-1">Avis mentors</h1><p class="text-body-secondary mb-0">Retours et suggestions classés par Hackathon.</p></div>
+    <div><h1 class="h2 fw-bold mb-1">{% trans "Avis mentors" %}</h1><p class="text-body-secondary mb-0">Retours et suggestions classés par Hackathon.</p></div>
     <span class="badge bg-primary-subtle text-primary-emphasis rounded-pill px-3 py-2">{{ review_groups|length }} hackathon(s)</span>
 </div>
 <form method="get" class="card-modern p-4 mb-5 row g-3 align-items-end">
-    <div class="col-md-5"><label class="form-label small fw-semibold" for="hackathon">Hackathon</label><select class="form-select" id="hackathon" name="hackathon"><option value="">Tous</option>{% for h in hackathons %}<option value="{{ h.pk }}" {% if selected_hackathon == h.pk|stringformat:'s' %}selected{% endif %}>{{ h.title }}</option>{% endfor %}</select></div>
-    <div class="col-md-4"><label class="form-label small fw-semibold" for="type">Avis concernant</label><select class="form-select" id="type" name="type"><option value="">Hackathons et Challenges</option><option value="hackathon" {% if target_type == 'hackathon' %}selected{% endif %}>Hackathon</option><option value="challenge" {% if target_type == 'challenge' %}selected{% endif %}>Challenge</option></select></div>
-    <div class="col-md-3 d-flex gap-2"><button class="btn btn-primary rounded-pill px-4">Filtrer</button><a class="btn btn-outline-secondary rounded-pill px-4" href="{% url 'hackathons:mentor_feedback_list' %}">Effacer</a></div>
+    <div class="col-md-5"><label class="form-label small fw-semibold" for="hackathon">{% trans "Hackathon" %}</label><select class="form-select" id="hackathon" name="hackathon"><option value="">{% trans "Tous" %}</option>{% for h in hackathons %}<option value="{{ h.pk }}" {% if selected_hackathon == h.pk|stringformat:'s' %}selected{% endif %}>{{ h.title }}</option>{% endfor %}</select></div>
+    <div class="col-md-4"><label class="form-label small fw-semibold" for="type">{% trans "Avis concernant" %}</label><select class="form-select" id="type" name="type"><option value="">{% trans "Hackathons et Challenges" %}</option><option value="hackathon" {% if target_type == 'hackathon' %}selected{% endif %}>{% trans "Hackathon" %}</option><option value="challenge" {% if target_type == 'challenge' %}selected{% endif %}>{% trans "Challenge" %}</option></select></div>
+    <div class="col-md-3 d-flex gap-2"><button class="btn btn-primary rounded-pill px-4">{% trans "Filtrer" %}</button><a class="btn btn-outline-secondary rounded-pill px-4" href="{% url 'hackathons:mentor_feedback_list' %}">{% trans "Effacer" %}</a></div>
 </form>
 
 {% for h, reviews in review_groups %}
 <section class="card-modern p-4 p-lg-5 mb-4">
     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-4">
         <div><span class="badge bg-body-secondary text-body-secondary rounded-pill mb-2">{{ h.track.name }}</span><h2 class="h4 fw-bold mb-0">{{ h.title }}</h2></div>
-        <a href="{% url 'hackathons:hackathon_manage' h.pk %}" class="btn btn-outline-primary rounded-pill px-4">Ouvrir le Hackathon</a>
+        <a href="{% url 'hackathons:hackathon_manage' h.pk %}" class="btn btn-outline-primary rounded-pill px-4">{% trans "Ouvrir le Hackathon" %}</a>
     </div>
     <div class="d-flex flex-column gap-3">
         {% for feedback in reviews %}
@@ -25,12 +26,19 @@
                 <div class="d-flex flex-wrap align-items-center gap-2">
                     <span class="badge {% if feedback.challenge %}bg-info-subtle text-info-emphasis{% else %}bg-primary-subtle text-primary-emphasis{% endif %} rounded-pill px-3 py-2">{% if feedback.challenge %}Challenge · {{ feedback.challenge.title }}{% else %}Avis général{% endif %}</span>
                     {% if feedback.rating %}<span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-2"><i class="bi bi-star-fill me-1"></i>{{ feedback.rating }}/5</span>{% endif %}
+                    <form method="post" action="{% url 'hackathons:mentor_feedback_delete' feedback.pk %}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet avis mentor ?');" class="d-inline ms-1">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1" title="Supprimer cet avis">
+                            <i class="bi bi-trash me-1"></i>Supprimer
+                        </button>
+                    </form>
                 </div>
             </div>
-            {% if feedback.review %}<div class="mb-4"><div class="small text-body-secondary fw-semibold mb-2"><i class="bi bi-chat-quote me-1"></i>Avis</div><p class="mb-0" style="white-space: pre-line; line-height: 1.75;">{{ feedback.review }}</p></div>{% endif %}
+            {% if feedback.review %}<div class="mb-4"><div class="small text-body-secondary fw-semibold mb-2"><i class="bi bi-chat-quote me-1"></i>{% trans "Avis" %}</div><p class="mb-0" style="white-space: pre-line; line-height: 1.75;">{{ feedback.review }}</p></div>{% endif %}
             {% if feedback.ideas %}<div class="pt-3 border-top"><div class="small text-body-secondary fw-semibold mb-2"><i class="bi bi-lightbulb me-1"></i>Idées et suggestions</div><p class="mb-0" style="white-space: pre-line; line-height: 1.75;">{{ feedback.ideas }}</p></div>{% endif %}
         </article>
         {% endfor %}
     </div>
 </section>
-{% empty %}<div class="card-modern p-5 text-center text-body-secondary"><i class="bi bi-chat-square-text fs-1 d-block mb-3"></i>Aucun avis mentor pour ces filtres.</div>{% endfor %}
+{% empty %}<div class="card-modern p-5 text-center text-body-secondary"><i class="bi bi-chat-square-text fs-1 d-block mb-3"></i>{% trans "Aucun avis mentor pour ces filtres." %}</div>{% endfor %}

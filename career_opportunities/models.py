@@ -6,6 +6,7 @@ from django.db import models
 from django.utils import timezone
 from accounts.models import validate_cv_size
 from accounts.storage import PrivateCVStorage
+from django.utils.translation import gettext_lazy as _
 
 
 def validate_application_cv(upload):
@@ -24,25 +25,25 @@ def validate_application_cv(upload):
 
 class Opportunity(models.Model):
     class Type(models.TextChoices):
-        JOB = 'job', 'Job'
-        INTERNSHIP = 'internship', 'Internship'
-        APPRENTICESHIP = 'apprenticeship', 'Apprenticeship / work-study'
-        ENTRY_LEVEL = 'entry_level', 'Entry-level'
-        GRADUATE = 'graduate', 'Graduate'
-        OTHER = 'other', 'Other'
+        JOB = 'job', _('Job')
+        INTERNSHIP = 'internship', _('Internship')
+        APPRENTICESHIP = 'apprenticeship', _('Apprenticeship / work-study')
+        ENTRY_LEVEL = 'entry_level', _('Entry-level')
+        GRADUATE = 'graduate', _('Graduate')
+        OTHER = 'other', _('Other')
 
     class WorkMode(models.TextChoices):
-        ONSITE = 'onsite', 'On-site'
-        HYBRID = 'hybrid', 'Hybrid'
-        REMOTE = 'remote', 'Remote'
-        UNSPECIFIED = 'unspecified', 'Not specified'
+        ONSITE = 'onsite', _('On-site')
+        HYBRID = 'hybrid', _('Hybrid')
+        REMOTE = 'remote', _('Remote')
+        UNSPECIFIED = 'unspecified', _('Not specified')
 
     class Status(models.TextChoices):
-        DRAFT = 'draft', 'Draft'
-        REVIEW = 'review', 'Pending review'
-        PUBLISHED = 'published', 'Published'
-        REJECTED = 'rejected', 'Rejected'
-        ARCHIVED = 'archived', 'Archived'
+        DRAFT = 'draft', _('Draft')
+        REVIEW = 'review', _('Pending review')
+        PUBLISHED = 'published', _('Published')
+        REJECTED = 'rejected', _('Rejected')
+        ARCHIVED = 'archived', _('Archived')
 
     title = models.CharField(max_length=240)
     company = models.CharField(max_length=180)
@@ -80,8 +81,8 @@ class Opportunity(models.Model):
 
 class OpportunitySkill(models.Model):
     class Kind(models.TextChoices):
-        REQUIRED = 'required', 'Required'
-        PREFERRED = 'preferred', 'Preferred'
+        REQUIRED = 'required', _('Required')
+        PREFERRED = 'preferred', _('Preferred')
 
     opportunity = models.ForeignKey(Opportunity, on_delete=models.CASCADE, related_name='skills')
     name = models.CharField(max_length=100)
@@ -97,12 +98,12 @@ class OpportunitySkill(models.Model):
 
 class CareerRequirement(models.Model):
     class Kind(models.TextChoices):
-        EDUCATION = 'education', 'Education / qualification'
-        EXPERIENCE = 'experience', 'Experience'
-        LANGUAGE = 'language', 'Language'
-        PROJECT = 'project', 'Project experience'
-        LOCATION = 'location', 'Location / work arrangement'
-        OTHER = 'other', 'Other eligibility'
+        EDUCATION = 'education', _('Education / qualification')
+        EXPERIENCE = 'experience', _('Experience')
+        LANGUAGE = 'language', _('Language')
+        PROJECT = 'project', _('Project experience')
+        LOCATION = 'location', _('Location / work arrangement')
+        OTHER = 'other', _('Other eligibility')
 
     opportunity = models.ForeignKey(Opportunity, on_delete=models.CASCADE, related_name='requirements')
     kind = models.CharField(max_length=16, choices=Kind.choices)
@@ -118,9 +119,9 @@ class CareerRequirement(models.Model):
 
 class StudentCVAnalysis(models.Model):
     class Status(models.TextChoices):
-        READY = 'ready', 'Ready'
-        UNREADABLE = 'unreadable', 'Unreadable PDF'
-        EMPTY = 'empty', 'No extractable text'
+        READY = 'ready', _('Ready')
+        UNREADABLE = 'unreadable', _('Unreadable PDF')
+        EMPTY = 'empty', _('No extractable text')
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='career_cv_analysis')
     cv_digest = models.CharField(max_length=64)
@@ -153,14 +154,14 @@ class SavedOpportunity(models.Model):
 
 class CareerApplication(models.Model):
     class Status(models.TextChoices):
-        DRAFT = 'draft', 'Draft'
-        INTENDED = 'intended', 'Intention to apply'
-        SUBMITTED = 'submitted', 'Submitted'
-        REVIEW = 'review', 'Under review'
-        INTERVIEW = 'interview', 'Interview'
-        ACCEPTED = 'accepted', 'Accepted'
-        REJECTED = 'rejected', 'Rejected'
-        WITHDRAWN = 'withdrawn', 'Withdrawn'
+        DRAFT = 'draft', _('Draft')
+        INTENDED = 'intended', _('Intention to apply')
+        SUBMITTED = 'submitted', _('Submitted')
+        REVIEW = 'review', _('Under review')
+        INTERVIEW = 'interview', _('Interview')
+        ACCEPTED = 'accepted', _('Accepted')
+        REJECTED = 'rejected', _('Rejected')
+        WITHDRAWN = 'withdrawn', _('Withdrawn')
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='career_applications')
     opportunity = models.ForeignKey(Opportunity, on_delete=models.CASCADE, related_name='applications')

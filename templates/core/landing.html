@@ -1,6 +1,7 @@
 {% extends "layouts/base_public.html" %}
+{% load i18n %}
 
-{% block title %}HackFlow - Plateforme de Gestion de Hackathon Étudiant{% endblock %}
+{% block title %}{% trans "HackFlow - Plateforme de Gestion de Hackathon Étudiant" %}{% endblock %}
 
 {% block public_content %}
 <!-- HERO SECTION ADAPTATIVE -->
@@ -11,12 +12,12 @@
             <div class="col-lg-7 text-center text-lg-start">
                 <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill glass-card mb-3">
                     <span class="badge bg-primary rounded-pill px-2 py-1 font-mono">{% if hackathon %}{{ hackathon.edition|default:hackathon.name }}{% else %}HackFlow{% endif %}</span>
-                    <span class="small text-body-secondary">{% if event_state == 'upcoming' %}Inscriptions et préparation en cours{% elif event_state == 'live' %}Événement en cours{% elif event_state == 'ended' %}Événement terminé{% else %}Plateforme de gestion de hackathons{% endif %}</span>
+                    <span class="small text-body-secondary">{% if event_state == 'upcoming' %}{% trans "Inscriptions et préparation en cours" %}{% elif event_state == 'live' %}{% trans "Événement en cours" %}{% elif event_state == 'ended' %}{% trans "Événement terminé" %}{% else %}{% trans "Plateforme de gestion de hackathons" %}{% endif %}</span>
                 </div>
                 <h1 class="display-3 fw-extrabold tracking-tight mb-3 text-body">
-                    {% if hackathon %}{{ hackathon.name }}.<br>{% else %}Créez votre équipe.<br>{% endif %}
-                    <span class="text-gradient-primary">Codez votre vision.</span> <br>
-                    Partagez votre projet.
+                    {% if hackathon %}{{ hackathon.name }}.<br>{% else %}{% trans "Créez votre équipe." %}<br>{% endif %}
+                    <span class="text-gradient-primary">{% trans "Codez votre vision." %}</span> <br>
+                    {% trans "Partagez votre projet." %}
                 </h1>
                 <p class="lead text-body-secondary mb-4 pe-lg-4">
                     {{ tagline }}
@@ -25,10 +26,10 @@
                 <!-- Boutons CTA -->
                 <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-lg-start mb-5">
                     <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg px-4 py-3 shadow-lg">
-                        <i class="bi bi-rocket-takeoff-fill me-2"></i>Participer au Hackathon
+                        <i class="bi bi-rocket-takeoff-fill me-2"></i>{% trans "Participer au Hackathon" %}
                     </a>
                     <a href="{% url 'accounts:login' %}" class="btn btn-glass btn-lg px-4 py-3">
-                        <i class="bi bi-box-arrow-in-right me-2"></i>Accéder à mon espace
+                        <i class="bi bi-box-arrow-in-right me-2"></i>{% trans "Accéder à mon espace" %}
                     </a>
                 </div>
 
@@ -86,7 +87,7 @@
                                     {% if featured_team %}<span class="small text-body-secondary">{{ featured_team.places_left }} place{{ featured_team.places_left|pluralize }} disponible{{ featured_team.places_left|pluralize }}</span>{% else %}<span class="small text-body-secondary">{{ teams_count }} équipe{{ teams_count|pluralize }} créée{{ teams_count|pluralize }}</span>{% endif %}
                                 </div>
                                 <a href="{% url 'accounts:register' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
-                                    Participer <i class="bi bi-arrow-right ms-1"></i>
+                                    {% trans "Participer" %} <i class="bi bi-arrow-right ms-1"></i>
                                 </a>
                             </div>
                         </div>
@@ -123,10 +124,10 @@
     <div class="container">
         <div class="text-center max-w-2xl mx-auto mb-5">
             <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 rounded-pill px-3 py-1 mb-2">
-                Parcours Structuré
+                {% trans "Parcours Structuré" %}
             </span>
-            <h2 class="display-5 fw-bold text-body">4 Étapes pour participer</h2>
-            <p class="text-body-secondary lead">Une organisation fluide pour que vous puissiez vous concentrer à 100% sur l'impact de votre projet.</p>
+            <h2 class="display-5 fw-bold text-body">{% trans "4 Étapes pour participer" %}</h2>
+            <p class="text-body-secondary lead">{% trans "Une organisation fluide pour que vous puissiez vous concentrer à 100% sur l'impact de votre projet." %}</p>
         </div>
 
         <div class="row g-4">
@@ -140,7 +141,7 @@
                     <h5 class="fw-bold mb-2 text-body">{{ step.title }}</h5>
                     <p class="text-body-secondary small flex-grow-1">{{ step.desc }}</p>
                     <div class="pt-3 border-top text-primary fw-semibold small d-flex align-items-center gap-1">
-                        <span>Étape clé</span> <i class="bi bi-arrow-right"></i>
+                    <span>{% trans "Étape clé" %}</span> <i class="bi bi-arrow-right"></i>
                     </div>
                 </div>
             </div>
@@ -155,9 +156,9 @@
         <div class="row align-items-center g-5">
             <div class="col-lg-6">
                 <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 rounded-pill px-3 py-1 mb-2">
-                    Algorithme de Matching
+                    {% trans "Algorithme de Matching" %}
                 </span>
-                <h2 class="display-5 fw-bold mb-3 text-body">Trouvez vos alter-ego techniques en quelques clics</h2>
+                <h2 class="display-5 fw-bold mb-3 text-body">{% trans "Trouvez vos alter-ego techniques en quelques clics" %}</h2>
                 <p class="text-body-secondary lead mb-4">
                     Les recommandations s’appuient sur les compétences, rôles préférés, thématiques, disponibilités renseignées et places restantes dans les équipes de l’événement.
                 </p>
@@ -168,7 +169,7 @@
                             <i class="bi bi-stars"></i>
                         </div>
                         <div>
-                            <h6 class="fw-bold mb-1 text-body">Des recommandations expliquées</h6>
+                    <h6 class="fw-bold mb-1 text-body">{% trans "Des recommandations expliquées" %}</h6>
                             <p class="text-body-secondary small mb-0">L’organisateur examine les compétences manquantes et valide lui-même les affectations proposées.</p>
                         </div>
                     </div>
@@ -227,11 +228,69 @@
             <p class="text-body-secondary lead">Les participants peuvent décrire leur besoin et suivre les échanges depuis leur espace.</p>
         </div>
 
-        <div class="row g-4 justify-content-center">
-            <div class="col-md-8 col-xl-6"><div class="card-modern p-4 d-flex align-items-center gap-4">
-                <span class="stat-icon stat-icon-success flex-shrink-0"><i class="bi bi-person-workspace"></i></span>
-                <div><div class="h3 fw-bold mb-1">{{ mentors_count }}</div><div class="fw-semibold text-body">Mentor{{ mentors_count|pluralize }} actif{{ mentors_count|pluralize }} sur HackFlow</div><p class="small text-body-secondary mb-0">Les demandes sont adressées aux mentors depuis l’espace participant. Les profils restent privés sur cette page publique.</p></div>
-            </div></div>
+        {% if mentors %}
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4 justify-content-center mb-5">
+            {% for mentor in mentors|slice:":4" %}
+            <div class="col">
+                <div class="card-modern card-modern-hoverable p-4 text-center h-100 shadow-sm d-flex flex-column justify-content-between position-relative">
+                    <div>
+                        <div class="mb-3 text-center">
+                            {% if mentor.profile_photo %}
+                                <img src="{{ mentor.profile_photo.url }}" alt="Photo de {{ mentor.get_full_name|default:mentor.username }}" class="rounded-circle mx-auto shadow-sm" width="88" height="88" style="object-fit: cover;">
+                            {% else %}
+                                <div role="img" class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center fw-bold fs-3 mx-auto shadow-sm" style="width: 88px; height: 88px;">
+                                    {{ mentor.first_name|first|upper }}{{ mentor.last_name|first|upper|default:mentor.username|first|upper }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <h3 class="h5 fw-bold text-body mb-1">{{ mentor.get_full_name|default:mentor.username }}</h3>
+
+                        <p class="text-body-secondary small mb-3">
+                            {{ mentor.specialty|default:"Expert Tech" }}{% if mentor.school %} @ {{ mentor.school }}{% endif %}
+                        </p>
+
+                        {% if mentor.skills %}
+                            <div class="d-flex flex-wrap justify-content-center gap-1 mb-4">
+                                {% for skill in mentor.skills %}
+                                    <span class="badge rounded-pill bg-light text-secondary border fw-normal px-2 py-1" style="font-size: 0.76rem;">{{ skill }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="mb-4"></div>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <a href="{% if user.is_authenticated %}{% if user.role == 'student' %}{% url 'student:dashboard' %}{% else %}{% url 'accounts:profile' %}{% endif %}{% else %}{% url 'accounts:login' %}{% endif %}" class="btn btn-outline-primary rounded-pill w-100 py-2 small fw-semibold d-flex align-items-center justify-content-center gap-2">
+                            <i class="bi bi-chat-dots-fill"></i>
+                            <span>Solliciter ce mentor</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="row justify-content-center mb-5">
+            <div class="col-md-8 col-xl-6">
+                <div class="card-modern p-4 text-center">
+                    <span class="stat-icon stat-icon-success mx-auto mb-3"><i class="bi bi-person-workspace"></i></span>
+                    <h3 class="h5 fw-bold mb-2">Mentors en cours d'intégration</h3>
+                    <p class="small text-body-secondary mb-0">Les mentors sont actuellement en cours de préparation pour accompagner les équipes.</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card-modern p-4 p-md-5 bg-gradient-subtle border text-center max-w-3xl mx-auto shadow-sm">
+            <h3 class="h4 fw-bold text-body mb-2">Vous êtes expert ou professionnel ?</h3>
+            <p class="text-body-secondary small mb-4">Rejoignez l'aventure HackFlow en tant que mentor pour partager vos compétences, guider de jeunes talents et vivre l'intensité du hackathon.</p>
+            <div>
+                <a href="{% url 'accounts:register_role' 'mentor' %}" class="btn btn-primary px-4 py-2 shadow-sm">
+                    <i class="bi bi-lightbulb-fill me-2"></i>Devenir Mentor
+                </a>
+            </div>
         </div>
     </div>
 </section>
@@ -241,9 +300,9 @@
     <div class="container">
         <div class="text-center max-w-2xl mx-auto mb-5">
             <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 rounded-pill px-3 py-1 mb-2">
-                Ambiance & Esprit Hackathon
+                {% trans "Ambiance & Esprit Hackathon" %}
             </span>
-            <h2 class="display-5 fw-bold text-body">Créez, collaborez et présentez votre projet</h2>
+            <h2 class="display-5 fw-bold text-body">{% trans "Créez, collaborez et présentez votre projet" %}</h2>
             <p class="text-body-secondary lead">Rejoignez un écosystème bienveillant conçu pour faire décoller vos compétences.</p>
         </div>
 
@@ -263,7 +322,7 @@
                 <div class="card-modern overflow-hidden h-100 shadow-sm">
                     <img src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=700&auto=format&fit=crop&q=80" alt="Sprint de code nocturne" class="w-100" style="height: 220px; object-fit: cover;">
                     <div class="p-4">
-                        <span class="badge bg-purple bg-opacity-10 text-secondary mb-2 font-mono" style="background-color: rgba(139, 92, 246, 0.1) !important; color: #7c3aed !important;">Espace équipe</span>
+                        <span class="badge bg-purple bg-opacity-10 text-secondary mb-2 font-mono" style="background-color: rgba(139, 92, 246, 0.1) !important; color: #7c3aed !important;">{% trans "Espace équipe" %}</span>
                         <h5 class="fw-bold mb-2 text-body">Suivez le travail</h5>
                         <p class="text-body-secondary small mb-0">Organisez les tâches, échangez avec l’équipe et suivez les jalons liés au hackathon.</p>
                     </div>
@@ -289,9 +348,9 @@
     <div class="container max-w-3xl">
         <div class="text-center mb-5">
             <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 rounded-pill px-3 py-1 mb-2">
-                Questions Fréquentes
+                {% trans "Questions Fréquentes" %}
             </span>
-            <h2 class="display-5 fw-bold text-body">Tout Ce Que Vous Devez Savoir</h2>
+            <h2 class="display-5 fw-bold text-body">{% trans "Tout Ce Que Vous Devez Savoir" %}</h2>
         </div>
 
         <div class="accordion accordion-flush card-modern p-3" id="faqAccordion">
@@ -316,16 +375,16 @@
 <!-- BANNIÈRE CTA FINAL ADAPTATIVE -->
 <section class="py-5 py-lg-6 hero-section text-center position-relative overflow-hidden border-top">
     <div class="container position-relative">
-        <h2 class="display-4 fw-bold mb-3 text-body">{% if hackathon %}Rejoignez {{ hackathon.name }}{% else %}Prêt à rejoindre HackFlow ?{% endif %}</h2>
+        <h2 class="display-4 fw-bold mb-3 text-body">{% if hackathon %}{% trans "Rejoignez" %} {{ hackathon.name }}{% else %}{% trans "Prêt à rejoindre HackFlow ?" %}{% endif %}</h2>
         <p class="lead text-body-secondary mb-4 max-w-xl mx-auto">
             {% if hackathon %}{{ participants_count }} participant{{ participants_count|pluralize }} inscrit{{ participants_count|pluralize }} et {{ teams_count }} équipe{{ teams_count|pluralize }} sont actuellement renseignés dans HackFlow.{% else %}Créez votre compte pour découvrir les hackathons gérés sur HackFlow.{% endif %}
         </p>
         <div class="d-flex flex-wrap gap-3 justify-content-center">
             <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg px-5 py-3 shadow-lg">
-                <i class="bi bi-person-plus-fill me-2"></i>Créer mon compte maintenant
+                <i class="bi bi-person-plus-fill me-2"></i>{% trans "Créer mon compte maintenant" %}
             </a>
             <a href="{% url 'accounts:login' %}" class="btn btn-glass btn-lg px-4 py-3">
-                <i class="bi bi-box-arrow-in-right me-2"></i>Se connecter
+                <i class="bi bi-box-arrow-in-right me-2"></i>{% trans "Se connecter" %}
             </a>
         </div>
     </div>

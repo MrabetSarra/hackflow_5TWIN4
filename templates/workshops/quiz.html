@@ -1,0 +1,90 @@
+{% extends workshop_base_template %}
+{% load static %}
+
+{% block title %}Quiz — {{ workshop.title }} — HackFlow{% endblock %}
+
+{% block student_content %}
+<div class="container-fluid px-4 py-4">
+
+  <div class="row justify-content-center">
+    <div class="col-12 col-xl-8">
+
+      <!-- Breadcrumb -->
+      <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{% url 'workshops:list' %}">Ateliers</a></li>
+          <li class="breadcrumb-item"><a href="{{ workshop.get_absolute_url }}">{{ workshop.title|truncatechars:30 }}</a></li>
+          <li class="breadcrumb-item active">Quiz de compréhension</li>
+        </ol>
+      </nav>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-primary text-white py-3">
+          <h4 class="mb-0 fw-bold">
+            <i class="bi bi-question-circle me-2"></i>Quiz : {{ workshop.title }}
+          </h4>
+        </div>
+
+        <div class="card-body p-4">
+          <p class="text-body-secondary">
+            Ce quiz valide votre compréhension de l'atelier. Un score de <strong>80% minimum</strong>
+            est requis pour valider votre présence et débloquer le certificat.
+          </p>
+
+          <form method="post" action="{% url 'workshops:quiz_submit' workshop.pk %}" id="quiz-form">
+            {% csrf_token %}
+
+            {% for question in questions %}
+            <div class="card mb-3 border-light">
+              <div class="card-body">
+                <h6 class="fw-semibold">{{ forloop.counter }}. {{ question.question }}</h6>
+                <div class="row g-2">
+                  <div class="col-6 col-md-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="question_{{ question.pk }}" value="0" id="q{{ question.pk }}_a">
+                      <label class="form-check-label" for="q{{ question.pk }}_a">A. {{ question.option_a }}</label>
+                    </div>
+                  </div>
+                  <div class="col-6 col-md-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="question_{{ question.pk }}" value="1" id="q{{ question.pk }}_b">
+                      <label class="form-check-label" for="q{{ question.pk }}_b">B. {{ question.option_b }}</label>
+                    </div>
+                  </div>
+                  <div class="col-6 col-md-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="question_{{ question.pk }}" value="2" id="q{{ question.pk }}_c">
+                      <label class="form-check-label" for="q{{ question.pk }}_c">C. {{ question.option_c }}</label>
+                    </div>
+                  </div>
+                  <div class="col-6 col-md-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="question_{{ question.pk }}" value="3" id="q{{ question.pk }}_d">
+                      <label class="form-check-label" for="q{{ question.pk }}_d">D. {{ question.option_d }}</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% empty %}
+            <div class="alert alert-warning">
+              Aucune question de quiz n'a encore été configurée pour cet atelier.
+            </div>
+            {% endfor %}
+
+            {% if questions %}
+            <div class="d-grid gap-2 mt-4">
+              <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold">
+                <i class="bi bi-check2-circle me-2"></i>Soumettre le quiz
+              </button>
+            </div>
+            {% endif %}
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

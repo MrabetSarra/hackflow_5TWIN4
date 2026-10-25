@@ -1,22 +1,22 @@
 {% extends "layouts/base_student.html" %}
-{% load announcement_format %}
+{% load announcement_format i18n %}
 
-{% block title %}Dashboard Student - HackFlow{% endblock %}
+{% block title %}{% trans "Student dashboard - HackFlow" %}{% endblock %}
 
 {% block student_content %}
 <div class="container-fluid px-0">
     <!-- Welcome Header -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
-            <h1 class="fw-bold text-body mb-1">Welcome to your workspace, {{ request.user.first_name|default:request.user.username }} 👋</h1>
-            <p class="text-body-secondary small mb-0">Hackathon {{ hackathon.edition }} • You are on team <strong class="text-primary">{{ team.name }}</strong>.</p>
+            <h1 class="fw-bold text-body mb-1">{% blocktrans with name=request.user.first_name|default:request.user.username %}Welcome to your workspace, {{ name }}{% endblocktrans %} 👋</h1>
+            <p class="text-body-secondary small mb-0">{% trans "Hackathon" %} {{ hackathon.edition }} • {% trans "You are on team" %} <strong class="text-primary">{{ team.name }}</strong>.</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
             <a href="{% url 'student:mentor_request' %}" class="btn btn-outline-danger btn-sm rounded-pill px-3 d-flex align-items-center gap-2">
-                <i aria-hidden="true" class="bi bi-headset"></i> Get help
+                <i aria-hidden="true" class="bi bi-headset"></i> {% trans "Get help" %}
             </a>
             <a href="{% url 'student:tasks_kanban' %}" class="btn btn-primary btn-sm rounded-pill px-3 d-flex align-items-center gap-2 shadow-sm">
-                <i aria-hidden="true" class="bi bi-kanban"></i> View Tasks
+                <i aria-hidden="true" class="bi bi-kanban"></i> {% trans "View Tasks" %}
             </a>
         </div>
     </div>
@@ -39,7 +39,7 @@
         <div class="col-sm-6 col-xl-3">
             <div class="stat-card card-modern h-100">
                 <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="text-body-secondary small fw-semibold">Project Progress</span>
+                    <span class="text-body-secondary small fw-semibold">{% trans "Project Progress" %}</span>
                     <span class="badge bg-primary-subtle text-primary">{{ progress }}%</span>
                 </div>
                 <div class="h3 fw-bold text-body mb-2 font-mono">{{ progress }}%</div>
@@ -70,10 +70,10 @@
             <div class="card-modern p-4 mb-4">
                 <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
                     <div>
-                        <h5 class="fw-bold text-body mb-1"><i aria-hidden="true" class="bi bi-signpost-split-fill text-primary me-2"></i>Hackathon Milestones & Schedule</h5>
-                        <p class="text-body-secondary small mb-0">Follow the key stages set by the organizers.</p>
+                        <h5 class="fw-bold text-body mb-1"><i aria-hidden="true" class="bi bi-signpost-split-fill text-primary me-2"></i>{% trans "Hackathon Milestones & Schedule" %}</h5>
+                        <p class="text-body-secondary small mb-0">{% trans "Follow the key stages set by the organizers." %}</p>
                     </div>
-                    <span class="badge bg-body-tertiary text-body-secondary border font-mono">48-hour Sprint</span>
+                    <span class="badge bg-body-tertiary text-body-secondary border font-mono">{% trans "48-hour Sprint" %}</span>
                 </div>
 
                 <div class="d-flex flex-column gap-3">
@@ -90,11 +90,11 @@
                         </div>
                         <div>
                             {% if item.status == 'done' %}
-                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Approved</span>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">{% trans "Approved" %}</span>
                             {% elif item.status == 'active' %}
-                            <span class="badge bg-primary text-white px-2 py-1">In progress</span>
+                            <span class="badge bg-primary text-white px-2 py-1">{% trans "In progress" %}</span>
                             {% else %}
-                            <span class="badge bg-secondary-subtle text-body-secondary px-2 py-1">Upcoming</span>
+                            <span class="badge bg-secondary-subtle text-body-secondary px-2 py-1">{% trans "Upcoming" %}</span>
                             {% endif %}
                         </div>
                     </div>
@@ -105,7 +105,7 @@
             <!-- Organizer announcements -->
             <section class="card-modern announcement-feed p-4" aria-labelledby="announcement-feed-title">
                 <h5 id="announcement-feed-title" class="fw-bold text-body mb-3">
-                    <i class="bi bi-megaphone-fill text-warning me-2" aria-hidden="true"></i>Latest Staff Announcements
+                    <i class="bi bi-megaphone-fill text-warning me-2" aria-hidden="true"></i>{% trans "Latest Staff Announcements" %}
                 </h5>
                 {% if recent_announcements %}
                 <div class="announcement-list">
@@ -120,14 +120,14 @@
                         <div class="announcement-notice-body">{{ ann.body|announcement_markdown }}</div>
                         {% endif %}
                         <footer class="announcement-notice-footer">
-                            <span>Posted by <strong>{{ ann.author }}</strong></span>
+                            <span>{% trans "Posted by" %} <strong>{{ ann.author }}</strong></span>
                             <time datetime="{{ ann.time|date:'c' }}" title="{{ ann.time|date:'DATETIME_FORMAT' }}">{{ ann.time|timesince }} ago</time>
                         </footer>
                     </article>
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="announcement-feed-empty text-body-secondary mb-0">There are no announcements for your event yet.</p>
+                <p class="announcement-feed-empty text-body-secondary mb-0">{% trans "There are no announcements for your event yet." %}</p>
                 {% endif %}
             </section>
         </div>
@@ -136,7 +136,7 @@
         <div class="col-lg-4">
             <!-- Alertes & Deadlines Proches -->
             <div class="card-modern p-4 mb-4">
-                <h5 class="fw-bold text-body mb-3"><i aria-hidden="true" class="bi bi-alarm-fill text-danger me-2"></i>Upcoming Deadlines</h5>
+                <h5 class="fw-bold text-body mb-3"><i aria-hidden="true" class="bi bi-alarm-fill text-danger me-2"></i>{% trans "Upcoming Deadlines" %}</h5>
                 <div class="d-flex flex-column gap-3">
                     {% for dl in upcoming_deadlines %}
                     <div class="p-3 rounded-3 border {% if dl.urgent %}border-danger-subtle bg-danger bg-opacity-10{% else %}bg-body-tertiary{% endif %}">
@@ -145,7 +145,7 @@
                             <span class="badge {% if dl.urgent %}bg-danger{% else %}bg-secondary{% endif %} rounded-pill font-mono">{{ dl.deadline|date:"l H:i" }}</span>
                         </div>
                         <div class="small {% if dl.urgent %}text-danger fw-semibold{% else %}text-body-secondary{% endif %} font-mono">
-                            <i aria-hidden="true" class="bi bi-hourglass-split me-1"></i><span data-live-countdown="{{ dl.deadline|date:'c' }}" data-countdown-prefix="In " data-countdown-expired="Deadline passed">In {{ dl.deadline|timeuntil }}</span>
+                            <i aria-hidden="true" class="bi bi-hourglass-split me-1"></i><span data-live-countdown="{{ dl.deadline|date:'c' }}" data-countdown-prefix="{% trans 'In ' %}" data-countdown-expired="{% trans 'Deadline passed' %}" data-countdown-hours-unit="{% trans 'h' %}" data-countdown-minutes-unit="{% trans 'min' %}">{% trans "In" %} {{ dl.deadline|timeuntil }}</span>
                         </div>
                     </div>
                     {% endfor %}
@@ -155,24 +155,24 @@
             <!-- Team Summary -->
             <div class="card-modern p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold text-body mb-0">My Team</h5>
-                    <a href="{% url 'student:team_detail' %}" class="small text-primary text-decoration-none fw-semibold">Manage <i aria-hidden="true" class="bi bi-arrow-right"></i></a>
+                    <h5 class="fw-bold text-body mb-0">{% trans "My Team" %}</h5>
+                    <a href="{% url 'student:team_detail' %}" class="small text-primary text-decoration-none fw-semibold">{% trans "Manage" %} <i aria-hidden="true" class="bi bi-arrow-right"></i></a>
                 </div>
                 <div class="p-3 rounded-3 bg-body-tertiary mb-3">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <strong class="text-body">{{ team.name }}</strong>
-                        <span class="badge bg-success-subtle text-success">{{ team.member_count }}/{{ team.max_members }} members</span>
+                        <span class="badge bg-success-subtle text-success">{% blocktrans with members=team.member_count maximum=team.max_members %}{{ members }}/{{ maximum }} members{% endblocktrans %}</span>
                     </div>
                     <p class="small text-body-secondary mb-0">{{ team.project_pitch }}</p>
                 </div>
 
                 <div class="alert alert-warning py-2 px-3 small d-flex align-items-center gap-2 mb-3">
                     <i aria-hidden="true" class="bi bi-exclamation-circle-fill flex-shrink-0"></i>
-                    <div>There are <strong>{{ team.places_left }} spot(s)</strong> left to complete your team.</div>
+                    <div>{% trans "There are" %} <strong>{{ team.places_left }} {% trans "spots" %}</strong> {% trans "left to complete your team." %}</div>
                 </div>
 
                 <a href="{% url 'student:skills_matching' %}" class="btn btn-outline-primary btn-sm w-100 rounded-pill">
-                    <i aria-hidden="true" class="bi bi-search me-1"></i>Find a teammate
+                    <i aria-hidden="true" class="bi bi-search me-1"></i>{% trans "Find a teammate" %}
                 </a>
             </div>
         </div>

@@ -1,4 +1,5 @@
 {% extends "layouts/base_mentor.html" %}
+{% load i18n %}
 
 {% block title %}Demandes d'Aide - Espace Mentor - HackFlow{% endblock %}
 
@@ -19,8 +20,8 @@
         <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
             <nav aria-label="Affichage des tickets">
                 <ul class="nav nav-pills gap-1">
-                    <li class="nav-item"><a class="nav-link {% if view == 'pending' %}active{% endif %}" {% if view == 'pending' %}aria-current="page"{% endif %} href="?view=pending">File d'attente <span class="badge bg-body-secondary text-body ms-1">{{ counts.pending }}</span></a></li>
-                    <li class="nav-item"><a class="nav-link {% if view == 'mine' %}active{% endif %}" {% if view == 'mine' %}aria-current="page"{% endif %} href="?view=mine">Mes tickets en cours <span class="badge bg-body-secondary text-body ms-1">{{ counts.mine }}</span></a></li>
+                    <li class="nav-item"><a class="nav-link {% if view == 'pending' %}active{% endif %}" {% if view == 'pending' %}aria-current="page"{% endif %} href="?view=pending">{% trans "File d'attente" %} <span class="badge bg-body-secondary text-body ms-1">{{ counts.pending }}</span></a></li>
+                    <li class="nav-item"><a class="nav-link {% if view == 'mine' %}active{% endif %}" {% if view == 'mine' %}aria-current="page"{% endif %} href="?view=mine">{% trans "Mes tickets en cours" %} <span class="badge bg-body-secondary text-body ms-1">{{ counts.mine }}</span></a></li>
                     <li class="nav-item"><a class="nav-link {% if view == 'resolved' %}active{% endif %}" {% if view == 'resolved' %}aria-current="page"{% endif %} href="?view=resolved">Mes tickets résolus</a></li>
                 </ul>
             </nav>
@@ -28,7 +29,7 @@
                 <input type="hidden" name="view" value="{{ view }}">
                 <label for="{{ form.urgency.id_for_label }}" class="visually-hidden">{{ form.urgency.label }}</label>
                 {{ form.urgency }}
-                <button type="submit" class="btn btn-outline-primary text-nowrap"><i class="bi bi-funnel-fill me-1" aria-hidden="true"></i>Filtrer</button>
+                <button type="submit" class="btn btn-outline-primary text-nowrap"><i class="bi bi-funnel-fill me-1" aria-hidden="true"></i>{% trans "Filtrer" %}</button>
             </form>
         </div>
     </div>
@@ -61,7 +62,7 @@
 
             <p class="text-body-secondary small mb-3 p-3 bg-body-tertiary rounded-3">{{ req.description|linebreaksbr }}</p>
 
-            {% if req.triage %}
+            {% if req.triage.status == 'done' or req.triage.status == 'failed' or req.triage and req.status != 'resolved' %}
             <div class="mb-3 p-3 border rounded-3 js-triage" id="triage-{{ req.pk }}" data-request-id="{{ req.pk }}" data-status="{{ req.triage.status }}" aria-live="polite">
                 {% include "mentor/_triage.html" with triage=req.triage %}
             </div>
@@ -74,7 +75,7 @@
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 pt-3 border-top">
                 {% if req.meeting_url %}
                 <a href="{{ req.meeting_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-success btn-sm rounded-pill px-3">
-                    <i class="bi bi-camera-video me-1" aria-hidden="true"></i>Rejoindre la salle visio<span class="visually-hidden"> (nouvel onglet)</span>
+                    <i class="bi bi-camera-video me-1" aria-hidden="true"></i>{% trans "Rejoindre la salle visio" %}<span class="visually-hidden"> (nouvel onglet)</span>
                 </a>
                 {% else %}<span></span>{% endif %}
 
@@ -82,13 +83,13 @@
                 <form method="post" action="{% url 'mentor:request_take' req.pk %}">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm">
-                        <i class="bi bi-check2 me-1" aria-hidden="true"></i>Prendre en charge
+                        <i class="bi bi-check2 me-1" aria-hidden="true"></i>{% trans "Prendre en charge" %}
                     </button>
                 </form>
                 {% elif req.status == 'accepted' %}
                 <div class="d-flex flex-wrap gap-2">
                     <a class="btn btn-outline-primary btn-sm rounded-pill" href="{% url 'mentor:session_create' %}?request={{ req.pk }}">
-                        <i class="bi bi-calendar-plus me-1" aria-hidden="true"></i>Planifier une session
+                        <i class="bi bi-calendar-plus me-1" aria-hidden="true"></i>{% trans "Planifier une session" %}
                     </a>
                     <button class="btn btn-outline-secondary btn-sm rounded-pill" type="button" data-bs-toggle="collapse" data-bs-target="#transfer-{{ req.pk }}" aria-expanded="false" aria-controls="transfer-{{ req.pk }}">
                         <i class="bi bi-arrow-left-right me-1" aria-hidden="true"></i>Transférer

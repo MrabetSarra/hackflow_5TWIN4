@@ -1,4 +1,5 @@
 {% extends "layouts/base_student.html" %}
+{% load i18n i18n_content %}
 
 {% block title %}Project Submission - HackFlow{% endblock %}
 
@@ -6,8 +7,8 @@
 <div class="container-fluid px-0">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
-            <h1 class="fw-bold text-dark mb-1">Final Project Submission & Deliverables</h1>
-            <p class="text-muted small mb-0">Provide all information required for the hackathon jury to evaluate your project.</p>
+            <h1 class="fw-bold text-dark mb-1">{% trans "Final Project Submission & Deliverables" %}</h1>
+            <p class="text-muted small mb-0">{% trans "Provide all information required for the hackathon jury to evaluate your project." %}</p>
         </div>
         <div class="d-flex align-items-center gap-2">
             <span class="badge {% if submission.is_locked %}bg-danger bg-opacity-10 text-danger border-danger{% else %}bg-warning bg-opacity-10 text-warning-emphasis border-warning{% endif %} border border-opacity-50 px-3 py-2 rounded-pill font-mono">
@@ -16,7 +17,7 @@
         </div>
     </div>
 
-    {% if milestones %}<form method="get" class="mb-4"><label for="milestone-select" class="form-label small fw-semibold">Submission milestone</label><div class="d-flex gap-2"><select class="form-select" id="milestone-select" name="milestone" onchange="this.form.submit()">{% for milestone_option in milestones %}<option value="{{ milestone_option.pk }}" {% if selected_milestone.pk == milestone_option.pk %}selected{% endif %}>{{ milestone_option.title }} Â· {{ milestone_option.due_at }}</option>{% endfor %}</select><noscript><button class="btn btn-outline-primary" type="submit">Select</button></noscript></div></form>{% endif %}
+    {% if milestones %}<form method="get" class="mb-4"><label for="milestone-select" class="form-label small fw-semibold">{% trans "Submission milestone" %}</label><div class="d-flex gap-2"><select class="form-select" id="milestone-select" name="milestone" onchange="this.form.submit()">{% for milestone_option in milestones %}<option value="{{ milestone_option.pk }}" {% if selected_milestone.pk == milestone_option.pk %}selected{% endif %}>{{ milestone_option.title|localized_milestone }} Â· {{ milestone_option.due_at }}</option>{% endfor %}</select><noscript><button class="btn btn-outline-primary" type="submit">{% trans "Select" %}</button></noscript></div></form>{% endif %}
 
     <!-- Submission status banner -->
     <div class="alert alert-info border-0 shadow-sm rounded-4 p-4 mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
@@ -25,13 +26,13 @@
                 <i aria-hidden="true" class="bi bi-cloud-arrow-up-fill fs-3"></i>
             </span>
             <div>
-                <h5 class="fw-bold mb-1 text-dark">Current status: <span class="badge bg-warning text-dark">{{ submission.status }}</span></h5>
+                <h5 class="fw-bold mb-1 text-dark">{% trans "Current status:" %} <span class="badge bg-warning text-dark">{{ submission.status }}</span></h5>
                 <p class="mb-0 text-muted small">{% if submission.is_locked %}The submission period is closed. You can no longer upload files or change your submission.{% else %}You can update this form until the deadline.{% endif %}</p>
             </div>
         </div>
         <div class="text-md-end">
-            <span class="small text-muted font-mono d-block mb-1">Estimated time remaining:</span>
-            <span class="fw-bold text-dark font-mono fs-5">{% if submission.time_left %}<span data-live-countdown="{{ submission.deadline|date:'c' }}" data-countdown-prefix="In " data-countdown-expired="Deadline passed">In {{ submission.time_left|timeuntil }}</span>{% elif submission.deadline %}Deadline passed{% else %}No deadline set{% endif %}</span>
+            <span class="small text-muted font-mono d-block mb-1">{% trans "Estimated time remaining:" %}</span>
+            <span class="fw-bold text-dark font-mono fs-5">{% if submission.time_left %}<span data-live-countdown="{{ submission.deadline|date:'c' }}" data-countdown-prefix="{% trans 'In ' %}" data-countdown-expired="{% trans 'Deadline passed' %}" data-countdown-hours-unit="{% trans 'h' %}" data-countdown-minutes-unit="{% trans 'min' %}">{% trans "In" %} {{ submission.time_left|timeuntil }}</span>{% elif submission.deadline %}{% trans "Deadline passed" %}{% else %}{% trans "No deadline set" %}{% endif %}</span>
         </div>
     </div>
 
@@ -43,41 +44,41 @@
                     {% for error in form.non_field_errors %}<div role="alert" class="alert alert-danger py-2">{{ error }}</div>{% endfor %}
                     {% if submission.is_locked %}<div class="alert alert-danger" role="status"><i aria-hidden="true" class="bi bi-lock-fill me-2"></i>Submission locked{% if submission.deadline %} after the deadline{% else %} until a deadline is configured{% endif %}.</div>{% endif %}
                     <fieldset class="border-0 p-0 m-0" {% if submission.is_locked %}disabled{% endif %}>
-                    <h5 class="fw-bold text-dark mb-4 pb-2 border-bottom">1. General Overview</h5>
+                    <h5 class="fw-bold text-dark mb-4 pb-2 border-bottom">{% trans "1. General Overview" %}</h5>
 
                     <div class="mb-3">
-                        <label for="{{ form.project_name.id_for_label }}" class="form-label small fw-semibold">Official project name</label>
+                        <label for="{{ form.project_name.id_for_label }}" class="form-label small fw-semibold">{% trans "Official project name" %}</label>
                         {{ form.project_name }}{% for error in form.project_name.errors %}<div id="{{ form.project_name.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
 
                     <div class="mb-3">
-                        <label for="{{ form.category.id_for_label }}" class="form-label small fw-semibold">Challenge / Selected theme</label>
+                        <label for="{{ form.category.id_for_label }}" class="form-label small fw-semibold">{% trans "Challenge / Selected theme" %}</label>
                         {{ form.category }}{% for error in form.category.errors %}<div id="{{ form.category.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
 
                     <div class="mb-4">
-                        <label for="{{ form.description.id_for_label }}" class="form-label small fw-semibold">Short pitch (150 words max)</label>
+                        <label for="{{ form.description.id_for_label }}" class="form-label small fw-semibold">{% trans "Short pitch (150 words max)" %}</label>
                         {{ form.description }}{% for error in form.description.errors %}<div id="{{ form.description.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
 
-                    <div class="mb-4"><label class="form-label small fw-semibold" for="id_project_summary">Project summary</label>{{ form.project_summary }}{% for error in form.project_summary.errors %}<div id="{{ form.project_summary.id_for_label }}_errors" class="text-danger small">{{ error }}</div>{% endfor %}<button class="btn btn-sm btn-outline-primary mt-2" type="button" id="ai-project-summary" data-url="{% url 'repositories:ai_suggestion' 'summary-placeholder' %}">Generate editable summary from repository</button><span class="small text-body-secondary ms-2" id="summary-ai-status" role="status"></span><div class="form-text">The description is written from the README, the file structure and the commit messages, and the technology stack is detected from the repository files, so it lists only what the project really uses. Review and edit it before submitting.</div></div>
+                    <div class="mb-4"><label class="form-label small fw-semibold" for="id_project_summary">{% trans "Project summary" %}</label>{{ form.project_summary }}{% for error in form.project_summary.errors %}<div id="{{ form.project_summary.id_for_label }}_errors" class="text-danger small">{{ error }}</div>{% endfor %}<button class="btn btn-sm btn-outline-primary mt-2" type="button" id="ai-project-summary" data-url="{% url 'repositories:ai_suggestion' 'summary-placeholder' %}">{% trans "Generate editable summary from repository" %}</button><span class="small text-body-secondary ms-2" id="summary-ai-status" role="status"></span><div class="form-text">{% trans "The description is written from the README, the file structure and the commit messages, and the technology stack is detected from the repository files, so it lists only what the project really uses. Review and edit it before submitting." %}</div></div>
 
-                    <h5 class="fw-bold text-body mb-4 pb-2 border-bottom">2. Links & Technical Repositories</h5>
+                    <h5 class="fw-bold text-body mb-4 pb-2 border-bottom">{% trans "2. Links & Technical Repositories" %}</h5>
 
-                    <div class="card-modern p-3 mb-3"><label class="form-label small fw-semibold" for="id_repository">Select a HackFlow repository version</label><select class="form-select" id="id_repository" name="repository"><option value="">No HackFlow repository</option>{% for repo in repositories %}<option value="{{ repo.pk }}" data-slug="{{ repo.slug }}" {% if form.is_bound %}{% if form.repository.value|stringformat:'s' == repo.pk|stringformat:'s' %}selected{% endif %}{% elif submission.repository.pk == repo.pk %}selected{% endif %}>{{ repo.name }}</option>{% endfor %}</select>{% for error in form.repository.errors %}<div id="{{ form.repository.id_for_label }}_errors" class="text-danger small">{{ error }}</div>{% endfor %}<div class="mt-3"><label class="form-label small fw-semibold" for="id_repository_branch">Branch to freeze</label>{{ form.repository_branch }}{% for error in form.repository_branch.errors %}<div id="{{ form.repository_branch.id_for_label }}_errors" class="text-danger small">{{ error }}</div>{% endfor %}<small class="form-text">The current commit on this branch is recorded with the submission, so the submitted version stays fixed.</small></div>{% if submission.repository and submission.repository_commit %}<div class="small text-body-secondary mt-2">Submitted version: <a href="{% url 'repositories:download' submission.repository.slug %}?revision={{ submission.repository_commit }}">{{ submission.repository.name }} · {{ submission.repository_commit|slice:':12' }} (download ZIP)</a></div>{% endif %}</div>
+                    <div class="card-modern p-3 mb-3"><label class="form-label small fw-semibold" for="id_repository">{% trans "Select a HackFlow repository version" %}</label><select class="form-select" id="id_repository" name="repository"><option value="">{% trans "No HackFlow repository" %}</option>{% for repo in repositories %}<option value="{{ repo.pk }}" data-slug="{{ repo.slug }}" {% if form.is_bound %}{% if form.repository.value|stringformat:'s' == repo.pk|stringformat:'s' %}selected{% endif %}{% elif submission.repository.pk == repo.pk %}selected{% endif %}>{{ repo.name }}</option>{% endfor %}</select>{% for error in form.repository.errors %}<div id="{{ form.repository.id_for_label }}_errors" class="text-danger small">{{ error }}</div>{% endfor %}<div class="mt-3"><label class="form-label small fw-semibold" for="id_repository_branch">{% trans "Branch to freeze" %}</label>{{ form.repository_branch }}{% for error in form.repository_branch.errors %}<div id="{{ form.repository_branch.id_for_label }}_errors" class="text-danger small">{{ error }}</div>{% endfor %}<small class="form-text">The current commit on this branch is recorded with the submission, so the submitted version stays fixed.</small></div>{% if submission.repository and submission.repository_commit %}<div class="small text-body-secondary mt-2">Submitted version: <a href="{% url 'repositories:download' submission.repository.slug %}?revision={{ submission.repository_commit }}">{{ submission.repository.name }} · {{ submission.repository_commit|slice:':12' }} (download ZIP)</a></div>{% endif %}</div>
 
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">GitHub / GitLab Repository URL</label>
+                        <label class="form-label small fw-semibold">{% trans "GitHub / GitLab Repository URL" %}</label>
                         <div class="input-group">
                             <span class="input-group-text"><i aria-hidden="true" class="bi bi-github"></i></span>
                             {{ form.github_url }}
                         </div>
                         {% for error in form.github_url.errors %}<div id="{{ form.github_url.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}
-                        <small class="text-body-secondary" style="font-size: 0.75rem;">The repository must be public or shared with the judges.</small>
+                        <small class="text-body-secondary" style="font-size: 0.75rem;">{% trans "The repository must be public or shared with the judges." %}</small>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Online Demo URL (Staging / Production)</label>
+                        <label class="form-label small fw-semibold">{% trans "Online Demo URL (Staging / Production)" %}</label>
                         <div class="input-group">
                             <span class="input-group-text"><i aria-hidden="true" class="bi bi-globe"></i></span>
                             {{ form.demo_url }}
@@ -86,19 +87,19 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label small fw-semibold">Demo Video URL (Loom, YouTube, Vimeo)</label>
+                        <label class="form-label small fw-semibold">{% trans "Demo Video URL (Loom, YouTube, Vimeo)" %}</label>
                         <div class="input-group">
                             <span class="input-group-text"><i aria-hidden="true" class="bi bi-camera-video"></i></span>
                             {{ form.video_url }}
                         </div>
                         {% for error in form.video_url.errors %}<div id="{{ form.video_url.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}
-                        <small class="text-body-secondary" style="font-size: 0.75rem;">A 3-minute video showing the use case and live functionality.</small>
+                        <small class="text-body-secondary" style="font-size: 0.75rem;">{% trans "A 3-minute video showing the use case and live functionality." %}</small>
                     </div>
 
-                    <h5 class="fw-bold text-body mb-4 pb-2 border-bottom">3. Project Files</h5>
+                    <h5 class="fw-bold text-body mb-4 pb-2 border-bottom">{% trans "3. Project Files" %}</h5>
 
                     <div class="mb-4">
-                        <label class="form-label small fw-semibold">Project ZIP archive</label>
+                        <label class="form-label small fw-semibold">{% trans "Project ZIP archive" %}</label>
                         <div class="p-4 rounded-3 border border-2 border-dashed text-center bg-light">
                             <i aria-hidden="true" class="bi bi-file-earmark-zip-fill fs-2 text-primary mb-2"></i>
                             <div class="fw-bold small mb-1">{% if submission.slide_file %}{{ submission.slide_file|cut:"submissions/" }}{% else %}No ZIP archive uploaded yet{% endif %}</div>
@@ -114,7 +115,7 @@
 
                     <div class="d-flex flex-wrap justify-content-end gap-2 pt-3 border-top">
                         <button type="submit" name="action" value="draft" class="btn btn-light px-4">
-                            Save as draft
+                            {% trans "Save as draft" %}
                         </button>
                         <button type="submit" name="action" value="submit" class="btn btn-primary px-4 shadow-sm">
                             <i aria-hidden="true" class="bi bi-check2-circle me-1"></i>Confirm & Submit

@@ -1,0 +1,292 @@
+{% extends "layouts/base_student.html" %}
+{% load static %}
+
+{% block title %}Choisir ma place — {{ workshop.title }}{% endblock %}
+
+{% block student_content %}
+<div class="container py-4">
+
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'workshops:list' %}">Ateliers</a></li>
+      <li class="breadcrumb-item"><a href="{{ workshop.get_absolute_url }}">{{ workshop.title|truncatechars:36 }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Choisir ma place</li>
+    </ol>
+  </nav>
+
+  <div class="text-center mb-4">
+    <span class="badge bg-success rounded-pill mb-3">
+      <i class="bi bi-geo-alt-fill me-1"></i>Atelier présentiel
+    </span>
+    <h1 class="h3 fw-bold mb-1">Sélectionnez votre place</h1>
+    <p class="text-body-secondary mb-1">{{ workshop.title }}</p>
+    <p class="small text-body-secondary mb-0">
+      <i class="bi bi-calendar3 me-1"></i>{{ workshop.starts_at|date:"d/m/Y à H\hi" }}
+      {% if workshop.room %}
+      <span class="mx-1">·</span><i class="bi bi-building me-1"></i>{{ workshop.room }}
+      {% endif %}
+    </p>
+  </div>
+
+  {% if free_count > 0 %}
+
+  <div class="row justify-content-center">
+    <div class="col-12 col-xl-10">
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-body p-3 p-md-4">
+
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+            <p class="mb-0 fw-semibold">
+              <span class="text-success">{{ free_count }}</span>
+              place{{ free_count|pluralize }} libre{{ free_count|pluralize }}
+            </p>
+            <p class="mb-0 small text-body-secondary">
+              {{ taken_count }} place{{ taken_count|pluralize }} occupée{{ taken_count|pluralize }}
+            </p>
+          </div>
+
+          <form method="post" action="{% url 'workshops:book' workshop.pk %}" id="seat-form">
+            {% csrf_token %}
+
+            <fieldset>
+              <legend class="visually-hidden">Choisir une place dans la salle</legend>
+
+              <div class="seat-map" role="group" aria-label="Plan des places">
+                {% for row in seat_rows %}
+                <div class="seat-row">
+                  <span class="seat-row-label" aria-hidden="true">{{ forloop.counter }}</span>
+                  {% for seat in row %}
+                  <input type="radio"
+                         name="seat_number"
+                         id="seat-{{ seat.number }}"
+                         value="{{ seat.number }}"
+                         class="seat-radio"
+                         {% if seat.taken %}disabled{% else %}required{% endif %}>
+                  <label for="seat-{{ seat.number }}"
+                         class="seat {% if seat.taken %}seat-taken{% else %}seat-free{% endif %}"
+                         title="Place {{ seat.number }}{% if seat.taken %} — occupée{% else %} — libre{% endif %}"
+                         aria-label="Place {{ seat.number }}{% if seat.taken %} occupée{% else %} libre{% endif %}">
+                    {% if seat.taken %}
+                    <i class="bi bi-lock-fill" aria-hidden="true"></i>
+                    {% else %}
+                    {{ seat.number }}
+                    {% endif %}
+                  </label>
+                  {% endfor %}
+                </div>
+                {% endfor %}
+              </div>
+
+              <div class="screen" aria-hidden="true">
+                <span>Écran / scène</span>
+              </div>
+            </fieldset>
+
+            <div class="d-flex flex-wrap justify-content-center gap-3 mt-4 small">
+              <span class="legend-item">
+                <span class="legend-seat legend-free"></span>Places libres
+              </span>
+              <span class="legend-item">
+                <span class="legend-seat legend-taken"><i class="bi bi-lock-fill"></i></span>Places occupées
+              </span>
+              <span class="legend-item">
+                <span class="legend-seat legend-selected"></span>Ma sélection
+              </span>
+            </div>
+
+            <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between gap-3 mt-4 pt-3 border-top">
+              <p class="mb-0 small text-body-secondary" aria-live="polite">
+                Place sélectionnée :
+                <strong id="selected-seat-label" class="text-body">aucune</strong>
+              </p>
+              <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold" id="seat-submit">
+                <i class="bi bi-check-circle-fill me-2"></i>Confirmer ma place
+              </button>
+            </div>
+          </form>
+
+        </div>
+      </div>
+
+      <div class="text-center mt-3">
+        <a href="{{ workshop.get_absolute_url }}" class="small text-body-secondary text-decoration-none">
+          <i class="bi bi-arrow-left me-1"></i>Retour à l'atelier
+        </a>
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body text-center p-4">
+          <div class="rounded-circle bg-warning bg-opacity-10 text-warning d-inline-flex align-items-center justify-content-center mb-3"
+               style="width:64px;height:64px;">
+            <i class="bi bi-people-fill fs-2"></i>
+          </div>
+          <h2 class="h5 fw-bold">Toutes les places sont occupées</h2>
+          <p class="text-body-secondary small mb-4">
+            Vous pouvez rejoindre la liste d'attente. Vous serez prévenu
+            automatiquement si une place se libère.
+          </p>
+          <form method="post" action="{% url 'workshops:book' workshop.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-warning rounded-pill px-4 fw-semibold">
+              <i class="bi bi-hourglass-split me-2"></i>Rejoindre la liste d'attente
+            </button>
+          </form>
+          <a href="{{ workshop.get_absolute_url }}" class="btn btn-link btn-sm text-body-secondary mt-2">
+            Retour à l'atelier
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% endif %}
+
+</div>
+
+<style>
+  .seat-map {
+    display: flex;
+    flex-direction: column;
+    gap: .45rem;
+    overflow-x: auto;
+    padding: .5rem .25rem 1rem;
+  }
+  .seat-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .35rem;
+    min-width: max-content;
+  }
+  .seat-row-label {
+    width: 1.4rem;
+    flex: 0 0 1.4rem;
+    text-align: right;
+    color: #adb5bd;
+    font-size: .7rem;
+    font-weight: 700;
+  }
+  .seat-radio {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .seat {
+    width: 2.25rem;
+    height: 1.85rem;
+    border-radius: .55rem .55rem .3rem .3rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .7rem;
+    font-weight: 700;
+    border: 2px solid transparent;
+    user-select: none;
+    margin: 0;
+    transition: transform .12s ease, background-color .12s ease;
+  }
+  .seat-free {
+    background: #fff4d6;
+    border-color: #ffd978;
+    color: #8a6400;
+    cursor: pointer;
+  }
+  .seat-free:hover {
+    background: #ffe9ad;
+    transform: translateY(-1px);
+  }
+  .seat-taken {
+    background: #eef0f2;
+    border-color: #e1e4e8;
+    color: #adb5bd;
+    cursor: not-allowed;
+  }
+  .seat-taken i {
+    font-size: .62rem;
+  }
+  .seat-radio:checked + .seat-free {
+    background: #ffc107;
+    border-color: #d99a00;
+    color: #3d2c00;
+    box-shadow: 0 0 0 .2rem rgba(255, 193, 7, .25);
+    transform: translateY(-1px);
+  }
+  .seat-radio:focus-visible + .seat {
+    outline: 2px solid #0d6efd;
+    outline-offset: 2px;
+  }
+  .screen {
+    width: min(80%, 34rem);
+    margin: 1rem auto 0;
+    padding-top: .55rem;
+    border-top: 4px solid #ffc107;
+    border-radius: 50% 50% 0 0 / 14px 14px 0 0;
+    text-align: center;
+    color: #adb5bd;
+    font-size: .7rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    color: #6c757d;
+  }
+  .legend-seat {
+    width: 1.15rem;
+    height: 1rem;
+    border-radius: .3rem .3rem .18rem .18rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid transparent;
+    font-size: .5rem;
+  }
+  .legend-free {
+    background: #fff4d6;
+    border-color: #ffd978;
+  }
+  .legend-taken {
+    background: #eef0f2;
+    border-color: #e1e4e8;
+    color: #adb5bd;
+  }
+  .legend-selected {
+    background: #ffc107;
+    border-color: #d99a00;
+  }
+  @media (max-width: 575.98px) {
+    .seat {
+      width: 2rem;
+      height: 1.7rem;
+    }
+  }
+</style>
+
+<script>
+(function () {
+  const form = document.getElementById('seat-form');
+  if (!form) return;
+
+  const label = document.getElementById('selected-seat-label');
+  const radios = form.querySelectorAll('input[name="seat_number"]');
+
+  radios.forEach(function (radio) {
+    radio.addEventListener('change', function () {
+      if (label && radio.checked) {
+        label.textContent = 'n°' + radio.value;
+      }
+    });
+  });
+})();
+</script>
+{% endblock %}

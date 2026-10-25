@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Vérification certificat {{ code }} — HackFlow{% endblock %}
+
+{% block layout %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center bg-body-secondary py-5">
+  <div class="col-12 col-sm-10 col-md-7 col-lg-5">
+
+    <div class="text-center mb-4">
+      <a href="/" class="text-decoration-none">
+        <span class="fw-bold fs-4 text-body">Hack<span class="text-primary">Flow</span></span>
+      </a>
+      <p class="text-body-secondary small mt-1">Vérification de certificat de formation</p>
+    </div>
+
+    <div class="card border-0 shadow-lg">
+      <div class="card-body p-5 text-center">
+
+        {% if cert and not cert.is_revoked %}
+        {# ── CERTIFICAT VALIDE ── #}
+        <div class="rounded-circle bg-success bg-opacity-10 text-success d-inline-flex align-items-center justify-content-center mb-4"
+             style="width:80px;height:80px;">
+          <i class="bi bi-patch-check-fill" style="font-size:2.5rem;"></i>
+        </div>
+        <h4 class="fw-bold text-success mb-1">Certificat VALIDE</h4>
+        <p class="text-body-secondary small mb-4">Authentifié par HackFlow</p>
+
+        <div class="p-4 bg-body-tertiary rounded-3 text-start mb-4">
+          <div class="row g-3">
+            <div class="col-12">
+              <p class="small text-body-secondary mb-0">Bénéficiaire</p>
+              <p class="fw-bold mb-0 fs-5">{{ cert.user.get_full_name|default:cert.user.username }}</p>
+            </div>
+            <div class="col-12">
+              <p class="small text-body-secondary mb-0">Atelier</p>
+              <p class="fw-semibold mb-0">{{ cert.workshop.title }}</p>
+            </div>
+            <div class="col-6">
+              <p class="small text-body-secondary mb-0">Intervenant</p>
+              <p class="mb-0">{{ cert.workshop.speaker_name }}</p>
+            </div>
+            <div class="col-6">
+              <p class="small text-body-secondary mb-0">Durée</p>
+              <p class="mb-0">{{ cert.hours_display }}</p>
+            </div>
+            <div class="col-6">
+              <p class="small text-body-secondary mb-0">Date d'émission</p>
+              <p class="mb-0">{{ cert.issued_at|date:"d/m/Y" }}</p>
+            </div>
+            <div class="col-6">
+              <p class="small text-body-secondary mb-0">N° de série</p>
+              <p class="mb-0 font-monospace">{{ cert.serial }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="border rounded-3 p-3 mb-4 bg-body-tertiary">
+          <p class="small text-body-secondary mb-1">Code de vérification</p>
+          <code class="fw-bold fs-6 text-primary">{{ cert.code }}</code>
+        </div>
+
+        {% elif cert and cert.is_revoked %}
+        {# ── CERTIFICAT RÉVOQUÉ ── #}
+        <div class="rounded-circle bg-danger bg-opacity-10 text-danger d-inline-flex align-items-center justify-content-center mb-4"
+             style="width:80px;height:80px;">
+          <i class="bi bi-x-octagon-fill" style="font-size:2.5rem;"></i>
+        </div>
+        <h4 class="fw-bold text-danger mb-2">Certificat RÉVOQUÉ</h4>
+        <p class="text-body-secondary">
+          Ce certificat (<code>{{ code }}</code>) a été révoqué et n'est plus valide.
+        </p>
+
+        {% else %}
+        {# ── CERTIFICAT INTROUVABLE ── #}
+        <div class="rounded-circle bg-secondary bg-opacity-10 text-secondary d-inline-flex align-items-center justify-content-center mb-4"
+             style="width:80px;height:80px;">
+          <i class="bi bi-question-circle-fill" style="font-size:2.5rem;"></i>
+        </div>
+        <h4 class="fw-bold mb-2">Certificat introuvable</h4>
+        <p class="text-body-secondary">
+          Aucun certificat ne correspond au code <code>{{ code }}</code>.
+        </p>
+        <p class="small text-body-secondary">
+          Vérifiez l'orthographe du code ou contactez l'émetteur.
+        </p>
+        {% endif %}
+
+        <a href="{% url 'workshops:list' %}" class="btn btn-outline-secondary rounded-pill px-4 mt-2">
+          <i class="bi bi-arrow-left me-1"></i>Catalogue des ateliers
+        </a>
+
+      </div>
+    </div>
+
+    <p class="text-center small text-body-secondary mt-3">
+      Ce service de vérification est fourni par HackFlow — aucune authentification requise.
+    </p>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,79 +1,88 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static i18n %}
 
 {% block layout %}
 <div class="dashboard-wrapper">
     <!-- Sidebar Student -->
-    <aside class="app-sidebar shadow-sm">
+    <aside class="app-sidebar shadow-sm" id="workspaceSidebar" aria-label="Student workspace">
         <div class="p-4 border-bottom border-light-subtle d-flex align-items-center justify-content-between">
             <a href="{% url 'student:dashboard' %}" class="d-flex align-items-center gap-2 text-decoration-none">
                 <img src="{% static 'images/hackflow-mark.png' %}" alt="" width="44" height="32" style="object-fit: contain;">
                 <span class="fw-bold fs-5 text-body">Hack<span class="text-gradient-primary">Flow</span></span>
             </a>
             <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 rounded-pill px-2 py-1 small">
-                Student
+                {% trans "Student" %}
             </span>
         </div>
 
-        <nav aria-label="Student workspace navigation" class="py-3 flex-grow-1 overflow-y-auto">
-            <div class="sidebar-heading">My Workspace</div>
+        <nav aria-label="{% trans 'Student workspace navigation' %}" class="py-3 flex-grow-1 overflow-y-auto">
+            <div class="sidebar-heading">{% trans "My Workspace" %}</div>
             <a href="{% url 'student:dashboard' %}" class="nav-link-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" {% if request.resolver_match.url_name == 'dashboard' %}aria-current="page"{% endif %}>
                 <i class="bi bi-grid-1x2-fill" aria-hidden="true"></i>
-                <span>Dashboard</span>
+                <span>{% trans "Dashboard" %}</span>
             </a>
             <a href="{% url 'student:team_detail' %}" class="nav-link-item {% if request.resolver_match.url_name == 'team_detail' %}active{% endif %}" {% if request.resolver_match.url_name == 'team_detail' %}aria-current="page"{% endif %}>
                 <i class="bi bi-people-fill" aria-hidden="true"></i>
-                <span>My Team</span>
+                <span>{% trans "My Team" %}</span>
                 <span class="badge bg-success ms-auto rounded-pill px-2 py-0" style="font-size: 0.7rem;">{{ student_team_member_count }}/{{ student_team_max_members }}</span>
             </a>
             <a href="{% url 'student:tasks_kanban' %}" class="nav-link-item {% if request.resolver_match.url_name == 'tasks_kanban' %}active{% endif %}" {% if request.resolver_match.url_name == 'tasks_kanban' %}aria-current="page"{% endif %}>
                 <i class="bi bi-kanban-fill" aria-hidden="true"></i>
-                <span>Task Management</span>
+                <span>{% trans "Task Management" %}</span>
             </a>
             <a href="{% url 'student:project_submission' %}" class="nav-link-item {% if request.resolver_match.url_name == 'project_submission' %}active{% endif %}" {% if request.resolver_match.url_name == 'project_submission' %}aria-current="page"{% endif %}>
                 <i class="bi bi-cloud-arrow-up-fill" aria-hidden="true"></i>
-                <span>Project Submission</span>
-                <span class="badge bg-warning text-dark ms-auto rounded-pill px-2 py-0" style="font-size: 0.68rem;">Milestone</span>
+                <span>{% trans "Project Submission" %}</span>
+                <span class="badge bg-warning text-dark ms-auto rounded-pill px-2 py-0" style="font-size: 0.68rem;">{% trans "Milestone" %}</span>
             </a>
             <a href="{% url 'repositories:list' %}" class="nav-link-item {% if request.resolver_match.app_name == 'repositories' %}active{% endif %}" {% if request.resolver_match.app_name == 'repositories' %}aria-current="page"{% endif %}>
                 <i class="bi bi-git" aria-hidden="true"></i>
-                <span>Repositories</span>
+                <span>{% trans "Repositories" %}</span>
             </a>
 
-            <div class="sidebar-heading mt-3">Network & Support</div>
+            <a href="{% url 'workshops:list' %}" class="nav-link-item {% if 'workshops' in request.resolver_match.app_name %}active{% endif %}">
+                <i class="bi bi-mortarboard-fill"></i>
+                <span>Ateliers & Formations</span>
+            </a>
+            <a href="{% url 'workshops:my_bookings' %}" class="nav-link-item {% if request.resolver_match.url_name == 'my_bookings' %}active{% endif %}">
+                <i class="bi bi-bookmark-fill"></i>
+                <span>Mes ateliers</span>
+            </a>
+
+            <div class="sidebar-heading mt-3">{% trans "Network & Support" %}</div>
             <a href="{% url 'hackathons:catalog' %}" class="nav-link-item {% if request.resolver_match.namespace == 'hackathons' and request.resolver_match.url_name != 'my_registrations' and request.resolver_match.url_name != 'my_favorites' and request.resolver_match.url_name != 'ai_recommendations' %}active{% endif %}">
                 <i class="bi bi-trophy-fill" aria-hidden="true"></i>
-                <span>Hackathons</span>
+                <span>{% trans "Hackathons" %}</span>
             </a>
             <a href="{% url 'hackathons:my_registrations' %}" class="nav-link-item {% if request.resolver_match.url_name == 'my_registrations' %}active{% endif %}">
                 <i class="bi bi-ticket-perforated-fill" aria-hidden="true"></i>
-                <span>Mes inscriptions</span>
+                <span>{% trans "Mes inscriptions" %}</span>
             </a>
             <a href="{% url 'hackathons:my_favorites' %}" class="nav-link-item {% if request.resolver_match.url_name == 'my_favorites' %}active{% endif %}">
                 <i class="bi bi-star-fill" aria-hidden="true"></i>
-                <span>Mes favoris</span>
+                <span>{% trans "Mes favoris" %}</span>
             </a>
             <a href="{% url 'hackathons:ai_recommendations' %}" class="nav-link-item {% if request.resolver_match.url_name == 'ai_recommendations' %}active{% endif %}">
                 <i class="bi bi-stars" aria-hidden="true"></i>
-                <span>Recommandations IA</span>
+                <span>{% trans "Recommandations IA" %}</span>
             </a>
             <a href="{% url 'student:skills_matching' %}" class="nav-link-item {% if request.resolver_match.url_name == 'skills_matching' %}active{% endif %}" {% if request.resolver_match.url_name == 'skills_matching' %}aria-current="page"{% endif %}>
                 <i class="bi bi-search-heart-fill" aria-hidden="true"></i>
-                <span>Talent Matching</span>
+                <span>{% trans "Talent Matching" %}</span>
             </a>
             <a href="{% url 'career_opportunities:list' %}" class="nav-link-item {% if request.resolver_match.namespace == 'career_opportunities' %}active{% endif %}">
                 <i class="bi bi-briefcase-fill"></i>
-                <span>Career opportunities</span>
+                <span>{% trans "Career opportunities" %}</span>
             </a>
             <a href="{% url 'student:mentor_request' %}" class="nav-link-item {% if request.resolver_match.url_name == 'mentor_request' %}active{% endif %}" {% if request.resolver_match.url_name == 'mentor_request' %}aria-current="page"{% endif %}>
                 <i class="bi bi-chat-quote-fill" aria-hidden="true"></i>
-                <span>Find a Mentor</span>
+                <span>{% trans "Find a Mentor" %}</span>
             </a>
 
-            <div class="sidebar-heading mt-3">Settings</div>
+            <div class="sidebar-heading mt-3">{% trans "Settings" %}</div>
             <a href="{% url 'accounts:profile' %}" class="nav-link-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}" {% if request.resolver_match.url_name == 'profile' %}aria-current="page"{% endif %}>
                 <i class="bi bi-person-badge-fill" aria-hidden="true"></i>
-                <span>My Profile</span>
+                <span>{% trans "My Profile" %}</span>
             </a>
         </nav>
 
@@ -84,7 +93,7 @@
                     <p class="mb-0 fw-semibold text-truncate small text-body">{{ request.user.get_full_name|default:request.user.username }}</p>
                     <p class="mb-0 text-body-secondary small text-truncate" style="font-size: 0.75rem;">{{ request.user.school|default:'Student' }}</p>
                 </div>
-                <a href="{% url 'accounts:logout' %}" class="text-secondary hover-text-danger p-1" title="Log out" aria-label="Log out">
+                <a href="{% url 'accounts:logout' %}" class="text-secondary hover-text-danger p-1" title="{% trans 'Log out' %}" aria-label="{% trans 'Log out' %}">
                     <i class="bi bi-box-arrow-right fs-5" aria-hidden="true"></i>
                 </a>
             </div>
@@ -96,35 +105,38 @@
         <!-- Topbar Student -->
         <header class="app-topbar justify-content-between">
             <div class="d-flex align-items-center gap-3">
-                <button class="btn btn-outline-secondary d-lg-none p-1 px-2" id="sidebarToggle" type="button" aria-label="Open navigation menu">
+                <button class="btn btn-outline-secondary d-lg-none p-1 px-2" id="sidebarToggle" type="button" aria-label="{% trans 'Open navigation menu' %}" aria-controls="workspaceSidebar" aria-expanded="false">
                     <i class="bi bi-list fs-4" aria-hidden="true"></i>
                 </button>
                 <div class="d-none d-sm-flex align-items-center gap-2 bg-body-tertiary px-3 py-1 rounded-pill border">
                     <i aria-hidden="true" class="bi bi-person-badge text-primary"></i>
-                    <span class="small fw-semibold text-body">Student</span>
+                    <span class="small fw-semibold text-body">{% trans "Student" %}</span>
                 </div>
             </div>
 
             <div class="d-flex align-items-center gap-3">
+                {% include "components/language_switcher.html" %}
                 <!-- Dark / Light Theme Toggle -->
                 {% include "components/theme_toggle.html" %}
 
                 <!-- Compteur Hackathon mini -->
                 <div class="d-none d-md-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 small fw-semibold font-mono">
                     <i aria-hidden="true" class="bi bi-stopwatch-fill"></i>
-                    <span>Final sprint: <span {% if student_sprint_deadline %}data-live-countdown="{{ student_sprint_deadline }}" data-countdown-prefix="" data-countdown-expired="Ended"{% endif %}>{{ student_sprint_countdown }}</span></span>
+                    <span>{% trans "Final sprint:" %} <span {% if student_sprint_deadline %}data-live-countdown="{{ student_sprint_deadline }}" data-countdown-prefix="" data-countdown-expired="{% trans 'Ended' %}" data-countdown-hours-unit="{% trans 'h' %}" data-countdown-minutes-unit="{% trans 'min' %}"{% endif %}>{{ student_sprint_countdown }}</span></span>
                 </div>
 
                 <!-- Notifications -->
                 <div class="dropdown">
-                    <button class="btn btn-glass position-relative rounded-circle p-2 border" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications" aria-label="Notifications ({{ student_notification_count }} new)">
+                    <button class="btn btn-glass position-relative rounded-circle p-2 border" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="{% trans 'Notifications' %}" aria-label="{% blocktrans with count=student_notification_count %}Notifications ({{ count }} new){% endblocktrans %}">
                         <i class="bi bi-bell-fill text-secondary" aria-hidden="true"></i>
+                        {% if student_notification_count > 0 %}
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
                             {{ student_notification_count }}
                         </span>
+                        {% endif %}
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" style="width: 320px;">
-                        <li class="p-2 border-bottom fw-bold small text-body-secondary">Recent notifications</li>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" style="width: 320px; max-height: 400px; overflow-y: auto;">
+                        <li class="p-2 border-bottom fw-bold small text-body-secondary">{% trans "Recent notifications" %}</li>
                         {% for notification in student_notifications %}
                         <li>
                             <a class="dropdown-item p-2 rounded-2 small text-wrap d-flex gap-2 align-items-start" href="{{ notification.url|default:'#' }}">
@@ -135,21 +147,26 @@
                                 </div>
                             </a>
                         </li>
+                        {% empty %}
+                        <li class="p-3 text-center text-body-secondary small">
+                            <i class="bi bi-bell-slash fs-4 d-block mb-1"></i>
+                            {% trans "Aucune notification récente" %}
+                        </li>
                         {% endfor %}
                     </ul>
                 </div>
 
                 <!-- Menu Profil -->
                 <div class="dropdown">
-                    <a href="#" role="button" aria-label="Open profile menu" class="d-flex align-items-center text-decoration-none dropdown-toggle text-body" data-bs-toggle="dropdown" aria-expanded="false">
+                    <a href="#" role="button" aria-label="{% trans 'Open profile menu' %}" class="d-flex align-items-center text-decoration-none dropdown-toggle text-body" data-bs-toggle="dropdown" aria-expanded="false">
                         <span class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px;">{{ student_initials }}</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2">
                         <li><h6 class="dropdown-header">{{ request.user.get_full_name|default:request.user.username }}</h6></li>
-                        <li><a class="dropdown-item rounded-2" href="{% url 'accounts:profile' %}"><i aria-hidden="true" class="bi bi-person me-2"></i>My Profile</a></li>
-                        <li><a class="dropdown-item rounded-2" href="{% url 'student:team_detail' %}"><i aria-hidden="true" class="bi bi-people me-2"></i>My Team</a></li>
+                        <li><a class="dropdown-item rounded-2" href="{% url 'accounts:profile' %}"><i aria-hidden="true" class="bi bi-person me-2"></i>{% trans "My Profile" %}</a></li>
+                        <li><a class="dropdown-item rounded-2" href="{% url 'student:team_detail' %}"><i aria-hidden="true" class="bi bi-people me-2"></i>{% trans "My Team" %}</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item rounded-2 text-danger" href="{% url 'accounts:logout' %}"><i aria-hidden="true" class="bi bi-box-arrow-right me-2"></i>Log out</a></li>
+                        <li><a class="dropdown-item rounded-2 text-danger" href="{% url 'accounts:logout' %}"><i aria-hidden="true" class="bi bi-box-arrow-right me-2"></i>{% trans "Log out" %}</a></li>
                     </ul>
                 </div>
             </div>
@@ -157,6 +174,7 @@
 
         <!-- Main Content Body -->
         <main id="main-content" class="p-3 p-md-4 flex-grow-1">
+            {% if request.resolver_match.app_name == 'workshops' %}{% include "repositories/_messages.html" %}{% endif %}
             {% block student_content %}{% block profile_content %}{% endblock %}{% endblock %}
         </main>
     </div>

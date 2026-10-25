@@ -1,0 +1,43 @@
+{# Compte à rebours des ateliers — mise à jour chaque seconde. #}
+{# Cible : tout élément portant data-workshop-countdown="<date ISO 8601>". #}
+<script>
+(function () {
+  'use strict';
+
+  const nodes = document.querySelectorAll('[data-workshop-countdown]');
+  if (!nodes.length) return;
+
+  const pad = (value) => String(value).padStart(2, '0');
+
+  function render() {
+    const now = Date.now();
+
+    nodes.forEach((el) => {
+      const target = new Date(el.dataset.workshopCountdown).getTime();
+      if (Number.isNaN(target)) return;
+
+      let diff = Math.floor((target - now) / 1000);
+
+      if (diff <= 0) {
+        el.textContent = el.dataset.countdownFinished || 'Atelier en cours';
+        el.classList.add('text-danger', 'fw-semibold');
+        return;
+      }
+
+      const days = Math.floor(diff / 86400);
+      diff %= 86400;
+      const hours = Math.floor(diff / 3600);
+      diff %= 3600;
+      const minutes = Math.floor(diff / 60);
+      const seconds = diff % 60;
+
+      el.textContent =
+        (days > 0 ? days + 'j ' : '') +
+        pad(hours) + 'h' + pad(minutes) + 'mn' + pad(seconds) + 's';
+    });
+  }
+
+  render();
+  window.setInterval(render, 1000);
+})();
+</script>

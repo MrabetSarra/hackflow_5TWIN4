@@ -1,4 +1,5 @@
 {% extends "layouts/base_student.html" %}
+{% load i18n %}
 
 {% block title %}Find a Mentor - HackFlow{% endblock %}
 
@@ -6,8 +7,8 @@
 <div class="container-fluid px-0">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
-            <h1 class="fw-bold text-dark mb-1">Live Mentoring & Support</h1>
-            <p class="text-muted small mb-0">Blocked by a technical issue or need feedback on your product? Ask a mentor for help.</p>
+            <h1 class="fw-bold text-dark mb-1">{% trans "Live Mentoring & Support" %}</h1>
+            <p class="text-muted small mb-0">{% trans "Blocked by a technical issue or need feedback on your product? Ask a mentor for help." %}</p>
         </div>
         <div class="d-flex align-items-center gap-2">
             <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill small fw-semibold">
@@ -25,34 +26,34 @@
                 <form method="post" novalidate>{% csrf_token %}
                     <input type="hidden" name="action" value="{% if editing_request %}update{% else %}create{% endif %}">{% if editing_request %}<input type="hidden" name="request_id" value="{{ editing_request.pk }}">{% endif %}
                     <div class="mb-3">
-                        <label for="{{ form.subject.id_for_label }}" class="form-label small fw-semibold">Issue / Request</label>
+                        <label for="{{ form.subject.id_for_label }}" class="form-label small fw-semibold">{% trans "Issue / Request" %}</label>
                         {{ form.subject }}{% for error in form.subject.errors %}<div id="{{ form.subject.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
 
                     <div class="mb-3">
-                        <label for="{{ form.category.id_for_label }}" class="form-label small fw-semibold">Area of expertise</label>
+                        <label for="{{ form.category.id_for_label }}" class="form-label small fw-semibold">{% trans "Area of expertise" %}</label>
                         {{ form.category }}{% for error in form.category.errors %}<div id="{{ form.category.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
 
                     <div class="mb-3">
-                        <label for="{{ form.urgency.id_for_label }}" class="form-label small fw-semibold">Urgency</label>
+                        <label for="{{ form.urgency.id_for_label }}" class="form-label small fw-semibold">{% trans "Urgency" %}</label>
                         <div class="row g-2">
                             <div class="col-4">
                                 <label class="card-modern p-2 text-center cursor-pointer border-danger bg-danger bg-opacity-10 w-100">
                                     <input type="radio" name="urgency" value="blocking" class="form-check-input d-none" {% if form.urgency.value == 'blocking' or not form.urgency.value %}checked{% endif %}>
-                                    <span class="small fw-bold text-danger">Blocking</span>
+                                    <span class="small fw-bold text-danger">{% trans "Blocking" %}</span>
                                 </label>
                             </div>
                             <div class="col-4">
                                 <label class="card-modern p-2 text-center cursor-pointer w-100">
                                     <input type="radio" name="urgency" value="important" class="form-check-input d-none" {% if form.urgency.value == 'important' %}checked{% endif %}>
-                                    <span class="small fw-semibold text-warning-emphasis">Important</span>
+                                    <span class="small fw-semibold text-warning-emphasis">{% trans "Important" %}</span>
                                 </label>
                             </div>
                             <div class="col-4">
                                 <label class="card-modern p-2 text-center cursor-pointer w-100">
                                     <input type="radio" name="urgency" value="normal" class="form-check-input d-none" {% if form.urgency.value == 'normal' %}checked{% endif %}>
-                                    <span class="small fw-semibold text-secondary">Advice</span>
+                                    <span class="small fw-semibold text-secondary">{% trans "Advice" %}</span>
                                 </label>
                             </div>
                         </div>
@@ -60,12 +61,12 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="{{ form.meeting_url.id_for_label }}" class="form-label small fw-semibold">Meeting room link (Meet / Discord)</label>
+                        <label for="{{ form.meeting_url.id_for_label }}" class="form-label small fw-semibold">{% trans "Meeting room link (Meet / Discord)" %}</label>
                         {{ form.meeting_url }}{% for error in form.meeting_url.errors %}<div id="{{ form.meeting_url.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
 
                     <div class="mb-4">
-                        <label for="{{ form.description.id_for_label }}" class="form-label small fw-semibold">Detailed description of the issue</label>
+                        <label for="{{ form.description.id_for_label }}" class="form-label small fw-semibold">{% trans "Detailed description of the issue" %}</label>
                         {{ form.description }}{% for error in form.description.errors %}<div id="{{ form.description.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
                     {% for error in form.non_field_errors %}<div role="alert" class="alert alert-danger py-2">{{ error }}</div>{% endfor %}
@@ -73,7 +74,7 @@
                     <button type="submit" class="btn btn-primary rounded-pill w-100 py-2 shadow-sm fw-semibold">
                         <i aria-hidden="true" class="bi bi-send-fill me-2"></i>{% if editing_request %}Save request changes{% else %}Send help request{% endif %}
                     </button>
-                    {% if editing_request %}<a href="{% url 'student:mentor_request' %}" class="btn btn-light rounded-pill w-100 mt-2">Cancel editing</a>{% endif %}
+                    {% if editing_request %}<a href="{% url 'student:mentor_request' %}" class="btn btn-light rounded-pill w-100 mt-2">{% trans "Cancel editing" %}</a>{% endif %}
                 </form>
             </div>
         </div>
@@ -85,9 +86,9 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div class="d-flex align-items-center gap-2">
                         <span class="spinner-grow spinner-grow-sm text-primary" role="status"></span>
-                        <h5 class="fw-bold text-dark mb-0">Request in Progress</h5>
+                        <h5 class="fw-bold text-dark mb-0">{% trans "Request in Progress" %}</h5>
                     </div>
-                    <span class="badge bg-primary rounded-pill font-mono">Active</span>
+                    <span class="badge bg-primary rounded-pill font-mono">{% trans "Active" %}</span>
                 </div>
 
                 {% for req in active_requests %}
@@ -102,19 +103,19 @@
 
                     <h6 class="fw-bold text-dark mb-2">{{ req.subject }}</h6>
                     <p class="small text-muted mb-3">{{ req.category }}</p>
-                    {% if req.is_pending %}<div class="d-flex flex-wrap gap-2 mb-3"><a href="?edit={{ req.pk }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Edit request</a><button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" data-request-delete="{{ req.pk }}" data-request-subject="{{ req.subject }}" data-bs-toggle="modal" data-bs-target="#cancelMentorRequestModal">Cancel request</button></div>{% endif %}
+                    {% if req.is_pending %}<div class="d-flex flex-wrap gap-2 mb-3"><a href="?edit={{ req.pk }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">{% trans "Edit request" %}</a><button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" data-request-delete="{{ req.pk }}" data-request-subject="{{ req.subject }}" data-bs-toggle="modal" data-bs-target="#cancelMentorRequestModal">{% trans "Cancel request" %}</button></div>{% endif %}
 
                     <!-- Assigned Mentor -->
                     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 p-3 rounded-3 bg-white border">
                         <div class="d-flex align-items-center gap-3">
                             {% if req.mentor_avatar %}<img src="{{ req.mentor_avatar }}" alt="{{ req.mentor_name }}" class="rounded-circle border" width="44" height="44" style="object-fit: cover;">{% else %}<span class="rounded-circle border bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center fw-bold flex-shrink-0" style="width: 44px; height: 44px;">{{ req.mentor_initials|default:"?" }}</span>{% endif %}
                             <div>
-                                <div class="small text-muted" style="font-size: 0.72rem;">Assigned to:</div>
+                                <div class="small text-muted" style="font-size: 0.72rem;">{% trans "Assigned to:" %}</div>
                                 <div class="fw-bold text-dark">{{ req.mentor_name }}</div>
                             </div>
                         </div>
                         <a href="{{ req.meeting_url }}" target="_blank" class="btn btn-success btn-sm rounded-pill px-3 shadow-sm d-flex align-items-center gap-2">
-                            <i aria-hidden="true" class="bi bi-camera-video-fill"></i>Join meeting
+                            <i aria-hidden="true" class="bi bi-camera-video-fill"></i>{% trans "Join meeting" %}
                         </a>
                     </div>
                 </div>
@@ -123,7 +124,7 @@
 
             <!-- Previous Requests -->
             <div class="card-modern p-4">
-                <h5 class="fw-bold text-dark mb-3"><i aria-hidden="true" class="bi bi-clock-history text-secondary me-2"></i>Past Sessions</h5>
+                <h5 class="fw-bold text-dark mb-3"><i aria-hidden="true" class="bi bi-clock-history text-secondary me-2"></i>{% trans "Past Sessions" %}</h5>
                 <div class="d-flex flex-column gap-3">
                     {% for past in past_requests %}
                     <div class="p-3 rounded-3 border bg-white">
@@ -138,7 +139,7 @@
                         </div>
 
                         <h6 class="fw-bold text-dark mb-1">{{ past.subject }}</h6>
-                        {% if past.is_pending %}<div class="d-flex flex-wrap gap-2 my-2"><a href="?edit={{ past.pk }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Edit request</a><button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" data-request-delete="{{ past.pk }}" data-request-subject="{{ past.subject }}" data-bs-toggle="modal" data-bs-target="#cancelMentorRequestModal">Cancel request</button></div>{% endif %}
+                        {% if past.is_pending %}<div class="d-flex flex-wrap gap-2 my-2"><a href="?edit={{ past.pk }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">{% trans "Edit request" %}</a><button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" data-request-delete="{{ past.pk }}" data-request-subject="{{ past.subject }}" data-bs-toggle="modal" data-bs-target="#cancelMentorRequestModal">{% trans "Cancel request" %}</button></div>{% endif %}
                         <p class="small text-muted mb-2">{{ past.category }} • Mentor: <strong>{{ past.mentor_name }}</strong></p>
 
                         <div class="p-2 rounded bg-light border-start border-3 border-success small text-muted">
@@ -151,7 +152,7 @@
         </div>
     </div>
 </div>
-<div class="modal fade" id="cancelMentorRequestModal" tabindex="-1" aria-labelledby="cancelMentorRequestTitle" aria-hidden="true" role="dialog" aria-modal="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content card-modern border-0"><div class="modal-header border-bottom"><h5 class="modal-title fw-bold" id="cancelMentorRequestTitle">Cancel help request</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><form method="post" id="cancelMentorRequestForm">{% csrf_token %}<input type="hidden" name="action" value="cancel"><input type="hidden" name="request_id" value=""><div class="modal-body"><p class="mb-0" id="cancelMentorRequestMessage"></p></div><div class="modal-footer border-top"><button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">Keep request</button><button type="submit" class="btn btn-danger rounded-pill px-3">Cancel request</button></div></form></div></div></div>
+<div class="modal fade" id="cancelMentorRequestModal" tabindex="-1" aria-labelledby="cancelMentorRequestTitle" aria-hidden="true" role="dialog" aria-modal="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content card-modern border-0"><div class="modal-header border-bottom"><h5 class="modal-title fw-bold" id="cancelMentorRequestTitle">{% trans "Cancel help request" %}</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button></div><form method="post" id="cancelMentorRequestForm">{% csrf_token %}<input type="hidden" name="action" value="cancel"><input type="hidden" name="request_id" value=""><div class="modal-body"><p class="mb-0" id="cancelMentorRequestMessage"></p></div><div class="modal-footer border-top"><button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">{% trans "Keep request" %}</button><button type="submit" class="btn btn-danger rounded-pill px-3">{% trans "Cancel request" %}</button></div></form></div></div></div>
 <script>
 document.querySelectorAll('[data-request-delete]').forEach((button) => button.addEventListener('click', () => {
     document.querySelector('#cancelMentorRequestForm [name="request_id"]').value = button.dataset.requestDelete;

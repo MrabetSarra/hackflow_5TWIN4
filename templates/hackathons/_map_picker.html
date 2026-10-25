@@ -1,17 +1,18 @@
+{% load i18n %}
 {# Champ « Lieu » avec carte : la recherche, le clic et le déplacement du repère renseignent le lieu et les coordonnées #}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <div class="mt-5">
-    <label class="form-label fw-semibold" for="{{ form.location.id_for_label }}">Lieu <span class="text-danger">*</span></label>
+    <label class="form-label fw-semibold" for="{{ form.location.id_for_label }}">{% trans "Lieu" %} <span class="text-danger">*</span></label>
     <div class="input-group mb-2">
         {{ form.location }}
-        <button type="button" class="btn btn-outline-primary" id="hf-map-search-btn"><i class="bi bi-search me-1"></i>Rechercher</button>
+        <button type="button" class="btn btn-outline-primary" id="hf-map-search-btn"><i class="bi bi-search me-1"></i>{% trans "Rechercher" %}</button>
         <button type="button" class="btn btn-outline-secondary" id="hf-map-clear">Effacer le repère</button>
     </div>
     {% for error in form.location.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
     <div class="form-text mb-3">Saisissez une adresse puis cliquez sur « Rechercher », ou placez directement le repère sur la carte. Le lieu sera affiché aux étudiants et aux mentors.</div>
     <div id="hf-map" role="region" aria-label="Carte pour choisir le lieu" style="height: 380px; border-radius: 1rem; z-index: 0;"></div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <script>
 (function () {
   var latI = document.getElementById('id_latitude'), lngI = document.getElementById('id_longitude');

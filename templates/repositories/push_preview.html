@@ -1,4 +1,5 @@
 {% extends "layouts/base_student.html" %}
+{% load i18n %}
 {% load static %}
 {% block title %}Review changes · {{ repository.name }} - HackFlow{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'repositories/repositories.css' %}">{% endblock %}
@@ -10,11 +11,11 @@
     <!-- Header -->
     <div class="repo-header">
         <div class="repo-header__breadcrumb">
-            <a href="{% url 'repositories:list' %}">Repositories</a>
+            <a href="{% url 'repositories:list' %}">{% trans "Repositories" %}</a>
             <span class="text-body-secondary">/</span>
             <a href="{% url 'repositories:detail' repository.slug %}?branch={{ branch|urlencode }}">{{ repository.name }}</a>
             <span class="text-body-secondary">/</span>
-            <span class="fw-semibold text-body">Review changes</span>
+            <span class="fw-semibold text-body">{% trans "Review changes" %}</span>
         </div>
         <div class="repo-header__name mt-1">
             <i aria-hidden="true" class="bi bi-eye text-primary"></i>
@@ -45,13 +46,13 @@
             <div class="card-modern overflow-hidden mb-3">
                 <div class="repo-toolbar" style="border-radius:.75rem .75rem 0 0;">
                     <span class="fw-semibold text-body small">
-                        <i aria-hidden="true" class="bi bi-file-diff text-primary me-1"></i>Changed files
+                        <i aria-hidden="true" class="bi bi-file-diff text-primary me-1"></i>{% trans "Changed files" %}
                     </span>
                 </div>
                 <div class="p-3">
                     {% if preview.added %}
                     <h6 class="fw-semibold text-success small d-flex align-items-center gap-1 mb-2">
-                        <i aria-hidden="true" class="bi bi-plus-circle-fill"></i>Added
+                        <i aria-hidden="true" class="bi bi-plus-circle-fill"></i>{% trans "Added" %}
                     </h6>
                     <ul class="repository-change-list mb-3">
                         {% for path in preview.added %}<li><i aria-hidden="true" class="bi bi-plus text-success"></i><code>{{ path }}</code></li>{% endfor %}
@@ -60,7 +61,7 @@
 
                     {% if preview.modified %}
                     <h6 class="fw-semibold text-warning-emphasis small d-flex align-items-center gap-1 mb-2">
-                        <i aria-hidden="true" class="bi bi-pencil-fill"></i>Modified
+                        <i aria-hidden="true" class="bi bi-pencil-fill"></i>{% trans "Modified" %}
                     </h6>
                     <ul class="repository-change-list mb-3">
                         {% for path in preview.modified %}<li><i aria-hidden="true" class="bi bi-pencil text-warning"></i><code>{{ path }}</code></li>{% endfor %}
@@ -69,7 +70,7 @@
 
                     {% if preview.deleted %}
                     <h6 class="fw-semibold text-danger small d-flex align-items-center gap-1 mb-2">
-                        <i aria-hidden="true" class="bi bi-dash-circle-fill"></i>Deleted
+                        <i aria-hidden="true" class="bi bi-dash-circle-fill"></i>{% trans "Deleted" %}
                     </h6>
                     <ul class="repository-change-list mb-3">
                         {% for path in preview.deleted %}<li><i aria-hidden="true" class="bi bi-dash text-danger"></i><code>{{ path }}</code></li>{% endfor %}
@@ -77,7 +78,7 @@
                     {% endif %}
 
                     {% if not preview.added and not preview.modified and not preview.deleted %}
-                    <p class="text-body-secondary small mb-0">No tracked changes were found in this upload.</p>
+                    <p class="text-body-secondary small mb-0">{% trans "No tracked changes were found in this upload." %}</p>
                     {% endif %}
                 </div>
             </div>
@@ -122,7 +123,7 @@
                     <button class="btn btn-sm btn-primary rounded-pill px-3 flex-shrink-0"
                             type="button" id="ai-describe-project"
                             data-url="{% url 'repositories:ai_suggestion' repository.slug %}">
-                        <i aria-hidden="true" class="bi bi-stars me-1"></i>Analyze project
+                        <i aria-hidden="true" class="bi bi-stars me-1"></i>{% trans "Analyze project" %}
                     </button>
                 </div>
 
@@ -130,7 +131,7 @@
                 <div id="ai-describe-loading" class="d-none">
                     <div class="d-flex align-items-center gap-2 text-body-secondary small">
                         <span class="spinner-border spinner-border-sm text-primary"></span>
-                        <span id="ai-describe-status">Analyzing your project files with Ollama…</span>
+                        <span id="ai-describe-status">{% trans "Analyzing your project files with Ollama…" %}</span>
                     </div>
                 </div>
 

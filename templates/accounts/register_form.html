@@ -1,6 +1,7 @@
 {% extends "layouts/base_public.html" %}
+{% load i18n %}
 
-{% block title %}{{ role_label }} Registration - HackFlow{% endblock %}
+{% block title %}{% blocktrans with role_label=role_label %}{{ role_label }} Registration{% endblocktrans %} - HackFlow{% endblock %}
 
 {% block public_content %}
 <section class="py-5 bg-gradient-subtle min-vh-100">
@@ -9,11 +10,11 @@
             <div class="col-lg-8 col-xl-7">
                 <div class="card-modern p-4 p-md-5 shadow-lg">
                     <div class="mb-4">
-                        <a href="{% url 'accounts:register' %}" class="small text-decoration-none"><i aria-hidden="true" class="bi bi-arrow-left me-1"></i>Change role</a>
+                        <a href="{% url 'accounts:register' %}" class="small text-decoration-none"><i aria-hidden="true" class="bi bi-arrow-left me-1"></i>{% trans "Change role" %}</a>
                         <div class="mt-3">
-                            <span class="badge {% if role == 'student' %}bg-primary bg-opacity-10 text-primary{% else %}bg-secondary bg-opacity-10 text-secondary{% endif %} rounded-pill px-3 py-2">{{ role_label }} registration</span>
-                            <h1 class="h2 fw-bold text-body mt-3 mb-1">{% if role == 'student' %}Join a team{% else %}Share your expertise{% endif %}</h1>
-                            <p class="text-body-secondary mb-0">Create your HackFlow account to access your workspace.</p>
+                            <span class="badge {% if role == 'student' %}bg-primary bg-opacity-10 text-primary{% else %}bg-secondary bg-opacity-10 text-secondary{% endif %} rounded-pill px-3 py-2">{% blocktrans with role_label=role_label %}{{ role_label }} registration{% endblocktrans %}</span>
+                            <h1 class="h2 fw-bold text-body mt-3 mb-1">{% if role == 'student' %}{% trans "Join a team" %}{% else %}{% trans "Share your expertise" %}{% endif %}</h1>
+                            <p class="text-body-secondary mb-0">{% trans "Create your HackFlow account to access your workspace." %}</p>
                         </div>
                     </div>
 
@@ -55,10 +56,10 @@
                                 {% endif %}
                             {% endfor %}
                         </div>
-                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold mt-4">Create my {{ role_label|lower }} account</button>
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold mt-4">{% blocktrans with role_label=role_label|lower %}Create my {{ role_label }} account{% endblocktrans %}</button>
                     </form>
 
-                    <p class="text-center small text-body-secondary mt-4 mb-0">Already registered? <a href="{% url 'accounts:login' %}" class="fw-semibold">Log in</a></p>
+                    <p class="text-center small text-body-secondary mt-4 mb-0">{% trans "Already registered?" %} <a href="{% url 'accounts:login' %}" class="fw-semibold">{% trans "Log in" %}</a></p>
                 </div>
             </div>
         </div>

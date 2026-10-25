@@ -8,8 +8,10 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 """
 
 import os
+import secrets
 import tempfile
 from pathlib import Path
+from urllib.parse import unquote, urlsplit
 
 import dj_database_url
 
@@ -47,11 +49,36 @@ def _env_bool(name, default=False):
 
 # Security settings
 DEBUG = _env_bool('DJANGO_DEBUG', False)
+CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL', '').strip()
+if not DEBUG and not CLOUDINARY_URL:
+    raise RuntimeError(
+        'CLOUDINARY_URL must be set when DJANGO_DEBUG is false; '
+        'production uploads must not use the ephemeral local filesystem.'
+    )
+
+CLOUDINARY_STORAGE = {}
+if CLOUDINARY_URL:
+    _cloudinary = urlsplit(CLOUDINARY_URL)
+    if (
+        _cloudinary.scheme != 'cloudinary'
+        or not _cloudinary.hostname
+        or not _cloudinary.username
+        or not _cloudinary.password
+    ):
+        raise RuntimeError('CLOUDINARY_URL must be a valid Cloudinary credential URL.')
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': _cloudinary.hostname,
+        'API_KEY': unquote(_cloudinary.username),
+        'API_SECRET': unquote(_cloudinary.password),
+        # django-cloudinary-storage otherwise prepends MEDIA_URL to generated URLs,
+        # even though its uploads are stored without that prefix.
+        'PREFIX': '',
+    }
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '')
 if not SECRET_KEY:
     if DEBUG:
-        SECRET_KEY = 'django-insecure-hackflow-local-development-only'
+        SECRET_KEY = secrets.token_urlsafe(50)
     else:
         raise RuntimeError(
             'DJANGO_SECRET_KEY must be set when DJANGO_DEBUG is false.'
@@ -88,11 +115,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    *(['cloudinary_storage', 'cloudinary'] if CLOUDINARY_URL else []),
     'core.apps.CoreConfig',
     'accounts.apps.AccountsConfig',
     'student.apps.StudentConfig',
     'mentor.apps.MentorConfig',
     'dashboard_admin.apps.DashboardAdminConfig',
+    'workshops.apps.WorkshopsConfig',
     'career_opportunities.apps.CareerOpportunitiesConfig',
     'repositories.apps.RepositoriesConfig',
     'hackathons.apps.HackathonsConfig',
@@ -101,6 +130,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -129,6 +159,7 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
+                'django.template.context_processors.i18n',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'student.context_processors.student_globals',
@@ -316,7 +347,13 @@ if RENDER_EXTERNAL_HOSTNAME:
         CSRF_TRUSTED_ORIGINS.append(_render_origin)
 
 # Internationalization
-LANGUAGE_CODE = 'fr-fr'
+LANGUAGE_CODE = 'fr'
+LANGUAGES = [
+    ('en', 'English'),
+    ('fr', 'Français'),
+    ('ar', 'العربية'),
+]
+LOCALE_PATHS = [BASE_DIR / 'locale']
 TIME_ZONE = 'Europe/Paris'
 USE_I18N = True
 USE_TZ = True
@@ -333,16 +370,21 @@ STATICFILES_DIRS = [
 try:
     import whitenoise  # noqa: F401
 except ImportError:
-    pass
+    _staticfiles_storage_backend = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 else:
-    STORAGES = {
-        'default': {
-            'BACKEND': 'django.core.files.storage.FileSystemStorage',
-        },
-        'staticfiles': {
-            'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
-        },
-    }
+    _staticfiles_storage_backend = 'whitenoise.storage.CompressedStaticFilesStorage'
+
+STORAGES = {
+    'default': {
+        'BACKEND': (
+            'cloudinary_storage.storage.MediaCloudinaryStorage'
+            if CLOUDINARY_URL else 'django.core.files.storage.FileSystemStorage'
+        ),
+    },
+    'staticfiles': {
+        'BACKEND': _staticfiles_storage_backend,
+    },
+}
 
 # Media files and private application data
 MEDIA_URL = '/media/'
@@ -470,6 +512,9 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_RESULT_SERIALIZER = 'json'
 
+# Absolute base URL used in generated documents (QR codes of certificates).
+SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Relative weights for available career profile criteria; scoring renormalizes
@@ -485,3 +530,9 @@ CAREER_MATCH_WEIGHTS = {
 
 # CV OCR is performed locally through RapidOCR; no CV content is sent to an API.
 CV_OCR_DPI = int(os.environ.get('CV_OCR_DPI', '190'))
+
+# OAuth2 Social Authentication (GitHub & Google)
+GITHUB_CLIENT_ID = os.environ.get('GITHUB_CLIENT_ID', '').strip()
+GITHUB_CLIENT_SECRET = os.environ.get('GITHUB_CLIENT_SECRET', '').strip()
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '').strip()
+GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '').strip()

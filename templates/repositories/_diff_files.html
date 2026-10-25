@@ -1,3 +1,4 @@
+{% load i18n %}
 {% for file in diff_files %}
 <details class="repository-diff-file mb-2" open>
     <summary>
@@ -8,6 +9,6 @@
 </details>
 {% empty %}
 <div class="text-center py-4">
-    <span class="text-body-secondary small"><i aria-hidden="true" class="bi bi-check2-circle text-success me-1"></i>No file changes to display.</span>
+    <span class="text-body-secondary small"><i aria-hidden="true" class="bi bi-check2-circle text-success me-1"></i>{% trans "No file changes to display." %}</span>
 </div>
 {% endfor %}

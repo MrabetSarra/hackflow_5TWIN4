@@ -1,10 +1,26 @@
 from django.urls import path
+from django.views.generic import RedirectView
+
 from . import views
 
 app_name = 'mentor'
 
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
+    # Compatibilité avec les anciens liens /mentor/workshops/... : les URL
+    # canoniques du module Ateliers sont /workshops/... (sans préfixe mentor).
+    path(
+        'workshops/',
+        RedirectView.as_view(pattern_name='workshops:list',
+                             permanent=False),
+        name='workshops_legacy_list',
+    ),
+    path(
+        'workshops/dashboard/',
+        RedirectView.as_view(pattern_name='workshops:dashboard',
+                             permanent=False),
+        name='workshops_legacy_dashboard',
+    ),
     path('teams/', views.teams_list, name='teams_list'),
     path('teams/<int:team_id>/', views.team_detail, name='team_detail'),
     path('teams/<int:team_id>/follow/', views.team_follow, name='team_follow'),
@@ -16,7 +32,6 @@ urlpatterns = [
     path('requests/triage-status/', views.triage_status, name='triage_status'),
     path('requests/<int:request_id>/triage/correct/', views.triage_correct, name='triage_correct'),
     path('requests/<int:request_id>/triage/retry/', views.triage_retry, name='triage_retry'),
-    path('ai-metrics/', views.ai_metrics, name='ai_metrics'),
     # Étape 3 — sessions de mentorat
     path('sessions/', views.sessions_list, name='sessions_list'),
     path('sessions/new/', views.session_create, name='session_create'),

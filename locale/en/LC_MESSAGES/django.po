@@ -1,0 +1,4949 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "HackFlow - Plateforme de Gestion de Hackathon Étudiant"
+msgstr "HackFlow - Student Hackathon Management Platform"
+
+msgid "Inscriptions et préparation en cours"
+msgstr "Registration and preparation are underway"
+
+msgid "Événement en cours"
+msgstr "Event in progress"
+
+msgid "Événement terminé"
+msgstr "Event ended"
+
+msgid "Plateforme de gestion de hackathons"
+msgstr "Hackathon management platform"
+
+msgid "Créez votre équipe."
+msgstr "Build your team."
+
+msgid "Codez votre vision."
+msgstr "Code your vision."
+
+msgid "Partagez votre projet."
+msgstr "Share your project."
+
+msgid "Participer au Hackathon"
+msgstr "Join the Hackathon"
+
+msgid "Accéder à mon espace"
+msgstr "Access my workspace"
+
+msgid "Parcours Structuré"
+msgstr "A structured journey"
+
+msgid "4 Étapes pour participer"
+msgstr "4 steps to participate"
+
+msgid "Une organisation fluide pour que vous puissiez vous concentrer à 100% sur l'impact de votre projet."
+msgstr "A smooth process so you can focus entirely on the impact of your project."
+
+msgid "Étape clé"
+msgstr "Key step"
+
+msgid "Algorithme de Matching"
+msgstr "Team matching algorithm"
+
+msgid "Trouvez vos alter-ego techniques en quelques clics"
+msgstr "Find your technical counterparts in just a few clicks"
+
+msgid "Des recommandations expliquées"
+msgstr "Recommendations you can understand"
+
+msgid "Accompagnement HackFlow"
+msgstr "HackFlow mentoring"
+
+msgid "Un espace de mentorat relié à vos équipes"
+msgstr "A mentoring space connected to your teams"
+
+msgid "Ambiance & Esprit Hackathon"
+msgstr "Hackathon atmosphere and spirit"
+
+msgid "Créez, collaborez et présentez votre projet"
+msgstr "Create, collaborate, and present your project"
+
+msgid "Questions Fréquentes"
+msgstr "Frequently asked questions"
+
+msgid "Tout Ce Que Vous Devez Savoir"
+msgstr "Everything you need to know"
+
+msgid "Rejoignez"
+msgstr "Join"
+
+msgid "Prêt à rejoindre HackFlow ?"
+msgstr "Ready to join HackFlow?"
+
+msgid "Créer mon compte maintenant"
+msgstr "Create my account now"
+
+msgid "Se connecter"
+msgstr "Log in"
+
+msgid "Le Hackathon"
+msgstr "The Hackathon"
+
+msgid "Déroulement"
+msgstr "How it works"
+
+msgid "Mentorat"
+msgstr "Mentoring"
+
+msgid "Connexion"
+msgstr "Log in"
+
+msgid "Inscription"
+msgstr "Sign up"
+
+msgid "Log In"
+msgstr "Log In"
+
+msgid "Welcome back to HackFlow"
+msgstr "Welcome back to HackFlow"
+
+msgid "Log in to access your HackFlow workspace."
+msgstr "Log in to access your HackFlow workspace."
+
+msgid "Password"
+msgstr "Password"
+
+msgid "Forgot password?"
+msgstr "Forgot password?"
+
+msgid "Keep me logged in on this device"
+msgstr "Keep me logged in on this device"
+
+msgid "Log in"
+msgstr "Log in"
+
+msgid "Not registered for the hackathon yet?"
+msgstr "Not registered for the hackathon yet?"
+
+msgid "Create an account"
+msgstr "Create an account"
+
+msgid "Create your account"
+msgstr "Create your account"
+
+msgid "I am a student"
+msgstr "I am a student"
+
+msgid "Find a team, share your skills, and take part in the hackathon."
+msgstr "Find a team, share your skills, and take part in the hackathon."
+
+msgid "Create a student account"
+msgstr "Create a student account"
+
+msgid "Je suis mentor"
+msgstr "I am a mentor"
+
+msgid "Présentez votre expertise et accompagnez les équipes pendant l’événement."
+msgstr "Share your expertise and guide teams throughout the event."
+
+msgid "Créer un compte mentor"
+msgstr "Create a mentor account"
+
+msgid "Already registered?"
+msgstr "Already registered?"
+
+msgid "Change role"
+msgstr "Change role"
+
+msgid "Join a team"
+msgstr "Join a team"
+
+msgid "Share your expertise"
+msgstr "Share your expertise"
+
+msgid "Create your HackFlow account to access your workspace."
+msgstr "Create your HackFlow account to access your workspace."
+
+msgid "{{ role_label }} Registration"
+msgstr "{{ role_label }} registration"
+
+msgid "{{ role_label }} registration"
+msgstr "{{ role_label }} registration"
+
+msgid "Create my {{ role_label }} account"
+msgstr "Create my {{ role_label }} account"
+
+msgid "Student workspace navigation"
+msgstr "Student workspace navigation"
+
+msgid "My Workspace"
+msgstr "My Workspace"
+
+msgid "Dashboard"
+msgstr "Dashboard"
+
+msgid "My Team"
+msgstr "My Team"
+
+msgid "Task Management"
+msgstr "Task Management"
+
+msgid "Project Submission"
+msgstr "Project Submission"
+
+msgid "Milestone"
+msgstr "Milestone"
+
+msgid "Repositories"
+msgstr "Repositories"
+
+msgid "Network & Support"
+msgstr "Network & Support"
+
+msgid "Mes inscriptions"
+msgstr "My registrations"
+
+msgid "Mes favoris"
+msgstr "My favorites"
+
+msgid "Recommandations IA"
+msgstr "AI recommendations"
+
+msgid "Talent Matching"
+msgstr "Talent matching"
+
+msgid "Career opportunities"
+msgstr "Career opportunities"
+
+msgid "Find a Mentor"
+msgstr "Find a mentor"
+
+msgid "Settings"
+msgstr "Settings"
+
+msgid "Log out"
+msgstr "Log out"
+
+msgid "Open navigation menu"
+msgstr "Open navigation menu"
+
+msgid "Final sprint:"
+msgstr "Final sprint:"
+
+msgid "Ended"
+msgstr "Ended"
+
+msgid "Recent notifications"
+msgstr "Recent notifications"
+
+msgid "Open profile menu"
+msgstr "Open profile menu"
+
+msgid "Gestion Globale"
+msgstr "Global management"
+
+msgid "Cockpit Organisateur"
+msgstr "Organizer cockpit"
+
+msgid "Événement & Évaluation"
+msgstr "Event & evaluation"
+
+msgid "Avis mentors"
+msgstr "Mentor feedback"
+
+msgid "Annonces & Push"
+msgstr "Announcements & push"
+
+msgid "Career Opportunities"
+msgstr "Career opportunities"
+
+msgid "Grille & Jury Final"
+msgstr "Scoring & final jury"
+
+msgid "Project Submissions"
+msgstr "Project submissions"
+
+msgid "Mon Profil Admin"
+msgstr "My admin profile"
+
+msgid "Menu"
+msgstr "Menu"
+
+msgid "Hackathon en direct : Phase de sprint"
+msgstr "Live hackathon: sprint phase"
+
+msgid "Diffuser une annonce"
+msgstr "Publish an announcement"
+
+msgid "Alertes Organisateur"
+msgstr "Organizer alerts"
+
+msgid "12 participants sans équipe"
+msgstr "12 participants without a team"
+
+msgid "Le matching automatique s'exécutera à 15h00."
+msgstr "Automatic matching will run at 3:00 PM."
+
+msgid "Menu du compte administrateur"
+msgstr "Administrator account menu"
+
+msgid "Accompagnement"
+msgstr "Mentoring"
+
+msgid "Tableau de Bord"
+msgstr "Dashboard"
+
+msgid "Demandes d'Aide"
+msgstr "Help requests"
+
+msgid "{{ count }} en attente"
+msgstr "{{ count }} pending"
+
+msgid "Équipes suivies"
+msgstr "Followed teams"
+
+msgid "Soumissions à évaluer"
+msgstr "Submissions to review"
+
+msgid "Suivi & Feedbacks"
+msgstr "Tracking & feedback"
+
+msgid "Assistant IA"
+msgstr "AI assistant"
+
+msgid "Retours & Conseils"
+msgstr "Feedback & advice"
+
+msgid "Métriques IA"
+msgstr "AI metrics"
+
+msgid "Disponible pour mentorat"
+msgstr "Available for mentoring"
+
+msgid "Menu du profil"
+msgstr "Profile menu"
+
+msgid "Mes Équipes"
+msgstr "My teams"
+
+msgid "Basculer entre thème sombre et clair"
+msgstr "Toggle dark and light themes"
+
+msgid "Changer de thème"
+msgstr "Change theme"
+
+msgid "Light"
+msgstr "Light"
+
+msgid "Dark"
+msgstr "Dark"
+
+msgid "Switch to light theme"
+msgstr "Switch to light theme"
+
+msgid "Switch to dark theme"
+msgstr "Switch to dark theme"
+
+msgid "Theme"
+msgstr "Theme"
+
+msgid "Display & reading"
+msgstr "Display & reading"
+
+msgid "Close display and reading options"
+msgstr "Close display and reading options"
+
+msgid "Text size"
+msgstr "Text size"
+
+msgid "Decrease text size"
+msgstr "Decrease text size"
+
+msgid "Reset text size"
+msgstr "Reset text size"
+
+msgid "Increase text size"
+msgstr "Increase text size"
+
+msgid "High contrast"
+msgstr "High contrast"
+
+msgid "More line spacing"
+msgstr "More line spacing"
+
+msgid "Underline links"
+msgstr "Underline links"
+
+msgid "Simple reading font"
+msgstr "Simple reading font"
+
+msgid "Reduce motion"
+msgstr "Reduce motion"
+
+msgid "Strong keyboard focus"
+msgstr "Strong keyboard focus"
+
+msgid "Align text left"
+msgstr "Align text left"
+
+msgid "Highlight headings"
+msgstr "Highlight headings"
+
+msgid "Reset display settings"
+msgstr "Reset display settings"
+
+msgid "Your preferences are saved on this device."
+msgstr "Your preferences are saved on this device."
+
+msgid "Open display and reading options"
+msgstr "Open display and reading options"
+
+msgid "Close"
+msgstr "Close"
+
+msgid "Action completed successfully."
+msgstr "Action completed successfully."
+
+msgid "Choose language"
+msgstr "Choose language"
+
+msgid "Demo"
+msgstr "Demo"
+
+msgid "Public homepage"
+msgstr "Public homepage"
+
+msgid "Visitor"
+msgstr "Visitor"
+
+msgid "Student workspace"
+msgstr "Student workspace"
+
+msgid "Mentor workspace"
+msgstr "Mentor workspace"
+
+msgid "Mentor"
+msgstr "Mentor"
+
+msgid "Administrator cockpit"
+msgstr "Administrator cockpit"
+
+msgid "Toggle theme"
+msgstr "Toggle theme"
+
+msgid "Back to dashboard"
+msgstr "Back to dashboard"
+
+msgid "Page not found"
+msgstr "Page not found"
+
+msgid "The page you requested could not be found."
+msgstr "The page you requested could not be found."
+
+msgid "Something went wrong"
+msgstr "Something went wrong"
+
+msgid "We could not complete your request. Please try again later."
+msgstr "We could not complete your request. Please try again later."
+
+msgid "Toggle navigation"
+msgstr "Toggle navigation"
+
+msgid "FAQ"
+msgstr "FAQ"
+
+msgid "Team of five"
+msgstr "Team of five"
+
+msgid "Demo workspaces"
+msgstr "Demo workspaces"
+
+msgid "Quick links"
+msgstr "Quick links"
+
+msgid "Hackathon information"
+msgstr "Hackathon information"
+
+msgid "University campus & online"
+msgstr "University campus & online"
+
+msgid "Registration is open"
+msgstr "Registration is open"
+
+msgid "Made with care for students and organizers."
+msgstr "Made with care for students and organizers."
+
+msgid "Academic project developed by a team of five."
+msgstr "Academic project developed by a team of five."
+
+msgid "Close messaging"
+msgstr "Close messaging"
+
+msgid "Open messaging"
+msgstr "Open messaging"
+
+msgid "You"
+msgstr "You"
+
+msgid "Copilot"
+msgstr "Copilot"
+
+msgid "Draft title"
+msgstr "Draft title"
+
+msgid "Message"
+msgstr "Message"
+
+msgid "Save as draft"
+msgstr "Save as draft"
+
+msgid "Organizer assistant"
+msgstr "Organizer assistant"
+
+msgid "Close copilot"
+msgstr "Close copilot"
+
+msgid "Copilot conversation"
+msgstr "Copilot conversation"
+
+msgid "How can I help you?"
+msgstr "How can I help you?"
+
+msgid "I use hackathon data to prepare a summary and suggested actions."
+msgstr "I use hackathon data to prepare a summary and suggested actions."
+
+msgid "Summarize the hackathon status."
+msgstr "Summarize the hackathon status."
+
+msgid "Summarize the hackathon"
+msgstr "Summarize the hackathon"
+
+msgid "Which teams need help, and why?"
+msgstr "Which teams need help, and why?"
+
+msgid "Teams to follow up with"
+msgstr "Teams to follow up with"
+
+msgid "Which teams may miss the deadline?"
+msgstr "Which teams may miss the deadline?"
+
+msgid "Deadline risks"
+msgstr "Deadline risks"
+
+msgid "Write an announcement reminding everyone of the deadline."
+msgstr "Write an announcement reminding everyone of the deadline."
+
+msgid "Write an announcement"
+msgstr "Write an announcement"
+
+msgid "Reviewing the data and preparing a response…"
+msgstr "Reviewing the data and preparing a response…"
+
+msgid "Your message"
+msgstr "Your message"
+
+msgid "Write your message…"
+msgstr "Write your message…"
+
+msgid "Send"
+msgstr "Send"
+
+msgid "Statistics are based on database records."
+msgstr "Statistics are based on database records."
+
+msgid "Messaging"
+msgstr "Messaging"
+
+msgid "Kick-off & Ideation"
+msgstr "Kick-off & Ideation"
+
+msgid "Concept review with a mentor"
+msgstr "Concept review with a mentor"
+
+msgid "Milestone 1: Architecture & Wireframes"
+msgstr "Milestone 1: Architecture & Wireframes"
+
+msgid "Milestone 2: Functional MVP submission"
+msgstr "Milestone 2: Functional MVP submission"
+
+msgid "Final Pitch to the Jury"
+msgstr "Final Pitch to the Jury"
+
+msgid "Notifications ({{ count }} new)"
+msgstr "Notifications ({{ count }} new)"
+
+msgid "In "
+msgstr "In "
+
+msgid "In"
+msgstr "In"
+
+msgid "Deadline passed"
+msgstr "Deadline passed"
+
+msgid "No deadline set"
+msgstr "No deadline set"
+
+msgid "h"
+msgstr "h"
+
+msgid "min"
+msgstr "min"
+
+msgid "Admin"
+msgstr "Administrator"
+
+msgid "Désconnexion"
+msgstr "Log out"
+
+msgid "Hackathons"
+msgstr "Hackathons"
+
+msgid "Mon Profil"
+msgstr "My profile"
+
+msgid "Mon Profil Mentor"
+msgstr "My mentor profile"
+
+msgid "Navigation mentor"
+msgstr "Mentor navigation"
+
+msgid "Notifications"
+msgstr "Notifications"
+
+msgid "Paramètres"
+msgstr "Settings"
+
+msgid "Se déconnecter"
+msgstr "Log out"
+
+msgid "Sessions"
+msgstr "Sessions"
+
+msgid "Student"
+msgstr "Student"
+
+msgid "Équipes & Projets"
+msgstr "Teams & projects"
+
+msgid "My Profile"
+msgstr "My profile"
+
+msgid "Déconnexion"
+msgstr "Log out"
+
+msgid "Frequently asked questions"
+msgstr "Frequently asked questions"
+
+msgid "Participants"
+msgstr "Participants"
+
+msgid "HackFlow - Student Hackathon Platform"
+msgstr "HackFlow - Student Hackathon Platform"
+
+msgid "Collaborative student hackathon platform for team matching, mentoring, and project tracking."
+msgstr "Collaborative student hackathon platform for team matching, mentoring, and project tracking."
+
+msgid "HackFlow - Build · Collaborate · Create"
+msgstr "HackFlow - Build · Collaborate · Create"
+
+msgid "The collaborative student hackathon platform."
+msgstr "The collaborative student hackathon platform."
+
+msgid "Skip to main content"
+msgstr "Skip to main content"
+
+msgid "Welcome to your workspace, {{ name }}"
+msgstr "Welcome to your workspace, {{ name }}"
+
+msgid "Get help"
+msgstr "Get help"
+
+msgid "View Tasks"
+msgstr "View tasks"
+
+msgid "Project Progress"
+msgstr "Project progress"
+
+msgid "Hackathon Milestones & Schedule"
+msgstr "Hackathon milestones & schedule"
+
+msgid "Follow the key stages set by the organizers."
+msgstr "Follow the key stages set by the organizers."
+
+msgid "48-hour Sprint"
+msgstr "48-hour sprint"
+
+msgid "Approved"
+msgstr "Approved"
+
+msgid "In progress"
+msgstr "In progress"
+
+msgid "Upcoming"
+msgstr "Upcoming"
+
+msgid "Latest Staff Announcements"
+msgstr "Latest staff announcements"
+
+msgid "Posted by"
+msgstr "Posted by"
+
+msgid "There are no announcements for your event yet."
+msgstr "There are no announcements for your event yet."
+
+msgid "Upcoming Deadlines"
+msgstr "Upcoming deadlines"
+
+msgid "Manage"
+msgstr "Manage"
+
+msgid "{{ members }}/{{ maximum }} members"
+msgstr "{{ members }}/{{ maximum }} members"
+
+msgid "There are"
+msgstr "There are"
+
+msgid "spots"
+msgstr "spots"
+
+msgid "left to complete your team."
+msgstr "left to complete your team."
+
+msgid "Find a teammate"
+msgstr "Find a teammate"
+
+msgid "Hackathon"
+msgstr "Hackathon"
+
+msgid "You are on team"
+msgstr "You are on team"
+
+msgid "Espace Mentorat & Accompagnement"
+msgstr "Mentoring & support workspace"
+
+msgid "Welcome"
+msgstr "Welcome"
+
+msgid "Expert"
+msgstr "Expert"
+
+msgid "Queue ({{ count }} tickets)"
+msgstr "Queue ({{ count }} tickets)"
+
+msgid "View teams"
+msgstr "View teams"
+
+msgid "Indicators"
+msgstr "Indicators"
+
+msgid "Organization announcements"
+msgstr "Organization announcements"
+
+msgid "ago"
+msgstr "ago"
+
+msgid "Urgent pending requests"
+msgstr "Urgent pending requests"
+
+msgid "Unassigned tickets, starting with the most urgent."
+msgstr "Unassigned tickets, starting with the most urgent."
+
+msgid "View the full queue"
+msgstr "View the full queue"
+
+msgid "Without a team"
+msgstr "Without a team"
+
+msgid "Table"
+msgstr "Table"
+
+msgid "Take request"
+msgstr "Take request"
+
+msgid "No pending requests. All teams are unblocked!"
+msgstr "No pending requests. All teams are unblocked!"
+
+msgid "My sessions today"
+msgstr "My sessions today"
+
+msgid "Team:"
+msgstr "Team:"
+
+msgid "Join video call"
+msgstr "Join video call"
+
+msgid "new tab"
+msgstr "new tab"
+
+msgid "No sessions scheduled for today."
+msgstr "No sessions scheduled for today."
+
+msgid "Mentor role reminder"
+msgstr "Mentor role reminder"
+
+msgid "Your goal is to guide students without doing the work for them. Help them break down the problem, favor a practical MVP, and prepare them for challenging jury questions!"
+msgstr "Your goal is to guide students without doing the work for them. Help them break down the problem, favor a practical MVP, and prepare them for challenging jury questions!"
+
+msgid "Organizer cockpit & overview"
+msgstr "Organizer cockpit & overview"
+
+msgid "Supervising {{ name }}"
+msgstr "Supervising {{ name }}"
+
+msgid "Supervision based on data recorded in HackFlow."
+msgstr "Supervision based on data recorded in HackFlow."
+
+msgid "CSV export report generated successfully!"
+msgstr "CSV export report generated successfully!"
+
+msgid "Export data"
+msgstr "Export data"
+
+msgid "Publish announcement"
+msgstr "Publish announcement"
+
+msgid "Team distribution by challenge"
+msgstr "Team distribution by challenge"
+
+msgid "{{ count }} teams ({{ percent }}%)"
+msgstr "{{ count }} teams ({{ percent }}%)"
+
+msgid "Recent recorded activity"
+msgstr "Recent recorded activity"
+
+msgid "Recent activity"
+msgstr "Recent activity"
+
+msgid "No activity recorded yet."
+msgstr "No activity recorded yet."
+
+msgid "Student dashboard - HackFlow"
+msgstr "Student dashboard - HackFlow"
+
+msgid "Mentor dashboard - HackFlow"
+msgstr "Mentor dashboard - HackFlow"
+
+msgid "Organizer cockpit - HackFlow Admin"
+msgstr "Organizer cockpit - HackFlow Admin"
+
+msgid "Completed tasks"
+msgstr "Completed tasks"
+
+msgid "Resolved mentor requests"
+msgstr "Resolved mentor requests"
+
+msgid "Open team spots"
+msgstr "Open team spots"
+
+msgid "Create a team"
+msgstr "Create a team"
+
+msgid "Demandes d'aide en attente"
+msgstr "Pending help requests"
+
+msgid "Tickets en cours (moi)"
+msgstr "My active tickets"
+
+msgid "Évaluations rédigées"
+msgstr "Evaluations written"
+
+msgid "Hackathon data"
+msgstr "Hackathon data"
+
+msgid "Équipes"
+msgstr "Teams"
+
+msgid "Teams in database"
+msgstr "Teams in database"
+
+msgid "Étudiants affectés"
+msgstr "Students assigned to teams"
+
+msgid "%(count)s without a team"
+msgstr "%(count)s without a team"
+
+msgid "Demandes mentor ouvertes"
+msgstr "Open mentor requests"
+
+msgid "%(count)s blocking"
+msgstr "%(count)s blocking"
+
+msgid "%(count)s unfinished tasks are past their deadline."
+msgstr "%(count)s unfinished tasks are past their deadline."
+
+msgid "View participants"
+msgstr "View participants"
+
+msgid "A member joined %(team)s"
+msgstr "A member joined %(team)s"
+
+msgid "Deliverable received for %(team)s"
+msgstr "Deliverable received for %(team)s"
+
+msgid "HackFlow réunit les participants, les équipes et les mentors dans un espace unique pour organiser le hackathon."
+msgstr "HackFlow brings participants, teams, and mentors together in one space to organize the hackathon."
+
+msgid "Participants inscrits"
+msgstr "Registered participants"
+
+msgid "Équipes créées"
+msgstr "Teams created"
+
+msgid "Mentors actifs"
+msgstr "Active mentors"
+
+msgid "Places disponibles"
+msgstr "Available spots"
+
+msgid "Créez votre profil"
+msgstr "Create your profile"
+
+msgid "Ajoutez vos compétences, vos rôles préférés et vos disponibilités."
+msgstr "Add your skills, preferred roles, and availability."
+
+msgid "Profil participant"
+msgstr "Participant profile"
+
+msgid "Formez une équipe"
+msgstr "Build a team"
+
+msgid "Rejoignez une équipe ou consultez les recommandations de composition."
+msgstr "Join a team or review team composition recommendations."
+
+msgid "Matching assisté"
+msgstr "Assisted matching"
+
+msgid "Organisez le projet"
+msgstr "Organize the project"
+
+msgid "Répartissez les tâches, suivez les jalons et échangez avec vos coéquipiers."
+msgstr "Assign tasks, track milestones, and communicate with your teammates."
+
+msgid "Espace équipe"
+msgstr "Team workspace"
+
+msgid "Présentez votre projet"
+msgstr "Present your project"
+
+msgid "Déposez votre livrable et partagez vos liens avec le jury."
+msgstr "Submit your deliverable and share your links with the jury."
+
+msgid "Dépôt de projet"
+msgstr "Project submission"
+
+msgid "Puis-je participer sans équipe ?"
+msgstr "Can I participate without a team?"
+
+msgid "Oui. Créez votre profil et rejoignez une équipe disponible. Les organisateurs peuvent aussi proposer une composition à partir des compétences et préférences renseignées."
+msgstr "Yes. Create your profile and join an available team. Organizers can also suggest team compositions based on the skills and preferences you provide."
+
+msgid "Comment trouver une équipe qui correspond à mon profil ?"
+msgstr "How can I find a team that matches my profile?"
+
+msgid "Les équipes peuvent indiquer les compétences recherchées. Le matching tient compte des compétences, rôles préférés, thématiques et disponibilités renseignés."
+msgstr "Teams can list the skills they need. Matching considers the skills, preferred roles, topics, and availability you provide."
+
+msgid "Où suivre les informations de l’événement ?"
+msgstr "Where can I follow event updates?"
+
+msgid "Les annonces publiées pour le hackathon apparaissent dans les espaces des participants. Les dates et le lieu de l’événement sont affichés ci-dessus lorsqu’ils sont configurés."
+msgstr "Hackathon announcements appear in participants' workspaces. Event dates and location are shown above when they have been set."
+
+msgid "Comment remettre un projet au jury ?"
+msgstr "How do I submit a project to the jury?"
+
+msgid "L’équipe peut renseigner sa description, ses liens de démonstration et déposer son archive depuis l’espace de soumission."
+msgstr "The team can add a project description and demo links, then upload its archive from the submission workspace."
+
+
+msgid "Add or update a team link/document"
+msgstr "Add or update a team link/document"
+
+
+msgid "Approve"
+msgstr "Approve"
+
+
+msgid "Assigned mentor:"
+msgstr "Assigned mentor:"
+
+
+msgid "Browse the talent pool"
+msgstr "Browse the talent pool"
+
+
+msgid "Cancel"
+msgstr "Cancel"
+
+
+msgid "Cancel invitation"
+msgstr "Cancel invitation"
+
+
+msgid "Captain"
+msgstr "Captain"
+
+
+msgid "Chat together"
+msgstr "Chat together"
+
+
+msgid "Confirm"
+msgstr "Confirm"
+
+
+msgid "Confirm team change"
+msgstr "Confirm team change"
+
+
+msgid "Conversation"
+msgstr "Conversation"
+
+
+msgid "Copy"
+msgstr "Copy"
+
+
+msgid "Could not load this conversation. Please try again."
+msgstr "Could not load this conversation. Please try again."
+
+
+msgid "Create a new team"
+msgstr "Create a new team"
+
+
+msgid "Create a team to organize your project, invite students, manage tasks, and chat with your teammates in one place."
+msgstr "Create a team to organize your project, invite students, manage tasks, and chat with your teammates in one place."
+
+
+msgid "Create team"
+msgstr "Create team"
+
+
+msgid "Create your team"
+msgstr "Create your team"
+
+
+msgid "Decline"
+msgstr "Decline"
+
+
+msgid "Delete"
+msgstr "Delete"
+
+
+msgid "Edit"
+msgstr "Edit"
+
+
+msgid "Edit team"
+msgstr "Edit team"
+
+
+msgid "Final submission status:"
+msgstr "Final submission status:"
+
+
+msgid "Find a team"
+msgstr "Find a team"
+
+
+msgid "Invitation link copied to clipboard!"
+msgstr "Invitation link copied to clipboard!"
+
+
+msgid "Invite a member"
+msgstr "Invite a member"
+
+
+msgid "Invite a participant"
+msgstr "Invite a participant"
+
+
+msgid "Invite members"
+msgstr "Invite members"
+
+
+msgid "Leave request pending"
+msgstr "Leave request pending"
+
+
+msgid "Leave team"
+msgstr "Leave team"
+
+
+msgid "Location:"
+msgstr "Location:"
+
+
+msgid "Looking for:"
+msgstr "Looking for:"
+
+
+msgid "Make captain"
+msgstr "Make captain"
+
+
+msgid "No project links yet. Add the team's real repository, prototype, or demo link."
+msgstr "No project links yet. Add the team's real repository, prototype, or demo link."
+
+
+msgid "Open Kanban"
+msgstr "Open Kanban"
+
+
+msgid "Open Slot"
+msgstr "Open Slot"
+
+
+msgid "Or invite by university email:"
+msgstr "Or invite by university email:"
+
+
+msgid "Pending invitations"
+msgstr "Pending invitations"
+
+
+msgid "Plan tasks"
+msgstr "Plan tasks"
+
+
+msgid "Project Links & Resources"
+msgstr "Project Links & Resources"
+
+
+msgid "Remove"
+msgstr "Remove"
+
+
+msgid "Request to leave team"
+msgstr "Request to leave team"
+
+
+msgid "Requests to leave the team"
+msgstr "Requests to leave the team"
+
+
+msgid "Save for the team"
+msgstr "Save for the team"
+
+
+msgid "Save team"
+msgstr "Save team"
+
+
+msgid "Set up your project workspace. You can invite teammates after creating it."
+msgstr "Set up your project workspace. You can invite teammates after creating it."
+
+
+msgid "Team Information"
+msgstr "Team Information"
+
+
+msgid "Team roles, responsibilities, and skills."
+msgstr "Team roles, responsibilities, and skills."
+
+
+msgid "You are not on a team yet"
+msgstr "You are not on a team yet"
+
+
+msgid "Your workspace starts here"
+msgstr "Your workspace starts here"
+
+
+msgid "spots available"
+msgstr "spots available"
+
+
+msgid "Forgot your password?"
+msgstr "Forgot your password?"
+
+
+msgid "We?ll send you a verification code that is valid for 10 minutes."
+msgstr "We?ll send you a verification code that is valid for 10 minutes."
+
+
+msgid "If an active account matches this address, you?ll receive a verification code. Check your inbox and spam folder."
+msgstr "If an active account matches this address, you?ll receive a verification code. Check your inbox and spam folder."
+
+
+msgid "Enter verification code"
+msgstr "Enter verification code"
+
+
+msgid "Account email address"
+msgstr "Account email address"
+
+
+msgid "Send code"
+msgstr "Send code"
+
+
+msgid "Password updated"
+msgstr "Password updated"
+
+
+msgid "Your new password has been saved. You can log in now."
+msgstr "Your new password has been saved. You can log in now."
+
+
+msgid "Verify your code"
+msgstr "Verify your code"
+
+
+msgid "Enter the code you received and choose a new password."
+msgstr "Enter the code you received and choose a new password."
+
+
+msgid "Reset my password"
+msgstr "Reset my password"
+
+
+msgid "The information shown here comes from your HackFlow account."
+msgstr "The information shown here comes from your HackFlow account."
+
+
+msgid "Edit my details"
+msgstr "Edit my details"
+
+
+msgid "Account Information"
+msgstr "Account Information"
+
+
+msgid "First name"
+msgstr "First name"
+
+
+msgid "Email address"
+msgstr "Email address"
+
+
+msgid "Download CV (PDF)"
+msgstr "Download CV (PDF)"
+
+
+msgid "No CV uploaded"
+msgstr "No CV uploaded"
+
+
+msgid "School / organization"
+msgstr "School / organization"
+
+
+msgid "Study level"
+msgstr "Study level"
+
+
+msgid "Specialty"
+msgstr "Specialty"
+
+
+msgid "Detected in your CV"
+msgstr "Detected in your CV"
+
+
+msgid "No skills detected yet. CV text is extracted locally, including scanned pages when OCR can read them. You can also add skills in your profile details."
+msgstr "No skills detected yet. CV text is extracted locally, including scanned pages when OCR can read them. You can also add skills in your profile details."
+
+
+msgid "Team formation preferences"
+msgstr "Team formation preferences"
+
+
+msgid "Preferred roles"
+msgstr "Preferred roles"
+
+
+msgid "Development"
+msgstr "Development"
+
+
+msgid "Design / UX"
+msgstr "Design / UX"
+
+
+msgid "Business / Pitch"
+msgstr "Business / Pitch"
+
+
+msgid "Product"
+msgstr "Product"
+
+
+msgid "Published roles ranked against your profile evidence."
+msgstr "Published roles ranked against your profile evidence."
+
+
+msgid "Add your CV to get personalized matches."
+msgstr "Add your CV to get personalized matches."
+
+
+msgid "Your offers are still available; no score is invented without a readable CV."
+msgstr "Your offers are still available; no score is invented without a readable CV."
+
+
+msgid "Complete profile"
+msgstr "Complete profile"
+
+
+msgid "Your CV could not be analyzed."
+msgstr "Your CV could not be analyzed."
+
+
+msgid "Scanned pages are read locally with OCR. Try a clearer PDF if no text could be recognized."
+msgstr "Scanned pages are read locally with OCR. Try a clearer PDF if no text could be recognized."
+
+
+msgid "Update CV"
+msgstr "Update CV"
+
+
+msgid "CAREER TRACKER"
+msgstr "CAREER TRACKER"
+
+
+msgid "My applications"
+msgstr "My applications"
+
+
+msgid "Keep every opportunity moving. Review your progress and update your next step in one place."
+msgstr "Keep every opportunity moving. Review your progress and update your next step in one place."
+
+
+msgid "Explore opportunities"
+msgstr "Explore opportunities"
+
+
+msgid "Your pipeline"
+msgstr "Your pipeline"
+
+
+msgid "All tracked"
+msgstr "All tracked"
+
+
+msgid "Interviews"
+msgstr "Interviews"
+
+
+msgid "Accepted"
+msgstr "Accepted"
+
+
+msgid "Create and publish an opportunity for students."
+msgstr "Create and publish an opportunity for students."
+
+
+msgid "Opportunity basics"
+msgstr "Opportunity basics"
+
+
+msgid "Set the role name, employer and a clear description."
+msgstr "Set the role name, employer and a clear description."
+
+
+msgid "Opportunity type"
+msgstr "Opportunity type"
+
+
+msgid "Publication status"
+msgstr "Publication status"
+
+
+msgid "Describe the role, responsibilities and application process clearly."
+msgstr "Describe the role, responsibilities and application process clearly."
+
+
+msgid "Add weighted evidence criteria. All nonzero weights are normalized to 100% when saved."
+msgstr "Add weighted evidence criteria. All nonzero weights are normalized to 100% when saved."
+
+
+msgid "Requirement type"
+msgstr "Requirement type"
+
+
+msgid "Assessment details"
+msgstr "Assessment details"
+
+
+msgid "Mandatory"
+msgstr "Mandatory"
+
+
+msgid "All opportunities"
+msgstr "All opportunities"
+
+
+msgid "Saved opportunities"
+msgstr "Saved opportunities"
+
+
+msgid "Search"
+msgstr "Search"
+
+
+msgid "All types"
+msgstr "All types"
+
+
+msgid "Work arrangement"
+msgstr "Work arrangement"
+
+
+msgid "All arrangements"
+msgstr "All arrangements"
+
+
+msgid "Skills"
+msgstr "Skills"
+
+
+msgid "Create opportunity"
+msgstr "Create opportunity"
+
+
+msgid "Pending review"
+msgstr "Pending review"
+
+
+msgid "Expired"
+msgstr "Expired"
+
+
+msgid "Applications"
+msgstr "Applications"
+
+
+msgid "Previous"
+msgstr "Previous"
+
+
+msgid "Next"
+msgstr "Next"
+
+
+msgid "Page of"
+msgstr "Page of"
+
+
+msgid "Actions"
+msgstr "Actions"
+
+
+msgid "Page /"
+msgstr "Page /"
+
+
+msgid "Download ZIP"
+msgstr "Download ZIP"
+
+
+msgid "No project archives yet"
+msgstr "No project archives yet"
+
+
+msgid "Uploaded team submissions will appear here for jury review."
+msgstr "Uploaded team submissions will appear here for jury review."
+
+
+msgid "No matching submissions"
+msgstr "No matching submissions"
+
+
+msgid "Try another team, project or milestone name."
+msgstr "Try another team, project or milestone name."
+
+
+msgid "No conversations yet. Open your team page to message a member."
+msgstr "No conversations yet. Open your team page to message a member."
+
+
+msgid "Start a conversation"
+msgstr "Start a conversation"
+
+
+msgid "Private conversation"
+msgstr "Private conversation"
+
+
+msgid "All conversations"
+msgstr "All conversations"
+
+
+msgid "You?re invited to join"
+msgstr "You?re invited to join"
+
+
+msgid "Join the team workspace to collaborate on tasks and message your teammates."
+msgstr "Join the team workspace to collaborate on tasks and message your teammates."
+
+
+msgid "Accept invitation"
+msgstr "Accept invitation"
+
+
+msgid "Live Mentoring & Support"
+msgstr "Live Mentoring & Support"
+
+
+msgid "Blocker"
+msgstr "Blocker"
+
+
+msgid "Important"
+msgstr "Important"
+
+
+msgid "Advice"
+msgstr "Advice"
+
+
+msgid "Filter"
+msgstr "Filter"
+
+
+msgid "Clear filters"
+msgstr "Clear filters"
+
+
+msgid "Reset"
+msgstr "Reset"
+
+
+msgid "Compare branches"
+msgstr "Compare branches"
+
+
+msgid "Choose two branches to see the difference between them."
+msgstr "Choose two branches to see the difference between them."
+
+
+msgid "These branches are identical ? no differences found."
+msgstr "These branches are identical ? no differences found."
+
+
+msgid "Your team's shared code, versioned and organized."
+msgstr "Your team's shared code, versioned and organized."
+
+
+msgid "New repository"
+msgstr "New repository"
+
+
+msgid "Join a team to get started"
+msgstr "Join a team to get started"
+
+
+msgid "Repositories are shared with your team. Join or create a team first."
+msgstr "Repositories are shared with your team. Join or create a team first."
+
+
+msgid "Create a repository to give your team a shared place for project code and version history."
+msgstr "Create a repository to give your team a shared place for project code and version history."
+
+
+msgid "Create your first repository"
+msgstr "Create your first repository"
+
+
+msgid "Read-only access to repositories for teams where you have an accepted mentor request."
+msgstr "Read-only access to repositories for teams where you have an accepted mentor request."
+
+
+msgid "No assigned team repositories"
+msgstr "No assigned team repositories"
+
+
+msgid "Repositories appear here once a team assigns you as their mentor through an accepted request."
+msgstr "Repositories appear here once a team assigns you as their mentor through an accepted request."
+
+
+msgid "Create branch"
+msgstr "Create branch"
+
+
+msgid "Comment"
+msgstr "Comment"
+
+
+msgid "Compare"
+msgstr "Compare"
+
+
+msgid "Merge requests"
+msgstr "Merge requests"
+
+
+msgid "Merge request"
+msgstr "Merge request"
+
+
+msgid "Branches"
+msgstr "Branches"
+
+
+msgid "History"
+msgstr "History"
+
+
+msgid "Files"
+msgstr "Files"
+
+
+msgid "Push to"
+msgstr "Push to"
+
+
+msgid "Choose which binary version to keep:"
+msgstr "Choose which binary version to keep:"
+
+
+msgid "No file changes to display."
+msgstr "No file changes to display."
+
+
+msgid "No messages yet. Send the first one below."
+msgstr "No messages yet. Send the first one below."
+
+
+msgid "Probl?matique"
+msgstr "Problem statement"
+
+
+msgid "Objectifs"
+msgstr "Objectives"
+
+
+msgid "Contraintes"
+msgstr "Constraints"
+
+
+msgid "Livrables attendus"
+msgstr "Expected deliverables"
+
+
+msgid "Consignes sp?cifiques"
+msgstr "Specific instructions"
+
+
+msgid "Technologies recommand?es"
+msgstr "Recommended technologies"
+
+
+msgid "R?compense"
+msgstr "Reward"
+
+
+msgid "?quipes inscrites"
+msgstr "Registered teams"
+
+
+msgid "Inscrit"
+msgstr "Registered"
+
+
+msgid "Un seul challenge par hackathon"
+msgstr "Only one challenge per hackathon"
+
+
+msgid "Inscriptions ouvertes"
+msgstr "Registration open"
+
+
+msgid "Inscriptions ferm?es"
+msgstr "Registration closed"
+
+
+msgid "Date limite :"
+msgstr "Deadline:"
+
+
+msgid "Voir le challenge"
+msgstr "View challenge"
+
+
+msgid "S'inscrire"
+msgstr "Register"
+
+
+msgid "Voir mon avis"
+msgstr "View my feedback"
+
+
+msgid "Donner un avis sur ce challenge"
+msgstr "Leave feedback on this challenge"
+
+
+msgid "Aper?u"
+msgstr "Overview"
+
+
+msgid "Programme"
+msgstr "Schedule"
+
+
+msgid "Annonces"
+msgstr "Announcements"
+
+
+msgid "Ressources"
+msgstr "Resources"
+
+
+msgid "En cours"
+msgstr "In progress"
+
+
+msgid "Termin?"
+msgstr "Completed"
+
+
+msgid "? venir"
+msgstr "Upcoming"
+
+
+msgid "Le programme sera bient?t disponible."
+msgstr "The schedule will be available soon."
+
+
+msgid "Aucune annonce active."
+msgstr "No active announcements."
+
+
+msgid "T?l?charger"
+msgstr "Download"
+
+
+msgid "Aucune ressource publi?e."
+msgstr "No resources have been published."
+
+
+msgid "challenge ? capacit?"
+msgstr "challenges ? capacity"
+
+
+msgid "G?rer"
+msgstr "Manage"
+
+
+msgid "Modifier"
+msgstr "Edit"
+
+
+msgid "Voir le hackathon"
+msgstr "View hackathon"
+
+
+msgid "Lieu"
+msgstr "Location"
+
+
+msgid "Rechercher"
+msgstr "Search"
+
+
+msgid "Effacer le rep?re"
+msgstr "Clear marker"
+
+
+msgid "Saisissez une adresse puis cliquez sur ? Rechercher ?, ou placez directement le rep?re sur la carte. Le lieu sera affich? aux ?tudiants et aux mentors."
+msgstr "Enter an address and select Search, or place the marker on the map. Students and mentors will see this location."
+
+
+msgid "Ouvrir dans OpenStreetMap"
+msgstr "Open in OpenStreetMap"
+
+
+msgid "Retour"
+msgstr "Back"
+
+
+msgid "Enregistrer"
+msgstr "Save"
+
+
+msgid "Annuler"
+msgstr "Cancel"
+
+
+msgid "Retour Annuler"
+msgstr "Back Cancel"
+
+
+msgid "Supprimer"
+msgstr "Delete"
+
+
+msgid "D?publier"
+msgstr "Unpublish"
+
+
+msgid "Publier"
+msgstr "Publish"
+
+
+msgid "Publier le hackathon"
+msgstr "Publish hackathon"
+
+
+msgid "Publier hackathon + challenges"
+msgstr "Publish hackathon + challenges"
+
+
+msgid "Nouveau hackathon"
+msgstr "New hackathon"
+
+
+msgid "Recherche"
+msgstr "Search"
+
+
+msgid "Track"
+msgstr "Track"
+
+
+msgid "Tous"
+msgstr "All"
+
+
+msgid "Tous les Tracks"
+msgstr "All tracks"
+
+
+msgid "Publication"
+msgstr "Publication"
+
+
+msgid "P?riode"
+msgstr "Period"
+
+
+msgid "Toutes"
+msgstr "All"
+
+
+msgid "Termin?s"
+msgstr "Completed"
+
+
+msgid "Aucun hackathon pour le moment."
+msgstr "No hackathons yet."
+
+
+msgid "Cr?er vos hackathons, leurs challenges et g?rez leur publication."
+msgstr "Create hackathons and challenges, and manage their publication."
+
+
+msgid "Retours et suggestions class?s par Hackathon."
+msgstr "Feedback and suggestions grouped by hackathon."
+
+
+msgid "hackathon(s)"
+msgstr "hackathon(s)"
+
+
+msgid "Avis concernant"
+msgstr "Feedback about"
+
+
+msgid "Hackathons et Challenges"
+msgstr "Hackathons and challenges"
+
+
+msgid "Challenge"
+msgstr "Challenge"
+
+
+msgid "Filtrer"
+msgstr "Filter"
+
+
+msgid "Effacer"
+msgstr "Clear"
+
+
+msgid "Ouvrir le Hackathon"
+msgstr "Open hackathon"
+
+
+msgid "Challenge ? Avis g?n?ral"
+msgstr "Challenge ? General feedback"
+
+
+msgid "Avis"
+msgstr "Feedback"
+
+
+msgid "Id?es et suggestions"
+msgstr "Ideas and suggestions"
+
+
+msgid "Aucun avis mentor pour ces filtres."
+msgstr "No mentor feedback matches these filters."
+
+
+msgid "Modifier l'annonce"
+msgstr "Edit announcement"
+
+
+msgid "R?diger une annonce"
+msgstr "Write an announcement"
+
+
+msgid "Mettez ? jour votre message"
+msgstr "Update your message"
+
+
+msgid "Un message clair aide tout le monde ? avancer"
+msgstr "A clear message helps everyone move forward"
+
+
+msgid "?v?nement associ?"
+msgstr "Related event"
+
+
+msgid "Assistant de r?daction"
+msgstr "Writing assistant"
+
+
+msgid "Public cible"
+msgstr "Audience"
+
+
+msgid "Sujet et informations ? inclure"
+msgstr "Topic and details to include"
+
+
+msgid "Tous les r?les"
+msgstr "All roles"
+
+
+msgid "?tudiants"
+msgstr "Students"
+
+
+msgid "Mentors"
+msgstr "Mentors"
+
+
+msgid "Tous les statuts"
+msgstr "All statuses"
+
+
+msgid "En ?quipe"
+msgstr "Assigned to a team"
+
+
+msgid "Sans ?quipe"
+msgstr "Not assigned to a team"
+
+
+msgid "Actifs"
+msgstr "Active"
+
+
+msgid "Inactifs"
+msgstr "Inactive"
+
+
+msgid "Participant"
+msgstr "Participant"
+
+
+msgid "?tablissement"
+msgstr "Institution"
+
+
+msgid "R?le"
+msgstr "Role"
+
+
+msgid "Capitaine"
+msgstr "Captain"
+
+
+msgid "Membres"
+msgstr "Members"
+
+
+msgid "Emplacement"
+msgstr "Location"
+
+
+msgid "Mentor R?f?rent"
+msgstr "Assigned mentor"
+
+
+msgid "Livrable"
+msgstr "Deliverable"
+
+
+msgid "Aucune ?quipe n?est enregistr?e pour ce filtre."
+msgstr "No teams match this filter."
+
+
+msgid "Pr?c?dent"
+msgstr "Previous"
+
+
+msgid "Suivant"
+msgstr "Next"
+
+
+msgid "Page"
+msgstr "Page"
+
+
+msgid "?quipe"
+msgstr "Team"
+
+
+msgid "Statut"
+msgstr "Status"
+
+
+msgid "Historique"
+msgstr "History"
+
+
+msgid "?v?nements"
+msgstr "Events"
+
+
+msgid "Localisation"
+msgstr "Location"
+
+
+msgid "Challenges"
+msgstr "Challenges"
+
+
+msgid "Inscriptions"
+msgstr "Registrations"
+
+
+msgid "Date limite"
+msgstr "Deadline"
+
+
+msgid "Aucun challenge publi? pour le moment."
+msgstr "No challenges have been published yet."
+
+
+msgid "D?roulement du hackathon"
+msgstr "Hackathon schedule"
+
+
+msgid "Voir plus"
+msgstr "See more"
+
+
+msgid "R?glement"
+msgstr "Rules"
+
+
+msgid "Prochain rendez-vous"
+msgstr "Next event"
+
+
+msgid "Conflit d'agenda."
+msgstr "Schedule conflict."
+
+
+msgid "Aujourd'hui"
+msgstr "Today"
+
+
+msgid "Aucune inscription pour le moment : vos hackathons appara?tront ici."
+msgstr "No registrations yet. Your hackathons will appear here."
+
+
+msgid "Voir les d?tails du hackathon"
+msgstr "View hackathon details"
+
+
+msgid "Annuler l'inscription"
+msgstr "Cancel registration"
+
+
+msgid "Retirer des favoris"
+msgstr "Remove from favorites"
+
+
+msgid "Ajouter aux favoris"
+msgstr "Add to favorites"
+
+
+msgid "Retrouvez vos Hackathons et Challenges enregistr?s."
+msgstr "Find your saved hackathons and challenges here."
+
+
+msgid "R?initialiser"
+msgstr "Reset"
+
+
+msgid "Aucun favori ne correspond ? ces filtres."
+msgstr "No favorites match these filters."
+
+
+msgid "Assistant IA mentor"
+msgstr "AI mentor assistant"
+
+
+msgid "Choisissez un hackathon ou un challenge : l'IA en donne un r?sum? simple, les points cl?s, les difficult?s probables des ?quipes, des questions ? poser et des conseils d'accompagnement."
+msgstr "Choose a hackathon or challenge. AI will provide a plain summary, key points, likely team challenges, questions to ask and mentoring tips."
+
+
+msgid "Expliquer le hackathon"
+msgstr "Explain the hackathon"
+
+
+msgid "Expliquer le d?fi"
+msgstr "Explain the challenge"
+
+
+msgid "Aucun challenge publi?."
+msgstr "No published challenges."
+
+
+msgid "Aucun hackathon publi? pour le moment."
+msgstr "No hackathons have been published yet."
+
+
+msgid "Analyse IA personnalis?e"
+msgstr "Personalized AI analysis"
+
+
+msgid "Hackathons recommand?s"
+msgstr "Recommended hackathons"
+
+
+msgid "Challenges class?s pour vous"
+msgstr "Challenges ranked for you"
+
+
+msgid "Expliquer avec l'IA"
+msgstr "Explain with AI"
+
+
+msgid "Coach IA"
+msgstr "AI coach"
+
+
+msgid "R?sum?, conseils et astuces pour ce challenge"
+msgstr "Summary, advice and tips for this challenge"
+
+
+msgid "D?couvrez les hackathons et leurs challenges."
+msgstr "Explore hackathons and their challenges."
+
+
+msgid "Tous les hackathons"
+msgstr "All hackathons"
+
+
+msgid "Confirmer votre inscription"
+msgstr "Confirm your registration"
+
+
+msgid "Votre inscription engage votre ?quipe sur ce challenge ; un seul challenge par hackathon est possible."
+msgstr "Your registration commits your team to this challenge; only one challenge per hackathon is allowed."
+
+
+msgid "Confirmer l'inscription"
+msgstr "Confirm registration"
+
+
+msgid "Annuler mon inscription"
+msgstr "Cancel my registration"
+
+
+msgid "Voir mon avis Donner un avis"
+msgstr "View feedback ? Leave feedback"
+
+
+msgid "Retour au hackathon"
+msgstr "Back to hackathon"
+
+
+msgid "Avis mentor"
+msgstr "Mentor feedback"
+
+
+msgid "Votre avis a ?t? envoy?"
+msgstr "Your feedback has been sent"
+
+
+msgid "Il est visible par l??quipe organisatrice. Vous ne pouvez pas en cr?er un second pour cette cible."
+msgstr "The organizers can see it. You cannot submit another review for this item."
+
+
+msgid "Votre note"
+msgstr "Your rating"
+
+
+msgid "Retour au Hackathon"
+msgstr "Back to hackathon"
+
+
+msgid "Supprimer mon avis"
+msgstr "Delete my feedback"
+
+
+msgid "Votre retour sera transmis ? l??quipe organisatrice et affich? dans la page ? Avis mentors ?."
+msgstr "Your feedback will be sent to the organizers and shown on the Mentor feedback page."
+
+
+msgid "Envoyer l'avis"
+msgstr "Send feedback"
+
+
+msgid "Votre calendrier personnel : hackathons et ?tapes de programme de vos challenges."
+msgstr "Your personal calendar of hackathons and challenge schedule items."
+
+
+msgid "D?couvrir des hackathons"
+msgstr "Explore hackathons"
+
+
+msgid "New Task"
+msgstr "New task"
+
+
+msgid "Current Sprint"
+msgstr "Current sprint"
+
+
+msgid "Product Backlog"
+msgstr "Product backlog"
+
+
+msgid "Sprint Backlog"
+msgstr "Sprint backlog"
+
+
+msgid "Generate tasks with AI"
+msgstr "Generate tasks with AI"
+
+
+msgid "Edit Task"
+msgstr "Edit task"
+
+
+msgid "Delete task?"
+msgstr "Delete task?"
+
+
+msgid "To Do"
+msgstr "To do"
+
+
+msgid "In Progress"
+msgstr "In progress"
+
+
+msgid "Completed"
+msgstr "Completed"
+
+
+msgid "Meet"
+msgstr "Meet"
+
+
+msgid "Team"
+msgstr "Team"
+
+
+msgid "Weight"
+msgstr "Weight"
+
+
+msgid "Status"
+msgstr "Status"
+
+
+msgid "Active"
+msgstr "Active"
+
+
+msgid "Inactive"
+msgstr "Inactive"
+
+
+msgid "Published"
+msgstr "Published"
+
+
+msgid "Application update"
+msgstr "Application update"
+
+
+msgid "Username or email address"
+msgstr "Username or email address"
+
+
+msgid "Your password"
+msgstr "Your password"
+
+
+msgid "Last name"
+msgstr "Last name"
+
+
+msgid "Username"
+msgstr "Username"
+
+
+msgid "Choose a study level"
+msgstr "Choose a study level"
+
+
+msgid "Bachelor 1 or 2"
+msgstr "Bachelor 1 or 2"
+
+
+msgid "Bachelor 3 / University Bachelor of Technology"
+msgstr "Bachelor 3 / University Bachelor of Technology"
+
+
+msgid "Master 1"
+msgstr "Master 1"
+
+
+msgid "Master 2 / Engineering degree"
+msgstr "Master 2 / Engineering degree"
+
+
+msgid "Other"
+msgstr "Other"
+
+
+msgid "About me"
+msgstr "About me"
+
+
+msgid "GitHub profile"
+msgstr "GitHub profile"
+
+
+msgid "LinkedIn profile"
+msgstr "LinkedIn profile"
+
+
+msgid "Confirm password"
+msgstr "Confirm password"
+
+
+msgid "Preferred project themes"
+msgstr "Preferred project themes"
+
+
+msgid "Availability during the hackathon"
+msgstr "Availability during the hackathon"
+
+
+msgid "Data / AI"
+msgstr "Data / AI"
+
+
+msgid "Weekdays during the day"
+msgstr "Weekdays during the day"
+
+
+msgid "Weekday evenings"
+msgstr "Weekday evenings"
+
+
+msgid "Weekends"
+msgstr "Weekends"
+
+
+msgid "Flexible"
+msgstr "Flexible"
+
+
+msgid "Separate multiple themes with commas (for example: health, climate, education)."
+msgstr "Separate multiple themes with commas (for example: health, climate, education)."
+
+
+msgid "Unspecified availability is treated as unknown."
+msgstr "Unspecified availability is treated as unknown."
+
+
+msgid "Profile photo"
+msgstr "Profile photo"
+
+
+msgid "CV (PDF)"
+msgstr "CV (PDF)"
+
+
+msgid "The selected file does not appear to be a valid PDF."
+msgstr "The selected file does not appear to be a valid PDF."
+
+
+msgid "The two passwords do not match."
+msgstr "The two passwords do not match."
+
+
+msgid "This username is already taken."
+msgstr "This username is already taken."
+
+
+msgid "An account already uses this email address."
+msgstr "An account already uses this email address."
+
+
+msgid "Team name"
+msgstr "Team name"
+
+
+msgid "Category"
+msgstr "Category"
+
+
+msgid "Project description"
+msgstr "Project description"
+
+
+msgid "Table number"
+msgstr "Table number"
+
+
+msgid "Room"
+msgstr "Room"
+
+
+msgid "Skill needed"
+msgstr "Skill needed"
+
+
+msgid "Invitee email"
+msgstr "Invitee email"
+
+
+msgid "This student is already on a team."
+msgstr "This student is already on a team."
+
+
+msgid "Resource title"
+msgstr "Resource title"
+
+
+msgid "Link"
+msgstr "Link"
+
+
+msgid "Document"
+msgstr "Document"
+
+
+msgid "Resource type"
+msgstr "Resource type"
+
+
+msgid "Add a valid link or upload a document."
+msgstr "Add a valid link or upload a document."
+
+
+msgid "Task title"
+msgstr "Task title"
+
+
+msgid "Description"
+msgstr "Description"
+
+
+msgid "Assignee"
+msgstr "Assignee"
+
+
+msgid "Priority"
+msgstr "Priority"
+
+
+msgid "Deadline"
+msgstr "Deadline"
+
+
+msgid "Describe a feature or goal for your team..."
+msgstr "Describe a feature or goal for your team..."
+
+
+msgid "No sprint selected"
+msgstr "No sprint selected"
+
+
+msgid "Back-End Development & Databases"
+msgstr "Back-End Development & Databases"
+
+
+msgid "Front-End Development & Frameworks"
+msgstr "Front-End Development & Frameworks"
+
+
+msgid "AI, LLMs & Machine Learning"
+msgstr "AI, LLMs & Machine Learning"
+
+
+msgid "DevOps, Docker & Cloud Deployment"
+msgstr "DevOps, Docker & Cloud Deployment"
+
+
+msgid "UI/UX Design & User Experience"
+msgstr "UI/UX Design & User Experience"
+
+
+msgid "Pitch & Presentation Structure"
+msgstr "Pitch & Presentation Structure"
+
+
+msgid "Issue / request"
+msgstr "Issue / request"
+
+
+msgid "Area of expertise"
+msgstr "Area of expertise"
+
+
+msgid "Urgency"
+msgstr "Urgency"
+
+
+msgid "Meeting room link"
+msgstr "Meeting room link"
+
+
+msgid "Detailed description"
+msgstr "Detailed description"
+
+
+msgid "Repository branch"
+msgstr "Repository branch"
+
+
+msgid "Project ZIP archive"
+msgstr "Project ZIP archive"
+
+
+msgid "Project name"
+msgstr "Project name"
+
+
+msgid "Project pitch"
+msgstr "Project pitch"
+
+
+msgid "GitHub / GitLab repository URL"
+msgstr "GitHub / GitLab repository URL"
+
+
+msgid "Online demo URL"
+msgstr "Online demo URL"
+
+
+msgid "Demo video URL"
+msgstr "Demo video URL"
+
+
+msgid "Pitch deck PDF"
+msgstr "Pitch deck PDF"
+
+
+msgid "HackFlow repository"
+msgstr "HackFlow repository"
+
+
+msgid "Project summary"
+msgstr "Project summary"
+
+
+msgid "Choose a branch to freeze for this submission."
+msgstr "Choose a branch to freeze for this submission."
+
+
+msgid "Write your message?"
+msgstr "Write your message?"
+
+
+msgid "Your new password"
+msgstr "Your new password"
+
+
+msgid "Verification code"
+msgstr "Verification code"
+
+
+msgid "Enter the 6-digit code sent to your email."
+msgstr "Enter the 6-digit code sent to your email."
+
+
+msgid "Save"
+msgstr "Save"
+
+
+msgid "Team Members (%(member_count)s/%(max_members)s)"
+msgstr "Team Members (%(member_count)s/%(max_members)s)"
+
+
+msgid "Leave %(team_name)s? Transfer captaincy first if other members remain."
+msgstr "Leave %(team_name)s? Transfer captaincy first if other members remain."
+
+
+msgid "Request to leave %(team_name)s? The captain will be notified and must approve your request."
+msgstr "Request to leave %(team_name)s? The captain will be notified and must approve your request."
+
+
+msgid "Remove %(member_name)s from the team?"
+msgstr "Remove %(member_name)s from the team?"
+
+
+msgid "Message %(member_name)s"
+msgstr "Message %(member_name)s"
+
+
+msgid "Cancel the invitation to %(invite_email)s?"
+msgstr "Cancel the invitation to %(invite_email)s?"
+
+
+msgid "%(member_name)s wants to leave."
+msgstr "%(member_name)s wants to leave."
+
+
+msgid "%(team_name)s cover"
+msgstr "%(team_name)s cover"
+
+
+msgid "Direct invitation link to join %(team_name)s:"
+msgstr "Direct invitation link to join %(team_name)s:"
+
+
+msgid "Shared from latest submission ? updated by %(updater)s"
+msgstr "Shared from latest submission ? updated by %(updater)s"
+
+
+msgid "Updated by %(updater)s"
+msgstr "Updated by %(updater)s"
+
+
+msgid "A mandatory requirement is contradicted by information in your profile. Review the items marked below before applying."
+msgstr "A mandatory requirement is contradicted by information in your profile. Review the items marked below before applying."
+
+
+msgid "AI Team Formation"
+msgstr "AI Team Formation"
+
+
+msgid "About this opportunity"
+msgstr "About this opportunity"
+
+
+msgid "Activity"
+msgstr "Activity"
+
+
+msgid "Added"
+msgstr "Added"
+
+
+msgid "All specialties"
+msgstr "All specialties"
+
+
+msgid "All statuses"
+msgstr "All statuses"
+
+
+msgid "Analyze project"
+msgstr "Analyze project"
+
+
+msgid "Any status"
+msgstr "Any status"
+
+
+msgid "Application status"
+msgstr "Application status"
+
+
+msgid "Availability"
+msgstr "Availability"
+
+
+msgid "Back to opportunities"
+msgstr "Back to opportunities"
+
+
+msgid "Cancel editing"
+msgstr "Cancel editing"
+
+
+msgid "Changed files"
+msgstr "Changed files"
+
+
+msgid "Changes to be merged"
+msgstr "Changes to be merged"
+
+
+msgid "Click to choose a folder"
+msgstr "Click to choose a folder"
+
+
+msgid "Confirm and merge"
+msgstr "Confirm and merge"
+
+
+msgid "Confirm merge"
+msgstr "Confirm merge"
+
+
+msgid "Contact"
+msgstr "Contact"
+
+
+msgid "Create one to propose changes from a branch."
+msgstr "Create one to propose changes from a branch."
+
+
+msgid "Deleted"
+msgstr "Deleted"
+
+
+msgid "Detailed description of the issue"
+msgstr "Detailed description of the issue"
+
+
+msgid "Download private CV"
+msgstr "Download private CV"
+
+
+msgid "Education"
+msgstr "Education"
+
+
+msgid "Eligibility"
+msgstr "Eligibility"
+
+
+msgid "Events Overview"
+msgstr "Events Overview"
+
+
+msgid "Every assessment uses explicit evidence from your CV or profile."
+msgstr "Every assessment uses explicit evidence from your CV or profile."
+
+
+msgid "Evidence:"
+msgstr "Evidence:"
+
+
+msgid "Experience"
+msgstr "Experience"
+
+
+msgid "Filter opportunities"
+msgstr "Filter opportunities"
+
+
+msgid "Filter profiles"
+msgstr "Filter profiles"
+
+
+msgid "Find an opportunity"
+msgstr "Find an opportunity"
+
+
+msgid "Find the skills your team needs or discover projects looking for teammates."
+msgstr "Find the skills your team needs or discover projects looking for teammates."
+
+
+msgid "Interview date and time"
+msgstr "Interview date and time"
+
+
+msgid "Invite to team"
+msgstr "Invite to team"
+
+
+msgid "Issue / Request"
+msgstr "Issue / Request"
+
+
+msgid "Jury workspace"
+msgstr "Jury workspace"
+
+
+msgid "Languages"
+msgstr "Languages"
+
+
+msgid "Loading conversation?"
+msgstr "Loading conversation?"
+
+
+msgid "Location"
+msgstr "Location"
+
+
+msgid "Manage participants"
+msgstr "Manage participants"
+
+
+msgid "Mandatory criterion not met"
+msgstr "Mandatory criterion not met"
+
+
+msgid "Meeting room link (Meet / Discord)"
+msgstr "Meeting room link (Meet / Discord)"
+
+
+msgid "Member since"
+msgstr "Member since"
+
+
+msgid "Merging"
+msgstr "Merging"
+
+
+msgid "Message to student"
+msgstr "Message to student"
+
+
+msgid "Modified"
+msgstr "Modified"
+
+
+msgid "Move tasks forward during the sprint."
+msgstr "Move tasks forward during the sprint."
+
+
+msgid "Needs review"
+msgstr "Needs review"
+
+
+msgid "No comments yet. Start the review discussion below."
+msgstr "No comments yet. Start the review discussion below."
+
+
+msgid "No email address"
+msgstr "No email address"
+
+
+msgid "No merge requests yet"
+msgstr "No merge requests yet"
+
+
+msgid "No role preference provided."
+msgstr "No role preference provided."
+
+
+msgid "No student applications yet."
+msgstr "No student applications yet."
+
+
+msgid "No tracked changes were found in this upload."
+msgstr "No tracked changes were found in this upload."
+
+
+msgid "No unassigned students found"
+msgstr "No unassigned students found"
+
+
+msgid "Not enough match evidence"
+msgstr "Not enough match evidence"
+
+
+msgid "Not scored"
+msgstr "Not scored"
+
+
+msgid "ORGANIZER WORKSPACE"
+msgstr "ORGANIZER WORKSPACE"
+
+
+msgid "OVERVIEW"
+msgstr "OVERVIEW"
+
+
+msgid "Open a merge request"
+msgstr "Open a merge request"
+
+
+msgid "Opportunity catalog"
+msgstr "Opportunity catalog"
+
+
+msgid "PERSONALIZED MATCH"
+msgstr "PERSONALIZED MATCH"
+
+
+msgid "Pending"
+msgstr "Pending"
+
+
+msgid "Preferred skills"
+msgstr "Preferred skills"
+
+
+msgid "Project and eligibility criteria"
+msgstr "Project and eligibility criteria"
+
+
+msgid "Project folder"
+msgstr "Project folder"
+
+
+msgid "Propose, review and merge changes between branches."
+msgstr "Propose, review and merge changes between branches."
+
+
+msgid "Publish clear roles, track interest and keep every listing up to date."
+msgstr "Publish clear roles, track interest and keep every listing up to date."
+
+
+msgid "Request in Progress"
+msgstr "Request in Progress"
+
+
+msgid "Required for applicants with a reliable match score of at least 50%."
+msgstr "Required for applicants with a reliable match score of at least 50%."
+
+
+msgid "Required skills"
+msgstr "Required skills"
+
+
+msgid "Requirement"
+msgstr "Requirement"
+
+
+msgid "Requirement breakdown"
+msgstr "Requirement breakdown"
+
+
+msgid "Requirements"
+msgstr "Requirements"
+
+
+msgid "Requirements demonstrated"
+msgstr "Requirements demonstrated"
+
+
+msgid "Resolve conflicts"
+msgstr "Resolve conflicts"
+
+
+msgid "Resolve merge conflicts"
+msgstr "Resolve merge conflicts"
+
+
+msgid "Review changes"
+msgstr "Review changes"
+
+
+msgid "Save and notify student"
+msgstr "Save and notify student"
+
+
+msgid "Search your catalog"
+msgstr "Search your catalog"
+
+
+msgid "Select files to upload"
+msgstr "Select files to upload"
+
+
+msgid "Select one ZIP archive or a single file."
+msgstr "Select one ZIP archive or a single file."
+
+
+msgid "Separate must-have skills from preferences."
+msgstr "Separate must-have skills from preferences."
+
+
+msgid "Share responsibilities, track progress, and spot blockers early."
+msgstr "Share responsibilities, track progress, and spot blockers early."
+
+
+msgid "Some mandatory requirements are not demonstrated. This does not prove you lack them; add evidence or confirm with the organizer."
+msgstr "Some mandatory requirements are not demonstrated. This does not prove you lack them; add evidence or confirm with the organizer."
+
+
+msgid "Student applications"
+msgstr "Student applications"
+
+
+msgid "Submitted projects"
+msgstr "Submitted projects"
+
+
+msgid "Tasks to plan for this sprint."
+msgstr "Tasks to plan for this sprint."
+
+
+msgid "Teams"
+msgstr "Teams"
+
+
+msgid "The product backlog is empty."
+msgstr "The product backlog is empty."
+
+
+msgid "This offer has no structured matching requirements. Review the description and apply based on your judgment."
+msgstr "This offer has no structured matching requirements. Review the description and apply based on your judgment."
+
+
+msgid "Total offers"
+msgstr "Total offers"
+
+
+msgid "Try another skill filter, or check back when more students are looking for a team."
+msgstr "Try another skill filter, or check back when more students are looking for a team."
+
+
+msgid "Type"
+msgstr "Type"
+
+
+msgid "Weekday daytime"
+msgstr "Weekday daytime"
+
+
+msgid "ZIP archive or single file"
+msgstr "ZIP archive or single file"
+
+
+msgid "awaiting publication"
+msgstr "awaiting publication"
+
+
+msgid "career opportunities"
+msgstr "career opportunities"
+
+
+msgid "current memberships"
+msgstr "current memberships"
+
+
+msgid "in your catalog"
+msgstr "in your catalog"
+
+
+msgid "intended, submitted or in review"
+msgstr "intended, submitted or in review"
+
+
+msgid "next conversations"
+msgstr "next conversations"
+
+
+msgid "offers received"
+msgstr "offers received"
+
+
+msgid "or drag and drop your project folder here"
+msgstr "or drag and drop your project folder here"
+
+
+msgid "overall match"
+msgstr "overall match"
+
+
+msgid "past deadline"
+msgstr "past deadline"
+
+
+msgid "recorded events"
+msgstr "recorded events"
+
+
+msgid "student activity"
+msgstr "student activity"
+
+
+msgid "tracked"
+msgstr "tracked"
+
+
+msgid "uploaded archives"
+msgstr "uploaded archives"
+
+
+msgid "visible to students"
+msgstr "visible to students"
+
+
+msgid "Location not specified"
+msgstr "Location not specified"
+
+
+msgid "of requirement weight evaluated"
+msgstr "of requirement weight evaluated"
+
+
+msgid "evaluated"
+msgstr "evaluated"
+
+
+msgid "need more evidence"
+msgstr "need more evidence"
+
+
+msgid "Eligibility:"
+msgstr "Eligibility:"
+
+
+msgid "weight"
+msgstr "weight"
+
+
+msgid "Ways to strengthen your profile"
+msgstr "Ways to strengthen your profile"
+
+
+msgid "Add your CV to see a personalized score."
+msgstr "Add your CV to see a personalized score."
+
+
+msgid "No text could be recognized in your CV."
+msgstr "No text could be recognized in your CV."
+
+
+msgid "Your CV could not be read."
+msgstr "Your CV could not be read."
+
+
+msgid "Scanned pages are processed locally with OCR. A clear PDF helps improve recognition; no score is fabricated when evidence is unavailable."
+msgstr "Scanned pages are processed locally with OCR. A clear PDF helps improve recognition; no score is fabricated when evidence is unavailable."
+
+
+msgid "Go to profile"
+msgstr "Go to profile"
+
+
+msgid "Ready to apply?"
+msgstr "Ready to apply?"
+
+
+msgid "Compatibility helps you review fit; it is not a hiring decision."
+msgstr "Compatibility helps you review fit; it is not a hiring decision."
+
+
+msgid "Unsave opportunity"
+msgstr "Unsave opportunity"
+
+
+msgid "Save opportunity"
+msgstr "Save opportunity"
+
+
+msgid "Application already submitted"
+msgstr "Application already submitted"
+
+
+msgid "Your CV and application are in the tracker. You can follow updates there."
+msgstr "Your CV and application are in the tracker. You can follow updates there."
+
+
+msgid "View my applications"
+msgstr "View my applications"
+
+
+msgid "Your private profile CV will be used. You do not need to upload it again."
+msgstr "Your private profile CV will be used. You do not need to upload it again."
+
+
+msgid "Portfolio URL (optional)"
+msgstr "Portfolio URL (optional)"
+
+
+msgid "Note (optional)"
+msgstr "Note (optional)"
+
+
+msgid "Reapply through HackFlow"
+msgstr "Reapply through HackFlow"
+
+
+msgid "Apply through HackFlow"
+msgstr "Apply through HackFlow"
+
+
+msgid "Add your CV to your profile before applying through HackFlow."
+msgstr "Add your CV to your profile before applying through HackFlow."
+
+
+msgid "Add CV to profile"
+msgstr "Add CV to profile"
+
+
+msgid "Apply on employer site"
+msgstr "Apply on employer site"
+
+
+msgid "Private note (optional)"
+msgstr "Private note (optional)"
+
+
+msgid "Track my intention to apply"
+msgstr "Track my intention to apply"
+
+
+msgid "The organizer has not added an application link yet."
+msgstr "The organizer has not added an application link yet."
+
+
+msgid "Search title or company"
+msgstr "Search title or company"
+
+
+msgid "Updated most recently first"
+msgstr "Updated most recently first"
+
+
+msgid "Updated"
+msgstr "Updated"
+
+
+msgid "Eligible for interview review"
+msgstr "Eligible for interview review"
+
+
+msgid "The organizer will post the interview date and updates here."
+msgstr "The organizer will post the interview date and updates here."
+
+
+msgid "Below the 50% consideration threshold"
+msgstr "Below the 50% consideration threshold"
+
+
+msgid "This application is not selected for interview consideration based on the current match."
+msgstr "This application is not selected for interview consideration based on the current match."
+
+
+msgid "Eligibility not yet determined"
+msgstr "Eligibility not yet determined"
+
+
+msgid "There is not enough readable CV or profile evidence to calculate a reliable match."
+msgstr "There is not enough readable CV or profile evidence to calculate a reliable match."
+
+
+msgid "Interview"
+msgstr "Interview"
+
+
+msgid "scheduled for"
+msgstr "scheduled for"
+
+
+msgid "date to be confirmed by the organizer."
+msgstr "date to be confirmed by the organizer."
+
+
+msgid "Organizer update:"
+msgstr "Organizer update:"
+
+
+msgid "Withdraw"
+msgstr "Withdraw"
+
+
+msgid "View opportunity"
+msgstr "View opportunity"
+
+
+msgid "No applications match these filters"
+msgstr "No applications match these filters"
+
+
+msgid "Your tracker is ready"
+msgstr "Your tracker is ready"
+
+
+msgid "Try another search or clear the filters."
+msgstr "Try another search or clear the filters."
+
+
+msgid "Save an opportunity or start an application to see your progress here."
+msgstr "Save an opportunity or start an application to see your progress here."
+
+
+msgid "Browse opportunities"
+msgstr "Browse opportunities"
+
+
+msgid "Application pages"
+msgstr "Application pages"
+
+
+msgid "of"
+msgstr "of"
+
+
+msgid "Edit profile"
+msgstr "Edit profile"
+
+
+msgid "Not provided."
+msgstr "Not provided."
+
+
+msgid "Online Presence"
+msgstr "Online Presence"
+
+
+msgid "Profile Photo and CV"
+msgstr "Profile Photo and CV"
+
+
+msgid "Photo: JPG, PNG, or WebP, up to 5 MB. CV: PDF, up to 10 MB."
+msgstr "Photo: JPG, PNG, or WebP, up to 5 MB. CV: PDF, up to 10 MB."
+
+
+msgid "Save files"
+msgstr "Save files"
+
+
+msgid "Final Project Submission & Deliverables"
+msgstr "Final Project Submission & Deliverables"
+
+
+msgid "Provide all information required for the hackathon jury to evaluate your project."
+msgstr "Provide all information required for the hackathon jury to evaluate your project."
+
+
+msgid "Deadline:"
+msgstr "Deadline:"
+
+
+msgid "Submission milestone"
+msgstr "Submission milestone"
+
+
+msgid "Select"
+msgstr "Select"
+
+
+msgid "Current status:"
+msgstr "Current status:"
+
+
+msgid "The submission period is closed. You can no longer upload files or change your submission. You can update this form until the deadline."
+msgstr "The submission period is closed. You can no longer upload files or change your submission. You can update this form until the deadline."
+
+
+msgid "Estimated time remaining:"
+msgstr "Estimated time remaining:"
+
+
+msgid "Submission locked after the deadline until a deadline is configured."
+msgstr "Submission locked after the deadline until a deadline is configured."
+
+
+msgid "1. General Overview"
+msgstr "1. General Overview"
+
+
+msgid "Official project name"
+msgstr "Official project name"
+
+
+msgid "Challenge / Selected theme"
+msgstr "Challenge / Selected theme"
+
+
+msgid "Short pitch (150 words max)"
+msgstr "Short pitch (150 words max)"
+
+
+msgid "Generate editable summary from repository"
+msgstr "Generate editable summary from repository"
+
+
+msgid "The description is written from the README, the file structure and the commit messages, and the technology stack is detected from the repository files, so it lists only what the project really uses. Review and edit it before submitting."
+msgstr "The description is written from the README, the file structure and the commit messages, and the technology stack is detected from the repository files, so it lists only what the project really uses. Review and edit it before submitting."
+
+
+msgid "2. Links & Technical Repositories"
+msgstr "2. Links & Technical Repositories"
+
+
+msgid "Blocked by a technical issue or need feedback on your product? Ask a mentor for help."
+msgstr "Blocked by a technical issue or need feedback on your product? Ask a mentor for help."
+
+
+msgid "mentors online"
+msgstr "mentors online"
+
+
+msgid "Edit Help Request"
+msgstr "Edit Help Request"
+
+
+msgid "New Help Request"
+msgstr "New Help Request"
+
+
+msgid "Blocking"
+msgstr "Blocking"
+
+
+msgid "Save request changes"
+msgstr "Save request changes"
+
+
+msgid "Send help request"
+msgstr "Send help request"
+
+
+msgid "Edit request"
+msgstr "Edit request"
+
+
+msgid "Cancel request"
+msgstr "Cancel request"
+
+
+msgid "Assigned to:"
+msgstr "Assigned to:"
+
+
+msgid "Join meeting"
+msgstr "Join meeting"
+
+
+msgid "Past Sessions"
+msgstr "Past Sessions"
+
+
+msgid "This request date has passed."
+msgstr "This request date has passed."
+
+
+msgid "Cancel help request"
+msgstr "Cancel help request"
+
+
+msgid "Keep request"
+msgstr "Keep request"
+
+
+msgid "Messages"
+msgstr "Messages"
+
+
+msgid "Your private conversations with other students."
+msgstr "Your private conversations with other students."
+
+
+msgid "Conversation with"
+msgstr "Conversation with"
+
+
+msgid "Team Invitation"
+msgstr "Team Invitation"
+
+
+msgid "Invitation from"
+msgstr "Invitation from"
+
+
+msgid "No tasks here."
+msgstr "No tasks here."
+
+
+msgid "Urgent"
+msgstr "Urgent"
+
+
+msgid "In Review"
+msgstr "In Review"
+
+
+msgid "Review"
+msgstr "Review"
+
+
+msgid "Add to sprint"
+msgstr "Add to sprint"
+
+
+msgid "Agile Scrum Management Sprint Kanban Board"
+msgstr "Agile Scrum Management Sprint Kanban Board"
+
+
+msgid "task(s) in the sprint"
+msgstr "task(s) in the sprint"
+
+
+msgid "Demandes d'Aide des ?quipes"
+msgstr "Demandes d'Aide des ?quipes"
+
+
+msgid "Prenez en charge un ticket, d?bloquez l'?quipe puis marquez-le comme r?solu."
+msgstr "Prenez en charge un ticket, d?bloquez l'?quipe puis marquez-le comme r?solu."
+
+
+msgid "ticket en attente"
+msgstr "ticket en attente"
+
+
+msgid "File d'attente"
+msgstr "File d'attente"
+
+
+msgid "Mes tickets en cours"
+msgstr "Mes tickets en cours"
+
+
+msgid "Mes tickets r?solus"
+msgstr "Mes tickets r?solus"
+
+
+msgid "Demand? par"
+msgstr "Demand? par"
+
+
+msgid "Cr?? il y a"
+msgstr "Cr?? il y a"
+
+
+msgid "R?solution :"
+msgstr "R?solution :"
+
+
+msgid "Rejoindre la salle visio"
+msgstr "Rejoindre la salle visio"
+
+
+msgid "nouvel onglet"
+msgstr "nouvel onglet"
+
+
+msgid "Prendre en charge"
+msgstr "Prendre en charge"
+
+
+msgid "Planifier une session"
+msgstr "Planifier une session"
+
+
+msgid "Transf?rer"
+msgstr "Transf?rer"
+
+
+msgid "Marquer r?solu"
+msgstr "Marquer r?solu"
+
+
+msgid "Mes Sessions"
+msgstr "Mes Sessions"
+
+
+msgid "Sessions de Mentorat"
+msgstr "Sessions de Mentorat"
+
+
+msgid "Planifiez vos rendez-vous avec les ?quipes ; elles sont notifi?es automatiquement."
+msgstr "Planifiez vos rendez-vous avec les ?quipes ; elles sont notifi?es automatiquement."
+
+
+msgid "Pass?es / annul?es"
+msgstr "Pass?es / annul?es"
+
+
+msgid "Aucune session ? venir."
+msgstr "Aucune session ? venir."
+
+
+msgid "Aucune session pass?e."
+msgstr "Aucune session pass?e."
+
+
+msgid "Nouvelle session"
+msgstr "Nouvelle session"
+
+
+msgid "Modifier la session"
+msgstr "Modifier la session"
+
+
+msgid "Champ obligatoire. Indiquez au moins un lien visio ou un lieu."
+msgstr "Champ obligatoire. Indiquez au moins un lien visio ou un lieu."
+
+
+msgid "Planifier et pr?venir l'?quipe"
+msgstr "Planifier et pr?venir l'?quipe"
+
+
+msgid "Confirmer la suppression"
+msgstr "Confirmer la suppression"
+
+
+msgid "Voulez-vous vraiment supprimer ? Cette action est d?finitive."
+msgstr "Voulez-vous vraiment supprimer ? Cette action est d?finitive."
+
+
+msgid "Supprimer d?finitivement"
+msgstr "Supprimer d?finitivement"
+
+
+msgid "M?triques du Tri IA"
+msgstr "M?triques du Tri IA"
+
+
+msgid "Mod?le local"
+msgstr "Mod?le local"
+
+
+msgid "Indicateurs en direct"
+msgstr "Indicateurs en direct"
+
+
+msgid "Tickets analys?s"
+msgstr "Tickets analys?s"
+
+
+msgid "Latence m?diane"
+msgstr "Latence m?diane"
+
+
+msgid "Accord IA / mentors sur la cat?gorie"
+msgstr "Accord IA / mentors sur la cat?gorie"
+
+
+msgid "Accord sur l'urgence"
+msgstr "Accord sur l'urgence"
+
+
+msgid "?valuation sur le jeu de test ?tiquet?"
+msgstr "?valuation sur le jeu de test ?tiquet?"
+
+
+msgid "Cat?gorie"
+msgstr "Cat?gorie"
+
+
+msgid "Urgence"
+msgstr "Urgence"
+
+
+msgid "?quipes & Projets"
+msgstr "?quipes & Projets"
+
+
+msgid "Suivez les ?quipes que vous accompagnez, rep?rez celles qui ont besoin d'aide."
+msgstr "Suivez les ?quipes que vous accompagnez, rep?rez celles qui ont besoin d'aide."
+
+
+msgid "Mes ?quipes"
+msgstr "Mes ?quipes"
+
+
+msgid "Suivie"
+msgstr "Suivie"
+
+
+msgid "Avancement"
+msgstr "Avancement"
+
+
+msgid "membre"
+msgstr "membre"
+
+
+msgid "demande d'aide"
+msgstr "demande d'aide"
+
+
+msgid "Sprint actif"
+msgstr "Sprint actif"
+
+
+msgid "Ne plus suivre"
+msgstr "Ne plus suivre"
+
+
+msgid "Suivre"
+msgstr "Suivre"
+
+
+msgid "Aucune ?quipe ne correspond ? ces crit?res."
+msgstr "Aucune ?quipe ne correspond ? ces crit?res."
+
+
+msgid "Mes ?valuations"
+msgstr "Mes ?valuations"
+
+
+msgid "Retours & ?valuations"
+msgstr "Retours & ?valuations"
+
+
+msgid "Vos ?valuations multi-crit?res des projets soumis, ? partager avec les ?quipes."
+msgstr "Vos ?valuations multi-crit?res des projets soumis, ? partager avec les ?quipes."
+
+
+msgid "?valuer une soumission"
+msgstr "?valuer une soumission"
+
+
+msgid "? partager"
+msgstr "? partager"
+
+
+msgid "Partag?es"
+msgstr "Partag?es"
+
+
+msgid "?quipe :"
+msgstr "?quipe :"
+
+
+msgid "Partag?e"
+msgstr "Partag?e"
+
+
+msgid "Non partag?e"
+msgstr "Non partag?e"
+
+
+msgid "Pitch :"
+msgstr "Pitch :"
+
+
+msgid "Voir"
+msgstr "Voir"
+
+
+msgid "Aucune ?valuation pour le moment."
+msgstr "Aucune ?valuation pour le moment."
+
+
+msgid "Voir les soumissions ? ?valuer"
+msgstr "Voir les soumissions ? ?valuer"
+
+
+msgid "?valuation de"
+msgstr "?valuation de"
+
+
+msgid "Jalon :"
+msgstr "Jalon :"
+
+
+msgid "Partag?e le"
+msgstr "Partag?e le"
+
+
+msgid "Notes par crit?re"
+msgstr "Notes par crit?re"
+
+
+msgid "Crit?re"
+msgstr "Crit?re"
+
+
+msgid "Poids"
+msgstr "Poids"
+
+
+msgid "Note"
+msgstr "Note"
+
+
+msgid "Commentaire"
+msgstr "Commentaire"
+
+
+msgid "Aucune note."
+msgstr "Aucune note."
+
+
+msgid "Appr?ciation g?n?rale"
+msgstr "Appr?ciation g?n?rale"
+
+
+msgid "Pr?paration au pitch :"
+msgstr "Pr?paration au pitch :"
+
+
+msgid "Partager avec l'?quipe"
+msgstr "Partager avec l'?quipe"
+
+
+msgid "?valuer Modifier l'?valuation"
+msgstr "?valuer Modifier l'?valuation"
+
+
+msgid "Rappel de la soumission"
+msgstr "Rappel de la soumission"
+
+
+msgid "D?p?t"
+msgstr "D?p?t"
+
+
+msgid "D?mo"
+msgstr "D?mo"
+
+
+msgid "Vid?o"
+msgstr "Vid?o"
+
+
+msgid "Grille de jugement"
+msgstr "Grille de jugement"
+
+
+msgid "Total pond?r? :"
+msgstr "Total pond?r? :"
+
+
+msgid "Enregistrer l'?valuation"
+msgstr "Enregistrer l'?valuation"
+
+
+msgid "Appliquer"
+msgstr "Appliquer"
+
+
+msgid "Soumissions des ?quipes et ?tat de mon ?valuation"
+msgstr "Soumissions des ?quipes et ?tat de mon ?valuation"
+
+
+msgid "Soumissions de Projet"
+msgstr "Soumissions de Projet"
+
+
+msgid "?valuez les livrables des ?quipes selon la grille de jugement (avis consultatif, le jury d?cide)."
+msgstr "?valuez les livrables des ?quipes selon la grille de jugement (avis consultatif, le jury d?cide)."
+
+
+msgid "Mes ?quipes suivies uniquement"
+msgstr "Mes ?quipes suivies uniquement"
+
+
+msgid "Jalon"
+msgstr "Jalon"
+
+
+msgid "Livrables"
+msgstr "Livrables"
+
+
+msgid "Ma note"
+msgstr "Ma note"
+
+
+msgid "Action"
+msgstr "Action"
+
+
+msgid "Voir mon ?valuation"
+msgstr "Voir mon ?valuation"
+
+
+msgid "Noter"
+msgstr "Noter"
+
+
+msgid "Aucune soumission ? ?valuer pour le moment."
+msgstr "Aucune soumission ? ?valuer pour le moment."
+
+
+msgid "Suivre cette ?quipe"
+msgstr "Suivre cette ?quipe"
+
+
+msgid "Demandes d'aide de l'?quipe"
+msgstr "Demandes d'aide de l'?quipe"
+
+
+msgid "Aucune demande d'aide pour cette ?quipe."
+msgstr "Aucune demande d'aide pour cette ?quipe."
+
+
+msgid "Mes sessions avec l'?quipe"
+msgstr "Mes sessions avec l'?quipe"
+
+
+msgid "Aucune session planifi?e avec cette ?quipe."
+msgstr "Aucune session planifi?e avec cette ?quipe."
+
+
+msgid "Aucun membre."
+msgstr "Aucun membre."
+
+
+msgid "Derni?re soumission"
+msgstr "Derni?re soumission"
+
+
+msgid "D?p?t de code"
+msgstr "D?p?t de code"
+
+
+msgid "D?mo en ligne"
+msgstr "D?mo en ligne"
+
+
+msgid "Mentors qui suivent l'?quipe"
+msgstr "Mentors qui suivent l'?quipe"
+
+
+msgid "Analyse IA en cours?"
+msgstr "Analyse IA en cours?"
+
+
+msgid "Analyse IA indisponible :"
+msgstr "Analyse IA indisponible :"
+
+
+msgid "Relancer l'analyse"
+msgstr "Relancer l'analyse"
+
+
+msgid "Suggestion IA"
+msgstr "Suggestion IA"
+
+
+msgid "Corrig?e par"
+msgstr "Corrig?e par"
+
+
+msgid "L'?tudiant a indiqu?"
+msgstr "L'?tudiant a indiqu?"
+
+
+msgid "Mentor sugg?r? :"
+msgstr "Mentor sugg?r? :"
+
+
+msgid "Corriger la suggestion"
+msgstr "Corriger la suggestion"
+
+
+msgid "Dates de l??v?nement"
+msgstr "Event dates"
+
+
+msgid "?v?nement ? venir"
+msgstr "Upcoming event"
+
+
+msgid "Les informations seront publi?es ici par l?organisateur."
+msgstr "The organizer will publish event information here."
+
+
+msgid "?v?nement en cours"
+msgstr "Event in progress"
+
+
+msgid "Prochaine ?dition"
+msgstr "Next edition"
+
+
+msgid "?v?nement termin?"
+msgstr "Event completed"
+
+
+msgid "?quipes HackFlow"
+msgstr "HackFlow teams"
+
+
+msgid "Les ?quipes appara?tront ici apr?s leur cr?ation."
+msgstr "Teams will appear here once they have been created."
+
+
+msgid "Capacit? de l??quipe"
+msgstr "Team capacity"
+
+
+msgid "Recherche :"
+msgstr "Looking for:"
+
+
+msgid "Consultez les besoins d?clar?s par les ?quipes."
+msgstr "Browse the skills teams are looking for."
+
+
+msgid "Participer"
+msgstr "Join"
+
+
+msgid "Les recommandations s?appuient sur les comp?tences, r?les pr?f?r?s, th?matiques, disponibilit?s renseign?es et places restantes dans les ?quipes de l??v?nement."
+msgstr "Recommendations consider skills, preferred roles, themes, availability and open team places."
+
+
+msgid "L?organisateur examine les comp?tences manquantes et valide lui-m?me les affectations propos?es."
+msgstr "The organizer reviews missing skills and approves the suggested team assignments."
+
+
+msgid "Donn?es actuelles de l??v?nement"
+msgstr "Current event data"
+
+
+msgid "profil avec comp?tences ou pr?f?rences ? participant sans ?quipe."
+msgstr "profiles with skills or preferences ? unassigned participants."
+
+
+msgid "Renseigner mes comp?tences"
+msgstr "Add my skills"
+
+
+msgid "?quipes de l??v?nement"
+msgstr "Event teams"
+
+
+msgid "place libre"
+msgstr "open place"
+
+
+msgid "Donn?es actuelles"
+msgstr "Current data"
+
+
+msgid "Aucune ?quipe n?est encore enregistr?e pour cet ?v?nement."
+msgstr "No teams have registered for this event yet."
+
+
+msgid "Les participants peuvent d?crire leur besoin et suivre les ?changes depuis leur espace."
+msgstr "Participants can describe what they need and follow conversations from their workspace."
+
+
+msgid "Rejoignez un ?cosyst?me bienveillant con?u pour faire d?coller vos comp?tences."
+msgstr "Join a supportive community built to help your skills grow."
+
+
+msgid "Trouvez vos co?quipiers"
+msgstr "Find your teammates"
+
+
+msgid "Renseignez vos comp?tences et rejoignez une ?quipe selon ses places et besoins affich?s."
+msgstr "Add your skills and join a team based on its open places and listed needs."
+
+
+msgid "Organisez les t?ches, ?changez avec l??quipe et suivez les jalons li?s au hackathon."
+msgstr "Organize tasks, collaborate with your team and track hackathon milestones."
+
+
+msgid "Pr?parez le jury"
+msgstr "Prepare for the jury"
+
+
+msgid "D?posez votre archive, ajoutez les liens utiles et consultez les retours de l??quipe organisatrice."
+msgstr "Upload your project archive, add useful links and review organizer feedback."
+
+
+msgid "Annonce"
+msgstr "Announcement"
+
+
+msgid "Total"
+msgstr "Total"
+
+
+msgid "Publi?es"
+msgstr "Published"
+
+
+msgid "Urgentes"
+msgstr "Urgent"
+
+
+msgid "Programm?es"
+msgstr "Scheduled"
+
+
+msgid "Brouillons"
+msgstr "Drafts"
+
+
+msgid "Cette semaine"
+msgstr "This week"
+
+
+msgid "?v?nement actif :"
+msgstr "Active event:"
+
+
+msgid "Le brouillon ne sera pas publi? automatiquement : utilisez ? Ins?rer dans l?annonce ?, relisez-le, puis cliquez sur ? Publier ?."
+msgstr "The draft will not publish automatically. Insert it into the announcement, review it, then select Publish."
+
+
+msgid "?quipes sans d?p?t pour le dernier jalon"
+msgstr "Teams without a submission for the latest milestone"
+
+
+msgid "Pr?cisez le sujet et les informations ? communiquer."
+msgstr "Specify the subject and details to communicate."
+
+
+msgid "Professionnel"
+msgstr "Professional"
+
+
+msgid "Chaleureux"
+msgstr "Warm"
+
+
+msgid "Direct"
+msgstr "Direct"
+
+
+msgid "Enthousiaste"
+msgstr "Enthusiastic"
+
+
+msgid "Format"
+msgstr "Format"
+
+
+msgid "Sujet"
+msgstr "Subject"
+
+
+msgid "Enregistrer en brouillon"
+msgstr "Save draft"
+
+
+msgid "Aucune annonce"
+msgstr "No announcements"
+
+
+msgid "?quipes"
+msgstr "Teams"
+
+
+msgid "Nouvel ?v?nement"
+msgstr "New event"
+
+
+msgid "au total"
+msgstr "total"
+
+
+msgid "actifs aujourd'hui"
+msgstr "active today"
+
+
+msgid "inscriptions ouvertes"
+msgstr "registrations open"
+
+
+msgid "sur tous les ?v?nements"
+msgstr "across all events"
+
+
+msgid "Progression globale des jalons"
+msgstr "Overall milestone progress"
+
+
+msgid "jalons termin?s"
+msgstr "milestones complete"
+
+
+msgid "Dates"
+msgstr "Dates"
+
+
+msgid "Inscriptions / ?quipes"
+msgstr "Registrations / teams"
+
+
+msgid "inscrits ? ?quipes"
+msgstr "registered ? teams"
+
+
+msgid "?tudiants ? mentors"
+msgstr "students ? mentors"
+
+
+msgid "Aucun ?v?nement cr?? pour le moment."
+msgstr "No events have been created yet."
+
+
+msgid "Modifier l'?v?nement"
+msgstr "Edit event"
+
+
+msgid "Cr?er un ?v?nement"
+msgstr "Create event"
+
+
+msgid "Participant profile"
+msgstr "Participant profile"
+
+
+msgid "Profile ID"
+msgstr "Profile ID"
+
+
+msgid "Deactivate"
+msgstr "Deactivate"
+
+
+msgid "Reactivate"
+msgstr "Reactivate"
+
+
+msgid "Last seen"
+msgstr "Last seen"
+
+
+msgid "No sign-in recorded"
+msgstr "No sign-in recorded"
+
+
+msgid "Activity history"
+msgstr "Activity history"
+
+
+msgid "Recorded milestones from this participant?s account"
+msgstr "Recorded events from this participant?s account"
+
+
+msgid "events"
+msgstr "events"
+
+
+msgid "Only account creation is recorded so far. New team, project, support and career events will appear here when available."
+msgstr "Only account creation is recorded so far. Team, project, support and career activity will appear here when available."
+
+
+msgid "Profile overview"
+msgstr "Profile overview"
+
+
+msgid "Core account details"
+msgstr "Core account details"
+
+
+msgid "Skills and preferences"
+msgstr "Skills and preferences"
+
+
+msgid "Used to recommend a balanced team composition"
+msgstr "Used to recommend a balanced team composition"
+
+
+msgid "No skills listed yet."
+msgstr "No skills listed yet."
+
+
+msgid "Roles:"
+msgstr "Roles:"
+
+
+msgid "Project themes:"
+msgstr "Project themes:"
+
+
+msgid "Not provided"
+msgstr "Not provided"
+
+
+msgid "Organizer validation"
+msgstr "Organizer review"
+
+
+msgid "Review team compositions and missing roles before saving assignments."
+msgstr "Review team compositions and missing roles before saving assignments."
+
+
+msgid "Team Formation"
+msgstr "Team formation"
+
+
+msgid "G?n?rer une proposition"
+msgstr "Generate a proposal"
+
+
+msgid "Le score combine besoins de comp?tences (40 %), compl?mentarit? des r?les (25 %), pr?f?rences (20 %), disponibilit?s (10 %) et ?quilibre de capacit? (5 %). Les crit?res absents sont neutres. La proposition ne modifie rien avant validation."
+msgstr "The score combines skill needs (40%), role complementarity (25%), preferences (20%), availability (10%) and capacity balance (5%). Missing criteria are neutral. No assignments change until approved."
+
+
+msgid "?tudiants sans ?quipe"
+msgstr "Students without a team"
+
+
+msgid "Affectations propos?es"
+msgstr "Suggested assignments"
+
+
+msgid "Resteraient sans ?quipe"
+msgstr "Would remain without a team"
+
+
+msgid "Capacit? insuffisante :"
+msgstr "Insufficient capacity:"
+
+
+msgid "ces ?tudiants n?ont pas ?t? affect?s dans la proposition."
+msgstr "these students were not assigned in this proposal."
+
+
+msgid "Composition propos?e :"
+msgstr "Suggested composition:"
+
+
+msgid "Capacit? atteinte"
+msgstr "Capacity reached"
+
+
+msgid "Compatibilit?"
+msgstr "Match"
+
+
+msgid "Aucune nouvelle affectation recommand?e ? cette ?quipe."
+msgstr "No additional assignments are recommended for this team."
+
+
+msgid "? compl?ter :"
+msgstr "To complete:"
+
+
+msgid "Comp?tence :"
+msgstr "Skill:"
+
+
+msgid "R?le :"
+msgstr "Role:"
+
+
+msgid "Aucun manque prioritaire d?tect?"
+msgstr "No priority gaps detected"
+
+
+msgid "Aucune ?quipe n?est disponible pour cette ?dition."
+msgstr "No teams are available for this edition."
+
+
+msgid "AI triage metrics"
+msgstr "AI triage metrics"
+
+
+msgid "via Ollama : il propose une cat?gorie, une urgence et un r?sum? pour chaque demande d'aide. Le mentor garde la d?cision et peut corriger la suggestion."
+msgstr "via Ollama: it suggests a category, urgency and summary for each help request. Mentors make the final decision and can correct suggestions."
+
+
+msgid "Accord sur l?urgence"
+msgstr "Urgency agreement"
+
+
+msgid "tickets analys?s sur"
+msgstr "requests analyzed on"
+
+
+msgid "g?n?r? le"
+msgstr "generated on"
+
+
+msgid "commande"
+msgstr "command"
+
+
+msgid "accuracy"
+msgstr "accuracy"
+
+
+msgid "F1 macro"
+msgstr "macro F1"
+
+
+msgid "Latence ? chaud p50 / p95"
+msgstr "Warm latency p50 / p95"
+
+
+msgid "D?marrage ? froid :"
+msgstr "Cold start:"
+
+
+msgid "Cat?gorie Urgence : pr?cision, rappel, F1 et matrice de confusion"
+msgstr "Category and urgency: precision, recall, F1 and confusion matrix"
+
+
+msgid "Lignes = classe r?elle, colonnes = classe pr?dite (diagonale = bonnes r?ponses)."
+msgstr "Rows = actual class; columns = predicted class (diagonal = correct predictions)."
+
+
+msgid "M?triques par classe et matrice de confusion"
+msgstr "Per-class metrics and confusion matrix"
+
+
+msgid "Analyse en cours"
+msgstr "Analysis in progress"
+
+
+msgid "Annonce des r?sultats"
+msgstr "Results announcement"
+
+
+msgid "Annul?"
+msgstr "Cancelled"
+
+
+msgid "Annul?e"
+msgstr "Cancelled"
+
+
+msgid "Apprenticeship / work-study"
+msgstr "Apprenticeship / work-study"
+
+
+msgid "Archived"
+msgstr "Archived"
+
+
+msgid "Archiv?"
+msgstr "Archived"
+
+
+msgid "Atelier technique"
+msgstr "Technical workshop"
+
+
+msgid "Automatique (ticket ou session)"
+msgstr "Automatic (request or session)"
+
+
+msgid "Autre"
+msgstr "Other"
+
+
+msgid "Avanc?"
+msgstr "Advanced"
+
+
+msgid "Brouillon"
+msgstr "Draft"
+
+
+msgid "Choisie par le mentor"
+msgstr "Chosen by the mentor"
+
+
+msgid "Closed"
+msgstr "Closed"
+
+
+msgid "Cl?ture"
+msgstr "Closing"
+
+
+msgid "Coach IA ?tudiant"
+msgstr "Student AI coach"
+
+
+msgid "Confirm?e"
+msgstr "Confirmed"
+
+
+msgid "Consignes"
+msgstr "Instructions"
+
+
+msgid "Declined"
+msgstr "Declined"
+
+
+msgid "Documentation"
+msgstr "Documentation"
+
+
+msgid "Done"
+msgstr "Done"
+
+
+msgid "Draft"
+msgstr "Draft"
+
+
+msgid "D?but du d?veloppement"
+msgstr "Development begins"
+
+
+msgid "D?butant"
+msgstr "Beginner"
+
+
+msgid "D?lib?ration"
+msgstr "Deliberation"
+
+
+msgid "D?monstrations"
+msgstr "Demos"
+
+
+msgid "Education / qualification"
+msgstr "Education / qualification"
+
+
+msgid "En attente"
+msgstr "Pending"
+
+
+msgid "En bonne voie"
+msgstr "On track"
+
+
+msgid "Entry-level"
+msgstr "Entry-level"
+
+
+msgid "Everyone"
+msgstr "Everyone"
+
+
+msgid "Explication mentor"
+msgstr "Mentor explanation"
+
+
+msgid "Failed"
+msgstr "Failed"
+
+
+msgid "Figma"
+msgstr "Figma"
+
+
+msgid "Gel du code"
+msgstr "Code freeze"
+
+
+msgid "GitHub"
+msgstr "GitHub"
+
+
+msgid "Graduate"
+msgstr "Graduate"
+
+
+msgid "High"
+msgstr "High"
+
+
+msgid "Hybrid"
+msgstr "Hybrid"
+
+
+msgid "In review"
+msgstr "In review"
+
+
+msgid "Indisponible"
+msgstr "Unavailable"
+
+
+msgid "Info"
+msgstr "Info"
+
+
+msgid "Information"
+msgstr "Information"
+
+
+msgid "Informations Wi-Fi"
+msgstr "Wi-Fi information"
+
+
+msgid "Inscriptions closes"
+msgstr "Registration closed"
+
+
+msgid "Intention to apply"
+msgstr "Intention to apply"
+
+
+msgid "Interm?diaire"
+msgstr "Intermediate"
+
+
+msgid "Internship"
+msgstr "Internship"
+
+
+msgid "Jeu de donn?es"
+msgstr "Dataset"
+
+
+msgid "Job"
+msgstr "Job"
+
+
+msgid "Jury et mentors"
+msgstr "Jury and mentors"
+
+
+msgid "Jury uniquement"
+msgstr "Jury only"
+
+
+msgid "Language"
+msgstr "Language"
+
+
+msgid "Lien API"
+msgstr "API link"
+
+
+msgid "Location / work arrangement"
+msgstr "Location / work arrangement"
+
+
+msgid "Mentors uniquement"
+msgstr "Mentors only"
+
+
+msgid "Merged"
+msgstr "Merged"
+
+
+msgid "Needs revision"
+msgstr "Needs revision"
+
+
+msgid "No extractable text"
+msgstr "No extractable text"
+
+
+msgid "Normal"
+msgstr "Normal"
+
+
+msgid "Not specified"
+msgstr "Not specified"
+
+
+msgid "On-site"
+msgstr "On-site"
+
+
+msgid "Open"
+msgstr "Open"
+
+
+msgid "Other eligibility"
+msgstr "Other eligibility"
+
+
+msgid "Ouverture"
+msgstr "Opening"
+
+
+msgid "Pas pr?t"
+msgstr "Not ready"
+
+
+msgid "Permanence de mentorat"
+msgstr "Mentoring office hours"
+
+
+msgid "Planifi?e"
+msgstr "Planned"
+
+
+msgid "Planned"
+msgstr "Planned"
+
+
+msgid "Preferred"
+msgstr "Preferred"
+
+
+msgid "Project experience"
+msgstr "Project experience"
+
+
+msgid "Pr?t"
+msgstr "Ready"
+
+
+msgid "Publi?"
+msgstr "Published"
+
+
+msgid "Ready"
+msgstr "Ready"
+
+
+msgid "Recommandations ?tudiant"
+msgstr "Student recommendations"
+
+
+msgid "Rejected"
+msgstr "Rejected"
+
+
+msgid "Remote"
+msgstr "Remote"
+
+
+msgid "Required"
+msgstr "Required"
+
+
+msgid "Resolved"
+msgstr "Resolved"
+
+
+msgid "Running"
+msgstr "Running"
+
+
+msgid "R?daction de challenge"
+msgstr "Challenge writing"
+
+
+msgid "R?daction de hackathon"
+msgstr "Hackathon writing"
+
+
+msgid "Starter kit"
+msgstr "Starter kit"
+
+
+msgid "Students"
+msgstr "Students"
+
+
+msgid "Submitted"
+msgstr "Submitted"
+
+
+msgid "Team captains"
+msgstr "Team captains"
+
+
+msgid "Template"
+msgstr "Template"
+
+
+msgid "Termin?e"
+msgstr "Completed"
+
+
+msgid "To do"
+msgstr "To do"
+
+
+msgid "Under review"
+msgstr "Under review"
+
+
+msgid "Unreadable PDF"
+msgstr "Unreadable PDF"
+
+
+msgid "Withdrawn"
+msgstr "Withdrawn"
+
+
+msgid "?chou?e"
+msgstr "Failed"
+
+
+msgid "?valuation"
+msgstr "Evaluation"
+
+msgid "Supervision de l'Ensemble des Équipes"
+msgstr "Team overview"
+
+msgid "Contrôle des collectifs, mentors référents, tables et états de soumission des projets."
+msgstr "Review teams, assigned mentors, tables, and project submission status."
+
+msgid "actif"
+msgstr "active"
+
+msgid "équipe"
+msgstr "team"
+
+msgid "Défi / Thématique"
+msgstr "Challenge / Theme"
+
+msgid "Mentor Référent"
+msgstr "Assigned mentor"
+
+msgid "Voir les dépôts"
+msgstr "View repositories"
+
+msgid "Ouvrir l’espace jury"
+msgstr "Open judging workspace"
+
+msgid "Aucune équipe n’est enregistrée pour ce filtre."
+msgstr "No teams are registered for this filter."
+
+msgid "Déroulement du hackathon"
+msgstr "Hackathon schedule"
+
+msgid "Cliquez sur une étape pour la définir comme étape actuelle"
+msgstr "Select a step to make it the current stage."
+
+msgid "Les inscriptions se ferment automatiquement à la date limite d'inscription ou au début du hackathon."
+msgstr "Registration closes automatically at the deadline or when the hackathon begins."
+
+msgid "Ouvertes"
+msgstr "Open"
+
+msgid "Fermées"
+msgstr "Closed"
+
+msgid "Ouvrez un challenge pour gérer son programme, ses annonces et ses ressources."
+msgstr "Open a challenge to manage its schedule, announcements, and resources."
+
+msgid "Nouveau challenge"
+msgstr "New challenge"
+
+msgid "équipe(s) inscrite(s)"
+msgstr "registered team(s)"
+
+msgid "Gérer"
+msgstr "Manage"
+
+msgid "Dépublier"
+msgstr "Unpublish"
+
+msgid "Aucun challenge. Créez-en un pour démarrer."
+msgstr "No challenges yet. Create one to get started."
+
+msgid "Métriques du Tri IA"
+msgstr "AI triage metrics"
+
+msgid "Tickets analysés"
+msgstr "Tickets analyzed"
+
+msgid "échec"
+msgstr "failed"
+
+msgid "Latence médiane"
+msgstr "Median latency"
+
+msgid "Accord IA / mentors sur la catégorie"
+msgstr "AI / mentor category agreement"
+
+msgid "correction"
+msgstr "correction"
+
+msgid "Évaluation sur le jeu de test étiqueté"
+msgstr "Evaluation on the labeled test set"
+
+msgid "tickets analysés sur"
+msgstr "tickets analyzed out of"
+
+msgid "généré le"
+msgstr "generated on"
+
+msgid "Catégorie"
+msgstr "Category"
+
+msgid "précision"
+msgstr "precision"
+
+msgid "rappel"
+msgstr "recall"
+
+msgid "et matrice de confusion"
+msgstr "and confusion matrix"
+
+msgid "Lignes = classe réelle, colonnes = classe prédite (diagonale = bonnes réponses)."
+msgstr "Rows show actual classes; columns show predicted classes (the diagonal contains correct predictions)."
+
+msgid "Métriques par classe et matrice de confusion"
+msgstr "Metrics by class and confusion matrix"
+
+msgid "Classe"
+msgstr "Class"
+
+msgid "Support"
+msgstr "Support"
+
+msgid "Aucun rapport d'évaluation"
+msgstr "No evaluation report"
+
+msgid "Project submissions"
+msgstr "Project submissions"
+
+msgid "Review the teams’ latest project archives and download a submission when you’re ready."
+msgstr "Review the teams’ latest project archives and download a submission when you’re ready."
+
+msgid "The submission period is closed. You can no longer upload files or change your submission."
+msgstr "The submission period is closed. You can no longer upload files or change your submission."
+
+msgid "You can update this form until the deadline."
+msgstr "You can update this form until the deadline."
+
+msgid "Select a HackFlow repository version"
+msgstr "Select a HackFlow repository version"
+
+msgid "No HackFlow repository"
+msgstr "No HackFlow repository"
+
+msgid "Branch to freeze"
+msgstr "Branch to freeze"
+
+msgid "GitHub / GitLab Repository URL"
+msgstr "GitHub / GitLab repository URL"
+
+msgid "Online Demo URL (Staging / Production)"
+msgstr "Online demo URL (staging / production)"
+
+msgid "Demo Video URL (Loom, YouTube, Vimeo)"
+msgstr "Demo video URL (Loom, YouTube, Vimeo)"
+
+msgid "A 3-minute video showing the use case and live functionality."
+msgstr "A 3-minute video showing the use case and live functionality."
+
+msgid "3. Project Files"
+msgstr "3. Project files"
+
+msgid "No ZIP archive uploaded yet"
+msgstr "No ZIP archive uploaded yet"
+
+msgid "The repository must be public or shared with the judges."
+msgstr "The repository must be public or shared with the judges."
+
+msgid "Working prototype accessible without a complicated sign-in"
+msgstr "Working prototype accessible without a complicated sign-in"
+
+msgid "AI project description"
+msgstr "AI project description"
+
+msgid "Analyzing your project files with Ollama…"
+msgstr "Analyzing your project files with Ollama…"
+
+msgid "Auto-ignored paths"
+msgstr "Automatically ignored paths"
+
+msgid "Upload mode"
+msgstr "Upload mode"
+
+msgid "Keep missing files"
+msgstr "Keep missing files"
+
+msgid "Replace everything"
+msgstr "Replace everything"
+
+msgid "Complete merge"
+msgstr "Complete merge"
+
+msgid "Save progress"
+msgstr "Save progress"
+
+msgid "— Choose a version —"
+msgstr "— Choose a version —"
+
+msgid "Keep source"
+msgstr "Keep source"
+
+msgid "Keep target"
+msgstr "Keep target"
+
+msgid "spot(s) available"
+msgstr "spot(s) available"
+

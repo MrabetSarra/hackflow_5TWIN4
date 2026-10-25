@@ -1,4 +1,6 @@
 {% extends "layouts/base_mentor.html" %}
+{% load i18n %}
+{% load i18n_content %}
 
 {% block title %}Project Submissions - HackFlow{% endblock %}
 
@@ -16,19 +18,19 @@
     <section class="submission-hero p-4 p-lg-5 mb-4">
         <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-4">
             <div>
-                <div class="text-primary fw-semibold small text-uppercase mb-2"><i class="bi bi-folder2-open me-1"></i> Jury workspace</div>
-                <h1 class="h2 fw-bold text-body mb-2">Project submissions</h1>
-                <p class="text-body-secondary mb-0">Review the teams’ latest project archives and download a submission when you’re ready.</p>
+                <div class="text-primary fw-semibold small text-uppercase mb-2"><i class="bi bi-folder2-open me-1"></i> {% trans "Jury workspace" %}</div>
+                <h1 class="h2 fw-bold text-body mb-2">{% trans "Project submissions" %}</h1>
+                <p class="text-body-secondary mb-0">{% trans "Review the teams’ latest project archives and download a submission when you’re ready." %}</p>
             </div>
             <div class="d-flex align-items-center gap-3 bg-white rounded-4 px-4 py-3 shadow-sm">
                 <span class="submission-icon"><i class="bi bi-archive"></i></span>
-                <div><div class="h3 fw-bold mb-0">{{ submissions|length }}</div><div class="small text-body-secondary">uploaded archives</div></div>
+                <div><div class="h3 fw-bold mb-0">{{ submissions|length }}</div><div class="small text-body-secondary">{% trans "uploaded archives" %}</div></div>
             </div>
         </div>
     </section>
 
     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-3">
-        <div><h2 class="h5 fw-bold mb-1">Submitted projects</h2><p class="small text-body-secondary mb-0"><span data-result-count>{{ submissions|length }}</span> submission{{ submissions|length|pluralize }} available</p></div>
+        <div><h2 class="h5 fw-bold mb-1">{% trans "Submitted projects" %}</h2><p class="small text-body-secondary mb-0"><span data-result-count>{{ submissions|length }}</span> submission{{ submissions|length|pluralize }} available</p></div>
         <label class="submission-search position-relative w-100">
             <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-body-secondary"></i>
             <input class="form-control ps-5 rounded-3" type="search" placeholder="Search team, project or milestone…" aria-label="Search submissions" data-submission-search>
@@ -48,7 +50,7 @@
                         </div>
                         <p class="text-body-secondary mb-3">{{ submission.project_name|default:submission.team.project_name|default:"Project title not provided" }}</p>
                         <div class="d-flex flex-wrap gap-x-4 gap-3 small text-body-secondary mb-3">
-                            <span><i class="bi bi-flag me-1 text-primary"></i>{{ submission.milestone.title }}</span>
+                            <span><i class="bi bi-flag me-1 text-primary"></i>{{ submission.milestone.title|localized_milestone }}</span>
                             {% if submission.submitted_at %}<span><i class="bi bi-clock me-1"></i>{{ submission.submitted_at|date:"M j, Y · H:i" }}</span>{% endif %}
                         </div>
                         <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 border-top pt-3">
@@ -56,17 +58,17 @@
                                 <i class="bi bi-file-earmark-zip text-primary mt-1"></i>
                                 <div class="min-w-0"><div class="submission-file small fw-semibold">{{ submission.file.name|cut:"submissions/" }}</div><div class="small text-body-secondary">ZIP archive · {{ submission.file.size|filesizeformat }}</div></div>
                             </div>
-                            <a class="btn btn-primary rounded-3 flex-shrink-0" href="{% url 'student:download_submission' submission.id %}"><i class="bi bi-download me-2"></i>Download ZIP</a>
+                            <a class="btn btn-primary rounded-3 flex-shrink-0" href="{% url 'student:download_submission' submission.id %}"><i class="bi bi-download me-2"></i>{% trans "Download ZIP" %}</a>
                         </div>
                     </div>
                 </div>
             </article>
         </div>
         {% empty %}
-        <div class="col-12"><div class="card-modern text-center py-5 px-3"><span class="submission-icon mx-auto mb-3"><i class="bi bi-inbox"></i></span><h3 class="h5 fw-bold">No project archives yet</h3><p class="text-body-secondary mb-0">Uploaded team submissions will appear here for jury review.</p></div></div>
+        <div class="col-12"><div class="card-modern text-center py-5 px-3"><span class="submission-icon mx-auto mb-3"><i class="bi bi-inbox"></i></span><h3 class="h5 fw-bold">{% trans "No project archives yet" %}</h3><p class="text-body-secondary mb-0">{% trans "Uploaded team submissions will appear here for jury review." %}</p></div></div>
         {% endfor %}
     </div>
-    <div class="card-modern text-center py-5 px-3 d-none" data-submission-empty><span class="submission-icon mx-auto mb-3"><i class="bi bi-search"></i></span><h3 class="h5 fw-bold">No matching submissions</h3><p class="text-body-secondary mb-0">Try another team, project or milestone name.</p></div>
+    <div class="card-modern text-center py-5 px-3 d-none" data-submission-empty><span class="submission-icon mx-auto mb-3"><i class="bi bi-search"></i></span><h3 class="h5 fw-bold">{% trans "No matching submissions" %}</h3><p class="text-body-secondary mb-0">{% trans "Try another team, project or milestone name." %}</p></div>
 </div>
 <script>
     (() => {

@@ -22,13 +22,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (theme === 'dark') {
         if (sunIcon) sunIcon.classList.remove('d-none');
         if (moonIcon) moonIcon.classList.add('d-none');
-        if (textEl) textEl.textContent = 'Clair';
-        btn.setAttribute('title', 'Passer en thème clair');
+        if (textEl) textEl.textContent = btn.dataset.labelLight || '';
+        btn.setAttribute('title', btn.dataset.titleLight || '');
       } else {
         if (sunIcon) sunIcon.classList.add('d-none');
         if (moonIcon) moonIcon.classList.remove('d-none');
-        if (textEl) textEl.textContent = 'Sombre';
-        btn.setAttribute('title', 'Passer en thème sombre');
+        if (textEl) textEl.textContent = btn.dataset.labelDark || '';
+        btn.setAttribute('title', btn.dataset.titleDark || '');
       }
     });
   };
@@ -51,22 +51,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 3. Toggle de la Sidebar Mobile
   const sidebarToggle = document.getElementById('sidebarToggle');
-  const sidebar = document.querySelector('.app-sidebar');
+  const sidebar = document.getElementById('workspaceSidebar');
   if (sidebarToggle && sidebar) {
+    const isMobileSidebar = () => window.matchMedia('(max-width: 991.98px)').matches;
+    const setSidebarOpen = (open) => {
+      sidebar.classList.toggle('show', open);
+      sidebarToggle.setAttribute('aria-expanded', String(open));
+      sidebar.inert = isMobileSidebar() && !open;
+    };
+
+    setSidebarOpen(false);
     sidebarToggle.addEventListener('click', (e) => {
       e.stopPropagation();
-      sidebar.classList.toggle('show');
+      setSidebarOpen(!sidebar.classList.contains('show'));
     });
 
     document.addEventListener('click', (e) => {
       if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target) && sidebar.classList.contains('show')) {
-        sidebar.classList.remove('show');
+        setSidebarOpen(false);
       }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && sidebar.classList.contains('show')) {
+        setSidebarOpen(false);
+        sidebarToggle.focus();
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      if (!isMobileSidebar()) setSidebarOpen(false);
+      else sidebar.inert = !sidebar.classList.contains('show');
     });
   }
 
   // 4. Toasts de notification pour les actions visuelles (Démo)
-  const showToast = (message = 'Action simulée avec succès pour la démo !', type = 'info') => {
+  const showToast = (message = document.documentElement.dataset.toastDefault || '', type = 'info') => {
     let container = document.getElementById('toastContainer');
     if (!container) {
       container = document.createElement('div');
@@ -87,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <i class="bi bi-info-circle-fill text-primary"></i>
           <span>${message}</span>
         </div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="${document.documentElement.dataset.toastCloseLabel || ''}"></button>
       </div>
     `;
     container.appendChild(toastEl);
@@ -99,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Attacher le toast aux boutons interactifs sans formulaire
   document.querySelectorAll('[data-demo-toast]').forEach((btn) => {
     btn.addEventListener('click', (e) => {
-      const msg = btn.getAttribute('data-demo-toast') || 'Action enregistrée pour la démo HackFlow.';
+      const msg = btn.getAttribute('data-demo-toast') || document.documentElement.dataset.toastDefault || '';
       showToast(msg);
     });
   });
@@ -112,13 +132,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const remainingMinutes = Math.floor((deadline.getTime() - Date.now()) / 60000);
       if (remainingMinutes < 0) {
-        element.textContent = element.dataset.countdownExpired || 'Deadline passed';
+        element.textContent = element.dataset.countdownExpired || '';
         return;
       }
 
-      const hours = Math.floor(remainingMinutes / 60);
-      const minutes = String(remainingMinutes % 60).padStart(2, '0');
-      element.textContent = `${element.dataset.countdownPrefix || ''}${hours}h${minutes}mn`;
+      const numberFormat = new Intl.NumberFormat(document.documentElement.lang || 'en');
+      const hours = numberFormat.format(Math.floor(remainingMinutes / 60));
+      const minutes = numberFormat.format(remainingMinutes % 60).padStart(2, '0');
+      const hourUnit = element.dataset.countdownHoursUnit || '';
+      const minuteUnit = element.dataset.countdownMinutesUnit || '';
+      element.textContent = `${element.dataset.countdownPrefix || ''}${hours}${hourUnit} ${minutes}${minuteUnit}`.trim();
     });
   };
   updateDeadlineCountdowns();
@@ -179,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const setPanelOpen = (open) => {
       panel.hidden = !open;
       toggle.setAttribute('aria-expanded', String(open));
-      toggle.setAttribute('aria-label', open ? 'Close accessibility options' : 'Open accessibility options');
+      toggle.setAttribute('aria-label', open ? toggle.dataset.labelClose : toggle.dataset.labelOpen);
       if (open) panel.querySelector('button')?.focus();
     };
     toggle.addEventListener('click', () => setPanelOpen(panel.hidden));

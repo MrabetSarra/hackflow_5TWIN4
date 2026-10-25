@@ -1,0 +1,24 @@
+{% load i18n %}
+<div class="dropdown language-switcher">
+    <button class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1 d-inline-flex align-items-center gap-2 border-opacity-50"
+            type="button" data-bs-toggle="dropdown" aria-expanded="false"
+            aria-label="{% trans 'Choose language' %}" title="{% trans 'Choose language' %}">
+        <i class="bi bi-globe2" aria-hidden="true"></i>
+        <span class="small fw-semibold">{{ LANGUAGE_CODE|upper }}</span>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2">
+        {% for language_code, language_name in LANGUAGES %}
+        <li>
+            <form action="{% url 'set_language' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <input type="hidden" name="language" value="{{ language_code }}">
+                <button class="dropdown-item rounded-2 d-flex align-items-center justify-content-between gap-3" type="submit" lang="{{ language_code }}">
+                    <span>{{ language_name }}</span>
+                    {% if LANGUAGE_CODE == language_code %}<i class="bi bi-check2 text-primary" aria-hidden="true"></i>{% endif %}
+                </button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+</div>

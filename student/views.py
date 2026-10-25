@@ -6,7 +6,7 @@ from datetime import timedelta
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
-from django.http import FileResponse, HttpResponseBadRequest, JsonResponse
+from django.http import FileResponse, HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.db import transaction
 from django.db.models import Count, Q
 from django.core.exceptions import ValidationError
@@ -14,6 +14,7 @@ from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.translation import gettext as _t
 from django.utils.text import slugify
 try:
     from kombu.exceptions import OperationalError as CeleryOperationalError
@@ -78,9 +79,9 @@ def dashboard(request):
         'team': team, 'hackathon': hackathon, 'timeline': timeline, 'upcoming_deadlines': deadlines,
         'progress': progress, 'completed_tasks': completed, 'total_tasks': total, 'resolved_requests': resolved,
         'stats': [
-            {'label': 'Completed tasks', 'value': f'{completed}/{total}', 'icon': 'bi-check2-square', 'color': 'success'},
-            {'label': 'Resolved mentor requests', 'value': resolved, 'icon': 'bi-headset', 'color': 'primary'},
-            {'label': 'Open team spots', 'value': f'{team.places_left}' if team else 'Create a team', 'icon': 'bi-person-plus', 'color': 'warning'},
+            {'label': _t('Completed tasks'), 'value': f'{completed}/{total}', 'icon': 'bi-check2-square', 'color': 'success'},
+            {'label': _t('Resolved mentor requests'), 'value': resolved, 'icon': 'bi-headset', 'color': 'primary'},
+            {'label': _t('Open team spots'), 'value': f'{team.places_left}' if team else _t('Create a team'), 'icon': 'bi-person-plus', 'color': 'warning'},
         ],
         'recent_announcements': [{'title': announcement.title, 'body': announcement.body,
                                   'author': announcement.author, 'time': announcement.published_at,
@@ -315,9 +316,18 @@ def team_detail(request):
             if resource_form.is_valid():
                 resource = resource_form.save(commit=False)
                 resource.team, resource.created_by = team, request.user
-                resource.save()
-                messages.success(request, 'Team resource saved. Your teammates can see the update now.')
-                return redirect('student:team_detail')
+                try:
+                    resource.save()
+                except Exception as error:
+                    logger.error(
+                        'Team resource upload failed (resource_id=%s, error_type=%s)',
+                        resource.pk or 'new', type(error).__name__,
+                    )
+                    messages.error(request, 'The resource could not be uploaded. Please try again.')
+                    show_resource_modal = True
+                else:
+                    messages.success(request, 'Team resource saved. Your teammates can see the update now.')
+                    return redirect('student:team_detail')
             show_resource_modal = True
         elif request.POST.get('action') == 'delete_resource':
             get_object_or_404(Resource, pk=_safe_pk(request.POST.get('resource_id')), team=team).delete()
@@ -742,15 +752,23 @@ def project_submission(request):
                         item.repository_commit = commit_hash
                         item.status = Submission.Status.SUBMITTED if request.POST.get('action') == 'submit' else Submission.Status.DRAFT
                         if item.status == Submission.Status.SUBMITTED: item.submitted_at = timezone.now()
-                        with transaction.atomic():
-                            item.save()
-                            team.project_name = item.project_name
-                            team.project_pitch = item.description
-                            team.description = item.description
-                            team.category = item.category
-                            team.save(update_fields=['project_name', 'project_pitch', 'description', 'category'])
-                        messages.success(request, 'Submission saved and shared with your team.')
-                        return redirect(f"{reverse('student:project_submission')}?milestone={milestone.pk}")
+                        try:
+                            with transaction.atomic():
+                                item.save()
+                                team.project_name = item.project_name
+                                team.project_pitch = item.description
+                                team.description = item.description
+                                team.category = item.category
+                                team.save(update_fields=['project_name', 'project_pitch', 'description', 'category'])
+                        except Exception as error:
+                            logger.error(
+                                'Submission upload failed (team_id=%s, milestone_id=%s, error_type=%s)',
+                                team.pk, milestone.pk, type(error).__name__,
+                            )
+                            messages.error(request, 'The project file could not be saved. Please try again.')
+                        else:
+                            messages.success(request, 'Submission saved and shared with your team.')
+                            return redirect(f"{reverse('student:project_submission')}?milestone={milestone.pk}")
     elif request.method == 'POST':
         messages.error(request, 'Project submissions are unavailable because there is no active deadline.')
         form = SubmissionForm(instance=submission, team=team)
@@ -790,8 +808,45 @@ def download_submission(request, submission_id):
         from django.http import Http404
         raise Http404('This submission does not contain an uploaded file.')
     filename = submission.file.name.rsplit('/', 1)[-1]
-    return FileResponse(submission.file.open('rb'), as_attachment=True, filename=filename,
-                        content_type='application/zip')
+    try:
+        file_handle = submission.file.open('rb')
+    except Exception as error:
+        logger.error(
+            'Submission download failed (submission_id=%s, error_type=%s)',
+            submission.pk, type(error).__name__,
+        )
+        return HttpResponse('File storage is temporarily unavailable.', status=503)
+    response = FileResponse(file_handle, as_attachment=True, filename=filename,
+                            content_type='application/zip')
+    response['Cache-Control'] = 'private, no-store'
+    response['X-Content-Type-Options'] = 'nosniff'
+    return response
+
+
+@role_required('student')
+def download_team_resource(request, resource_id):
+    team = _team_for(request.user)
+    if not team:
+        raise Http404
+    resource = get_object_or_404(Resource, pk=resource_id, team=team)
+    if not resource.document:
+        raise Http404
+    try:
+        file_handle = resource.document.open('rb')
+    except Exception as error:
+        logger.error(
+            'Team resource download failed (resource_id=%s, error_type=%s)',
+            resource.pk, type(error).__name__,
+        )
+        return HttpResponse('File storage is temporarily unavailable.', status=503)
+    response = FileResponse(
+        file_handle, as_attachment=True,
+        filename=resource.document.name.rsplit('/', 1)[-1],
+        content_type='application/octet-stream',
+    )
+    response['Cache-Control'] = 'private, no-store'
+    response['X-Content-Type-Options'] = 'nosniff'
+    return response
 
 
 def models_f(name):

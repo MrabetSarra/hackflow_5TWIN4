@@ -1,0 +1,88 @@
+{% extends workshop_base_template %}
+{% load static %}
+
+{% block title %}Résultat Quiz — {{ workshop.title }} — HackFlow{% endblock %}
+
+{% block student_content %}
+<div class="container-fluid px-4 py-4">
+
+  <div class="row justify-content-center">
+    <div class="col-12 col-xl-8">
+
+      <!-- Breadcrumb -->
+      <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{% url 'workshops:list' %}">Ateliers</a></li>
+          <li class="breadcrumb-item"><a href="{{ workshop.get_absolute_url }}">{{ workshop.title|truncatechars:30 }}</a></li>
+          <li class="breadcrumb-item active">Résultat du quiz</li>
+        </ol>
+      </nav>
+
+      <!-- Score principal -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body text-center py-4">
+          <h1 class="fw-bold text-primary display-4">{{ score }}/{{ total }}</h1>
+          <p class="fs-4 fw-semibold">{{ percentage }}%</p>
+          {% if passed %}
+          <div class="alert alert-success mt-3">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <strong>Quiz réussi !</strong> Votre présence est validée et votre certificat est disponible.
+          </div>
+          {% else %}
+          <div class="alert alert-warning mt-3">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Score insuffisant.</strong> Il faut 80% pour valider la présence. Vous pouvez retenter le quiz.
+          </div>
+          <a href="{% url 'workshops:quiz' workshop.pk %}" class="btn btn-outline-primary">Retenter le quiz</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Détails des réponses -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-bottom py-3">
+          <h5 class="mb-0 fw-bold">Détail de vos réponses</h5>
+        </div>
+        <div class="card-body p-0">
+          {% for result in results %}
+          <div class="list-group-item list-group-item-action border-0 py-3">
+            <div class="d-flex w-100 align-items-start">
+              <div class="flex-shrink-0 me-3">
+                <span class="badge {% if result.is_correct %}bg-success{% else %}bg-danger{% endif %} rounded-pill">
+                  {{ forloop.counter }}
+                </span>
+              </div>
+              <div class="flex-grow-1">
+                <h6 class="mb-1">{{ result.question.question }}</h6>
+                {% if result.is_correct %}
+                <span class="badge bg-success">Correct</span>
+                {% else %}
+                <span class="badge bg-danger">Incorrect</span>
+                <span class="text-danger small mt-1 d-block">Réponse attendue : {{ result.correct_answer }}</span>
+                {% endif %}
+                {% if result.explanation %}
+                <p class="small text-body-secondary mt-2">{{ result.explanation }}</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      {% if passed %}
+      <div class="d-grid gap-2 mt-4">
+        <a href="{% url 'workshops:my_bookings' %}" class="btn btn-primary rounded-pill px-4">
+          <i class="bi bi-award-fill me-2"></i>Voir mes certificats
+        </a>
+        <a href="{% url 'workshops:list' %}" class="btn btn-outline-secondary rounded-pill px-4">
+          Retour au catalogue
+        </a>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

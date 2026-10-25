@@ -1,4 +1,5 @@
 {% extends "layouts/base_student.html" %}
+{% load i18n %}
 {% load static %}
 
 {% block title %}Conversation with {{ other_user.get_full_name|default:other_user.username }} - HackFlow{% endblock %}
@@ -8,9 +9,9 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="fw-bold text-body mb-1">{{ other_user.get_full_name|default:other_user.username }}</h1>
-            <p class="text-body-secondary small mb-0">Private conversation</p>
+            <p class="text-body-secondary small mb-0">{% trans "Private conversation" %}</p>
         </div>
-        <a href="{% url 'student:messages' %}" class="btn btn-outline-secondary btn-sm rounded-pill">All conversations</a>
+        <a href="{% url 'student:messages' %}" class="btn btn-outline-secondary btn-sm rounded-pill">{% trans "All conversations" %}</a>
     </div>
 
     <div class="card-modern p-4">

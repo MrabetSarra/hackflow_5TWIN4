@@ -1,8 +1,12 @@
+import base64
+import io
 import logging
 import secrets
 from datetime import timedelta
 from pathlib import Path
+from urllib.parse import urlsplit
 
+import qrcode
 from django.contrib.auth import get_user_model, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password, make_password
@@ -11,7 +15,7 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.contrib import messages
 from django.db import transaction
-from django.http import FileResponse, Http404
+from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -23,8 +27,13 @@ from .forms import (
     PasswordResetVerifyForm,
     ProfileAssetsForm,
     ProfileDetailsForm,
+    TwoFactorDisableForm,
+    TwoFactorRegenerateBackupCodesForm,
+    TwoFactorSetupForm,
+    TwoFactorVerifyForm,
 )
 from .models import PasswordResetCode
+from .oauth import OAuthError, get_oauth_provider, get_or_create_oauth_user
 from student.models import Hackathon, HackathonRegistration
 
 
@@ -73,6 +82,13 @@ def login_view(request):
     form = EmailOrUsernameAuthenticationForm(request, data=request.POST or None)
     if request.method == 'POST' and form.is_valid():
         user = form.get_user()
+        if user.two_factor_enabled:
+            request.session['2fa_user_id'] = user.pk
+            request.session['2fa_remember_me'] = bool(request.POST.get('remember_me'))
+            if next_url and url_has_allowed_host_and_scheme(next_url, {request.get_host()}, require_https=request.is_secure()):
+                request.session['2fa_next_url'] = next_url
+            return redirect('accounts:two_factor_verify')
+
         auth_login(request, user)
         if not request.POST.get('remember_me'):
             request.session.set_expiry(0)
@@ -201,15 +217,18 @@ def register_role_view(request, role):
         'role_label': role_labels[role],
     })
 
+def _get_layout_template(user):
+    role = getattr(user, 'role', None)
+    if role in ('admin', 'organization'):
+        return 'layouts/base_admin.html'
+    elif role == 'mentor':
+        return 'layouts/base_mentor.html'
+    return 'layouts/base_student.html'
+
+
 @login_required
 def profile_view(request):
-    role = getattr(request.user, 'role', None)
-    if role in ('admin', 'organization'):
-        layout_template = 'layouts/base_admin.html'
-    elif role == 'mentor':
-        layout_template = 'layouts/base_mentor.html'
-    else:
-        layout_template = 'layouts/base_student.html'
+    layout_template = _get_layout_template(request.user)
     cv_skill_additions = []
     cv_detected_skills = []
     if request.user.role == 'student' and request.user.cv:
@@ -238,14 +257,42 @@ def profile_view(request):
     if request.method == 'POST' and form.is_valid():
         old_photo = request.user.profile_photo
         old_cv = request.user.cv
-        profile_user = form.save()
+        photo_uploaded = bool(request.FILES.get('profile_photo'))
+        try:
+            profile_user = form.save()
+            if photo_uploaded:
+                # Resolve the URL now so storage/configuration failures cannot look like a
+                # successful upload followed by a broken image on the next page load.
+                photo_url = profile_user.profile_photo.url
+        except Exception as error:
+            logger.error(
+                'Profile asset upload failed (user_id=%s, error_type=%s)',
+                request.user.pk, type(error).__name__,
+            )
+            return HttpResponse(
+                'Your image or file could not be uploaded. Please try again.', status=503,
+            )
+        if photo_uploaded:
+            storage = profile_user.profile_photo.storage
+            logger.info(
+                'Profile photo upload succeeded (user_id=%s, storage_backend=%s, url_host=%s)',
+                profile_user.pk,
+                f'{storage.__class__.__module__}.{storage.__class__.__name__}',
+                urlsplit(photo_url).hostname or 'relative',
+            )
         cv_changed = bool(profile_user.cv and (not old_cv or old_cv.name != profile_user.cv.name))
         if old_photo and old_photo.name != profile_user.profile_photo.name:
-            old_photo.delete(save=False)
+            try:
+                old_photo.delete(save=False)
+            except Exception as error:
+                logger.warning('Old profile photo cleanup failed (user_id=%s, error_type=%s)', profile_user.pk, type(error).__name__)
         if old_cv and old_cv.name != profile_user.cv.name:
             from career_opportunities.models import CareerApplication
             if not CareerApplication.objects.filter(cv=old_cv.name).exists():
-                old_cv.delete(save=False)
+                try:
+                    old_cv.delete(save=False)
+                except Exception as error:
+                    logger.warning('Old private CV cleanup failed (user_id=%s, error_type=%s)', profile_user.pk, type(error).__name__)
         if cv_changed and profile_user.role == 'student':
             from career_opportunities.services.cv_analysis import analyze_student_cv
             analysis = analyze_student_cv(profile_user)
@@ -272,9 +319,321 @@ def profile_view(request):
 def download_cv_view(request):
     if not request.user.cv:
         raise Http404
-    return FileResponse(
-        request.user.cv.open('rb'),
-        as_attachment=True,
-        filename=Path(request.user.cv.name).name,
-        content_type='application/pdf',
-    )
+    try:
+        file_handle = request.user.cv.open('rb')
+    except Exception as error:
+        logger.error('Private CV download failed (user_id=%s, error_type=%s)', request.user.pk, type(error).__name__)
+        return HttpResponse('File storage is temporarily unavailable.', status=503)
+    response = FileResponse(file_handle, as_attachment=True,
+                            filename=Path(request.user.cv.name).name,
+                            content_type='application/pdf')
+    response['Cache-Control'] = 'private, no-store'
+    response['X-Content-Type-Options'] = 'nosniff'
+    return response
+
+
+def two_factor_verify_view(request):
+    """Verify 2FA TOTP or backup code before completing login."""
+    if request.user.is_authenticated:
+        return redirect(_default_destination(request.user))
+
+    user_id = request.session.get('2fa_user_id')
+    if not user_id:
+        return redirect('accounts:login')
+
+    user = get_user_model().objects.filter(pk=user_id, is_active=True).first()
+    if not user or not user.two_factor_enabled:
+        request.session.pop('2fa_user_id', None)
+        request.session.pop('2fa_remember_me', None)
+        request.session.pop('2fa_next_url', None)
+        return redirect('accounts:login')
+
+    if request.GET.get('cancel'):
+        request.session.pop('2fa_user_id', None)
+        request.session.pop('2fa_remember_me', None)
+        request.session.pop('2fa_next_url', None)
+        return redirect('accounts:login')
+
+    form = TwoFactorVerifyForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        code = form.cleaned_data['code']
+        is_totp_valid = user.verify_totp(code)
+        is_backup_valid = False if is_totp_valid else user.verify_and_consume_backup_code(code)
+
+        if is_totp_valid or is_backup_valid:
+            remember_me = request.session.pop('2fa_remember_me', False)
+            next_url = request.session.pop('2fa_next_url', None)
+            request.session.pop('2fa_user_id', None)
+
+            auth_login(request, user)
+            if not remember_me:
+                request.session.set_expiry(0)
+
+            if is_backup_valid:
+                messages.warning(
+                    request,
+                    'Vous vous êtes connecté avec un code de secours. Pensez à vérifier vos codes restants dans votre profil.'
+                )
+
+            if next_url and url_has_allowed_host_and_scheme(next_url, {request.get_host()}, require_https=request.is_secure()):
+                return redirect(next_url)
+            return redirect(_default_destination(user))
+        else:
+            form.add_error('code', 'Code de vérification ou code de secours invalide.')
+
+    return render(request, 'accounts/two_factor_verify.html', {
+        'form': form,
+        'user_identifier': user.email or user.username,
+    })
+
+
+@login_required
+def two_factor_setup_view(request):
+    """Enable 2FA by scanning QR code and verifying the first TOTP code."""
+    if request.user.two_factor_enabled:
+        messages.info(request, "L'authentification à deux facteurs est déjà activée sur votre compte.")
+        return redirect('accounts:profile')
+
+    setup_secret = request.session.get('2fa_setup_secret')
+    if not setup_secret:
+        setup_secret = request.user.generate_two_factor_secret()
+        request.session['2fa_setup_secret'] = setup_secret
+
+    totp_uri = request.user.get_totp_uri(secret=setup_secret)
+
+    # Generate QR Code image in base64
+    qr = qrcode.QRCode(version=1, box_size=8, border=2)
+    qr.add_data(totp_uri)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="#1e293b", back_color="white")
+    buffer = io.BytesIO()
+    img.save(buffer, format="PNG")
+    qr_b64 = base64.b64encode(buffer.getvalue()).decode()
+
+    # Formatted secret for display (e.g. ABCD EFGH ...)
+    secret_formatted = ' '.join([setup_secret[i:i+4] for i in range(0, len(setup_secret), 4)])
+
+    form = TwoFactorSetupForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        code = form.cleaned_data['code']
+        if request.user.verify_totp(code, secret=setup_secret):
+            request.user.two_factor_secret = setup_secret
+            plain_backup_codes = request.user.generate_backup_codes()
+            request.user.two_factor_enabled = True
+            request.user.save(update_fields=['two_factor_secret', 'backup_codes', 'two_factor_enabled'])
+            request.session.pop('2fa_setup_secret', None)
+            request.session['2fa_new_backup_codes'] = plain_backup_codes
+            messages.success(request, 'Authentification à deux facteurs activée avec succès !')
+            return redirect('accounts:two_factor_backup_codes')
+        else:
+            form.add_error('code', "Code de vérification invalide. Vérifiez l'heure de votre appareil et réessayez.")
+
+    return render(request, 'accounts/two_factor_setup.html', {
+        'layout_template': _get_layout_template(request.user),
+        'form': form,
+        'qr_b64': qr_b64,
+        'secret': setup_secret,
+        'secret_formatted': secret_formatted,
+    })
+
+
+@login_required
+def two_factor_backup_codes_view(request):
+    """Display generated backup codes or allow regenerating them with password confirmation."""
+    if not request.user.two_factor_enabled:
+        messages.error(request, "L'authentification à deux facteurs n'est pas activée.")
+        return redirect('accounts:profile')
+
+    layout_template = _get_layout_template(request.user)
+    new_codes = request.session.pop('2fa_new_backup_codes', None)
+    if new_codes:
+        return render(request, 'accounts/two_factor_backup_codes.html', {
+            'layout_template': layout_template,
+            'backup_codes': new_codes,
+            'just_generated': True,
+        })
+
+    form = TwoFactorRegenerateBackupCodesForm(request.user, request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        plain_backup_codes = request.user.generate_backup_codes()
+        request.user.save(update_fields=['backup_codes'])
+        messages.success(request, 'Un nouveau jeu de codes de secours a été généré.')
+        return render(request, 'accounts/two_factor_backup_codes.html', {
+            'layout_template': layout_template,
+            'backup_codes': plain_backup_codes,
+            'just_generated': True,
+        })
+
+    return render(request, 'accounts/two_factor_backup_codes.html', {
+        'layout_template': layout_template,
+        'form': form,
+        'remaining_count': len(request.user.backup_codes or []),
+        'just_generated': False,
+    })
+
+
+@login_required
+def two_factor_disable_view(request):
+    """Disable 2FA after password confirmation."""
+    if not request.user.two_factor_enabled:
+        return redirect('accounts:profile')
+
+    form = TwoFactorDisableForm(request.user, request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        request.user.two_factor_enabled = False
+        request.user.two_factor_secret = ''
+        request.user.backup_codes = []
+        request.user.save(update_fields=['two_factor_enabled', 'two_factor_secret', 'backup_codes'])
+        messages.success(request, "L'authentification à deux facteurs a été désactivée avec succès.")
+        return redirect('accounts:profile')
+
+    return render(request, 'accounts/two_factor_disable.html', {
+        'layout_template': _get_layout_template(request.user),
+        'form': form,
+    })
+
+
+def oauth_login_view(request, provider):
+    """Initiate OAuth authorization redirect for Google or GitHub."""
+    try:
+        oauth_provider = get_oauth_provider(provider)
+    except ValueError:
+        raise Http404("Fournisseur OAuth inconnu.")
+
+    role = request.GET.get('role')
+    if role:
+        if role not in ('student', 'mentor'):
+            raise Http404("Rôle non autorisé. Seuls les comptes Étudiant et Mentor sont permis.")
+        request.session['oauth_role'] = role
+    else:
+        request.session.pop('oauth_role', None)
+
+    if not oauth_provider.is_configured():
+        messages.warning(
+            request,
+            f"L'authentification via {provider.capitalize()} n'est pas encore configurée dans les variables d'environnement "
+            f"({provider.upper()}_CLIENT_ID et {provider.upper()}_CLIENT_SECRET)."
+        )
+        return redirect('accounts:login')
+
+    state = secrets.token_urlsafe(32)
+    request.session['oauth_state'] = state
+    request.session['oauth_provider'] = provider
+
+    next_url = request.GET.get('next')
+    if next_url and url_has_allowed_host_and_scheme(next_url, {request.get_host()}, require_https=request.is_secure()):
+        request.session['oauth_next'] = next_url
+
+    redirect_uri = request.build_absolute_uri(reverse('accounts:oauth_callback', args=[provider]))
+    auth_url = oauth_provider.get_authorization_url(redirect_uri=redirect_uri, state=state)
+    return redirect(auth_url)
+
+
+def oauth_callback_view(request, provider):
+    """Handle OAuth authorization callback, exchange code, and log user in."""
+    try:
+        oauth_provider = get_oauth_provider(provider)
+    except ValueError:
+        raise Http404("Fournisseur OAuth inconnu.")
+
+    if request.GET.get('error'):
+        error_msg = request.GET.get('error_description') or request.GET.get('error')
+        logger.warning("OAuth error returned by %s: %s", provider, error_msg)
+        messages.warning(request, f"Connexion {provider.capitalize()} annulée.")
+        return redirect('accounts:login')
+
+    expected_state = request.session.pop('oauth_state', None)
+    state = request.GET.get('state')
+    if not state or not expected_state or state != expected_state:
+        messages.error(request, "Échec de validation de sécurité OAuth (state invalide). Veuillez réessayer.")
+        return redirect('accounts:login')
+
+    code = request.GET.get('code')
+    if not code:
+        messages.error(request, "Code d'autorisation manquant.")
+        return redirect('accounts:login')
+
+    redirect_uri = request.build_absolute_uri(reverse('accounts:oauth_callback', args=[provider]))
+
+    try:
+        user_info = oauth_provider.get_user_info(code=code, redirect_uri=redirect_uri)
+    except OAuthError as err:
+        logger.error("OAuth authentication failed for %s: %s", provider, err)
+        messages.error(request, f"Erreur lors de l'authentification avec {provider.capitalize()} : {err}")
+        return redirect('accounts:login')
+    except Exception:
+        logger.exception("Unexpected error during OAuth login with %s", provider)
+        messages.error(request, f"Une erreur inattendue est survenue lors de la connexion avec {provider.capitalize()}.")
+        return redirect('accounts:login')
+
+    email = user_info['email'].strip().lower()
+    existing_user = get_user_model().objects.filter(email__iexact=email).first()
+
+    if existing_user:
+        user, created = get_or_create_oauth_user(user_info, provider)
+    else:
+        requested_role = request.session.pop('oauth_role', None)
+        if requested_role in ('student', 'mentor'):
+            user, created = get_or_create_oauth_user(user_info, provider, role=requested_role)
+        else:
+            # Let the new user select their role (Student or Mentor only)
+            request.session['oauth_pending_user_info'] = user_info
+            request.session['oauth_pending_provider'] = provider
+            return redirect('accounts:oauth_select_role')
+
+    next_url = request.session.pop('oauth_next', None)
+
+    # If user has 2FA enabled, enforce second factor verification!
+    if user.two_factor_enabled:
+        request.session['2fa_user_id'] = user.pk
+        request.session['2fa_remember_me'] = True
+        if next_url and url_has_allowed_host_and_scheme(next_url, {request.get_host()}, require_https=request.is_secure()):
+            request.session['2fa_next_url'] = next_url
+        messages.info(request, "Veuillez saisir votre code d'authentification 2FA pour terminer la connexion.")
+        return redirect('accounts:two_factor_verify')
+
+    auth_login(request, user)
+
+    if created:
+        messages.success(request, f"Bienvenue sur HackFlow ! Votre compte a été créé avec succès via {provider.capitalize()}.")
+    else:
+        messages.success(request, f"Ravi de vous revoir ! Connexion réussie via {provider.capitalize()}.")
+
+    if next_url and url_has_allowed_host_and_scheme(next_url, {request.get_host()}, require_https=request.is_secure()):
+        return redirect(next_url)
+    return redirect(_default_destination(user))
+
+
+def oauth_select_role_view(request):
+    """Allow newly registered OAuth users to select their role (strictly Student or Mentor only)."""
+    user_info = request.session.get('oauth_pending_user_info')
+    provider = request.session.get('oauth_pending_provider', 'github')
+
+    if not user_info:
+        return redirect('accounts:login')
+
+    if request.method == 'POST':
+        chosen_role = request.POST.get('role')
+        if chosen_role not in ('student', 'mentor'):
+            messages.error(request, "Choix non autorisé. Seuls les comptes Étudiant et Mentor peuvent être créés.")
+            return render(request, 'accounts/oauth_select_role.html', {
+                'user_info': user_info,
+                'provider': provider,
+            })
+
+        user, created = get_or_create_oauth_user(user_info, provider, role=chosen_role)
+        request.session.pop('oauth_pending_user_info', None)
+        request.session.pop('oauth_pending_provider', None)
+        next_url = request.session.pop('oauth_next', None)
+
+        auth_login(request, user)
+        messages.success(request, f"Bienvenue sur HackFlow ! Votre compte a été créé avec succès.")
+
+        if next_url and url_has_allowed_host_and_scheme(next_url, {request.get_host()}, require_https=request.is_secure()):
+            return redirect(next_url)
+        return redirect(_default_destination(user))
+
+    return render(request, 'accounts/oauth_select_role.html', {
+        'user_info': user_info,
+        'provider': provider,
+    })

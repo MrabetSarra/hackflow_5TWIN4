@@ -1,3 +1,4 @@
+{% load i18n %}
 {# Carte hackathon : variables h, manage (bool) #}
 <div class="card-modern card-modern-hoverable h-100 overflow-hidden d-flex flex-column">
     {% if h.banner %}
@@ -23,10 +24,10 @@
         <div class="mt-auto">
             {% if manage %}
             <a href="{% url 'hackathons:hackathon_manage' h.pk %}" class="btn btn-sm btn-primary rounded-pill px-3">Gérer</a>
-            <a href="{% url 'hackathons:hackathon_edit' h.pk %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">Modifier</a>
+            <a href="{% url 'hackathons:hackathon_edit' h.pk %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">{% trans "Modifier" %}</a>
             {% else %}
             <div class="d-flex align-items-center gap-2">
-                <a href="{% url 'hackathons:hackathon_detail' h.slug %}" class="btn btn-sm btn-primary rounded-pill px-3">Voir le hackathon</a>
+                <a href="{% url 'hackathons:hackathon_detail' h.slug %}" class="btn btn-sm btn-primary rounded-pill px-3">{% trans "Voir le hackathon" %}</a>
                 {% if is_student %}
                 <form method="post" action="{% url 'hackathons:favorite_toggle' 'hackathon' h.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
                     <button type="submit" class="btn btn-sm btn-outline-warning rounded-circle" title="{% if h.pk in favorite_hackathon_ids %}Retirer des favoris{% else %}Ajouter aux favoris{% endif %}" aria-label="{% if h.pk in favorite_hackathon_ids %}Retirer des favoris{% else %}Ajouter aux favoris{% endif %}"><i class="bi {% if h.pk in favorite_hackathon_ids %}bi-star-fill{% else %}bi-star{% endif %}"></i></button>

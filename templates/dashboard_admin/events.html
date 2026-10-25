@@ -1,4 +1,5 @@
 {% extends "layouts/base_admin.html" %}
+{% load i18n %}
 
 {% block title %}Events Overview - HackFlow{% endblock %}
 
@@ -6,7 +7,7 @@
 <div class="container-fluid px-0">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-1">Events Overview</h2>
+            <h2 class="fw-bold text-dark mb-1">{% trans "Events Overview" %}</h2>
             <p class="text-muted small mb-0">Événements, inscriptions, équipes et progression par jalons.</p>
         </div>
         <a href="#event-form" class="btn btn-primary btn-sm rounded-pill px-3"><i class="bi bi-plus-lg me-1"></i>Nouvel événement</a>
@@ -20,25 +21,25 @@
 
     <div class="row g-3 mb-4">
         <div class="col-sm-6 col-xl">
-            <div class="stat-card card-modern h-100"><div class="text-muted small fw-semibold">Événements</div><div class="h2 fw-bold text-dark mb-0 mt-2">{{ events_total }}</div><div class="small text-muted">au total</div></div>
+            <div class="stat-card card-modern h-100"><div class="text-muted small fw-semibold">Événements</div><div class="h2 fw-bold text-dark mb-0 mt-2">{{ events_total }}</div><div class="small text-muted">{% trans "au total" %}</div></div>
         </div>
         <div class="col-sm-6 col-xl">
-            <div class="stat-card card-modern h-100"><div class="text-muted small fw-semibold">En cours</div><div class="h2 fw-bold text-success mb-0 mt-2">{{ active_events }}</div><div class="small text-muted">actifs aujourd'hui</div></div>
+            <div class="stat-card card-modern h-100"><div class="text-muted small fw-semibold">{% trans "En cours" %}</div><div class="h2 fw-bold text-success mb-0 mt-2">{{ active_events }}</div><div class="small text-muted">{% trans "actifs aujourd'hui" %}</div></div>
         </div>
         <div class="col-sm-6 col-xl">
-            <div class="stat-card card-modern h-100"><div class="text-muted small fw-semibold">À venir</div><div class="h2 fw-bold text-primary mb-0 mt-2">{{ upcoming_events }}</div><div class="small text-muted">inscriptions ouvertes</div></div>
+            <div class="stat-card card-modern h-100"><div class="text-muted small fw-semibold">À venir</div><div class="h2 fw-bold text-primary mb-0 mt-2">{{ upcoming_events }}</div><div class="small text-muted">{% trans "inscriptions ouvertes" %}</div></div>
         </div>
         <div class="col-sm-6 col-xl">
-            <div class="stat-card card-modern h-100"><div class="text-muted small fw-semibold">Inscriptions</div><div class="h2 fw-bold text-dark mb-0 mt-2">{{ registrants_total }}</div><div class="small text-muted">sur tous les événements</div></div>
+            <div class="stat-card card-modern h-100"><div class="text-muted small fw-semibold">{% trans "Inscriptions" %}</div><div class="h2 fw-bold text-dark mb-0 mt-2">{{ registrants_total }}</div><div class="small text-muted">sur tous les événements</div></div>
         </div>
         <div class="col-sm-6 col-xl">
-            <div class="stat-card card-modern h-100"><div class="text-muted small fw-semibold">Équipes</div><div class="h2 fw-bold text-dark mb-0 mt-2">{{ teams_total }}</div><div class="small text-muted">au total</div></div>
+            <div class="stat-card card-modern h-100"><div class="text-muted small fw-semibold">{% trans "Équipes" %}</div><div class="h2 fw-bold text-dark mb-0 mt-2">{{ teams_total }}</div><div class="small text-muted">{% trans "au total" %}</div></div>
         </div>
     </div>
 
     <div class="card-modern p-4 mb-4">
         <div class="d-flex justify-content-between align-items-center mb-2">
-            <h5 class="fw-bold text-dark mb-0">Progression globale des jalons</h5>
+            <h5 class="fw-bold text-dark mb-0">{% trans "Progression globale des jalons" %}</h5>
             <span class="small text-muted">{{ milestones_completed }}/{{ milestones_total }} jalons terminés · {{ overall_progress }}%</span>
         </div>
         <div class="progress" role="progressbar" aria-label="Progression globale des événements" aria-valuenow="{{ overall_progress }}" aria-valuemin="0" aria-valuemax="100" style="height: 10px;">
@@ -53,9 +54,9 @@
                 <thead class="bg-light">
                     <tr>
                         <th class="ps-4 py-3 small text-uppercase text-muted">Événement</th>
-                        <th class="py-3 small text-uppercase text-muted">Dates</th>
-                        <th class="py-3 small text-uppercase text-muted">Lieu</th>
-                        <th class="py-3 small text-uppercase text-muted">Statut</th>
+                        <th class="py-3 small text-uppercase text-muted">{% trans "Dates" %}</th>
+                        <th class="py-3 small text-uppercase text-muted">{% trans "Lieu" %}</th>
+                        <th class="py-3 small text-uppercase text-muted">{% trans "Statut" %}</th>
                         <th class="py-3 small text-uppercase text-muted">Inscriptions / équipes</th>
                         <th class="pe-4 py-3 small text-uppercase text-muted">Progression</th>
                         <th class="py-3"></th>
@@ -111,7 +112,7 @@
             </div>
             <div class="d-flex gap-2 mt-4">
                 <button class="btn btn-primary" type="submit"><i class="bi bi-check-lg me-1"></i>{% if editing_event %}Enregistrer{% else %}Créer l'événement{% endif %}</button>
-                {% if editing_event %}<a class="btn btn-outline-secondary" href="{% url 'dashboard_admin:events_overview' %}">Annuler</a>{% endif %}
+                {% if editing_event %}<a class="btn btn-outline-secondary" href="{% url 'dashboard_admin:events_overview' %}">{% trans "Annuler" %}</a>{% endif %}
             </div>
         </form>
     </div>

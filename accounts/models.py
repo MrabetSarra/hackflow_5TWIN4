@@ -50,7 +50,56 @@ class User(AbstractUser):
     )
     github_url = models.URLField(max_length=200, blank=True)
     linkedin_url = models.URLField(max_length=200, blank=True)
+    two_factor_enabled = models.BooleanField(default=False)
+    two_factor_secret = models.CharField(max_length=64, blank=True, default='')
+    backup_codes = models.JSONField(default=list, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def generate_two_factor_secret(self):
+        import pyotp
+        return pyotp.random_base32()
+
+    def get_totp_uri(self, secret=None):
+        import pyotp
+        totp_secret = secret or self.two_factor_secret
+        if not totp_secret:
+            return ''
+        name = self.email or self.username
+        return pyotp.totp.TOTP(totp_secret).provisioning_uri(name=name, issuer_name='HackFlow')
+
+    def verify_totp(self, code, secret=None):
+        import pyotp
+        totp_secret = secret or self.two_factor_secret
+        if not totp_secret or not code:
+            return False
+        clean_code = str(code).strip().replace(' ', '')
+        totp = pyotp.totp.TOTP(totp_secret)
+        return bool(totp.verify(clean_code, valid_window=1))
+
+    def generate_backup_codes(self, count=8):
+        import secrets
+        from django.contrib.auth.hashers import make_password
+        plain_codes = []
+        hashed_codes = []
+        for _ in range(count):
+            token = secrets.token_hex(4).upper()
+            formatted = f"{token[:4]}-{token[4:]}"
+            plain_codes.append(formatted)
+            hashed_codes.append(make_password(formatted.replace('-', '')))
+        self.backup_codes = hashed_codes
+        return plain_codes
+
+    def verify_and_consume_backup_code(self, code):
+        from django.contrib.auth.hashers import check_password
+        if not code or not self.backup_codes:
+            return False
+        clean_code = str(code).strip().replace('-', '').replace(' ', '').upper()
+        for idx, hashed in enumerate(self.backup_codes):
+            if check_password(clean_code, hashed):
+                self.backup_codes.pop(idx)
+                self.save(update_fields=['backup_codes'])
+                return True
+        return False
 
     def save(self, *args, **kwargs):
         # Django's createsuperuser command does not know about HackFlow roles.

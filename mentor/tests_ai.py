@@ -2,6 +2,7 @@
 import json
 import tempfile
 import urllib.error
+from datetime import timedelta
 from io import StringIO
 from pathlib import Path
 from unittest import mock
@@ -11,6 +12,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from student.models import MentorRequest
 
@@ -182,6 +184,20 @@ class TriageTaskTests(MentorViewsTestBase):
         self.assertFalse(RequestTriage.objects.filter(help_request=other).exists())
         enqueue.assert_called_once()
 
+    def test_ensure_triages_restarts_interrupted_analysis(self):
+        fresh = MentorRequest.objects.create(student=self.student, team=self.team, subject='Nouveau',
+                                             category='x', description='x')
+        triage = RequestTriage.objects.create(help_request=fresh, status=RequestTriage.Status.RUNNING)
+        with mock.patch.object(tasks, 'enqueue_triage') as enqueue, self.captureOnCommitCallbacks(execute=True):
+            tasks.ensure_triages([MentorRequest.objects.get(pk=fresh.pk)])
+        enqueue.assert_not_called()  # analyse récente : elle est peut-être encore en cours
+        RequestTriage.objects.filter(pk=triage.pk).update(updated_at=timezone.now() - timedelta(minutes=10))
+        with mock.patch.object(tasks, 'enqueue_triage') as enqueue, self.captureOnCommitCallbacks(execute=True):
+            tasks.ensure_triages([MentorRequest.objects.get(pk=fresh.pk)])
+        enqueue.assert_called_once_with(triage.pk)
+        triage.refresh_from_db()
+        self.assertEqual(triage.status, RequestTriage.Status.PENDING)
+
 
 class TriageViewTests(MentorViewsTestBase):
     def test_queue_launches_analysis_after_commit(self):
@@ -226,7 +242,6 @@ class TriageViewTests(MentorViewsTestBase):
     def test_student_cannot_use_ai_endpoints(self):
         self.client.force_login(self.student)
         self.assertEqual(self.client.get(reverse('mentor:triage_status')).status_code, 403)
-        self.assertEqual(self.client.get(reverse('mentor:ai_metrics')).status_code, 403)
 
     def test_correct_suggestion(self):
         triage = self.done_triage()
@@ -253,27 +268,6 @@ class TriageViewTests(MentorViewsTestBase):
         RequestTriage.objects.filter(pk=triage.pk).update(status=RequestTriage.Status.DONE)
         response = self.client.post(reverse('mentor:triage_retry', args=[self.pending.pk]))
         self.assertEqual(response.status_code, 404)
-
-    def test_metrics_page_with_and_without_report(self):
-        self.done_triage(corrected_category=DEVOPS, corrected_urgency='blocking', corrected_by=self.mentor)
-        with tempfile.TemporaryDirectory() as tmp:
-            report_path = Path(tmp) / 'report.json'
-            with mock.patch('mentor.management.commands.evaluate_triage.REPORT_JSON', report_path):
-                response = self.client.get(reverse('mentor:ai_metrics'))
-                self.assertContains(response, "Aucun rapport d'évaluation")
-                self.assertEqual(response.context['live']['category_agreement'], 100)
-                self.assertEqual(response.context['live']['urgency_agreement'], 0)
-                report = {
-                    'generated_at': '2026-10-24T10:00:00', 'model': 'llama3.2', 'samples': 2, 'answered': 2,
-                    'errors': [], 'cold_start_ms': 2000,
-                    'latency': {'count': 1, 'mean_ms': 900, 'p50_ms': 900, 'p95_ms': 900, 'max_ms': 900},
-                    'category': classification_report([DEVOPS, BACKEND], [DEVOPS, DEVOPS], ai.CATEGORIES),
-                    'urgency': classification_report(['blocking', 'normal'], ['blocking', 'normal'], ai.URGENCIES),
-                }
-                report_path.write_text(json.dumps(report), encoding='utf-8')
-                response = self.client.get(reverse('mentor:ai_metrics'))
-        self.assertContains(response, 'matrice de confusion')
-        self.assertContains(response, '0,500')
 
 
 class SeedMentorCommandTests(TestCase):

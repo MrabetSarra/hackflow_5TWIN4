@@ -1,30 +1,31 @@
 {% extends "layouts/base_mentor.html" %}
-{% load announcement_format %}
+{% load mentor_tags announcement_format i18n %}
+{% trans "Without a team" as no_team %}
 
-{% block title %}Tableau de Bord Mentor - HackFlow{% endblock %}
+{% block title %}{% trans "Mentor dashboard - HackFlow" %}{% endblock %}
 
 {% block mentor_content %}
 <div class="container-fluid px-0">
     <!-- En-tête Mentor -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
-            <h1 class="h2 fw-bold text-body mb-1">Espace Mentorat & Accompagnement</h1>
+            <h1 class="h2 fw-bold text-body mb-1">{% trans "Espace Mentorat & Accompagnement" %}</h1>
             <p class="text-body-secondary small mb-0">
-                Bienvenue {{ request.user.get_full_name|default:request.user.username }}{% if request.user.specialty %} • Expert {{ request.user.specialty }}{% endif %}
+                {% trans "Welcome" %} {{ request.user.get_full_name|default:request.user.username }}{% if request.user.specialty %} • {% trans "Expert" %} {{ request.user.specialty }}{% endif %}
             </p>
         </div>
         <div class="d-flex gap-2">
             <a href="{% url 'mentor:help_requests' %}" class="btn btn-danger btn-sm rounded-pill px-3 shadow-sm d-flex align-items-center gap-2">
-                <i class="bi bi-bell-fill" aria-hidden="true"></i> File d'attente ({{ pending_count }} ticket{{ pending_count|pluralize }})
+                <i class="bi bi-bell-fill" aria-hidden="true"></i> {% blocktrans with count=pending_count %}Queue ({{ count }} tickets){% endblocktrans %}
             </a>
             <a href="{% url 'mentor:teams_list' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3 d-flex align-items-center gap-2">
-                <i class="bi bi-people-fill" aria-hidden="true"></i> Voir les équipes
+                <i class="bi bi-people-fill" aria-hidden="true"></i> {% trans "View teams" %}
             </a>
         </div>
     </div>
 
     <!-- KPIs Mentor -->
-    <section class="row g-3 mb-4" aria-label="Indicateurs">
+    <section class="row g-3 mb-4" aria-label="{% trans 'Indicators' %}">
         {% for stat in stats %}
         <div class="col-sm-6 col-xl-3">
             <div class="stat-card card-modern h-100 d-flex align-items-center gap-3">
@@ -42,7 +43,7 @@
 
     {% if recent_announcements %}
     <section class="card-modern p-4 mb-4" aria-labelledby="announcements-title">
-        <h2 id="announcements-title" class="h5 fw-bold text-body mb-3"><i class="bi bi-megaphone-fill text-warning me-2" aria-hidden="true"></i>Annonces de l'organisation</h2>
+        <h2 id="announcements-title" class="h5 fw-bold text-body mb-3"><i class="bi bi-megaphone-fill text-warning me-2" aria-hidden="true"></i>{% trans "Organization announcements" %}</h2>
         <div class="d-flex flex-column gap-3">
             {% for announcement in recent_announcements %}
             <article class="p-3 rounded-3 bg-body-tertiary border-start border-4 {% if announcement.priority == 'urgent' %}border-danger{% elif announcement.priority == 'important' %}border-warning{% else %}border-info{% endif %}">
@@ -51,7 +52,7 @@
                     <span class="badge {% if announcement.priority == 'urgent' %}bg-danger-subtle text-danger{% elif announcement.priority == 'important' %}bg-warning-subtle text-warning-emphasis{% else %}bg-info-subtle text-info-emphasis{% endif %}">{{ announcement.get_priority_display }}</span>
                 </div>
                 {% if announcement.body %}<div class="small text-body-secondary mb-1">{{ announcement.body|announcement_markdown }}</div>{% endif %}
-                <div class="small text-muted">{{ announcement.author }} · il y a {{ announcement.published_at|timesince }}</div>
+                <div class="small text-muted">{{ announcement.author }} · {{ announcement.published_at|timesince }} {% trans "ago" %}</div>
             </article>
             {% endfor %}
         </div>
@@ -64,10 +65,10 @@
             <div class="card-modern p-4 mb-4 border-danger-subtle">
                 <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
                     <div>
-                        <h2 id="urgent-title" class="h5 fw-bold text-body mb-1"><i class="bi bi-lightning-charge-fill text-danger me-2" aria-hidden="true"></i>Demandes Prioritaires en Attente</h2>
-                        <p class="text-body-secondary small mb-0">Tickets non pris en charge, les plus urgents d'abord.</p>
+                        <h2 id="urgent-title" class="h5 fw-bold text-body mb-1"><i class="bi bi-lightning-charge-fill text-danger me-2" aria-hidden="true"></i>{% trans "Urgent pending requests" %}</h2>
+                        <p class="text-body-secondary small mb-0">{% trans "Unassigned tickets, starting with the most urgent." %}</p>
                     </div>
-                    <a href="{% url 'mentor:help_requests' %}" class="small text-primary text-decoration-none fw-semibold">Toute la file <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+                    <a href="{% url 'mentor:help_requests' %}" class="small text-primary text-decoration-none fw-semibold">{% trans "View the full queue" %} <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
                 </div>
 
                 <div class="d-flex flex-column gap-3">
@@ -76,10 +77,10 @@
                         <div class="d-flex justify-content-between align-items-start mb-2 gap-2">
                             <div>
                                 <span class="badge text-bg-{{ req.urgency_color }} rounded-pill me-2">{{ req.get_urgency_display }}</span>
-                                <strong class="text-body">{{ req.team.name|default:"Sans équipe" }}</strong>
-                                {% if req.team.table_number %}<span class="text-body-secondary small ms-1">(Table {{ req.team.table_number }})</span>{% endif %}
+                                <strong class="text-body">{{ req.team.name|default:no_team }}</strong>
+                                {% if req.team.table_number %}<span class="text-body-secondary small ms-1">({% trans "Table" %} {{ req.team.table_number }})</span>{% endif %}
                             </div>
-                            <span class="badge bg-body-tertiary text-body-secondary border font-mono small">il y a {{ req.created_at|timesince }}</span>
+                            <span class="badge bg-body-tertiary text-body-secondary border font-mono small">{{ req.created_at|timesince }} {% trans "ago" %}</span>
                         </div>
 
                         <h3 class="h6 fw-semibold text-body small mb-3">{{ req.subject }}</h3>
@@ -89,7 +90,7 @@
                             <form method="post" action="{% url 'mentor:request_take' req.pk %}">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
-                                    <i class="bi bi-headset me-1" aria-hidden="true"></i>Prendre en charge
+                                    <i class="bi bi-headset me-1" aria-hidden="true"></i>{% trans "Take request" %}
                                 </button>
                             </form>
                         </div>
@@ -97,7 +98,7 @@
                     {% empty %}
                     <p class="text-body-secondary small mb-0 text-center py-4">
                         <i class="bi bi-check2-circle text-success fs-4 d-block mb-2" aria-hidden="true"></i>
-                        Aucune demande en attente. Toutes les équipes sont débloquées !
+                        {% trans "No pending requests. All teams are unblocked!" %}
                     </p>
                     {% endfor %}
                 </div>
@@ -107,36 +108,36 @@
         <!-- Sessions du jour -->
         <div class="col-lg-5">
             <section class="card-modern p-4 mb-4" aria-labelledby="sessions-title">
-                <h2 id="sessions-title" class="h5 fw-bold text-body mb-3"><i class="bi bi-calendar-event text-primary me-2" aria-hidden="true"></i>Mes Sessions du Jour</h2>
+                <h2 id="sessions-title" class="h5 fw-bold text-body mb-3"><i class="bi bi-calendar-event text-primary me-2" aria-hidden="true"></i>{% trans "My sessions today" %}</h2>
 
                 <div class="d-flex flex-column gap-3">
                     {% for sess in today_sessions %}
                     <article class="p-3 rounded-3 border bg-body-tertiary">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-mono">{{ sess.starts_at|time:"H\hi" }} - {{ sess.ends_at|time:"H\hi" }}</span>
-                            <span class="badge bg-success-subtle text-success">{{ sess.get_status_display }}</span>
+                            <span class="badge {{ sess.status|status_badge }}">{{ sess.get_status_display }}</span>
                         </div>
-                        <h3 class="h6 fw-bold text-body mb-1">Équipe : {{ sess.team.name }}</h3>
+                        <h3 class="h6 fw-bold text-body mb-1">{% trans "Team:" %} {{ sess.team.name }}</h3>
                         <p class="small text-body-secondary mb-3">{{ sess.topic }}</p>
                         {% if sess.meeting_url %}
                         <a href="{{ sess.meeting_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-success rounded-pill w-100">
-                            <i class="bi bi-camera-video me-1" aria-hidden="true"></i>Rejoindre la visio<span class="visually-hidden"> (nouvel onglet)</span>
+                            <i class="bi bi-camera-video me-1" aria-hidden="true"></i>{% trans "Join video call" %}<span class="visually-hidden"> ({% trans "new tab" %})</span>
                         </a>
                         {% elif sess.location %}
                         <p class="small mb-0"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i>{{ sess.location }}</p>
                         {% endif %}
                     </article>
                     {% empty %}
-                    <p class="text-body-secondary small mb-0">Aucune session prévue aujourd'hui.</p>
+                    <p class="text-body-secondary small mb-0">{% trans "No sessions scheduled for today." %}</p>
                     {% endfor %}
                 </div>
             </section>
 
             <!-- Guide du Mentor -->
             <aside class="card-modern p-4 bg-body-tertiary" aria-labelledby="guide-title">
-                <h2 id="guide-title" class="h6 fw-bold text-body mb-2"><i class="bi bi-info-circle-fill text-primary me-2" aria-hidden="true"></i>Rappel Rôle Mentor</h2>
+                <h2 id="guide-title" class="h6 fw-bold text-body mb-2"><i class="bi bi-info-circle-fill text-primary me-2" aria-hidden="true"></i>{% trans "Mentor role reminder" %}</h2>
                 <p class="small text-body-secondary mb-0">
-                    Votre objectif est de guider sans faire à la place des étudiants. Aidez-les à découper le problème, privilégiez un MVP pragmatique et préparez-les aux questions pièges du jury !
+                    {% trans "Your goal is to guide students without doing the work for them. Help them break down the problem, favor a practical MVP, and prepare them for challenging jury questions!" %}
                 </p>
             </aside>
         </div>

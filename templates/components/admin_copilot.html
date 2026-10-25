@@ -13,54 +13,47 @@
 @media(max-width:575.98px){.admin-copilot__panel{width:min(360px,calc(100vw - 1.5rem));height:min(75vh,690px)}}
 </style>
 
-<div class="admin-copilot" data-copilot-widget>
+{% load i18n %}
+<div class="admin-copilot" data-copilot-widget data-close-label="{% trans 'Close messaging' %}" data-open-label="{% trans 'Open messaging' %}" data-user-label="{% trans 'You' %}" data-assistant-label="{% trans 'Copilot' %}" data-message-label="{% trans 'Message' %}">
     <section class="admin-copilot__panel" id="adminCopilotPanel" aria-labelledby="adminCopilotTitle" {% if not copilot_history %}hidden{% endif %}>
         <div class="admin-copilot__header p-3 border-bottom">
             <div class="d-flex align-items-center justify-content-between gap-3">
-                <div class="d-flex align-items-center gap-2"><span class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px"><i class="bi bi-stars fs-5"></i></span><div><h2 class="h6 fw-bold mb-0" id="adminCopilotTitle">HackFlow Copilot</h2><div class="small text-secondary">Assistant organisateur</div></div></div>
-                <button class="btn btn-sm btn-light rounded-circle" type="button" data-copilot-close aria-label="Fermer le copilote"><i class="bi bi-chevron-down"></i></button>
+                <div class="d-flex align-items-center gap-2"><span class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px"><i class="bi bi-stars fs-5"></i></span><div><h2 class="h6 fw-bold mb-0" id="adminCopilotTitle">HackFlow Copilot</h2><div class="small text-secondary">{% trans "Organizer assistant" %}</div></div></div>
+                <button class="btn btn-sm btn-light rounded-circle" type="button" data-copilot-close aria-label="{% trans 'Close copilot' %}"><i class="bi bi-chevron-down"></i></button>
             </div>
         </div>
 
-        <div class="admin-copilot__transcript" data-copilot-transcript aria-live="polite" aria-label="Conversation avec le copilote">
+        <div class="admin-copilot__transcript" data-copilot-transcript aria-live="polite" aria-label="{% trans 'Copilot conversation' %}">
             {% if not copilot_history %}
             <div class="text-center px-3 py-4">
                 <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center mb-3" style="width:54px;height:54px"><i class="bi bi-chat-heart fs-4"></i></div>
-                <h3 class="h6 fw-bold">Comment puis-je vous aider ?</h3>
-                <p class="small text-secondary mb-3">Je m’appuie sur les données du hackathon pour préparer un résumé et des pistes d’action.</p>
+                <h3 class="h6 fw-bold">{% trans "How can I help you?" %}</h3>
+                <p class="small text-secondary mb-3">{% trans "I use hackathon data to prepare a summary and suggested actions." %}</p>
                 <div class="admin-copilot__prompts justify-content-center">
-                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill js-copilot-prompt" data-prompt="Résume l’état du hackathon.">Résumer le hackathon</button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill js-copilot-prompt" data-prompt="Quelles équipes nécessitent une intervention et pourquoi ?">Équipes à suivre</button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill js-copilot-prompt" data-prompt="Quelles équipes risquent de ne pas respecter la deadline ?">Risques de délai</button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill js-copilot-prompt" data-prompt="Rédige une annonce pour rappeler la date limite.">Rédiger une annonce</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill js-copilot-prompt" data-prompt="{% trans 'Summarize the hackathon status.' %}">{% trans "Summarize the hackathon" %}</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill js-copilot-prompt" data-prompt="{% trans 'Which teams need help, and why?' %}">{% trans "Teams to follow up with" %}</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill js-copilot-prompt" data-prompt="{% trans 'Which teams may miss the deadline?' %}">{% trans "Deadline risks" %}</button>
                 </div>
             </div>
             {% endif %}
             {% for message in copilot_history %}
             <div class="copilot-message copilot-message--{{ message.role }}">
                 <div class="copilot-message__label">{% if message.role == 'user' %}Vous{% else %}Copilot{% endif %}</div>{{ message.content }}
-                {% if message.announcement_title and message.announcement_body %}
-                <form method="post" action="{% url 'dashboard_admin:dashboard' %}" class="mt-3 pt-3 border-top">{% csrf_token %}<input type="hidden" name="action" value="save_announcement">
-                    <label class="form-label small" for="announcementTitle{{ forloop.counter }}">Titre du brouillon</label><input class="form-control form-control-sm mb-2" id="announcementTitle{{ forloop.counter }}" name="announcement_title" maxlength="220" value="{{ message.announcement_title }}" required>
-                    <label class="form-label small" for="announcementBody{{ forloop.counter }}">Message</label><textarea class="form-control form-control-sm mb-2" id="announcementBody{{ forloop.counter }}" name="announcement_body" rows="4" maxlength="5000" required>{{ message.announcement_body }}</textarea>
-                    <button class="btn btn-outline-primary btn-sm rounded-pill" type="submit"><i class="bi bi-save me-1"></i>Enregistrer comme brouillon</button>
-                </form>
-                {% endif %}
             </div>
             {% endfor %}
-            <div class="small text-secondary px-2 pb-2" data-copilot-loading role="status" aria-live="polite" hidden><span class="spinner-grow spinner-grow-sm text-primary me-2" aria-hidden="true"></span>Je consulte les données et prépare une réponse…</div>
+            <div class="small text-secondary px-2 pb-2" data-copilot-loading role="status" aria-live="polite" hidden><span class="spinner-grow spinner-grow-sm text-primary me-2" aria-hidden="true"></span>{% trans "Reviewing the data and preparing a response…" %}</div>
         </div>
 
         <div class="admin-copilot__composer p-3 border-top">
             <form method="post" action="{% url 'dashboard_admin:copilot_ask' %}" class="d-flex align-items-end gap-2" data-copilot-form>
                 {% csrf_token %}<input type="hidden" name="action" value="ask_copilot">
-                <label class="visually-hidden" for="copilotQuestion">Votre message</label><textarea class="form-control rounded-4" id="copilotQuestion" name="question" rows="1" maxlength="1000" placeholder="Écrivez votre message…" required></textarea>
-                <button class="btn btn-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width:44px;height:44px;flex:0 0 44px" type="submit" data-copilot-submit aria-label="Envoyer"><i class="bi bi-arrow-up fs-5"></i></button>
+                <label class="visually-hidden" for="copilotQuestion">{% trans "Your message" %}</label><textarea class="form-control rounded-4" id="copilotQuestion" name="question" rows="1" maxlength="1000" placeholder="{% trans 'Write your message…' %}" required></textarea>
+                <button class="btn btn-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width:44px;height:44px;flex:0 0 44px" type="submit" data-copilot-submit aria-label="{% trans 'Send' %}"><i class="bi bi-arrow-up fs-5"></i></button>
             </form>
-            <div class="text-center small text-secondary mt-2" style="font-size:.68rem">Les statistiques proviennent de la base de données.</div>
+            <div class="text-center small text-secondary mt-2" style="font-size:.68rem">{% trans "Statistics are based on database records." %}</div>
         </div>
     </section>
-    <button type="button" class="admin-copilot__toggle btn btn-light position-relative rounded-circle p-2 border" data-copilot-toggle aria-controls="adminCopilotPanel" aria-expanded="{% if copilot_history %}true{% else %}false{% endif %}" aria-label="Ouvrir la messagerie" title="Messagerie">
+    <button type="button" class="admin-copilot__toggle btn btn-light position-relative rounded-circle p-2 border" data-copilot-toggle aria-controls="adminCopilotPanel" aria-expanded="{% if copilot_history %}true{% else %}false{% endif %}" aria-label="{% trans 'Open messaging' %}" title="{% trans 'Messaging' %}">
         <i class="bi {% if copilot_history %}bi-x-lg{% else %}bi-chat-dots-fill{% endif %} text-secondary" data-copilot-icon></i>
     </button>
 </div>
@@ -81,7 +74,7 @@
     const setOpen = (open) => {
         panel.hidden = !open;
         toggle.setAttribute('aria-expanded', String(open));
-        toggle.setAttribute('aria-label', open ? 'Fermer la messagerie' : 'Ouvrir la messagerie');
+        toggle.setAttribute('aria-label', open ? widget.dataset.closeLabel : widget.dataset.openLabel);
         icon.className = `bi ${open ? 'bi-x-lg' : 'bi-chat-dots-fill'} text-secondary`;
     };
     const scrollToLatest = () => { transcript.scrollTop = transcript.scrollHeight; };
@@ -90,37 +83,13 @@
         bubble.className = `copilot-message copilot-message--${role}`;
         const label = document.createElement('div');
         label.className = 'copilot-message__label';
-        label.textContent = role === 'user' ? 'Vous' : 'Copilot';
+        label.textContent = role === 'user' ? widget.dataset.userLabel : widget.dataset.assistantLabel;
         const text = document.createElement('div');
         text.textContent = content;
         bubble.append(label, text);
         transcript.appendChild(bubble);
         scrollToLatest();
         return bubble;
-    };
-    const addAnnouncementDraft = (bubble, title, body) => {
-        if (!title || !body) return;
-        const draftForm = document.createElement('form');
-        draftForm.method = 'post';
-        draftForm.action = '{% url "dashboard_admin:dashboard" %}';
-        draftForm.className = 'mt-3 pt-3 border-top';
-        const csrf = document.createElement('input');
-        csrf.type = 'hidden'; csrf.name = 'csrfmiddlewaretoken';
-        csrf.value = form.querySelector('[name="csrfmiddlewaretoken"]').value;
-        const action = document.createElement('input');
-        action.type = 'hidden'; action.name = 'action'; action.value = 'save_announcement';
-        const titleInput = document.createElement('input');
-        titleInput.className = 'form-control form-control-sm mb-2'; titleInput.name = 'announcement_title';
-        titleInput.maxLength = 220; titleInput.required = true; titleInput.value = title;
-        const bodyInput = document.createElement('textarea');
-        bodyInput.className = 'form-control form-control-sm mb-2'; bodyInput.name = 'announcement_body';
-        bodyInput.maxLength = 5000; bodyInput.rows = 4; bodyInput.required = true; bodyInput.value = body;
-        const titleLabel = document.createElement('label'); titleLabel.className = 'form-label small'; titleLabel.textContent = 'Titre du brouillon';
-        const bodyLabel = document.createElement('label'); bodyLabel.className = 'form-label small'; bodyLabel.textContent = 'Message';
-        const save = document.createElement('button'); save.type = 'submit'; save.className = 'btn btn-outline-primary btn-sm rounded-pill';
-        save.innerHTML = '<i class="bi bi-save me-1"></i>Enregistrer comme brouillon';
-        draftForm.append(csrf, action, titleLabel, titleInput, bodyLabel, bodyInput, save);
-        bubble.appendChild(draftForm);
     };
     toggle.addEventListener('click', () => setOpen(panel.hidden));
     widget.querySelector('[data-copilot-close]').addEventListener('click', () => setOpen(false));
@@ -157,8 +126,7 @@
             }
             const result = await response.json();
             if (!response.ok) throw new Error(result.error || 'La réponse du copilote est indisponible.');
-            const bubble = addMessage('assistant', result.answer || 'Je n’ai pas obtenu de réponse. Réessayez avec une question plus précise.');
-            addAnnouncementDraft(bubble, result.announcement_title, result.announcement_body);
+            addMessage('assistant', result.answer || 'Je n’ai pas obtenu de réponse. Réessayez avec une question plus précise.');
         } catch (error) {
             addMessage('assistant', error.message || 'Le copilote est momentanément indisponible. Réessayez dans quelques instants.');
         } finally {

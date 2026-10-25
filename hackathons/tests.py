@@ -201,6 +201,24 @@ class MentorFeedbackTests(Base):
         self.assertContains(response, 'Avis du premier hackathon')
         self.assertNotContains(response, 'Avis du second hackathon')
 
+    def test_mentor_feedback_list_deduplicates_by_mentor(self):
+        # A mentor leaves a general hackathon review AND a challenge review on the same hackathon
+        fb1 = MentorFeedback.objects.create(mentor=self.mentor, hackathon=self.h, review='Avis general precedent')
+        fb2 = MentorFeedback.objects.create(mentor=self.mentor, challenge=self.c, review='Avis challenge recent')
+        self.client.force_login(self.org)
+        response = self.client.get(reverse('hackathons:mentor_feedback_list'))
+        self.assertEqual(response.status_code, 200)
+        # The latest review is displayed, older duplicate is excluded
+        self.assertContains(response, 'Avis challenge recent')
+        self.assertNotContains(response, 'Avis general precedent')
+
+    def test_admin_can_delete_feedback(self):
+        fb = MentorFeedback.objects.create(mentor=self.mentor, hackathon=self.h, review='Avis a supprimer')
+        self.client.force_login(self.org)
+        response = self.client.post(reverse('hackathons:mentor_feedback_delete', args=[fb.pk]))
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(MentorFeedback.objects.filter(pk=fb.pk).exists())
+
     def test_catalog_lists_hackathons_and_filters_by_track(self):
         make_hackathon(Track.objects.create(name='FinTech'), name='Finance Jam')
         self.client.force_login(self.student)

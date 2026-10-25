@@ -4,6 +4,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
+from django.utils.translation import gettext_lazy as _
 
 from .models import validate_cv_size, validate_profile_photo_size
 
@@ -29,7 +30,7 @@ class EmailOrUsernameAuthenticationForm(AccessibleFormMixin, AuthenticationForm)
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['username'].max_length = 254
-        self.fields['username'].label = 'Username or email address'
+        self.fields['username'].label = _('Username or email address')
         self.fields['username'].widget.attrs.update({
             'class': 'form-control border-start-0 ps-0',
             'placeholder': 'name@university.edu',
@@ -38,7 +39,7 @@ class EmailOrUsernameAuthenticationForm(AccessibleFormMixin, AuthenticationForm)
         })
         self.fields['password'].widget.attrs.update({
             'class': 'form-control border-start-0 ps-0',
-            'placeholder': 'Your password',
+            'placeholder': _('Your password'),
             'autocomplete': 'current-password',
         })
 
@@ -57,30 +58,30 @@ class EmailOrUsernameAuthenticationForm(AccessibleFormMixin, AuthenticationForm)
 
 
 class AccountRegistrationForm(AccessibleFormMixin, forms.Form):
-    first_name = forms.CharField(max_length=150, label='Prénom')
-    last_name = forms.CharField(max_length=150, label='Nom')
-    username = forms.CharField(max_length=150, label="Nom d'utilisateur")
-    email = forms.EmailField(max_length=254, label='Adresse e-mail')
-    school = forms.CharField(max_length=150, label='Établissement / organisation')
+    first_name = forms.CharField(max_length=150, label=_('First name'))
+    last_name = forms.CharField(max_length=150, label=_('Last name'))
+    username = forms.CharField(max_length=150, label=_('Username'))
+    email = forms.EmailField(max_length=254, label=_('Email address'))
+    school = forms.CharField(max_length=150, label=_('School / organization'))
     study_level = forms.ChoiceField(
         choices=[
-            ('', 'Choisir un niveau'),
-            ('Licence 1 ou 2', 'Licence 1 ou 2'),
-            ('Licence 3 / BUT', 'Licence 3 / BUT'),
-            ('Master 1', 'Master 1'),
-            ('Master 2 / Cycle Ingénieur', 'Master 2 / Cycle Ingénieur'),
-            ('Autre cursus', 'Autre cursus'),
+            ('', _('Choose a study level')),
+            ('Licence 1 ou 2', _('Bachelor 1 or 2')),
+            ('Licence 3 / BUT', _('Bachelor 3 / University Bachelor of Technology')),
+            ('Master 1', _('Master 1')),
+            ('Master 2 / Cycle Ingénieur', _('Master 2 / Engineering degree')),
+            ('Autre cursus', _('Other')),
         ],
-        label="Niveau d'études",
+        label=_('Study level'),
         required=False,
     )
-    specialty = forms.CharField(max_length=150, label='Spécialité', required=False)
-    skills = forms.MultipleChoiceField(label='Compétences', required=False, widget=forms.CheckboxSelectMultiple)
-    bio = forms.CharField(label='Présentation', required=False, widget=forms.Textarea(attrs={'rows': 3}))
-    github_url = forms.URLField(max_length=200, label='Profil GitHub', required=False)
-    linkedin_url = forms.URLField(max_length=200, label='Profil LinkedIn', required=False)
-    password1 = forms.CharField(label='Mot de passe', strip=False, widget=forms.PasswordInput)
-    password2 = forms.CharField(label='Confirmer le mot de passe', strip=False, widget=forms.PasswordInput)
+    specialty = forms.CharField(max_length=150, label=_('Specialty'), required=False)
+    skills = forms.MultipleChoiceField(label=_('Skills'), required=False, widget=forms.CheckboxSelectMultiple)
+    bio = forms.CharField(label=_('About me'), required=False, widget=forms.Textarea(attrs={'rows': 3}))
+    github_url = forms.URLField(max_length=200, label=_('GitHub profile'), required=False)
+    linkedin_url = forms.URLField(max_length=200, label=_('LinkedIn profile'), required=False)
+    password1 = forms.CharField(label=_('Password'), strip=False, widget=forms.PasswordInput)
+    password2 = forms.CharField(label=_('Confirm password'), strip=False, widget=forms.PasswordInput)
 
     SKILL_CHOICES = [
         ('Python / Django', 'Python / Django'), ('React / TypeScript', 'React / TypeScript'),
@@ -98,33 +99,33 @@ class AccountRegistrationForm(AccessibleFormMixin, forms.Form):
         if role == 'student':
             labels = {
                 'first_name': 'First name', 'last_name': 'Last name', 'username': 'Username',
-                'email': 'Email address', 'school': 'School / organization', 'study_level': 'Study level',
-                'skills': 'Skills', 'bio': 'About me', 'github_url': 'GitHub profile',
-                'linkedin_url': 'LinkedIn profile', 'password1': 'Password', 'password2': 'Confirm password',
+                'email': _('Email address'), 'school': _('School / organization'), 'study_level': _('Study level'),
+                'skills': _('Skills'), 'bio': _('About me'), 'github_url': _('GitHub profile'),
+                'linkedin_url': _('LinkedIn profile'), 'password1': _('Password'), 'password2': _('Confirm password'),
             }
             for name, label in labels.items():
                 if name in self.fields:
                     self.fields[name].label = label
             level_labels = {
-                '': 'Choose a study level', 'Licence 1 ou 2': 'Bachelor 1 or 2',
-                'Licence 3 / BUT': 'Bachelor 3 / University Bachelor of Technology',
-                'Master 1': 'Master 1', 'Master 2 / Cycle Ingénieur': 'Master 2 / Engineering degree',
-                'Autre cursus': 'Other',
+                '': _('Choose a study level'), 'Licence 1 ou 2': _('Bachelor 1 or 2'),
+                'Licence 3 / BUT': _('Bachelor 3 / University Bachelor of Technology'),
+                'Master 1': _('Master 1'), 'Master 2 / Cycle Ingénieur': _('Master 2 / Engineering degree'),
+                'Autre cursus': _('Other'),
             }
             self.fields['study_level'].choices = [
                 (value, level_labels.get(value, label))
                 for value, label in self.fields['study_level'].choices
             ]
             self.fields['study_level'].choices = [
-                ('', 'Choose a study level'), *self.fields['study_level'].choices[1:]
+                ('', _('Choose a study level')), *self.fields['study_level'].choices[1:]
             ]
             self.fields['skills'].choices = [
-                (value, value.replace('IA &', 'AI &')) for value, _label in self.SKILL_CHOICES
+                (value, _(value.replace('IA &', 'AI &'))) for value, _label in self.SKILL_CHOICES
             ]
             self.fields.pop('specialty')
             self.fields['study_level'].required = True
             self.fields['skills'].choices = [
-                (value, value.replace('IA &', 'AI &')) for value, _label in self.SKILL_CHOICES
+                (value, _(value.replace('IA &', 'AI &'))) for value, _label in self.SKILL_CHOICES
             ]
             self.fields['skills'].required = True
         else:
@@ -142,13 +143,13 @@ class AccountRegistrationForm(AccessibleFormMixin, forms.Form):
     def clean_username(self):
         username = self.cleaned_data['username']
         if get_user_model().objects.filter(username__iexact=username).exists():
-            raise forms.ValidationError('This username is already taken.' if self.role == 'student' else "Ce nom d'utilisateur est déjà utilisé.")
+            raise forms.ValidationError(_('This username is already taken.'))
         return username
 
     def clean_email(self):
         email = self.cleaned_data['email'].strip()
         if get_user_model().objects.filter(email__iexact=email).exists():
-            raise forms.ValidationError('An account already uses this email address.' if self.role == 'student' else 'Un compte utilise déjà cette adresse e-mail.')
+            raise forms.ValidationError(_('An account already uses this email address.'))
         return email
 
     def clean(self):
@@ -227,7 +228,7 @@ class PasswordResetVerifyForm(AccessibleFormMixin, forms.Form):
         first = cleaned.get('new_password1')
         second = cleaned.get('new_password2')
         if first and second and first != second:
-            self.add_error('new_password2', 'Les deux mots de passe ne correspondent pas.')
+            self.add_error('new_password2', _('The two passwords do not match.'))
         return cleaned
 
 
@@ -247,15 +248,15 @@ class ProfileAssetsForm(AccessibleFormMixin, forms.ModelForm):
         model = get_user_model()
         fields = ('profile_photo', 'cv')
         labels = {
-            'profile_photo': 'Photo de profil',
-            'cv': 'Curriculum vitæ (PDF)',
+            'profile_photo': _('Profile photo'),
+            'cv': _('CV (PDF)'),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance.role == 'student':
-            self.fields['profile_photo'].label = 'Profile photo'
-            self.fields['cv'].label = 'CV (PDF)'
+            self.fields['profile_photo'].label = _('Profile photo')
+            self.fields['cv'].label = _('CV (PDF)')
 
     def clean_cv(self):
         uploaded_file = self.cleaned_data.get('cv')
@@ -263,7 +264,7 @@ class ProfileAssetsForm(AccessibleFormMixin, forms.ModelForm):
             signature = uploaded_file.read(5)
             uploaded_file.seek(0)
             if signature != b'%PDF-':
-                message = 'The selected file does not appear to be a valid PDF.' if self.instance.role == 'student' else 'Le fichier sélectionné ne semble pas être un PDF valide.'
+                message = _('The selected file does not appear to be a valid PDF.')
                 raise forms.ValidationError(message)
         return uploaded_file
 
@@ -272,20 +273,20 @@ class ProfileDetailsForm(AccessibleFormMixin, forms.ModelForm):
     """Editable account details with uniqueness and role-specific validation."""
 
     study_level = forms.ChoiceField(
-        choices=[('', 'Choisir un niveau')], required=False,
-        label="Niveau d'études", widget=forms.Select(attrs={'class': 'form-select'}),
+        choices=[('', _('Choose a study level'))], required=False,
+        label=_('Study level'), widget=forms.Select(attrs={'class': 'form-select'}),
     )
     skills = forms.MultipleChoiceField(
-        choices=[], required=False, label='Compétences',
+        choices=[], required=False, label=_('Skills'),
         widget=forms.CheckboxSelectMultiple,
     )
     preferred_roles = forms.MultipleChoiceField(
-        choices=[('developer', 'Développement'), ('designer', 'Design / UX'), ('business', 'Business / Pitch'), ('product', 'Produit'), ('data_ai', 'Data / IA')],
-        required=False, label='Rôles préférés', widget=forms.CheckboxSelectMultiple,
+        choices=[('developer', _('Development')), ('designer', _('Design / UX')), ('business', _('Business / Pitch')), ('product', _('Product')), ('data_ai', _('Data / AI'))],
+        required=False, label=_('Preferred roles'), widget=forms.CheckboxSelectMultiple,
     )
     availability_windows = forms.MultipleChoiceField(
-        choices=[('weekday_day', 'Journées en semaine'), ('weekday_evening', 'Soirs en semaine'), ('weekend', 'Week-end'), ('flexible', 'Flexible')],
-        required=False, label='Disponibilités pendant le hackathon', widget=forms.CheckboxSelectMultiple,
+        choices=[('weekday_day', _('Weekdays during the day')), ('weekday_evening', _('Weekday evenings')), ('weekend', _('Weekends')), ('flexible', _('Flexible'))],
+        required=False, label=_('Availability during the hackathon'), widget=forms.CheckboxSelectMultiple,
     )
 
     class Meta:
@@ -296,13 +297,13 @@ class ProfileDetailsForm(AccessibleFormMixin, forms.ModelForm):
             'bio', 'github_url', 'linkedin_url',
         )
         labels = {
-            'first_name': 'Prénom', 'last_name': 'Nom', 'username': "Nom d'utilisateur",
-            'email': 'Adresse e-mail', 'school': 'Établissement / organisation',
-            'study_level': "Niveau d'études", 'specialty': 'Spécialité',
-            'skills': 'Compétences', 'bio': 'Présentation',
-            'github_url': 'Profil GitHub', 'linkedin_url': 'Profil LinkedIn',
-            'preferred_roles': 'Rôles préférés', 'preferred_categories': 'Thématiques de projet préférées',
-            'availability_windows': 'Disponibilités pendant le hackathon',
+            'first_name': _('First name'), 'last_name': _('Last name'), 'username': _('Username'),
+            'email': _('Email address'), 'school': _('School / organization'),
+            'study_level': _('Study level'), 'specialty': _('Specialty'),
+            'skills': _('Skills'), 'bio': _('About me'),
+            'github_url': _('GitHub profile'), 'linkedin_url': _('LinkedIn profile'),
+            'preferred_roles': _('Preferred roles'), 'preferred_categories': _('Preferred project themes'),
+            'availability_windows': _('Availability during the hackathon'),
         }
         widgets = {
             'bio': forms.Textarea(attrs={'rows': 4}),
@@ -310,17 +311,17 @@ class ProfileDetailsForm(AccessibleFormMixin, forms.ModelForm):
 
     SKILL_CHOICES = AccountRegistrationForm.SKILL_CHOICES
     STUDY_LEVEL_CHOICES = [
-        ('Licence 1 ou 2', 'Licence 1 ou 2'), ('Licence 3 / BUT', 'Licence 3 / BUT'),
-        ('Master 1', 'Master 1'), ('Master 2 / Cycle Ingénieur', 'Master 2 / Cycle Ingénieur'),
-        ('Autre cursus', 'Autre cursus'),
+        ('Licence 1 ou 2', _('Bachelor 1 or 2')), ('Licence 3 / BUT', _('Bachelor 3 / University Bachelor of Technology')),
+        ('Master 1', _('Master 1')), ('Master 2 / Cycle Ingénieur', _('Master 2 / Engineering degree')),
+        ('Autre cursus', _('Other')),
     ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['preferred_categories'].help_text = 'Séparez plusieurs thèmes par une virgule (ex. santé, climat, éducation).'
-        self.fields['availability_windows'].help_text = 'Les disponibilités non renseignées sont traitées comme inconnues.'
+        self.fields['preferred_categories'].help_text = _('Separate multiple themes with commas (for example: health, climate, education).')
+        self.fields['availability_windows'].help_text = _('Unspecified availability is treated as unknown.')
         self.fields['skills'].choices = self.SKILL_CHOICES
-        self.fields['study_level'].choices = [('', 'Choisir un niveau'), *self.STUDY_LEVEL_CHOICES]
+        self.fields['study_level'].choices = [('', _('Choose a study level')), *self.STUDY_LEVEL_CHOICES]
         self.initial['skills'] = self.instance.skills or []
         self.initial['preferred_roles'] = self.instance.preferred_roles or []
         self.initial['availability_windows'] = self.instance.availability_windows or []
@@ -336,27 +337,27 @@ class ProfileDetailsForm(AccessibleFormMixin, forms.ModelForm):
         self.fields['email'].widget.attrs.update({'autocomplete': 'email'})
         if self.instance.role == 'student':
             student_labels = {
-                'first_name': 'First name', 'last_name': 'Last name', 'username': 'Username',
-                'email': 'Email address', 'school': 'School / organization',
-                'study_level': 'Study level', 'skills': 'Skills', 'bio': 'About me',
-                'github_url': 'GitHub profile', 'linkedin_url': 'LinkedIn profile',
-                'preferred_roles': 'Preferred roles', 'preferred_categories': 'Preferred project themes',
-                'availability_windows': 'Availability during the hackathon',
+                'first_name': _('First name'), 'last_name': _('Last name'), 'username': _('Username'),
+                'email': _('Email address'), 'school': _('School / organization'),
+                'study_level': _('Study level'), 'skills': _('Skills'), 'bio': _('About me'),
+                'github_url': _('GitHub profile'), 'linkedin_url': _('LinkedIn profile'),
+                'preferred_roles': _('Preferred roles'), 'preferred_categories': _('Preferred project themes'),
+                'availability_windows': _('Availability during the hackathon'),
             }
             for name, label in student_labels.items():
                 if name in self.fields:
                     self.fields[name].label = label
             level_labels = {
-                'Licence 1 ou 2': 'Bachelor 1 or 2', 'Licence 3 / BUT': 'Bachelor 3 / University Bachelor of Technology',
-                'Master 1': 'Master 1', 'Master 2 / Cycle Ingénieur': 'Master 2 / Engineering degree',
-                'Autre cursus': 'Other',
+                'Licence 1 ou 2': _('Bachelor 1 or 2'), 'Licence 3 / BUT': _('Bachelor 3 / University Bachelor of Technology'),
+                'Master 1': _('Master 1'), 'Master 2 / Cycle Ingénieur': _('Master 2 / Engineering degree'),
+                'Autre cursus': _('Other'),
             }
             self.fields['study_level'].choices = [
                 (value, level_labels.get(value, label))
                 for value, label in self.fields['study_level'].choices
             ]
             self.fields['study_level'].choices = [
-                ('', 'Choose a study level'), *self.fields['study_level'].choices[1:]
+                ('', _('Choose a study level')), *self.fields['study_level'].choices[1:]
             ]
             self.fields['study_level'].required = True
             self.fields.pop('specialty')
@@ -412,3 +413,94 @@ class ProfileDetailsForm(AccessibleFormMixin, forms.ModelForm):
             message = 'Select skills from the available list.' if self.instance.role == 'student' else 'Sélectionnez des compétences proposées dans la liste.'
             raise forms.ValidationError(message)
         return skills
+
+
+class TwoFactorVerifyForm(AccessibleFormMixin, forms.Form):
+    code = forms.CharField(
+        label='Code de vérification',
+        max_length=20,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control form-control-lg text-center font-monospace tracking-wider',
+            'placeholder': '123456 ou code de secours',
+            'autocomplete': 'one-time-code',
+            'autofocus': True,
+        }),
+        help_text="Entrez le code à 6 chiffres de votre application d'authentification ou un code de secours.",
+    )
+
+    def clean_code(self):
+        code = self.cleaned_data['code'].strip().replace(' ', '')
+        if not code:
+            raise forms.ValidationError('Veuillez entrer un code.')
+        return code
+
+
+class TwoFactorSetupForm(AccessibleFormMixin, forms.Form):
+    code = forms.CharField(
+        label='Code de confirmation (6 chiffres)',
+        max_length=8,
+        min_length=6,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control form-control-lg text-center font-monospace',
+            'placeholder': '123456',
+            'autocomplete': 'one-time-code',
+            'autofocus': True,
+        }),
+        help_text="Entrez le code affiché sur votre application pour confirmer la configuration.",
+    )
+
+    def clean_code(self):
+        code = self.cleaned_data['code'].strip().replace(' ', '')
+        if not code.isdigit() or len(code) != 6:
+            raise forms.ValidationError('Le code doit comporter exactement 6 chiffres.')
+        return code
+
+
+class TwoFactorDisableForm(AccessibleFormMixin, forms.Form):
+    password = forms.CharField(
+        label='Mot de passe actuel',
+        strip=False,
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Entrez votre mot de passe pour confirmer',
+            'autocomplete': 'current-password',
+            'autofocus': True,
+        }),
+        help_text="Par mesure de sécurité, veuillez confirmer votre mot de passe pour désactiver le 2FA.",
+    )
+
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+    def clean_password(self):
+        password = self.cleaned_data.get('password')
+        if not self.user.check_password(password):
+            raise forms.ValidationError('Mot de passe incorrect.')
+        return password
+
+
+class TwoFactorRegenerateBackupCodesForm(AccessibleFormMixin, forms.Form):
+    password = forms.CharField(
+        label='Mot de passe actuel',
+        strip=False,
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Entrez votre mot de passe pour confirmer',
+            'autocomplete': 'current-password',
+            'autofocus': True,
+        }),
+        help_text="Confirmez votre mot de passe pour générer un nouveau jeu de codes de secours.",
+    )
+
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+    def clean_password(self):
+        password = self.cleaned_data.get('password')
+        if not self.user.check_password(password):
+            raise forms.ValidationError('Mot de passe incorrect.')
+        return password
