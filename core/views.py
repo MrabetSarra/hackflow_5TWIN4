@@ -69,7 +69,9 @@ def landing(request):
     teams = list(team_queryset.order_by('name'))
     teams_count = len(teams)
     participants_count = student_pool.count()
-    mentors_count = User.objects.filter(role='mentor', is_active=True).count()
+    mentors_queryset = User.objects.filter(role='mentor', is_active=True).order_by('id')
+    mentors = list(mentors_queryset)
+    mentors_count = len(mentors)
     available_places = sum(max(0, team.max_members - team.current_member_count) for team in teams)
     unassigned_count = student_pool.annotate(
         has_team=Exists(TeamMembership.objects.filter(
@@ -124,6 +126,8 @@ def landing(request):
         'unassigned_count': unassigned_count,
         'profiled_count': profiled_count,
         'available_places': available_places,
+        'mentors': mentors,
+        'mentors_count': mentors_count,
         'matching_teams': matching_teams,
         'featured_team': matching_teams[0] if matching_teams else None,
         'steps': [
