@@ -173,14 +173,16 @@ $env:DJANGO_SECRET_KEY = 'local-test-key-change-me'
 python manage.py test
 ```
 
-Generate coverage reports with:
+In Windows PowerShell, generate a fresh coverage report with:
 
-```bash
-coverage erase
-coverage run manage.py test
-coverage report --fail-under=80
-coverage xml -o coverage.xml
-coverage html
+```powershell
+$env:DJANGO_DEBUG = "true"
+python -m coverage erase
+python -m coverage run manage.py test
+if ($LASTEXITCODE -ne 0) { throw "Django tests failed; do not use this coverage report." }
+python -m coverage report
+python -m coverage xml -o coverage.xml
+python -m coverage html
 ```
 
 The HTML report is written to `htmlcov/`; `coverage.xml` is the Cobertura report read by SonarQube. Coverage uses relative file paths so the report can be imported when the scanner runs in Docker. CI enforces 80% coverage and uploads both reports. Sonar analysis runs locally against the local SonarQube server; the GitHub Actions workflow does not submit analysis to SonarQube Cloud.
