@@ -1258,8 +1258,16 @@ def workshop_quiz(request, pk):
         messages.error(request, 'Le quiz est uniquement disponible pour les ateliers en replay.')
         return redirect('workshops:detail', slug=ws.slug)
 
-    booking = get_object_or_404(Booking, workshop=ws, user=request.user,
-                                status__in=['confirmed', 'attended'])
+    booking = _get_user_booking(ws, request.user)
+    can_access = (
+        (booking and booking.status in ['confirmed', 'attended'])
+        or _can_view_content(request.user, ws)
+    )
+
+    if not can_access:
+        messages.error(request, 'Réservez cet atelier pour accéder au quiz.')
+        return redirect('workshops:detail', slug=ws.slug)
+
     questions = list(ws.quiz_questions.all())
 
     context = {
@@ -1301,9 +1309,8 @@ def workshop_quiz_submit(request, pk):
     percentage = round(100 * score / len(questions))
 
     # Marquer l'atelier comme complété si score >= 80%
-    booking = get_object_or_404(Booking, workshop=ws, user=request.user,
-                                status__in=['confirmed', 'attended'])
-    if percentage >= 80 and booking.status != 'attended':
+    booking = _get_user_booking(ws, request.user)
+    if booking and percentage >= 80 and booking.status != 'attended':
         booking.status = 'attended'
         booking.attended_at = timezone.now()
         booking.save(update_fields=['status', 'attended_at'])
@@ -1312,11 +1319,17 @@ def workshop_quiz_submit(request, pk):
             f'Quiz réussi avec {score}/{len(questions)} ({percentage}%) ! '
             f'Présence validée et certificat disponible.'
         )
-    else:
+    elif booking:
         messages.warning(
             request,
             f'Quiz : {score}/{len(questions)} ({percentage}%). '
             f'Il faut 80% pour valider la présence.'
+        )
+    else:
+        messages.warning(
+            request,
+            f'Quiz : {score}/{len(questions)} ({percentage}%). '
+            f'Réservez cet atelier pour valider votre présence.'
         )
 
     context = {
