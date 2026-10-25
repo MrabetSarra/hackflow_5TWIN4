@@ -137,12 +137,22 @@ def _next_available_seat(workshop):
     return None
 
 
-def _can_manage(user, workshop):
-    """True si l'utilisateur peut éditer/supprimer cet atelier.
-
-    Un étudiant ne doit jamais pouvoir gérer un atelier, même si une donnée
-    ancienne lui attribuait par erreur ``created_by``.
+def _can_view_content(user, workshop):
     """
+    True si l'utilisateur peut voir le contenu de l'atelier (lien, vidéo, salle)
+    sans avoir besoin de réservation.
+    Admin et mentor : accès libre.
+    Étudiant : doit avoir une réservation confirmée/attended.
+    """
+    if not user.is_authenticated:
+        return False
+    if getattr(user, 'role', None) in ('admin', 'mentor'):
+        return True
+    return False
+
+
+def _can_manage(user, workshop):
+    """True si l'utilisateur peut éditer/supprimer cet atelier."""
     if getattr(user, 'role', None) == 'admin':
         return True
     return (
@@ -313,22 +323,24 @@ def workshop_detail(request, slug):
         Workshop.objects.prefetch_related('bookings'), slug=slug)
     booking = _get_user_booking(ws, request.user)
 
-    # Lien Zoom : exposé si réservé, ou si l'utilisateur peut gérer l'atelier
+    # Lien Zoom : exposé si réservé (étudiant) ou accès libre (admin/mentor)
     meeting_url = None
     if ws.mode == Workshop.Mode.ONLINE:
         can_see_url = (
-            booking and booking.status in ['confirmed', 'attended']
-        ) or _can_manage(request.user, ws)
+            (booking and booking.status in ['confirmed', 'attended'])
+            or _can_view_content(request.user, ws)
+        )
         if can_see_url:
             meeting_url = ws.meeting_url
 
-    # Replay : disponible si réservé, ou si l'utilisateur peut gérer l'atelier
+    # Replay : disponible si réservé (étudiant) ou accès libre (admin/mentor)
     replay_accessible = False
     replay_is_direct = False
     if ws.mode == Workshop.Mode.RECORDED:
         can_see_replay = (
-            booking and booking.status in ['confirmed', 'attended']
-        ) or _can_manage(request.user, ws)
+            (booking and booking.status in ['confirmed', 'attended'])
+            or _can_view_content(request.user, ws)
+        )
         if can_see_replay:
             replay_accessible = ws.is_replay_available
         clean_url = (ws.replay_url or '').split('?', 1)[0].lower()
