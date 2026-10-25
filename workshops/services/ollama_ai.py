@@ -219,7 +219,14 @@ def generate_quiz_questions(title: str, description: str, level: str = "Débutan
             if start != -1 and end > start:
                 data = json.loads(generated[start:end])
                 if isinstance(data, list) and len(data) >= 2:
-                    return data[:num_questions]
+                    # Normaliser la clé 'correct' → 'correct_index' pour cohérence
+                    normalized = []
+                    for item in data[:num_questions]:
+                        if isinstance(item, dict):
+                            if 'correct' in item and 'correct_index' not in item:
+                                item['correct_index'] = int(item.pop('correct'))
+                            normalized.append(item)
+                    return normalized
         except (json.JSONDecodeError, ValueError):
             pass
 
