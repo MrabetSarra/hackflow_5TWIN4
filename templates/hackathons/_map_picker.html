@@ -1,0 +1,80 @@
+{# Champ « Lieu » avec carte : la recherche, le clic et le déplacement du repère renseignent le lieu et les coordonnées #}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<div class="mt-5">
+    <label class="form-label fw-semibold" for="{{ form.location.id_for_label }}">Lieu <span class="text-danger">*</span></label>
+    <div class="input-group mb-2">
+        {{ form.location }}
+        <button type="button" class="btn btn-outline-primary" id="hf-map-search-btn"><i class="bi bi-search me-1"></i>Rechercher</button>
+        <button type="button" class="btn btn-outline-secondary" id="hf-map-clear">Effacer le repère</button>
+    </div>
+    {% for error in form.location.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+    <div class="form-text mb-3">Saisissez une adresse puis cliquez sur « Rechercher », ou placez directement le repère sur la carte. Le lieu sera affiché aux étudiants et aux mentors.</div>
+    <div id="hf-map" role="region" aria-label="Carte pour choisir le lieu" style="height: 380px; border-radius: 1rem; z-index: 0;"></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+  var latI = document.getElementById('id_latitude'), lngI = document.getElementById('id_longitude');
+  var locI = document.getElementById('{{ form.location.id_for_label }}');
+  var hasPoint = latI.value !== '' && lngI.value !== '';
+  var map = L.map('hf-map').setView(hasPoint ? [parseFloat(latI.value), parseFloat(lngI.value)] : [36.8065, 10.1815], hasPoint ? 15 : 6);
+  var tiles = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+    maxZoom: 19, referrerPolicy: 'origin',
+    attribution: '&copy; contributeurs <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  }).addTo(map);
+  var tileErrors = 0;
+  tiles.on('tileerror', function () {
+    if (++tileErrors === 4) {
+      map.removeLayer(tiles);
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19, attribution: 'Tuiles &copy; Esri'
+      }).addTo(map);
+    }
+  });
+  var marker = null;
+
+  function label(p) {
+    var street = [p.housenumber, p.street].filter(Boolean).join(' ');
+    var parts = [p.name];
+    if (street && street !== p.name) { parts.push(street); }
+    if (p.city) { parts.push(p.city); }
+    if (p.country) { parts.push(p.country); }
+    return parts.filter(Boolean).join(', ').slice(0, 180);
+  }
+  function setPoint(lat, lng, fill) {
+    latI.value = lat.toFixed(6); lngI.value = lng.toFixed(6);
+    if (marker) { marker.setLatLng([lat, lng]); }
+    else {
+      marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+      marker.on('dragend', function () { var p = marker.getLatLng(); setPoint(p.lat, p.lng, true); });
+    }
+    if (fill) {
+      fetch('https://photon.komoot.io/reverse?lang=fr&lat=' + lat + '&lon=' + lng)
+        .then(function (r) { return r.json(); })
+        .then(function (d) { if (d.features && d.features.length) { locI.value = label(d.features[0].properties); } })
+        .catch(function () {});
+    }
+  }
+  function search() {
+    var q = locI.value.trim();
+    if (!q) { locI.focus(); return; }
+    fetch('https://photon.komoot.io/api/?lang=fr&limit=1&q=' + encodeURIComponent(q))
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d.features || !d.features.length) { alert('Aucun résultat pour cette adresse.'); return; }
+        var c = d.features[0].geometry.coordinates;
+        map.setView([c[1], c[0]], 16); setPoint(c[1], c[0], false);
+        locI.value = label(d.features[0].properties) || q;
+      }).catch(function () { alert('La recherche est momentanément indisponible.'); });
+  }
+
+  map.on('click', function (e) { setPoint(e.latlng.lat, e.latlng.lng, true); });
+  document.getElementById('hf-map-search-btn').addEventListener('click', search);
+  locI.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); search(); } });
+  document.getElementById('hf-map-clear').addEventListener('click', function () {
+    latI.value = ''; lngI.value = '';
+    if (marker) { map.removeLayer(marker); marker = null; }
+  });
+  if (hasPoint) { setPoint(parseFloat(latI.value), parseFloat(lngI.value), false); }
+})();
+</script>

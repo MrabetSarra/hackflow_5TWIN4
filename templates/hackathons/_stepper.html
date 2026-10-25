@@ -1,0 +1,22 @@
+{# Cycle de vie du hackathon. Variables : h, editable (admin uniquement) #}
+<div class="hf-steps" role="list" aria-label="Étapes du hackathon">
+    {% for step in h.stage_steps %}
+    <div class="hf-step {{ step.state }}" role="listitem" {% if step.state == 'current' %}aria-current="step"{% endif %}>
+        {% if editable %}
+        <form method="post" action="{% url 'hackathons:hackathon_stage' h.pk %}">{% csrf_token %}
+            <input type="hidden" name="stage" value="{{ step.value }}">
+            <button type="submit" class="hf-step-body" title="Définir cette étape" {% if step.state != 'current' %}onclick="return confirm('Passer le hackathon à l\'étape « {{ step.label }} » ?')"{% endif %}>
+        {% else %}
+        <div class="hf-step-body">
+        {% endif %}
+                <span class="hf-dot">{% if step.state == 'done' %}<i class="bi bi-check-lg"></i>{% else %}{{ step.number }}{% endif %}</span>
+                <span class="hf-step-label d-block">{{ step.label }}</span>
+        {% if editable %}
+            </button>
+        </form>
+        {% else %}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>

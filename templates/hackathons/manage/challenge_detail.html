@@ -1,0 +1,69 @@
+<div class="mb-4">
+    <a href="{% url 'hackathons:hackathon_manage' h.pk %}" class="small text-decoration-none"><i class="bi bi-arrow-left me-1"></i>{{ h.title }}</a>
+</div>
+
+<section class="card-modern p-4 p-lg-5 mb-5">
+    <div class="d-flex flex-column flex-xl-row justify-content-between gap-4">
+        <div>
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <span class="badge bg-{{ challenge.status_color }}-subtle text-{{ challenge.status_color }} rounded-pill px-3 py-2">{{ challenge.get_status_display }}</span>
+                <span class="badge bg-{{ challenge.difficulty_color }}-subtle text-{{ challenge.difficulty_color }} rounded-pill px-3 py-2">{{ challenge.get_difficulty_display }}</span>
+            </div>
+            <h1 class="h2 fw-bold mb-2">{{ challenge.title }}</h1>
+            <p class="text-body-secondary mb-0">{{ challenge.short_description }}</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2 align-self-start">
+            <a href="{% url 'hackathons:challenge_edit' h.pk challenge.pk %}" class="btn btn-outline-secondary rounded-pill px-4"><i class="bi bi-pencil me-1"></i>Modifier</a>
+            <form method="post" action="{% url 'hackathons:challenge_status' h.pk challenge.pk %}">{% csrf_token %}
+                {% if challenge.status == 'published' %}<input type="hidden" name="action" value="unpublish"><button class="btn btn-warning rounded-pill px-4" onclick="return confirm('Dépublier ce challenge ?')"><i class="bi bi-eye-slash me-1"></i>Dépublier</button>
+                {% else %}<input type="hidden" name="action" value="publish"><button class="btn btn-success rounded-pill px-4" onclick="return confirm('Publier ce challenge ?')"><i class="bi bi-eye me-1"></i>Publier</button>{% endif %}
+            </form>
+            <a href="{% url 'hackathons:challenge_delete' h.pk challenge.pk %}" class="btn btn-outline-danger rounded-pill px-4"><i class="bi bi-trash me-1"></i>Supprimer</a>
+        </div>
+    </div>
+    <div class="row g-4 mt-2">
+        <div class="col-md-6"><div class="p-3 rounded-3 bg-body-tertiary"><div class="small text-body-secondary">Équipes inscrites</div><div class="h4 fw-bold mb-0">{{ challenge.slots_used }}</div></div></div>
+        <div class="col-md-6"><div class="p-3 rounded-3 bg-body-tertiary"><div class="small text-body-secondary">Date limite</div><div class="h6 fw-bold mb-0 mt-2">{{ challenge.deadline|date:"d/m/Y H:i" }}</div></div></div>
+    </div>
+</section>
+
+<section class="card-modern p-4 p-lg-5">
+    <ul class="nav hf-pills gap-1 mb-4 flex-wrap" id="manage-tabs" role="tablist">
+        <li class="nav-item"><button class="nav-link active" id="tab-overview" data-bs-toggle="pill" data-bs-target="#pane-overview" type="button" role="tab">Aperçu</button></li>
+        {% for s in sections %}<li class="nav-item"><button class="nav-link" id="tab-{{ s.kind }}" data-bs-toggle="pill" data-bs-target="#pane-{{ s.kind }}" type="button" role="tab"><i class="bi {{ s.icon }} me-1"></i>{{ s.label }} <span class="badge bg-body-secondary text-body-secondary rounded-pill">{{ s.items|length }}</span></button></li>{% endfor %}
+        <li class="nav-item"><button class="nav-link" id="tab-registrations" data-bs-toggle="pill" data-bs-target="#pane-registrations" type="button" role="tab"><i class="bi bi-people me-1"></i>Inscriptions <span class="badge bg-body-secondary text-body-secondary rounded-pill">{{ registrations|length }}</span></button></li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="pane-overview" role="tabpanel">{% include "hackathons/_challenge_body.html" %}</div>
+
+        {% for s in sections %}
+        <div class="tab-pane fade" id="pane-{{ s.kind }}" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="h5 fw-bold mb-0">{{ s.label }}</h2>
+                <a href="{% url 'hackathons:child_create' challenge.pk s.kind %}" class="btn btn-primary btn-sm rounded-pill px-3"><i class="bi bi-plus-lg me-1"></i>Ajouter</a>
+            </div>
+            {% include "hackathons/manage/_kind_table.html" with kind=s.kind items=s.items %}
+        </div>
+        {% endfor %}
+
+        <div class="tab-pane fade" id="pane-registrations" role="tabpanel">
+            <div class="table-responsive"><table class="table align-middle mb-0">
+                <thead><tr><th scope="col">Participant</th><th scope="col">Équipe</th><th scope="col">Date</th><th scope="col">Statut</th><th scope="col">Annulée le</th></tr></thead>
+                <tbody>
+                {% for r in registrations %}
+                <tr><td>{{ r.user.get_full_name|default:r.user.username }}</td><td>{{ r.team.name|default:"—" }}</td><td>{{ r.registered_at|date:"d/m/Y H:i" }}</td>
+                    <td><span class="badge bg-{{ r.status_color }}-subtle text-{{ r.status_color }} rounded-pill">{{ r.get_status_display }}</span></td><td>{{ r.cancelled_at|date:"d/m/Y H:i"|default:"—" }}</td></tr>
+                {% empty %}<tr><td colspan="5" class="text-center text-muted py-5">Aucune inscription.</td></tr>{% endfor %}
+                </tbody>
+            </table></div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var target = location.hash && document.querySelector(location.hash);
+  if (target && target.matches('[data-bs-toggle="pill"]')) { target.click(); }
+});
+</script>

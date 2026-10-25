@@ -1,0 +1,158 @@
+{% include "hackathons/_ai_client.html" %}
+
+<section class="card-modern p-4 p-lg-5 mb-4" style="background: linear-gradient(135deg, var(--bs-primary-bg-subtle), var(--bs-body-bg) 70%);">
+    <div class="d-flex flex-column flex-lg-row justify-content-between gap-4">
+        <div>
+            <span class="badge bg-primary-subtle text-primary-emphasis rounded-pill px-3 py-2 mb-3"><i class="bi bi-stars me-1"></i>Recommandation IA</span>
+            <h1 class="h2 fw-bold mb-2">Des challenges faits pour vos compétences</h1>
+            <p class="text-body-secondary mb-3" style="max-width: 640px;">Nous classons les challenges publiés d'après les compétences de votre profil. L'IA vous explique ensuite pourquoi ils vous conviennent et comment bien démarrer.</p>
+            <div class="d-flex flex-wrap gap-2">
+                {% for skill in skills %}<span class="badge bg-body text-body border rounded-pill px-3 py-2 fw-medium">{{ skill }}</span>
+                {% empty %}<a href="{% url 'accounts:profile' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3"><i class="bi bi-person-gear me-1"></i>Ajouter mes compétences</a>{% endfor %}
+            </div>
+        </div>
+        <div class="align-self-lg-center">
+            <button type="button" id="hf-reco-run" class="btn text-white rounded-pill px-4 py-3 shadow-sm" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);" {% if not skills or not ranked %}disabled{% endif %}>
+                <i class="bi bi-magic me-2"></i>Analyse IA personnalisée
+            </button>
+        </div>
+    </div>
+    <div id="hf-reco-output" class="mt-4" aria-live="polite"></div>
+</section>
+
+{% if ranked_hackathons %}
+<h2 class="h4 fw-bold mb-3">Hackathons recommandés</h2>
+<div class="row g-4 mb-5">
+    {% for entry in ranked_hackathons %}
+    <div class="col-md-6 col-xl-4">
+        <a href="{% url 'hackathons:hackathon_detail' entry.hackathon.slug %}" class="hf-tile d-block text-decoration-none text-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="badge bg-body-secondary text-body-secondary rounded-pill">{{ entry.hackathon.track.name }}</span>
+                <span class="fw-bold text-primary">{{ entry.score }}%</span>
+            </div>
+            <h3 class="h5 fw-bold">{{ entry.hackathon.title }}</h3>
+            <div class="progress mb-2" style="height: 6px;" role="progressbar" aria-label="Compatibilité" aria-valuenow="{{ entry.score }}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width: {{ entry.score }}%;"></div></div>
+            <div class="small text-body-secondary">{{ entry.challenge_count }} challenge{{ entry.challenge_count|pluralize }}{% if entry.matched %} · {{ entry.matched|join:", " }}{% endif %}</div>
+            <div class="small text-primary mt-2" data-hackathon-reason="{{ entry.hackathon.pk }}"></div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="d-flex justify-content-between align-items-end mb-3">
+    <div><h2 class="h4 fw-bold mb-1">Challenges classés pour vous</h2><p class="text-body-secondary small mb-0">{{ total_challenges }} challenge{{ total_challenges|pluralize }} publié{{ total_challenges|pluralize }} analysé{{ total_challenges|pluralize }}</p></div>
+</div>
+<div class="d-flex flex-column gap-3 mb-5" id="hf-reco-list">
+    {% for item in ranked %}
+    <article class="card-modern p-4" data-challenge-id="{{ item.challenge.pk }}" data-title="{{ item.challenge.title }}">
+        <div class="d-flex flex-column flex-md-row justify-content-between gap-4">
+            <div class="flex-grow-1">
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    <span class="badge bg-body-secondary text-body-secondary rounded-pill">{{ item.challenge.hackathon.title }}</span>
+                    <span class="badge bg-{{ item.challenge.difficulty_color }}-subtle text-{{ item.challenge.difficulty_color }}-emphasis rounded-pill">{{ item.challenge.get_difficulty_display }}</span>
+                    {% if item.challenge.pk in registered %}<span class="badge bg-success rounded-pill">Inscrit</span>{% endif %}
+                </div>
+                <h3 class="h5 fw-bold mb-1">{{ item.challenge.title }}</h3>
+                {% if item.challenge.short_description %}<p class="text-body-secondary small mb-2">{{ item.challenge.short_description }}</p>{% endif %}
+                <div class="d-flex flex-wrap gap-1 mb-2">{% for skill in item.matched %}<span class="badge bg-success-subtle text-success-emphasis rounded-pill fw-medium"><i class="bi bi-check2 me-1"></i>{{ skill }}</span>{% endfor %}</div>
+                <div class="small" data-reco-reason></div>
+                <div class="small text-body-secondary" data-reco-tip></div>
+            </div>
+            <div class="text-md-end flex-shrink-0" style="min-width: 190px;">
+                <div class="small text-body-secondary mb-1">Compatibilité</div>
+                <div class="h3 fw-bold {% if item.score >= 60 %}text-success{% elif item.score >= 30 %}text-primary{% else %}text-body-secondary{% endif %} mb-1">{{ item.score }}%</div>
+                <div class="progress mb-3" style="height: 6px;" role="progressbar" aria-label="Compatibilité" aria-valuenow="{{ item.score }}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar {% if item.score >= 60 %}bg-success{% endif %}" style="width: {{ item.score }}%;"></div></div>
+                <div class="d-flex flex-md-column gap-2">
+                    <button type="button" class="btn btn-sm text-white rounded-pill px-3 hf-coach-btn" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);" data-bs-toggle="modal" data-bs-target="#hf-coach-modal"><i class="bi bi-stars me-1"></i>Expliquer avec l'IA</button>
+                    <a href="{% url 'hackathons:challenge_detail' item.challenge.pk %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Voir le challenge</a>
+                </div>
+            </div>
+        </div>
+    </article>
+    {% empty %}<div class="card-modern p-5 text-center text-body-secondary"><i class="bi bi-flag fs-1 d-block mb-3"></i>Aucun challenge publié pour le moment.</div>{% endfor %}
+</div>
+
+<div class="modal fade" id="hf-coach-modal" tabindex="-1" aria-labelledby="hf-coach-title" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <div class="d-flex align-items-center gap-3"><span class="hf-icon text-white" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);"><i class="bi bi-stars"></i></span>
+                    <div><h2 class="modal-title h5 fw-bold mb-0" id="hf-coach-title">Coach IA</h2><div class="small text-body-secondary">Résumé, conseils et astuces pour ce challenge</div></div></div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body" id="hf-coach-output" aria-live="polite"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var el = HFAI.el;
+  var runButton = document.getElementById('hf-reco-run');
+  var output = document.getElementById('hf-reco-output');
+  var list = document.getElementById('hf-reco-list');
+
+  function analyse() {
+    runButton.disabled = true;
+    HFAI.run({
+      feature: 'student_recommend', data: {},
+      onLoading: function () { output.replaceChildren(HFAI.loading('L’IA analyse vos compétences…')); },
+      onDone: function (result, job) {
+        runButton.disabled = false;
+        var children = [el('div', {'class': 'hf-tile bg-body'}, [
+          el('div', {'class': 'fw-bold mb-1', text: 'Le conseil de l’IA'}), el('p', {'class': 'hf-text mb-0', text: result.advice})
+        ]), HFAI.feedbackBar(job)];
+        output.replaceChildren.apply(output, children);
+        var cards = {};
+        list.querySelectorAll('[data-challenge-id]').forEach(function (card) { cards[card.dataset.challengeId] = card; });
+        result.challenges.slice().reverse().forEach(function (item) {
+          var card = cards[item.id];
+          if (!card) { return; }
+          card.querySelector('[data-reco-reason]').textContent = item.reason;
+          card.querySelector('[data-reco-tip]').textContent = item.tip ? 'Astuce : ' + item.tip : '';
+          list.insertBefore(card, list.firstChild);
+        });
+        result.hackathons.forEach(function (item) {
+          var slot = document.querySelector('[data-hackathon-reason="' + item.id + '"]');
+          if (slot) { slot.textContent = item.reason; }
+        });
+      },
+      onError: function (message) { runButton.disabled = false; output.replaceChildren(HFAI.error(message, analyse)); }
+    });
+  }
+  if (runButton) { runButton.addEventListener('click', analyse); }
+
+  var modal = document.getElementById('hf-coach-modal');
+  var coachOutput = document.getElementById('hf-coach-output');
+  var coachTitle = document.getElementById('hf-coach-title');
+  function coach(challengeId) {
+    HFAI.run({
+      feature: 'student_coach', data: {challenge_id: challengeId},
+      onLoading: function () { coachOutput.replaceChildren(HFAI.loading('L’IA prépare votre coaching…')); },
+      onDone: function (result, job) {
+        var summary = el('div', {'class': 'p-4 rounded-4 mb-3', style: 'background: var(--bs-primary-bg-subtle);'}, [
+          el('div', {'class': 'small fw-semibold text-primary-emphasis mb-1', text: 'Résumé du défi par l’IA'}),
+          el('p', {'class': 'mb-0 fs-6', text: result.summary})
+        ]);
+        var parts = [summary, HFAI.block('Explication', 'bi-lightbulb', result.explanation, 'primary'),
+          HFAI.block('Pourquoi ce défi pour vous', 'bi-person-check', result.why_for_you, 'success'),
+          HFAI.block('Niveau de difficulté', 'bi-speedometer2', result.difficulty_feel, 'warning'),
+          HFAI.list('Par où commencer', 'bi-signpost-split', result.first_steps, 'primary'),
+          HFAI.list('Conseils', 'bi-chat-heart', result.tips, 'success'),
+          HFAI.list('Pièges à éviter', 'bi-exclamation-triangle', result.pitfalls, 'danger'),
+          HFAI.list('Compétences à réviser', 'bi-book', result.skills_to_learn, 'info'),
+          HFAI.list('Pour se démarquer', 'bi-rocket-takeoff', result.bonus_ideas, 'secondary'), HFAI.feedbackBar(job)];
+        coachOutput.replaceChildren.apply(coachOutput, parts.filter(Boolean));
+      },
+      onError: function (message) { coachOutput.replaceChildren(HFAI.error(message, function () { coach(coach.current); })); }
+    });
+  }
+  modal.addEventListener('show.bs.modal', function (event) {
+    var card = event.relatedTarget.closest('[data-challenge-id]');
+    coach.current = card.dataset.challengeId;
+    coachTitle.textContent = card.dataset.title;
+    coach(coach.current);
+  });
+});
+</script>

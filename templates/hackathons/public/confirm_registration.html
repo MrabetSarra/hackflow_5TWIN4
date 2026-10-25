@@ -1,0 +1,13 @@
+<div class="card-modern p-4 mx-auto" style="max-width: 600px;">
+    <h3 class="fw-bold mb-3">Confirmer votre inscription</h3>
+    <dl class="small">
+        <dt>Hackathon</dt><dd>{{ h.title }}</dd>
+        <dt>Challenge</dt><dd>{{ challenge.title }}</dd>
+        <dt>Équipe</dt><dd>{{ team.name|default:"Aucune équipe (inscription individuelle)" }}</dd>
+    </dl>
+    <p class="small text-body-secondary">Votre inscription engage {% if team %}votre équipe{% else %}vous{% endif %} sur ce challenge ; un seul challenge par hackathon est possible.</p>
+    <form method="post" class="d-flex gap-2">{% csrf_token %}
+        <button class="btn btn-primary">Confirmer l'inscription</button>
+        <a href="{% url 'hackathons:challenge_detail' challenge.pk %}" class="btn btn-outline-secondary">Annuler</a>
+    </form>
+</div>
