@@ -518,3 +518,9 @@ CAREER_MATCH_WEIGHTS = {
 
 # CV OCR is performed locally through RapidOCR; no CV content is sent to an API.
 CV_OCR_DPI = int(os.environ.get('CV_OCR_DPI', '190'))
+
+# OAuth2 Social Authentication (GitHub & Google)
+GITHUB_CLIENT_ID = os.environ.get('GITHUB_CLIENT_ID', '').strip()
+GITHUB_CLIENT_SECRET = os.environ.get('GITHUB_CLIENT_SECRET', '').strip()
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '').strip()
+GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '').strip()

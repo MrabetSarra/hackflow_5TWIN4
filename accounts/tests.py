@@ -307,3 +307,268 @@ class AccountViewCoverageTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Profile photo unavailable')
         self.assertContains(response, 'onerror="this.hidden=true;this.nextElementSibling.hidden=false;"')
+
+
+class TwoFactorAuthenticationTests(TestCase):
+    password = 'Valid-2FA-Password-123!'
+
+    def create_user(self, username='twofa-student', role='student', email=None):
+        return get_user_model().objects.create_user(
+            username=username,
+            email=email or f'{username}@example.test',
+            password=self.password,
+            role=role,
+        )
+
+    def test_user_totp_and_backup_code_helpers(self):
+        import pyotp
+        user = self.create_user()
+        secret = user.generate_two_factor_secret()
+        self.assertTrue(secret)
+        user.two_factor_secret = secret
+        user.save()
+
+        # Generate TOTP code
+        totp = pyotp.TOTP(secret)
+        current_code = totp.now()
+
+        self.assertTrue(user.verify_totp(current_code))
+        self.assertFalse(user.verify_totp('000000'))
+        self.assertFalse(user.verify_totp(''))
+
+        # Backup codes
+        plain_codes = user.generate_backup_codes(count=4)
+        user.save()
+        self.assertEqual(len(plain_codes), 4)
+        self.assertEqual(len(user.backup_codes), 4)
+
+        # Consuming a valid backup code
+        first_code = plain_codes[0]
+        self.assertTrue(user.verify_and_consume_backup_code(first_code))
+        self.assertEqual(len(user.backup_codes), 3)
+
+        # Re-consuming the same code must fail
+        self.assertFalse(user.verify_and_consume_backup_code(first_code))
+
+        # Consuming an invalid code
+        self.assertFalse(user.verify_and_consume_backup_code('INVALID-CODE'))
+
+    def test_login_flow_redirects_to_2fa_verify_when_enabled(self):
+        import pyotp
+        user = self.create_user(username='twofa-enabled-user')
+        secret = user.generate_two_factor_secret()
+        user.two_factor_secret = secret
+        user.two_factor_enabled = True
+        user.save()
+
+        # Step 1: POST to login
+        response = self.client.post(reverse('accounts:login'), {
+            'username': user.username,
+            'password': self.password,
+        })
+        self.assertRedirects(response, reverse('accounts:two_factor_verify'))
+        # User is not logged in yet
+        self.assertNotIn('_auth_user_id', self.client.session)
+        self.assertEqual(self.client.session.get('2fa_user_id'), user.pk)
+
+        # Step 2: GET verify page
+        get_res = self.client.get(reverse('accounts:two_factor_verify'))
+        self.assertEqual(get_res.status_code, 200)
+
+        # Step 3: Bad code
+        bad_post = self.client.post(reverse('accounts:two_factor_verify'), {'code': '999999'})
+        self.assertEqual(bad_post.status_code, 200)
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+        # Step 4: Correct code
+        valid_code = pyotp.TOTP(secret).now()
+        good_post = self.client.post(reverse('accounts:two_factor_verify'), {'code': valid_code})
+        self.assertRedirects(good_post, reverse('student:dashboard'))
+        self.assertIn('_auth_user_id', self.client.session)
+        self.assertNotIn('2fa_user_id', self.client.session)
+
+    def test_login_flow_with_backup_code(self):
+        user = self.create_user(username='twofa-backup-user')
+        user.two_factor_secret = user.generate_two_factor_secret()
+        plain_codes = user.generate_backup_codes(count=2)
+        user.two_factor_enabled = True
+        user.save()
+
+        # Login
+        self.client.post(reverse('accounts:login'), {
+            'username': user.username,
+            'password': self.password,
+        })
+
+        # Verify with backup code
+        good_post = self.client.post(reverse('accounts:two_factor_verify'), {'code': plain_codes[0]})
+        self.assertRedirects(good_post, reverse('student:dashboard'))
+        self.assertIn('_auth_user_id', self.client.session)
+
+        user.refresh_from_db()
+        self.assertEqual(len(user.backup_codes), 1)
+
+    def test_two_factor_setup_and_disable_views(self):
+        import pyotp
+        user = self.create_user(username='twofa-setup-user')
+        self.client.force_login(user)
+
+        # Visit setup page
+        setup_get = self.client.get(reverse('accounts:two_factor_setup'))
+        self.assertEqual(setup_get.status_code, 200)
+        pending_secret = self.client.session.get('2fa_setup_secret')
+        self.assertTrue(pending_secret)
+
+        # Submit valid TOTP
+        valid_code = pyotp.TOTP(pending_secret).now()
+        setup_post = self.client.post(reverse('accounts:two_factor_setup'), {'code': valid_code})
+        self.assertRedirects(setup_post, reverse('accounts:two_factor_backup_codes'))
+
+        user.refresh_from_db()
+        self.assertTrue(user.two_factor_enabled)
+        self.assertEqual(user.two_factor_secret, pending_secret)
+        self.assertEqual(len(user.backup_codes), 8)
+
+        # Disable 2FA with password
+        disable_post = self.client.post(reverse('accounts:two_factor_disable'), {'password': self.password})
+        self.assertRedirects(disable_post, reverse('accounts:profile'))
+        user.refresh_from_db()
+        self.assertFalse(user.two_factor_enabled)
+        self.assertEqual(user.two_factor_secret, '')
+        self.assertEqual(user.backup_codes, [])
+
+
+class OAuthAuthenticationTests(TestCase):
+    def test_oauth_login_redirect_when_not_configured(self):
+        with patch('accounts.oauth.GitHubOAuthProvider.get_client_id', return_value=''), \
+             patch('accounts.oauth.GitHubOAuthProvider.get_client_secret', return_value=''):
+            response = self.client.get(reverse('accounts:oauth_login', args=['github']))
+            self.assertRedirects(response, reverse('accounts:login'))
+
+    def test_oauth_login_redirect_when_configured(self):
+        with patch('accounts.oauth.GitHubOAuthProvider.get_client_id', return_value='test-gh-id'), \
+             patch('accounts.oauth.GitHubOAuthProvider.get_client_secret', return_value='test-gh-secret'):
+            response = self.client.get(reverse('accounts:oauth_login', args=['github']))
+            self.assertEqual(response.status_code, 302)
+            self.assertIn('https://github.com/login/oauth/authorize', response.url)
+            self.assertIn('client_id=test-gh-id', response.url)
+            self.assertIn('oauth_state', self.client.session)
+
+    def test_oauth_callback_state_mismatch_rejected(self):
+        session = self.client.session
+        session['oauth_state'] = 'good-state'
+        session.save()
+
+        response = self.client.get(reverse('accounts:oauth_callback', args=['github']), {
+            'state': 'tampered-state',
+            'code': 'sample-code',
+        })
+        self.assertRedirects(response, reverse('accounts:login'))
+        self.assertFalse(response.wsgi_request.user.is_authenticated)
+
+    @patch('accounts.oauth.GitHubOAuthProvider.get_user_info')
+    def test_oauth_callback_creates_new_user_with_role_param(self, mock_user_info):
+        mock_user_info.return_value = {
+            'email': 'new-oauth-student@example.test',
+            'username': 'oauthstudent',
+            'first_name': 'Alex',
+            'last_name': 'Coder',
+            'github_url': 'https://github.com/oauthstudent',
+            'bio': 'Developer',
+        }
+
+        session = self.client.session
+        session['oauth_state'] = 'test-state'
+        session['oauth_role'] = 'student'
+        session.save()
+
+        response = self.client.get(reverse('accounts:oauth_callback', args=['github']), {
+            'state': 'test-state',
+            'code': 'valid-code',
+        })
+        self.assertRedirects(response, reverse('student:dashboard'))
+
+        User = get_user_model()
+        user = User.objects.get(email='new-oauth-student@example.test')
+        self.assertEqual(user.first_name, 'Alex')
+        self.assertEqual(user.role, 'student')
+        self.assertEqual(user.github_url, 'https://github.com/oauthstudent')
+        self.assertTrue('_auth_user_id' in self.client.session)
+
+    @patch('accounts.oauth.GitHubOAuthProvider.get_user_info')
+    def test_oauth_callback_prompts_role_selection_and_allows_mentor(self, mock_user_info):
+        mock_user_info.return_value = {
+            'email': 'new-oauth-mentor@example.test',
+            'username': 'oauthmentor',
+            'first_name': 'Morgan',
+            'last_name': 'Guide',
+            'github_url': 'https://github.com/oauthmentor',
+            'bio': 'Tech Mentor',
+        }
+
+        session = self.client.session
+        session['oauth_state'] = 'test-mentor-state'
+        session.save()
+
+        response = self.client.get(reverse('accounts:oauth_callback', args=['github']), {
+            'state': 'test-mentor-state',
+            'code': 'valid-code',
+        })
+        # When no pre-selected role, redirect to select-role page
+        self.assertRedirects(response, reverse('accounts:oauth_select_role'))
+
+        # GET select-role page
+        get_role_res = self.client.get(reverse('accounts:oauth_select_role'))
+        self.assertEqual(get_role_res.status_code, 200)
+
+        # POST invalid role 'admin' must be rejected
+        bad_post = self.client.post(reverse('accounts:oauth_select_role'), {'role': 'admin'})
+        self.assertEqual(bad_post.status_code, 200)
+        self.assertFalse(get_user_model().objects.filter(email='new-oauth-mentor@example.test').exists())
+
+        # POST valid role 'mentor' succeeds
+        good_post = self.client.post(reverse('accounts:oauth_select_role'), {'role': 'mentor'})
+        self.assertRedirects(good_post, reverse('mentor:dashboard'))
+
+        User = get_user_model()
+        mentor_user = User.objects.get(email='new-oauth-mentor@example.test')
+        self.assertEqual(mentor_user.role, 'mentor')
+        self.assertTrue('_auth_user_id' in self.client.session)
+
+    def test_get_or_create_oauth_user_strictly_forbids_admin(self):
+        from accounts.oauth import get_or_create_oauth_user
+        with self.assertRaises(ValueError):
+            get_or_create_oauth_user({'email': 'hacker@example.test'}, 'github', role='admin')
+
+    @patch('accounts.oauth.GoogleOAuthProvider.get_user_info')
+    def test_oauth_callback_respects_existing_user_2fa(self, mock_user_info):
+        User = get_user_model()
+        user = User.objects.create_user(
+            username='google-2fa-user',
+            email='google2fa@example.test',
+            two_factor_enabled=True,
+            two_factor_secret='JBSWY3DPEHPK3PXP',
+            role='student',
+        )
+
+        mock_user_info.return_value = {
+            'email': 'google2fa@example.test',
+            'username': 'google2fa',
+            'first_name': 'Google',
+            'last_name': 'User',
+            'github_url': '',
+            'bio': '',
+        }
+
+        session = self.client.session
+        session['oauth_state'] = 'test-state-2fa'
+        session.save()
+
+        response = self.client.get(reverse('accounts:oauth_callback', args=['google']), {
+            'state': 'test-state-2fa',
+            'code': 'valid-google-code',
+        })
+        # Must redirect to 2FA verify page and NOT log in directly
+        self.assertRedirects(response, reverse('accounts:two_factor_verify'))
+        self.assertNotIn('_auth_user_id', self.client.session)
+        self.assertEqual(self.client.session.get('2fa_user_id'), user.pk)

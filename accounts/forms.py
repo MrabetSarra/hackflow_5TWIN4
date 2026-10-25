@@ -412,3 +412,94 @@ class ProfileDetailsForm(AccessibleFormMixin, forms.ModelForm):
             message = 'Select skills from the available list.' if self.instance.role == 'student' else 'Sélectionnez des compétences proposées dans la liste.'
             raise forms.ValidationError(message)
         return skills
+
+
+class TwoFactorVerifyForm(AccessibleFormMixin, forms.Form):
+    code = forms.CharField(
+        label='Code de vérification',
+        max_length=20,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control form-control-lg text-center font-monospace tracking-wider',
+            'placeholder': '123456 ou code de secours',
+            'autocomplete': 'one-time-code',
+            'autofocus': True,
+        }),
+        help_text="Entrez le code à 6 chiffres de votre application d'authentification ou un code de secours.",
+    )
+
+    def clean_code(self):
+        code = self.cleaned_data['code'].strip().replace(' ', '')
+        if not code:
+            raise forms.ValidationError('Veuillez entrer un code.')
+        return code
+
+
+class TwoFactorSetupForm(AccessibleFormMixin, forms.Form):
+    code = forms.CharField(
+        label='Code de confirmation (6 chiffres)',
+        max_length=8,
+        min_length=6,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control form-control-lg text-center font-monospace',
+            'placeholder': '123456',
+            'autocomplete': 'one-time-code',
+            'autofocus': True,
+        }),
+        help_text="Entrez le code affiché sur votre application pour confirmer la configuration.",
+    )
+
+    def clean_code(self):
+        code = self.cleaned_data['code'].strip().replace(' ', '')
+        if not code.isdigit() or len(code) != 6:
+            raise forms.ValidationError('Le code doit comporter exactement 6 chiffres.')
+        return code
+
+
+class TwoFactorDisableForm(AccessibleFormMixin, forms.Form):
+    password = forms.CharField(
+        label='Mot de passe actuel',
+        strip=False,
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Entrez votre mot de passe pour confirmer',
+            'autocomplete': 'current-password',
+            'autofocus': True,
+        }),
+        help_text="Par mesure de sécurité, veuillez confirmer votre mot de passe pour désactiver le 2FA.",
+    )
+
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+    def clean_password(self):
+        password = self.cleaned_data.get('password')
+        if not self.user.check_password(password):
+            raise forms.ValidationError('Mot de passe incorrect.')
+        return password
+
+
+class TwoFactorRegenerateBackupCodesForm(AccessibleFormMixin, forms.Form):
+    password = forms.CharField(
+        label='Mot de passe actuel',
+        strip=False,
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Entrez votre mot de passe pour confirmer',
+            'autocomplete': 'current-password',
+            'autofocus': True,
+        }),
+        help_text="Confirmez votre mot de passe pour générer un nouveau jeu de codes de secours.",
+    )
+
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+    def clean_password(self):
+        password = self.cleaned_data.get('password')
+        if not self.user.check_password(password):
+            raise forms.ValidationError('Mot de passe incorrect.')
+        return password

@@ -52,6 +52,14 @@ services:
         sync: false
       - key: GITHUB_PRIVATE_REPOSITORIES
         value: "true"
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
       - key: STATIC_ROOT
         value: /opt/render/project/src/staticfiles
       - key: SEED_DEMO
