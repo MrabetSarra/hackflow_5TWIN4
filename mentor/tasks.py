@@ -2,9 +2,11 @@
 import logging
 import os
 import threading
+from datetime import timedelta
 
 from django.conf import settings
 from django.db import close_old_connections, transaction
+from django.utils import timezone
 
 from hackflow.celery import celery_app
 
@@ -12,6 +14,9 @@ from .ai import TriageError, classify, model_name, suggest_mentor
 from .models import RequestTriage
 
 logger = logging.getLogger(__name__)
+
+# Bien au-delà du délai maximal d'un appel au modèle (MENTOR_AI_TIMEOUT, 90 s par défaut).
+STALE_AFTER = timedelta(minutes=3)
 
 
 def ai_enabled():
@@ -56,9 +61,17 @@ def triage_request(triage_id):
     run_triage(triage_id)
 
 
+# Une analyse à la fois en développement : SQLite refuse deux transactions d'écriture
+# simultanées (« database is locked ») et Ollama traite de toute façon un appel à la fois.
+_thread_lock = threading.Lock()
+
+
 def _run_in_thread(triage_id):
     try:
-        run_triage(triage_id)
+        with _thread_lock:
+            run_triage(triage_id)
+    except Exception:  # le ticket reste « en attente » et sera relancé (voir ensure_triages)
+        logger.exception('Mentor triage thread failed for triage %s', triage_id)
     finally:
         close_old_connections()
 
@@ -77,16 +90,33 @@ def enqueue_triage(triage_id):
 
 
 def ensure_triages(help_requests):
-    """Crée et lance l'analyse des tickets en attente qui n'en ont pas encore."""
+    """Crée et lance l'analyse des tickets en attente qui n'en ont pas encore.
+
+    Une analyse restée « en cours » trop longtemps a été interrompue (redémarrage du
+    serveur ou du worker) : elle est relancée au lieu d'afficher un chargement sans fin.
+    """
     if not ai_enabled():
         return
+    stale_before = timezone.now() - STALE_AFTER
+    unfinished = (RequestTriage.Status.PENDING, RequestTriage.Status.RUNNING)
     for help_request in help_requests:
-        if help_request.status != help_request.Status.PENDING or hasattr(help_request, 'triage'):
+        if help_request.status == help_request.Status.RESOLVED:
             continue
-        triage, created = RequestTriage.objects.get_or_create(help_request=help_request)
-        help_request.triage = triage
-        if created:
-            transaction.on_commit(lambda pk=triage.pk: enqueue_triage(pk))
+        triage = getattr(help_request, 'triage', None)
+        if triage is None:
+            if help_request.status != help_request.Status.PENDING:
+                continue
+            triage, created = RequestTriage.objects.get_or_create(help_request=help_request)
+            help_request.triage = triage
+            if created:
+                transaction.on_commit(lambda pk=triage.pk: enqueue_triage(pk))
+        elif triage.status in unfinished and triage.updated_at < stale_before:
+            restarted = RequestTriage.objects.filter(
+                pk=triage.pk, status__in=unfinished, updated_at__lt=stale_before,
+            ).update(status=RequestTriage.Status.PENDING, updated_at=timezone.now())
+            if restarted:
+                triage.status = RequestTriage.Status.PENDING
+                transaction.on_commit(lambda pk=triage.pk: enqueue_triage(pk))
 
 
 def retry_triage(triage):
