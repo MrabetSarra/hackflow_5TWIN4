@@ -49,12 +49,16 @@ from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
+import logging
+
 from accounts.decorators import role_required
 from student.models import Notification
 
 from .forms import RatingForm, WorkshopFilterForm, WorkshopForm
 from .models import (Badge, BadgeAward, Booking, Certificate, Workshop,
                      WorkshopActivity, WorkshopFavorite)
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -1096,12 +1100,13 @@ def organizer_dashboard(request):
     now = timezone.now()
     upcoming = [w for w in workshops if w.starts_at > now]
     forecasts = {}
-    try:
-        from .services.forecast import forecast as do_forecast
-        for w in upcoming[:5]:
+    from .services.forecast import forecast as do_forecast
+    for w in upcoming[:5]:
+        try:
             forecasts[w.pk] = do_forecast(w)
-    except Exception:
-        pass
+        except Exception:
+            logger.warning('Échec prévision IA atelier %s', w.pk)
+            forecasts[w.pk] = {'fill_proba': 0.0, 'noshow_proba': 0.05, 'alert': None}
     forecast_rows = [
         {'workshop': w, 'forecast': forecasts[w.pk]}
         for w in upcoming if w.pk in forecasts

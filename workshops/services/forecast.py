@@ -61,7 +61,8 @@ def _static_features(workshop) -> list[float]:
 def _heuristic_forecast(workshop) -> dict:
     """
     Fallback heuristique quand pas assez de données historiques.
-    Basé sur le taux actuel et le temps restant.
+    Basé sur le taux actuel et le temps restant, avec un taux de base
+    pour les ateliers qui n'ont pas encore de réservations.
     """
     now = timezone.now()
     delta = workshop.starts_at - now
@@ -72,10 +73,14 @@ def _heuristic_forecast(workshop) -> dict:
 
     fill_now = workshop.confirmed_count / workshop.capacity if workshop.capacity else 0.0
 
-    # Projection linéaire : si on est déjà à X% avec T heures restantes,
-    # on estime qu'on atteindra fill_now * (1 + coeff) à l'ouverture
+    # Taux de base pour les ateliers sans réservation (évite d'afficher 0%)
+    BASELINE_FILL = 0.15  # 15% de remplissage attendu par défaut
+    if fill_now == 0 and hours_remaining > 0:
+        fill_now = BASELINE_FILL
+
+    # Projection linéaire
     if hours_remaining > 0:
-        speed = fill_now / max(1, 24 * 7 - hours_remaining)  # remplissage/heure
+        speed = fill_now / max(1, 24 * 7 - hours_remaining)
         projected = fill_now + speed * hours_remaining
     else:
         projected = fill_now
