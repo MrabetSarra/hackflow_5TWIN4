@@ -73,35 +73,6 @@
     </div>
   </div>
 
-  <!-- Alertes prédictions IA -->
-  {% if forecast_rows %}
-  <div class="card border-0 shadow-sm mb-4 border-start border-4 border-warning">
-    <div class="card-body py-3">
-      <div class="d-flex align-items-center gap-2 mb-3">
-        <i class="bi bi-graph-up-arrow text-warning fs-5"></i>
-        <h6 class="mb-0 fw-bold">Alertes IA — Prédictions de remplissage</h6>
-        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill ms-1">IA</span>
-      </div>
-      <div class="row g-2">
-        {% for row in forecast_rows %}
-        {% if row.forecast.alert %}
-        <div class="col-12">
-          <div class="alert alert-warning py-2 small mb-0">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ row.forecast.alert }}
-          </div>
-        </div>
-        {% endif %}
-        {% endfor %}
-        {% if not has_forecast_alert %}
-        <div class="col-12">
-          <p class="text-body-secondary small mb-0">Aucune alerte pour le moment.</p>
-        </div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-  {% endif %}
-
   <!-- Tableau des ateliers -->
   <div class="card border-0 shadow-sm">
     <div class="card-header bg-transparent border-bottom py-3">
@@ -119,7 +90,6 @@
             <th>Remplissage</th>
             <th>Présence</th>
             <th>Note moy.</th>
-            <th>Prédiction IA</th>
             <th>Statut</th>
             <th></th>
           </tr>
@@ -201,23 +171,6 @@
                 {% for i in "12345" %}{% if forloop.counter <= ws.rating_stars %}<i class="bi bi-star-fill"></i>{% else %}<i class="bi bi-star"></i>{% endif %}{% endfor %}
               </span><br>
               <span class="small text-body-secondary">{{ ws.average_rating }}/5</span>
-              {% else %}
-              <span class="text-body-secondary small">—</span>
-              {% endif %}
-            </td>
-            <td>
-              {% if ws.pk in forecasts %}
-                <span class="small text-body-secondary" title="Prédiction IA">
-                  {% for pk, fc in forecasts.items %}
-                    {% if pk == ws.pk %}
-                      <span class="fw-semibold">{{ fc.fill_proba|floatformat:0 }}%</span>
-                      remplissage
-                      <span class="badge bg-info text-dark fs-7 px-1 py-0.5 ms-1" title="Source IA">
-                        {% if fc.source == 'ollama' %}Ollama{% else %}Heuristique{% endif %}
-                      </span>
-                    {% endif %}
-                  {% endfor %}
-                </span>
               {% else %}
               <span class="text-body-secondary small">—</span>
               {% endif %}

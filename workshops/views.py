@@ -1096,23 +1096,6 @@ def organizer_dashboard(request):
         ).order_by('-starts_at')
     )
 
-    # Prédictions IA sur les ateliers à venir
-    now = timezone.now()
-    upcoming = [w for w in workshops if w.starts_at > now]
-    forecasts = {}
-    from .services.forecast import forecast as do_forecast
-    for w in upcoming[:5]:
-        try:
-            forecasts[w.pk] = do_forecast(w)
-        except Exception:
-            logger.warning('Échec prévision IA atelier %s', w.pk)
-            forecasts[w.pk] = {'fill_proba': 0.0, 'noshow_proba': 0.05, 'alert': None}
-    forecast_rows = [
-        {'workshop': w, 'forecast': forecasts[w.pk]}
-        for w in upcoming if w.pk in forecasts
-    ]
-    has_forecast_alert = any(fc.get('alert') for fc in forecasts.values())
-
     # Statistiques globales (aucune requête par atelier)
     total_confirmed = sum(w.confirmed_count for w in workshops)
     total_attended  = sum(w.attendee_count for w in workshops)
@@ -1122,9 +1105,6 @@ def organizer_dashboard(request):
 
     return render(request, 'workshops/organizer_dashboard.html', {
         'workshops':       workshops,
-        'forecasts':       forecasts,
-        'forecast_rows':   forecast_rows,
-        'has_forecast_alert': has_forecast_alert,
         'total_confirmed': total_confirmed,
         'total_attended':  total_attended,
         'total_certs':     total_certs,
