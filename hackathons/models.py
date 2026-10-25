@@ -404,6 +404,50 @@ class MentorFeedback(models.Model):
         return f'Avis de {self.mentor} — {target}'
 
 
+class AIJob(models.Model):
+    """Requête IA exécutée en arrière-plan (Celery) ; sert aussi de journal pour les métriques."""
+
+    class Feature(models.TextChoices):
+        HACKATHON_DRAFT = 'hackathon_draft', 'Rédaction de hackathon'
+        CHALLENGE_DRAFT = 'challenge_draft', 'Rédaction de challenge'
+        STUDENT_COACH = 'student_coach', 'Coach IA étudiant'
+        STUDENT_RECOMMEND = 'student_recommend', 'Recommandations étudiant'
+        MENTOR_EXPLAIN = 'mentor_explain', 'Explication mentor'
+
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'En attente'
+        RUNNING = 'running', 'En cours'
+        DONE = 'done', 'Terminée'
+        FAILED = 'failed', 'Échouée'
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='hackathon_ai_jobs')
+    feature = models.CharField('Fonctionnalité', max_length=20, choices=Feature.choices)
+    payload = models.JSONField(default=dict, blank=True)
+    payload_hash = models.CharField(max_length=64, db_index=True)
+    status = models.CharField('Statut', max_length=8, choices=Status.choices, default=Status.PENDING)
+    result = models.JSONField(default=dict, blank=True)
+    error_message = models.CharField('Erreur', max_length=400, blank=True)
+    model_used = models.CharField('Modèle utilisé', max_length=80, blank=True)
+    fallback_used = models.BooleanField('Modèle de secours utilisé', default=False)
+    primary_error = models.CharField('Erreur du modèle principal', max_length=300, blank=True)
+    cached = models.BooleanField('Réponse issue du cache', default=False)
+    latency_ms = models.PositiveIntegerField('Temps de réponse (ms)', default=0)
+    queue_ms = models.PositiveIntegerField('Attente en file (ms)', default=0)
+    input_chars = models.PositiveIntegerField(default=0)
+    output_chars = models.PositiveIntegerField(default=0)
+    feedback = models.SmallIntegerField('Retour utilisateur', null=True, blank=True)
+    created_at = models.DateTimeField('Créée le', auto_now_add=True, db_index=True)
+    finished_at = models.DateTimeField('Terminée le', null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'requête IA'
+        verbose_name_plural = 'requêtes IA'
+
+    def __str__(self):
+        return f'{self.get_feature_display()} — {self.get_status_display()}'
+
+
 class ScheduleItem(models.Model):
     class Kind(models.TextChoices):
         OPENING = 'opening', 'Ouverture'

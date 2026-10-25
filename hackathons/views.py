@@ -62,6 +62,29 @@ def with_counts(qs, published_only=False):
 
 # ------------------------------------------------------------ Hackathons
 
+HACKATHON_AI_CONFIG = {
+    'feature': 'hackathon_draft', 'title_input': 'id_name', 'track_input': 'id_track_name',
+    'fields': [
+        {'key': 'short_description', 'label': 'Description courte', 'input': 'id_short_description'},
+        {'key': 'description', 'label': 'Description complète', 'input': 'id_description'},
+        {'key': 'rules', 'label': 'Règlement', 'input': 'id_rules'},
+    ],
+}
+
+CHALLENGE_AI_FIELDS = [
+    ('short_description', 'Description courte'), ('description', 'Description détaillée'), ('objectives', 'Objectifs'),
+    ('problem_statement', 'Problématique'), ('constraints', 'Contraintes'), ('deliverables', 'Livrables attendus'),
+    ('guidelines', 'Consignes spécifiques'), ('technologies', 'Technologies recommandées'),
+]
+
+
+def challenge_ai_config(hackathon):
+    return {
+        'feature': 'challenge_draft', 'title_input': 'id_title', 'hackathon_id': hackathon.pk,
+        'difficulty_input': 'id_difficulty', 'reward_input': 'id_reward',
+        'fields': [{'key': key, 'label': label, 'input': f'id_{key}'} for key, label in CHALLENGE_AI_FIELDS],
+    }
+
 @organizer_only
 def hackathon_list(request):
     qs = with_counts(HackathonProfile.objects.all())
@@ -95,7 +118,7 @@ def hackathon_form(request, pk=None):
     return page(request, 'hackathons/manage/form.html', {
         'form': form, 'title': 'Modifier le hackathon' if profile else 'Nouveau hackathon', 'multipart': True,
         'back_href': back, 'track_suggestions': Track.objects.order_by('name').values_list('name', flat=True),
-        'map_picker': True,
+        'map_picker': True, 'ai_config': HACKATHON_AI_CONFIG,
     })
 
 
@@ -205,6 +228,7 @@ def challenge_form(request, hackathon_id, pk=None):
         else reverse('hackathons:hackathon_manage', args=[h.pk])
     return page(request, 'hackathons/manage/form.html', {
         'form': form, 'title': 'Modifier le challenge' if challenge else 'Nouveau challenge', 'back_href': back,
+        'ai_config': challenge_ai_config(h),
     })
 
 

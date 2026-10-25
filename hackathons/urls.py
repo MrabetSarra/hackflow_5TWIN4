@@ -1,6 +1,7 @@
 from django.urls import path
 
 from . import public_views as p
+from . import ai_views as ai
 from . import views as v
 
 app_name = 'hackathons'
@@ -18,6 +19,13 @@ urlpatterns = [
     path('mentor-feedback/hackathon/<int:pk>/', v.mentor_feedback_hackathon, name='mentor_feedback_hackathon'),
     path('mentor-feedback/challenge/<int:pk>/', v.mentor_feedback_challenge, name='mentor_feedback_challenge'),
     path('mentor-feedback/<int:pk>/delete/', v.mentor_feedback_delete, name='mentor_feedback_delete'),
+
+    # Assistant IA (Gemini)
+    path('ia/<slug:feature>/start/', ai.ai_start, name='ai_start'),
+    path('ia/jobs/<int:job_id>/', ai.ai_status, name='ai_status'),
+    path('ia/jobs/<int:job_id>/feedback/', ai.ai_feedback, name='ai_feedback'),
+    path('ia/recommandations/', ai.ai_recommendations, name='ai_recommendations'),
+    path('ia/mentor/', ai.ai_mentor, name='ai_mentor'),
 
     # Organisateurs
     path('manage/hackathons/', v.hackathon_list, name='hackathon_list'),
