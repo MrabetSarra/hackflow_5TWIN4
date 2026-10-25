@@ -174,12 +174,33 @@ Generate coverage reports with:
 
 ```bash
 coverage run manage.py test
-coverage report --fail-under=70
+coverage report --fail-under=80
 coverage xml -o coverage.xml
 coverage html
 ```
 
-The HTML report is written to `htmlcov/`; `coverage.xml` is the Cobertura report imported by SonarQube. CI enforces 70% coverage and uploads both reports. To publish analysis from GitHub Actions, configure the `SONAR_TOKEN` repository secret and `SONAR_HOST_URL` repository variable for your SonarQube Server; the scan runs after tests when the token is present.
+The HTML report is written to `htmlcov/`; `coverage.xml` is the Cobertura report imported by SonarQube. CI enforces 80% coverage and uploads both reports. The GitHub-hosted workflow does not run a Sonar scan; use the following PowerShell commands on your PC to analyze against a local SonarQube server running on port 9000. Activate the project's virtual environment and start SonarQube before running them. Create the `HackFlow` project in the local SonarQube server and use its analysis token.
+
+```powershell
+$env:DJANGO_DEBUG = 'True'
+$env:DJANGO_SECRET_KEY = 'local-coverage-test-secret-key'
+coverage run manage.py test
+coverage report --fail-under=80
+coverage xml -o coverage.xml
+
+$env:SONAR_HOST_URL = 'http://host.docker.internal:9000'
+$secureToken = Read-Host 'Local SonarQube token' -AsSecureString
+$env:SONAR_TOKEN = [System.Net.NetworkCredential]::new('', $secureToken).Password
+
+docker run --rm `
+  -e SONAR_HOST_URL `
+  -e SONAR_TOKEN `
+  -v "${PWD}:/usr/src" `
+  sonarsource/sonar-scanner-cli
+
+Remove-Item Env:SONAR_TOKEN
+Remove-Variable secureToken
+```
 
 ## Environment variables
 
