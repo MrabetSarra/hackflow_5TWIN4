@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.validators import FileExtensionValidator, MinValueValidator
+from django.core.validators import FileExtensionValidator, MaxValueValidator, MinValueValidator
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
@@ -321,6 +321,87 @@ class Registration(models.Model):
     @property
     def status_color(self):
         return 'success' if self.status == self.Status.CONFIRMED else 'secondary'
+
+
+class Favorite(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='hackathon_favorites')
+    hackathon = models.ForeignKey(HackathonProfile, on_delete=models.CASCADE, null=True, blank=True, related_name='favorites')
+    challenge = models.ForeignKey(Challenge, on_delete=models.CASCADE, null=True, blank=True, related_name='favorites')
+    created_at = models.DateTimeField('Ajouté le', auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'favori'
+        verbose_name_plural = 'favoris'
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(hackathon__isnull=False, challenge__isnull=True)
+                    | models.Q(hackathon__isnull=True, challenge__isnull=False)
+                ),
+                name='favorite_has_exactly_one_target',
+            ),
+            models.UniqueConstraint(
+                fields=['user', 'hackathon'], condition=models.Q(challenge__isnull=True),
+                name='unique_user_favorite_hackathon',
+            ),
+            models.UniqueConstraint(
+                fields=['user', 'challenge'], condition=models.Q(hackathon__isnull=True),
+                name='unique_user_favorite_challenge',
+            ),
+        ]
+
+    def __str__(self):
+        target = self.hackathon or self.challenge
+        return f'{self.user} — {target}'
+
+
+class MentorFeedback(models.Model):
+    mentor = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='hackathon_feedback',
+        limit_choices_to={'role': 'mentor'}, verbose_name='Mentor',
+    )
+    hackathon = models.ForeignKey(
+        HackathonProfile, on_delete=models.CASCADE, null=True, blank=True,
+        related_name='mentor_feedback', verbose_name='Hackathon',
+    )
+    challenge = models.ForeignKey(
+        Challenge, on_delete=models.CASCADE, null=True, blank=True,
+        related_name='mentor_feedback', verbose_name='Challenge',
+    )
+    rating = models.PositiveSmallIntegerField(
+        'Note sur 5', null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(5)],
+    )
+    review = models.TextField('Avis', blank=True)
+    ideas = models.TextField('Idées et suggestions', blank=True)
+    created_at = models.DateTimeField('Envoyé le', auto_now_add=True)
+    updated_at = models.DateTimeField('Modifié le', auto_now=True)
+
+    class Meta:
+        ordering = ['-updated_at']
+        verbose_name = 'avis mentor'
+        verbose_name_plural = 'avis mentors'
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(hackathon__isnull=False, challenge__isnull=True)
+                    | models.Q(hackathon__isnull=True, challenge__isnull=False)
+                ),
+                name='mentor_feedback_has_exactly_one_target',
+            ),
+            models.UniqueConstraint(
+                fields=['mentor', 'hackathon'], condition=models.Q(challenge__isnull=True),
+                name='unique_mentor_feedback_hackathon',
+            ),
+            models.UniqueConstraint(
+                fields=['mentor', 'challenge'], condition=models.Q(hackathon__isnull=True),
+                name='unique_mentor_feedback_challenge',
+            ),
+        ]
+
+    def __str__(self):
+        target = self.hackathon or self.challenge
+        return f'Avis de {self.mentor} — {target}'
 
 
 class ScheduleItem(models.Model):

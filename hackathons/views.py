@@ -5,17 +5,19 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from accounts.decorators import role_required
+from student.models import Notification
 
 from .forms import (
-    ChallengeForm, FlashAnnouncementForm, HackathonForm,
+    ChallengeForm, FlashAnnouncementForm, HackathonForm, MentorFeedbackForm,
     ResourceForm, ScheduleItemForm,
 )
 from .models import (
-    Challenge, FlashAnnouncement, HackathonProfile, HackathonResource,
-    Registration, ScheduleItem, Track,
+    Challenge, Favorite, FlashAnnouncement, HackathonProfile, HackathonResource,
+    MentorFeedback, Registration, ScheduleItem, Track,
 )
 
 organizer_only = role_required('admin', 'organization')
@@ -152,8 +154,6 @@ def hackathon_delete(request, pk):
     profile = get_object_or_404(HackathonProfile.objects.select_related('event'), pk=pk)
     event = profile.event
     reasons = []
-    if Registration.objects.filter(challenge__hackathon=profile).exists():
-        reasons.append('des inscriptions à des challenges existent')
     if event.teams.exists() or event.registrations.exists():
         reasons.append("l'événement est utilisé par d'autres modules (équipes ou inscriptions)")
     back = reverse('hackathons:hackathon_manage', args=[pk])
@@ -161,13 +161,31 @@ def hackathon_delete(request, pk):
         if reasons:
             messages.error(request, 'Suppression impossible : ' + ' ; '.join(reasons) + '.')
             return redirect(back)
-        event.delete()
-        messages.success(request, 'Hackathon supprimé.')
+        with transaction.atomic():
+            participant_ids = Registration.objects.filter(
+                challenge__hackathon=profile, status=Registration.Status.CONFIRMED,
+            ).values_list('user_id', flat=True).distinct()
+            notifications = [
+                Notification(
+                    user_id=user_id,
+                    title='Hackathon annulé',
+                    message=f'Le hackathon « {profile.title} » a été annulé. Vos inscriptions à ses challenges ont été supprimées.',
+                    icon='bi-calendar-x-fill',
+                    url='/hackathons/',
+                )
+                for user_id in participant_ids
+            ]
+            Notification.objects.bulk_create(notifications)
+            event.delete()
+        if notifications:
+            messages.success(request, f'Hackathon supprimé. {len(notifications)} étudiant(s) ont été avertis.')
+        else:
+            messages.success(request, 'Hackathon supprimé.')
         return redirect('hackathons:hackathon_list')
     return page(request, 'hackathons/manage/confirm.html', {
         'title': 'Supprimer le hackathon', 'object_label': profile.title,
         'warning': ('Suppression impossible : ' + ' ; '.join(reasons) + '.') if reasons else
-                   'Ses challenges et tous leurs contenus seront supprimés.',
+               'Le hackathon, ses challenges et contenus seront supprimés. Chaque étudiant inscrit recevra une notification.',
         'blocked': bool(reasons), 'back_href': back,
     })
 
@@ -288,4 +306,147 @@ def child_delete(request, challenge_id, kind, pk):
         return redirect(back)
     return page(request, 'hackathons/manage/confirm.html', {
         'title': f'Supprimer : {singular}', 'object_label': str(obj), 'blocked': False, 'back_href': back,
+    })
+
+
+@role_required('student')
+@require_POST
+def favorite_toggle(request, kind, pk):
+    if kind == 'hackathon':
+        target = get_object_or_404(HackathonProfile, pk=pk, status=HackathonProfile.Status.PUBLISHED)
+        lookup = {'user': request.user, 'hackathon': target, 'challenge__isnull': True}
+        label = target.title
+    elif kind == 'challenge':
+        target = get_object_or_404(
+            Challenge.objects.select_related('hackathon'), pk=pk, status=Challenge.Status.PUBLISHED,
+            hackathon__status=HackathonProfile.Status.PUBLISHED,
+        )
+        lookup = {'user': request.user, 'challenge': target, 'hackathon__isnull': True}
+        label = target.title
+    else:
+        raise Http404
+
+    favorite = Favorite.objects.filter(**lookup).first()
+    if favorite:
+        favorite.delete()
+        messages.success(request, f'« {label} » retiré de vos favoris.')
+    else:
+        Favorite.objects.create(user=request.user, **{kind: target})
+        messages.success(request, f'« {label} » ajouté à vos favoris.')
+
+    destination = request.POST.get('next', '')
+    if not url_has_allowed_host_and_scheme(destination, allowed_hosts={request.get_host()}):
+        destination = reverse('hackathons:my_favorites')
+    return redirect(destination)
+
+
+@role_required('student')
+def my_favorites(request):
+    favorites = Favorite.objects.filter(user=request.user).select_related(
+        'hackathon', 'hackathon__event', 'hackathon__track', 'challenge', 'challenge__hackathon',
+        'challenge__hackathon__event', 'challenge__hackathon__track',
+    )
+    q = request.GET.get('q', '').strip()
+    kind = request.GET.get('kind', '')
+    track = request.GET.get('track', '')
+    if kind == 'hackathon':
+        favorites = favorites.filter(hackathon__isnull=False)
+    elif kind == 'challenge':
+        favorites = favorites.filter(challenge__isnull=False)
+    if track.isdigit():
+        favorites = favorites.filter(Q(hackathon__track_id=int(track)) | Q(challenge__hackathon__track_id=int(track)))
+    if q:
+        favorites = favorites.filter(
+            Q(hackathon__event__name__icontains=q)
+            | Q(hackathon__track__name__icontains=q)
+            | Q(challenge__title__icontains=q)
+            | Q(challenge__hackathon__event__name__icontains=q)
+            | Q(challenge__hackathon__track__name__icontains=q)
+        )
+    tracks = Track.objects.filter(
+        Q(hackathons__favorites__user=request.user)
+        | Q(hackathons__challenges__favorites__user=request.user)
+    ).distinct().order_by('name')
+    return page(request, 'hackathons/public/my_favorites.html', {
+        'favorites': favorites, 'q': q, 'kind': kind, 'track': track, 'tracks': tracks,
+    })
+
+
+@role_required('mentor')
+def mentor_feedback_hackathon(request, pk):
+    hackathon = get_object_or_404(HackathonProfile, pk=pk, status=HackathonProfile.Status.PUBLISHED)
+    feedback = MentorFeedback.objects.filter(mentor=request.user, hackathon=hackathon).first()
+    if request.method == 'POST':
+        if feedback:
+            messages.info(request, 'Votre avis existe déjà. Consultez-le ou supprimez-le avant d’en rédiger un nouveau.')
+            return redirect('hackathons:mentor_feedback_hackathon', pk=hackathon.pk)
+        form = MentorFeedbackForm(request.POST, instance=MentorFeedback(mentor=request.user, hackathon=hackathon))
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Votre avis sur ce hackathon a été envoyé à l’équipe organisatrice.')
+            return redirect('hackathons:hackathon_detail', slug=hackathon.slug)
+    else:
+        form = MentorFeedbackForm(instance=MentorFeedback(mentor=request.user, hackathon=hackathon))
+    return page(request, 'hackathons/public/mentor_feedback_form.html', {
+        'form': form, 'feedback': feedback, 'hackathon': hackathon, 'feedback_target': hackathon.title,
+        'back_url': reverse('hackathons:hackathon_detail', args=[hackathon.slug]),
+    })
+
+
+@role_required('mentor')
+def mentor_feedback_challenge(request, pk):
+    challenge = get_object_or_404(
+        Challenge.objects.select_related('hackathon', 'hackathon__event'),
+        pk=pk, status=Challenge.Status.PUBLISHED, hackathon__status=HackathonProfile.Status.PUBLISHED,
+    )
+    feedback = MentorFeedback.objects.filter(mentor=request.user, challenge=challenge).first()
+    if request.method == 'POST':
+        if feedback:
+            messages.info(request, 'Votre avis existe déjà. Consultez-le ou supprimez-le avant d’en rédiger un nouveau.')
+            return redirect('hackathons:mentor_feedback_challenge', pk=challenge.pk)
+        form = MentorFeedbackForm(request.POST, instance=MentorFeedback(mentor=request.user, challenge=challenge))
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Votre avis sur ce challenge a été envoyé à l’équipe organisatrice.')
+            return redirect('hackathons:hackathon_detail', slug=challenge.hackathon.slug)
+    else:
+        form = MentorFeedbackForm(instance=MentorFeedback(mentor=request.user, challenge=challenge))
+    return page(request, 'hackathons/public/mentor_feedback_form.html', {
+        'form': form, 'feedback': feedback, 'hackathon': challenge.hackathon, 'feedback_target': challenge.title,
+        'back_url': reverse('hackathons:hackathon_detail', args=[challenge.hackathon.slug]),
+    })
+
+
+@role_required('mentor')
+@require_POST
+def mentor_feedback_delete(request, pk):
+    feedback = get_object_or_404(MentorFeedback, pk=pk, mentor=request.user)
+    hackathon = feedback.hackathon if feedback.hackathon_id else feedback.challenge.hackathon
+    feedback.delete()
+    messages.success(request, 'Votre avis a été supprimé. Vous pouvez en rédiger un nouveau.')
+    return redirect('hackathons:hackathon_detail', slug=hackathon.slug)
+
+
+@role_required('admin', 'organization')
+def mentor_feedback_list(request):
+    reviews = MentorFeedback.objects.select_related(
+        'mentor', 'hackathon', 'hackathon__event', 'challenge', 'challenge__hackathon', 'challenge__hackathon__event',
+    )
+    hackathon_id = request.GET.get('hackathon', '')
+    target_type = request.GET.get('type', '')
+    if hackathon_id.isdigit():
+        reviews = reviews.filter(Q(hackathon_id=int(hackathon_id)) | Q(challenge__hackathon_id=int(hackathon_id)))
+    if target_type == 'hackathon':
+        reviews = reviews.filter(hackathon__isnull=False)
+    elif target_type == 'challenge':
+        reviews = reviews.filter(challenge__isnull=False)
+
+    grouped = {}
+    for review in reviews:
+        target_hackathon = review.hackathon if review.hackathon_id else review.challenge.hackathon
+        grouped.setdefault(target_hackathon, []).append(review)
+    review_groups = sorted(grouped.items(), key=lambda item: item[0].event.name.casefold())
+    return page(request, 'hackathons/manage/mentor_feedback_list.html', {
+        'review_groups': review_groups, 'hackathons': HackathonProfile.objects.select_related('event').order_by('event__name'),
+        'selected_hackathon': hackathon_id, 'target_type': target_type,
     })

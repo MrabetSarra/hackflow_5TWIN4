@@ -7,9 +7,16 @@
         <div>
             <h1 class="h2 fw-bold mb-2">{{ h.title }}</h1>
             <p class="text-body-secondary mb-3"><i class="bi bi-calendar-event me-2"></i>Du {{ h.starts_at|date:"d/m/Y H:i" }} au {{ h.ends_at|date:"d/m/Y H:i" }}</p>
-            <button class="btn btn-outline-primary rounded-pill px-4" type="button" data-bs-toggle="collapse" data-bs-target="#hackathon-details" aria-expanded="false" aria-controls="hackathon-details">
-                <i class="bi bi-chevron-down me-1"></i>Voir plus
-            </button>
+            <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-outline-primary rounded-pill px-4" type="button" data-bs-toggle="collapse" data-bs-target="#hackathon-details" aria-expanded="false" aria-controls="hackathon-details">
+                    <i class="bi bi-chevron-down me-1"></i>Voir plus
+                </button>
+                {% if is_student %}
+                <form method="post" action="{% url 'hackathons:favorite_toggle' 'hackathon' h.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type="submit" class="btn btn-outline-warning rounded-pill px-4"><i class="bi {% if favorite_hackathon %}bi-star-fill{% else %}bi-star{% endif %} me-1"></i>{% if favorite_hackathon %}Retirer des favoris{% else %}Ajouter aux favoris{% endif %}</button>
+                </form>
+                {% elif is_mentor %}<a class="btn btn-outline-primary rounded-pill px-4" href="{% url 'hackathons:mentor_feedback_hackathon' h.pk %}"><i class="bi bi-chat-square-text me-1"></i>{% if mentor_feedback_hackathon %}Voir mon avis{% else %}Donner un avis{% endif %}</a>{% endif %}
+            </div>
         </div>
         {% if countdown_target %}
         <div class="text-center align-self-start px-4 py-3 rounded-4 bg-primary-subtle">

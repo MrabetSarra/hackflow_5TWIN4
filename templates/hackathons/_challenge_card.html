@@ -19,6 +19,11 @@
                 </div>
             </div>
             <div class="d-flex flex-md-column gap-2 align-self-md-start">
+                {% if is_student %}
+                <form method="post" action="{% url 'hackathons:favorite_toggle' 'challenge' c.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type="submit" class="btn btn-sm btn-outline-warning rounded-circle align-self-end" title="{% if c.pk in favorite_challenge_ids %}Retirer des favoris{% else %}Ajouter aux favoris{% endif %}" aria-label="{% if c.pk in favorite_challenge_ids %}Retirer des favoris{% else %}Ajouter aux favoris{% endif %}"><i class="bi {% if c.pk in favorite_challenge_ids %}bi-star-fill{% else %}bi-star{% endif %}"></i></button>
+                </form>
+                {% endif %}
                 <button class="btn btn-outline-primary rounded-pill px-4" type="button" data-bs-toggle="collapse" data-bs-target="#challenge-{{ c.pk }}" aria-expanded="false" aria-controls="challenge-{{ c.pk }}">
                     <i class="bi bi-chevron-down me-1"></i>Voir le challenge
                 </button>
@@ -31,6 +36,7 @@
     <div class="collapse border-top" id="challenge-{{ c.pk }}">
         <div class="p-4">
             {% include "hackathons/_challenge_tabs.html" %}
+            {% if is_mentor %}<a class="btn btn-outline-primary rounded-pill px-4 mt-4" href="{% url 'hackathons:mentor_feedback_challenge' c.pk %}"><i class="bi bi-chat-square-text me-2"></i>{% if c.pk in mentor_feedback_challenge_ids %}Voir mon avis{% else %}Donner un avis sur ce challenge{% endif %}</a>{% endif %}
         </div>
     </div>
 </article>

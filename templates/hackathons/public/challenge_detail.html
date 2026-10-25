@@ -14,6 +14,9 @@
         </div>
         {% if is_student %}
         <div class="align-self-start">
+            <form method="post" action="{% url 'hackathons:favorite_toggle' 'challenge' c.pk %}" class="mb-2">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit" class="btn btn-outline-warning rounded-pill px-4"><i class="bi {% if favorite_challenge %}bi-star-fill{% else %}bi-star{% endif %} me-1"></i>{% if favorite_challenge %}Retirer des favoris{% else %}Ajouter aux favoris{% endif %}</button>
+            </form>
             {% if my_registration %}
             <span class="badge bg-success rounded-pill px-3 py-2 mb-2 d-inline-block">Inscrit</span>
             <form method="post" action="{% url 'hackathons:registration_cancel' my_registration.pk %}">{% csrf_token %}<button class="btn btn-outline-danger rounded-pill px-4" onclick="return confirm('Annuler votre inscription à ce challenge ?')">Annuler mon inscription</button></form>
@@ -24,4 +27,5 @@
         {% endif %}
     </div>
 </section>
+{% if is_mentor %}<div class="d-flex justify-content-end mb-4"><a class="btn btn-primary rounded-pill px-4" href="{% url 'hackathons:mentor_feedback_challenge' c.pk %}"><i class="bi bi-chat-square-text me-2"></i>{% if mentor_feedback %}Voir mon avis{% else %}Donner un avis sur ce challenge{% endif %}</a></div>{% endif %}
 <section class="card-modern p-4 p-lg-5">{% include "hackathons/_challenge_tabs.html" %}</section>

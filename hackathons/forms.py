@@ -8,6 +8,7 @@ from student.models import Hackathon
 
 from .models import (
     Challenge, FlashAnnouncement, HackathonProfile, HackathonResource,
+    MentorFeedback,
     ScheduleItem, Track,
 )
 
@@ -275,4 +276,21 @@ class ResourceForm(ChallengeScopedForm):
         data = super().clean()
         if not data.get('url') and not data.get('file'):
             self.add_error('url', 'Fournissez un lien ou un fichier.')
+        return data
+
+
+class MentorFeedbackForm(BaseStyledForm):
+    class Meta:
+        model = MentorFeedback
+        fields = ('rating', 'review', 'ideas')
+        widgets = {
+            'rating': forms.Select(choices=[('', 'Sans note')] + [(n, f'{n} / 5') for n in range(1, 6)]),
+            'review': forms.Textarea(attrs={'rows': 5, 'maxlength': 5000, 'placeholder': 'Votre avis sur ce hackathon ou ce challenge…'}),
+            'ideas': forms.Textarea(attrs={'rows': 4, 'maxlength': 3000, 'placeholder': 'Vos idées et suggestions…'}),
+        }
+
+    def clean(self):
+        data = super().clean()
+        if not (data.get('review', '').strip() or data.get('ideas', '').strip()):
+            raise forms.ValidationError('Rédigez un avis ou une idée avant l’envoi.')
         return data

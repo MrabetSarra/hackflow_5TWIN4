@@ -5,12 +5,13 @@ from django.urls import reverse
 from django.utils import timezone
 
 from accounts.models import User
-from student.models import Hackathon, Team, TeamMembership
+from student.models import Hackathon, Notification, Team, TeamMembership
 
 from . import services
 from .forms import ChallengeForm
 from .models import (
-    Challenge, FlashAnnouncement, HackathonProfile, Registration, ScheduleItem, Track,
+    Challenge, Favorite, FlashAnnouncement, HackathonProfile, MentorFeedback, Registration,
+    ScheduleItem, Track,
 )
 
 
@@ -66,6 +67,11 @@ class AccessTests(Base):
         for path in ('/hackathons/manage/tracks/', f'/hackathons/tracks/{self.track.slug}/'):
             self.assertEqual(self.client.get(path).status_code, 404, path)
 
+    def test_admin_sidebar_has_one_mentor_feedback_link(self):
+        self.client.force_login(self.org)
+        body = self.client.get(reverse('hackathons:mentor_feedback_list')).content.decode()
+        self.assertEqual(body.count(f'href="{reverse("hackathons:mentor_feedback_list")}" class="nav-link-item'), 1)
+
     def test_public_pages_render_for_student_and_mentor(self):
         for user in (self.student, self.mentor):
             self.client.force_login(user)
@@ -75,15 +81,142 @@ class AccessTests(Base):
             ):
                 self.assertEqual(self.client.get(url).status_code, 200, url)
 
+    def test_mentor_and_admin_views_render(self):
+        self.client.force_login(self.mentor)
+        self.assertEqual(self.client.get(reverse('hackathons:mentor_feedback_hackathon', args=[self.h.pk])).status_code, 200)
+        self.assertEqual(self.client.get(reverse('hackathons:mentor_feedback_challenge', args=[self.c.pk])).status_code, 200)
+        self.assertFalse(MentorFeedback.objects.exists())
+        self.client.force_login(self.org)
+        self.assertEqual(self.client.get(reverse('hackathons:mentor_feedback_list')).status_code, 200)
+
+
+class FavoritesTests(Base):
+    def setUp(self):
+        super().setUp()
+        self.client.force_login(self.student)
+
+    def test_toggle_hackathon_and_challenge_favorites(self):
+        hackathon_url = reverse('hackathons:favorite_toggle', args=['hackathon', self.h.pk])
+        challenge_url = reverse('hackathons:favorite_toggle', args=['challenge', self.c.pk])
+        self.assertRedirects(self.client.post(hackathon_url, {'next': reverse('hackathons:catalog')}), reverse('hackathons:catalog'))
+        self.client.post(challenge_url, {'next': reverse('hackathons:hackathon_detail', args=[self.h.slug])})
+        self.assertEqual(Favorite.objects.filter(user=self.student).count(), 2)
+        self.client.post(hackathon_url, {'next': reverse('hackathons:catalog')})
+        self.assertFalse(Favorite.objects.filter(user=self.student, hackathon=self.h).exists())
+        self.assertTrue(Favorite.objects.filter(user=self.student, challenge=self.c).exists())
+
+    def test_favorites_filter_by_query_track_and_kind(self):
+        other_track = Track.objects.create(name='FinTech')
+        other_h = make_hackathon(other_track, name='Finance Jam')
+        other_c = Challenge.objects.create(hackathon=other_h, title='Budget Bot', status='published')
+        Favorite.objects.create(user=self.student, hackathon=self.h)
+        Favorite.objects.create(user=self.student, challenge=other_c)
+        response = self.client.get(reverse('hackathons:my_favorites'))
+        self.assertContains(response, 'Green Jam')
+        self.assertContains(response, 'Budget Bot')
+        response = self.client.get(reverse('hackathons:my_favorites'), {'track': other_track.pk})
+        self.assertNotContains(response, 'Green Jam')
+        self.assertContains(response, 'Budget Bot')
+        response = self.client.get(reverse('hackathons:my_favorites'), {'q': 'Budget', 'kind': 'challenge'})
+        self.assertContains(response, 'Budget Bot')
+        self.assertNotContains(response, 'Green Jam')
+
+    def test_only_students_can_manage_favorites(self):
+        self.client.force_login(self.mentor)
+        self.assertEqual(self.client.get(reverse('hackathons:my_favorites')).status_code, 403)
+        self.assertEqual(self.client.post(reverse('hackathons:favorite_toggle', args=['challenge', self.c.pk])).status_code, 403)
+
+    def test_unpublished_items_cannot_be_favorited(self):
+        self.c.status = 'draft'
+        self.c.save()
+        response = self.client.post(reverse('hackathons:favorite_toggle', args=['challenge', self.c.pk]))
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(Favorite.objects.exists())
+
+
+class MentorFeedbackTests(Base):
+    def setUp(self):
+        super().setUp()
+        self.client.force_login(self.mentor)
+
+    def test_existing_hackathon_review_is_read_only_until_deleted(self):
+        url = reverse('hackathons:mentor_feedback_hackathon', args=[self.h.pk])
+        self.assertEqual(self.client.get(url).status_code, 200)
+        response = self.client.post(url, {'rating': '4', 'review': 'Bonne organisation', 'ideas': 'Ajouter une pause'})
+        self.assertRedirects(response, reverse('hackathons:hackathon_detail', args=[self.h.slug]))
+        feedback = MentorFeedback.objects.get(mentor=self.mentor, hackathon=self.h)
+        view_response = self.client.get(url)
+        self.assertContains(view_response, 'Bonne organisation')
+        self.assertContains(view_response, 'Supprimer mon avis')
+        self.assertNotContains(view_response, 'Envoyer l&#x27;avis')
+        response = self.client.post(url, {'rating': '5', 'review': 'Deuxième avis', 'ideas': ''})
+        self.assertRedirects(response, url)
+        feedback.refresh_from_db()
+        self.assertEqual(feedback.rating, 4)
+        self.assertEqual(feedback.review, 'Bonne organisation')
+        self.assertEqual(MentorFeedback.objects.filter(mentor=self.mentor, hackathon=self.h).count(), 1)
+        delete_url = reverse('hackathons:mentor_feedback_delete', args=[feedback.pk])
+        self.assertRedirects(self.client.post(delete_url), reverse('hackathons:hackathon_detail', args=[self.h.slug]))
+        self.assertFalse(MentorFeedback.objects.filter(pk=feedback.pk).exists())
+        response = self.client.post(url, {'rating': '5', 'review': 'Nouvel avis après suppression', 'ideas': ''})
+        self.assertRedirects(response, reverse('hackathons:hackathon_detail', args=[self.h.slug]))
+        self.assertEqual(MentorFeedback.objects.filter(mentor=self.mentor, hackathon=self.h).count(), 1)
+
+    def test_review_can_target_one_challenge_and_requires_content(self):
+        url = reverse('hackathons:mentor_feedback_challenge', args=[self.c.pk])
+        response = self.client.post(url, {'rating': '3', 'review': '', 'ideas': ''})
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(MentorFeedback.objects.exists())
+        response = self.client.post(url, {'rating': '3', 'review': 'Défi intéressant', 'ideas': 'Préciser le livrable'})
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(MentorFeedback.objects.filter(mentor=self.mentor, challenge=self.c, hackathon__isnull=True).exists())
+        feedback = MentorFeedback.objects.get(mentor=self.mentor, challenge=self.c)
+        response = self.client.post(url, {'rating': '5', 'review': 'Un deuxième avis', 'ideas': ''})
+        self.assertRedirects(response, url)
+        feedback.refresh_from_db()
+        self.assertEqual(feedback.review, 'Défi intéressant')
+
+    def test_mentor_cannot_delete_another_mentors_review(self):
+        feedback = MentorFeedback.objects.create(mentor=self.mentor, hackathon=self.h, review='À conserver')
+        another_mentor = User.objects.create_user('men2', password='x', role='mentor')
+        self.client.force_login(another_mentor)
+        response = self.client.post(reverse('hackathons:mentor_feedback_delete', args=[feedback.pk]))
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(MentorFeedback.objects.filter(pk=feedback.pk).exists())
+
+    def test_student_cannot_send_mentor_feedback(self):
+        self.client.force_login(self.student)
+        self.assertEqual(self.client.post(reverse('hackathons:mentor_feedback_hackathon', args=[self.h.pk])).status_code, 403)
+
+    def test_only_admin_can_view_reviews_and_reviews_filter_by_hackathon(self):
+        MentorFeedback.objects.create(mentor=self.mentor, hackathon=self.h, review='Avis du premier hackathon')
+        second = make_hackathon(Track.objects.create(name='Green Energy'), name='Energy Jam')
+        MentorFeedback.objects.create(mentor=self.mentor, challenge=Challenge.objects.create(
+            hackathon=second, title='Solar challenge', status='published'), review='Avis du second hackathon')
+        response = self.client.get(reverse('hackathons:mentor_feedback_list'))
+        self.assertEqual(response.status_code, 403)
+        self.client.force_login(self.org)
+        response = self.client.get(reverse('hackathons:mentor_feedback_list'), {'hackathon': self.h.pk})
+        self.assertContains(response, 'Green Jam')
+        self.assertContains(response, 'Avis du premier hackathon')
+        self.assertNotContains(response, 'Avis du second hackathon')
+
     def test_catalog_lists_hackathons_and_filters_by_track(self):
         make_hackathon(Track.objects.create(name='FinTech'), name='Finance Jam')
         self.client.force_login(self.student)
         response = self.client.get(reverse('hackathons:catalog'))
         self.assertContains(response, 'Green Jam')
         self.assertContains(response, 'Finance Jam')
+        self.assertContains(response, reverse('hackathons:favorite_toggle', args=['hackathon', self.h.pk]))
         filtered = self.client.get(reverse('hackathons:catalog'), {'track': self.track.pk})
         self.assertContains(filtered, 'Green Jam')
         self.assertNotContains(filtered, 'Finance Jam')
+
+    def test_favorite_page_link_is_in_student_sidebar(self):
+        self.client.force_login(self.student)
+        response = self.client.get(reverse('hackathons:my_favorites'))
+        self.assertContains(response, 'Mes favoris')
+        self.assertContains(response, reverse('hackathons:my_favorites'))
 
 
 class ChallengeContentTests(Base):
@@ -118,6 +251,13 @@ class ChallengeContentTests(Base):
         self.assertIn('Programme', body)
         self.assertNotIn('Filtrer les challenges', body)
         self.assertEqual(self.client.get(f'/hackathons/h/{self.h.slug}/challenges/').status_code, 404)
+
+    def test_mentor_review_buttons_render_on_hackathon_and_each_challenge(self):
+        self.client.force_login(self.mentor)
+        body = self.client.get(reverse('hackathons:hackathon_detail', args=[self.h.slug])).content.decode()
+        self.assertIn(reverse('hackathons:mentor_feedback_hackathon', args=[self.h.pk]), body)
+        self.assertIn(reverse('hackathons:mentor_feedback_challenge', args=[self.c.pk]), body)
+        self.assertNotIn(reverse('hackathons:favorite_toggle', args=['hackathon', self.h.pk]), body)
 
     def test_details_are_hidden_behind_voir_plus_and_map_comes_after_challenges(self):
         self.h.latitude, self.h.longitude = 36.8065, 10.1815
@@ -164,6 +304,7 @@ class ChallengeContentTests(Base):
         body = self.client.get(reverse('hackathons:catalog')).content.decode()
         self.assertIn(reverse('hackathons:my_registrations'), body)
         self.assertIn('Mes inscriptions', body)
+        self.assertEqual(body.count(f'href="{reverse("hackathons:my_favorites")}" class="nav-link-item'), 1)
 
 
 class VisibilityTests(Base):
@@ -409,10 +550,23 @@ class OrganizerFlowTests(Base):
         self.client.post(reverse('hackathons:challenge_delete', args=[self.h.pk, self.c.pk]))
         self.assertTrue(Challenge.objects.filter(pk=self.c.pk).exists())
 
-    def test_hackathon_with_registrations_cannot_be_deleted(self):
+    def test_hackathon_with_challenge_registrations_deleted_and_students_notified(self):
         services.register(self.student, self.c)
-        self.client.post(reverse('hackathons:hackathon_delete', args=[self.h.pk]))
-        self.assertTrue(HackathonProfile.objects.filter(pk=self.h.pk).exists())
+        other = Challenge.objects.create(hackathon=self.h, title='Challenge two', status='published')
+        services.cancel(Registration.objects.get(user=self.student, challenge=self.c))
+        services.register(self.student, self.c)
+        services.register(self.student2, other)
+
+        response = self.client.post(reverse('hackathons:hackathon_delete', args=[self.h.pk]))
+
+        self.assertRedirects(response, reverse('hackathons:hackathon_list'))
+        self.assertFalse(HackathonProfile.objects.filter(pk=self.h.pk).exists())
+        self.assertFalse(Registration.objects.filter(challenge__hackathon=self.h).exists())
+        self.assertEqual(Notification.objects.filter(user=self.student, title='Hackathon annulé').count(), 1)
+        self.assertEqual(Notification.objects.filter(user=self.student2, title='Hackathon annulé').count(), 1)
+        notification = Notification.objects.get(user=self.student, title='Hackathon annulé')
+        self.assertIn('Green Jam', notification.message)
+        self.assertEqual(notification.url, '/hackathons/')
 
     def test_hackathon_without_registration_deleted_with_event(self):
         event_id = self.h.event_id
