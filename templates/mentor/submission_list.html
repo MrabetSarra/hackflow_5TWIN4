@@ -1,5 +1,5 @@
 {% extends "layouts/base_mentor.html" %}
-{% load mentor_tags %}
+{% load mentor_tags i18n i18n_content %}
 
 {% block title %}Soumissions à évaluer - Espace Mentor - HackFlow{% endblock %}
 
@@ -7,13 +7,13 @@
 <div class="container-fluid px-0">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
-            <h1 class="h2 fw-bold text-body mb-1">Soumissions de Projet</h1>
+            <h1 class="h2 fw-bold text-body mb-1">{% trans "Soumissions de Projet" %}</h1>
             <p class="text-body-secondary small mb-0">Évaluez les livrables des équipes selon la grille de jugement (avis consultatif, le jury décide).</p>
         </div>
         <form method="get" class="form-check form-switch m-0">
             <input class="form-check-input" type="checkbox" role="switch" id="only-mine" name="mine" {% if mine %}checked{% endif %} onchange="this.form.submit()">
             <label class="form-check-label small" for="only-mine">Mes équipes suivies uniquement</label>
-            <noscript><button type="submit" class="btn btn-sm btn-outline-primary ms-2">Appliquer</button></noscript>
+            <noscript><button type="submit" class="btn btn-sm btn-outline-primary ms-2">{% trans "Appliquer" %}</button></noscript>
         </form>
     </div>
 
@@ -25,11 +25,11 @@
                     <tr>
                         <th scope="col" class="ps-4">Équipe</th>
                         <th scope="col">Projet</th>
-                        <th scope="col">Jalon</th>
-                        <th scope="col">Statut</th>
-                        <th scope="col">Livrables</th>
-                        <th scope="col">Ma note</th>
-                        <th scope="col" class="text-end pe-4">Action</th>
+                        <th scope="col">{% trans "Jalon" %}</th>
+                        <th scope="col">{% trans "Statut" %}</th>
+                        <th scope="col">{% trans "Livrables" %}</th>
+                        <th scope="col">{% trans "Ma note" %}</th>
+                        <th scope="col" class="text-end pe-4">{% trans "Action" %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -37,7 +37,7 @@
                     <tr>
                         <td class="ps-4 fw-semibold"><a href="{% url 'mentor:team_detail' submission.team.pk %}">{{ submission.team.name }}</a></td>
                         <td>{{ submission.project_name|default:submission.team.project_name|default:"—" }}</td>
-                        <td>{{ submission.milestone.title }}</td>
+<td>{{ submission.milestone.title|localized_milestone }}</td>
                         <td><span class="badge {{ submission.status|status_badge }}">{{ submission.get_status_display }}</span></td>
                         <td class="small">
                             {% if submission.github_url %}<a href="{{ submission.github_url }}" target="_blank" rel="noopener noreferrer" aria-label="Dépôt de code de {{ submission.team.name }} (nouvel onglet)"><i class="bi bi-github" aria-hidden="true"></i></a>{% endif %}
@@ -54,7 +54,7 @@
                             {% if submission.my_evaluation %}
                             <a class="btn btn-outline-primary btn-sm" href="{% url 'mentor:evaluation_detail' submission.my_evaluation.pk %}">Voir mon évaluation</a>
                             {% else %}
-                            <a class="btn btn-primary btn-sm" href="{% url 'mentor:evaluation_create' submission.pk %}"><i class="bi bi-pencil-square me-1" aria-hidden="true"></i>Noter</a>
+                            <a class="btn btn-primary btn-sm" href="{% url 'mentor:evaluation_create' submission.pk %}"><i class="bi bi-pencil-square me-1" aria-hidden="true"></i>{% trans "Noter" %}</a>
                             {% endif %}
                         </td>
                     </tr>

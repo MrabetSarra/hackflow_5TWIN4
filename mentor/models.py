@@ -6,6 +6,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Sum
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from student.models import MentorRequest, Submission, Team
 
@@ -47,9 +48,9 @@ class Criterion(models.Model):
     """Critère pondéré de la grille de jugement, partagé par le jury et les mentors."""
 
     class Scope(models.TextChoices):
-        BOTH = 'both', 'Jury et mentors'
-        JURY = 'jury', 'Jury uniquement'
-        MENTOR = 'mentor', 'Mentors uniquement'
+        BOTH = 'both', _('Jury et mentors')
+        JURY = 'jury', _('Jury uniquement')
+        MENTOR = 'mentor', _('Mentors uniquement')
 
     code = models.SlugField(max_length=50, unique=True)
     name = models.CharField(max_length=120)
@@ -104,8 +105,8 @@ class MentorAssignment(models.Model):
     """
 
     class Source(models.TextChoices):
-        MENTOR = 'mentor', 'Choisie par le mentor'
-        AUTO = 'auto', 'Automatique (ticket ou session)'
+        MENTOR = 'mentor', _('Choisie par le mentor')
+        AUTO = 'auto', _('Automatique (ticket ou session)')
         ORGANIZER = 'organizer', "Affectée par l'organisation"
 
     mentor = models.ForeignKey(
@@ -146,10 +147,10 @@ class MentoringSession(models.Model):
     """Session d'accompagnement planifiée entre un mentor et une équipe."""
 
     class Status(models.TextChoices):
-        PLANNED = 'planned', 'Planifiée'
-        CONFIRMED = 'confirmed', 'Confirmée'
-        DONE = 'done', 'Terminée'
-        CANCELLED = 'cancelled', 'Annulée'
+        PLANNED = 'planned', _('Planifiée')
+        CONFIRMED = 'confirmed', _('Confirmée')
+        DONE = 'done', _('Terminée')
+        CANCELLED = 'cancelled', _('Annulée')
 
     mentor = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='mentoring_sessions',
@@ -197,9 +198,9 @@ class MentorEvaluation(models.Model):
     """Évaluation multi-critères d'une soumission de projet par un mentor (avis consultatif)."""
 
     class PitchReadiness(models.TextChoices):
-        NOT_READY = 'not_ready', 'Pas prêt'
-        ON_TRACK = 'on_track', 'En bonne voie'
-        READY = 'ready', 'Prêt'
+        NOT_READY = 'not_ready', _('Pas prêt')
+        ON_TRACK = 'on_track', _('En bonne voie')
+        READY = 'ready', _('Prêt')
 
     mentor = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='mentor_evaluations',
@@ -274,10 +275,10 @@ class RequestTriage(models.Model):
     """Analyse IA (Ollama local) d'une demande d'aide : catégorie, urgence, résumé, mentor suggéré."""
 
     class Status(models.TextChoices):
-        PENDING = 'pending', 'En attente'
-        RUNNING = 'running', 'Analyse en cours'
-        DONE = 'done', 'Terminée'
-        FAILED = 'failed', 'Indisponible'
+        PENDING = 'pending', _('En attente')
+        RUNNING = 'running', _('Analyse en cours')
+        DONE = 'done', _('Terminée')
+        FAILED = 'failed', _('Indisponible')
 
     help_request = models.OneToOneField(MentorRequest, on_delete=models.CASCADE, related_name='triage')
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)

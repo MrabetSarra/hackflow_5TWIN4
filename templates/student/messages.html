@@ -1,12 +1,13 @@
 {% extends "layouts/base_student.html" %}
+{% load i18n %}
 
 {% block title %}Messages - HackFlow{% endblock %}
 
 {% block student_content %}
 <div class="container-fluid px-0">
     <div class="mb-4">
-        <h1 class="fw-bold text-body mb-1">Messages</h1>
-        <p class="text-body-secondary small mb-0">Your private conversations with other students.</p>
+        <h1 class="fw-bold text-body mb-1">{% trans "Messages" %}</h1>
+        <p class="text-body-secondary small mb-0">{% trans "Your private conversations with other students." %}</p>
     </div>
 
     <div class="card-modern p-4">
@@ -20,7 +21,7 @@
                 <i aria-hidden="true" class="bi bi-chevron-right text-primary"></i>
             </a>
             {% empty %}
-            <p class="text-body-secondary mb-0">No conversations yet. Open your team page to message a member.</p>
+            <p class="text-body-secondary mb-0">{% trans "No conversations yet. Open your team page to message a member." %}</p>
             {% endfor %}
         </div>
     </div>

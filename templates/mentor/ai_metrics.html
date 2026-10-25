@@ -1,0 +1,104 @@
+{% extends "layouts/base_mentor.html" %}
+{% load i18n %}
+
+{% block title %}Métriques IA - Espace Mentor - HackFlow{% endblock %}
+
+{% block mentor_content %}
+<div class="container-fluid px-0">
+    <div class="mb-4">
+        <h1 class="h2 fw-bold text-body mb-1">{% trans "Métriques du Tri IA" %}</h1>
+        <p class="text-body-secondary small mb-0">
+            Modèle local <code>{{ model }}</code> via Ollama : il propose une catégorie, une urgence et un résumé pour chaque demande d'aide.
+            Le mentor garde la décision et peut corriger la suggestion.
+        </p>
+    </div>
+
+    <!-- Indicateurs en direct -->
+    <section class="row g-3 mb-4" aria-labelledby="live-title">
+        <h2 id="live-title" class="visually-hidden">{% trans "Indicateurs en direct" %}</h2>
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card card-modern h-100">
+                <div class="h3 fw-bold font-mono mb-0">{{ live.done }}<span class="fs-6 text-body-secondary"> / {{ live.total }}</span></div>
+                <div class="text-body-secondary small fw-semibold">Tickets analysés{% if live.failed %} ({{ live.failed }} échec{{ live.failed|pluralize }}){% endif %}</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card card-modern h-100">
+                <div class="h3 fw-bold font-mono mb-0">{% if live.latency.p50_ms %}{{ live.latency.p50_ms }} ms{% else %}—{% endif %}</div>
+                <div class="text-body-secondary small fw-semibold">Latence médiane (p95 : {{ live.latency.p95_ms|default:"—" }} ms)</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card card-modern h-100">
+                <div class="h3 fw-bold font-mono mb-0">{% if live.category_agreement is not None %}{{ live.category_agreement }} %{% else %}—{% endif %}</div>
+                <div class="text-body-secondary small fw-semibold">{% trans "Accord IA / mentors sur la catégorie" %}</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card card-modern h-100">
+                <div class="h3 fw-bold font-mono mb-0">{% if live.urgency_agreement is not None %}{{ live.urgency_agreement }} %{% else %}—{% endif %}</div>
+                <div class="text-body-secondary small fw-semibold">{% trans "Accord sur l'urgence" %} ({{ live.corrected }} {% trans "correction" %}{{ live.corrected|pluralize }})</div>
+            </div>
+        </div>
+    </section>
+
+    {% if report %}
+    <section class="card-modern p-4 mb-4" aria-labelledby="offline-title">
+        <h2 id="offline-title" class="h5 fw-bold text-body mb-1">{% trans "Évaluation sur le jeu de test étiqueté" %}</h2>
+        <p class="small text-body-secondary mb-3">
+            {{ report.answered }} tickets analysés sur {{ report.samples }} • modèle <code>{{ report.model }}</code> •
+            généré le {{ report.generated_at|slice:":16"|cut:"T" }} • {% trans "commande" %} <code>python manage.py evaluate_triage</code>
+        </p>
+        <div class="row g-3">
+            <div class="col-md-3"><div class="p-3 border rounded-3 h-100"><div class="small text-body-secondary">Catégorie — accuracy</div><div class="h4 fw-bold font-mono mb-0">{{ report.category.accuracy|floatformat:3 }}</div></div></div>
+            <div class="col-md-3"><div class="p-3 border rounded-3 h-100"><div class="small text-body-secondary">Catégorie — F1 macro</div><div class="h4 fw-bold font-mono mb-0">{{ report.category.macro_f1|floatformat:3 }}</div></div></div>
+            <div class="col-md-3"><div class="p-3 border rounded-3 h-100"><div class="small text-body-secondary">{% trans "Urgence" %} — accuracy</div><div class="h4 fw-bold font-mono mb-0">{{ report.urgency.accuracy|floatformat:3 }}</div></div></div>
+            <div class="col-md-3"><div class="p-3 border rounded-3 h-100"><div class="small text-body-secondary">Latence à chaud p50 / p95</div><div class="h4 fw-bold font-mono mb-0">{{ report.latency.p50_ms }} / {{ report.latency.p95_ms }} ms</div><div class="small text-body-secondary">Démarrage à froid : {{ report.cold_start_ms }} ms</div></div></div>
+        </div>
+    </section>
+
+    {% for key, section in report.items %}{% if key == 'category' or key == 'urgency' %}
+    <section class="card-modern overflow-hidden mb-4" aria-labelledby="{{ key }}-title">
+        <h2 id="{{ key }}-title" class="h5 fw-bold text-body p-4 pb-0 mb-1">{% if key == 'category' %}Catégorie{% else %}{% trans "Urgence" %}{% endif %} : précision, {% trans "rappel" %}, F1 {% trans "et matrice de confusion" %}</h2>
+        <p class="small text-body-secondary px-4 mb-3">{% trans "Lignes = classe réelle, colonnes = classe prédite (diagonale = bonnes réponses)." %}</p>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <caption class="visually-hidden">Métriques par classe {% trans "et matrice de confusion" %}</caption>
+                <thead>
+                    <tr>
+                        <th scope="col" class="ps-4">{% trans "Classe" %}</th>
+                        <th scope="col" class="text-end">Précision</th>
+                        <th scope="col" class="text-end">Rappel</th>
+                        <th scope="col" class="text-end">F1</th>
+                        <th scope="col" class="text-end">{% trans "Support" %}</th>
+                        {% for label in section.labels %}<th scope="col" class="text-center" title="{{ label }}">P{{ forloop.counter }}</th>{% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in section.rows %}
+                    {% with row_index=forloop.counter %}
+                    <tr>
+                        <th scope="row" class="ps-4 fw-semibold small">R{{ row_index }} · {{ row.label }}</th>
+                        <td class="text-end font-mono">{{ row.precision|floatformat:3 }}</td>
+                        <td class="text-end font-mono">{{ row.recall|floatformat:3 }}</td>
+                        <td class="text-end font-mono">{{ row.f1|floatformat:3 }}</td>
+                        <td class="text-end font-mono">{{ row.support }}</td>
+                        {% for value in row.matrix %}
+                        <td class="text-center font-mono {% if forloop.counter == row_index %}bg-success-subtle fw-bold{% elif value %}bg-danger-subtle{% endif %}">{{ value }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endwith %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {% endif %}{% endfor %}
+    {% else %}
+    <section class="card-modern p-4 mb-4">
+        <h2 class="h5 fw-bold text-body">{% trans "Aucun rapport d'évaluation" %}</h2>
+        <p class="small text-body-secondary mb-0">Lancez <code>python manage.py evaluate_triage</code> (avec Ollama démarré) pour mesurer précision, {% trans "rappel" %}, F1 et latence sur le jeu de test étiqueté.</p>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}

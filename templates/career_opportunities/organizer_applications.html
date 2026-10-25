@@ -1,10 +1,11 @@
 {% extends 'layouts/base_admin.html' %}
+{% load i18n %}
 {% block title %}Student applications · HackFlow{% endblock %}
 {% block admin_content %}
 <div class="container-fluid">
   <a href="{% url 'dashboard_admin:career_dashboard' %}" class="small">← Career dashboard</a>
-  <h1 class="h2 fw-bold mt-2 mb-4">Student applications</h1>
-  {% for message in messages %}<div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %} alert-dismissible fade show" role="status">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>{% endfor %}
+  <h1 class="h2 fw-bold mt-2 mb-4">{% trans "Student applications" %}</h1>
+  {% for message in messages %}<div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %} alert-dismissible fade show" role="status">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{% trans 'Close' %}"></button></div>{% endfor %}
 
   <div class="d-grid gap-3">
     {% for app in applications %}
@@ -18,7 +19,7 @@
             <div class="small mt-2">
               {% if app.match_score != None %}
                 {% if app.match_eligible %}<span class="badge text-bg-success">Eligible · {{ app.match_score }}%</span>{% else %}<span class="badge text-bg-secondary">Below 50% · {{ app.match_score }}%</span>{% endif %}
-              {% else %}<span class="badge text-bg-warning">Not enough match evidence</span>{% endif %}
+              {% else %}<span class="badge text-bg-warning">{% trans "Not enough match evidence" %}</span>{% endif %}
               <span class="badge text-bg-light border text-body ms-1">{{ app.get_status_display }}</span>
             </div>
             {% if app.interview_at %}<div class="small mt-2"><i class="bi bi-calendar2-check me-1"></i>Interview: {{ app.interview_at|date:'M j, Y · H:i' }}</div>{% endif %}
@@ -26,30 +27,30 @@
             <div class="small text-secondary mt-2">
               {% for event in app.history.all %}<span class="me-3">{{ event.created_at|date:'Y-m-d' }} · {{ event.get_new_status_display }}{% if event.note %}: {{ event.note }}{% endif %}</span>{% empty %}No status updates{% endfor %}
             </div>
-            {% if app.cv %}<a href="{% url 'dashboard_admin:career_application_cv' app.pk %}" class="small d-inline-block mt-2">Download private CV</a>{% endif %}
+            {% if app.cv %}<a href="{% url 'dashboard_admin:career_application_cv' app.pk %}" class="small d-inline-block mt-2">{% trans "Download private CV" %}</a>{% endif %}
           </div>
 
           <form method="post" action="{% url 'dashboard_admin:career_application_status' app.pk %}" class="border rounded-4 bg-body-tertiary p-3" style="width:min(100%,400px)">
             {% csrf_token %}
-            <label class="form-label small fw-semibold" for="{{ app.update_form.status.id_for_label }}">Application update</label>
+            <label class="form-label small fw-semibold" for="{{ app.update_form.status.id_for_label }}">{% trans "Application update" %}</label>
             {{ app.update_form.status }}
-            <label class="form-label small fw-semibold" for="{{ app.update_form.interview_at.id_for_label }}">Interview date and time</label>
+            <label class="form-label small fw-semibold" for="{{ app.update_form.interview_at.id_for_label }}">{% trans "Interview date and time" %}</label>
             {{ app.update_form.interview_at }}
-            <div class="form-text mb-2">Required for applicants with a reliable match score of at least 50%.</div>
-            <label class="form-label small fw-semibold" for="{{ app.update_form.organizer_update.id_for_label }}">Message to student</label>
+            <div class="form-text mb-2">{% trans "Required for applicants with a reliable match score of at least 50%." %}</div>
+            <label class="form-label small fw-semibold" for="{{ app.update_form.organizer_update.id_for_label }}">{% trans "Message to student" %}</label>
             {{ app.update_form.organizer_update }}
-            <button class="btn btn-sm btn-primary mt-2" type="submit">Save and notify student</button>
+            <button class="btn btn-sm btn-primary mt-2" type="submit">{% trans "Save and notify student" %}</button>
           </form>
         </div>
       </div>
     </article>
-    {% empty %}<div class="card border-0 shadow-sm rounded-4 text-center p-5 text-secondary">No student applications yet.</div>{% endfor %}
+    {% empty %}<div class="card border-0 shadow-sm rounded-4 text-center p-5 text-secondary">{% trans "No student applications yet." %}</div>{% endfor %}
   </div>
 
   {% if page_obj.has_other_pages %}<nav class="d-flex justify-content-center mt-4" aria-label="Application pages"><ul class="pagination">
-    {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>{% else %}<li class="page-item disabled"><span class="page-link">Previous</span></li>{% endif %}
+    {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">{% trans "Previous" %}</a></li>{% else %}<li class="page-item disabled"><span class="page-link">{% trans "Previous" %}</span></li>{% endif %}
     <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
-    {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>{% else %}<li class="page-item disabled"><span class="page-link">Next</span></li>{% endif %}
+    {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">{% trans "Next" %}</a></li>{% else %}<li class="page-item disabled"><span class="page-link">{% trans "Next" %}</span></li>{% endif %}
   </ul></nav>{% endif %}
 </div>
 {% endblock %}

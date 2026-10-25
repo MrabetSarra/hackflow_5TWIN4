@@ -1,4 +1,5 @@
 {% extends "layouts/base_student.html" %}
+{% load i18n %}
 {% load static %}
 {% block title %}Repositories - HackFlow{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'repositories/repositories.css' %}?v={{ repositories_css_version }}">{% endblock %}
@@ -9,12 +10,12 @@
     <!-- Header -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
-            <h1 class="fw-bold text-body mb-1"><i aria-hidden="true" class="bi bi-diagram-2 text-primary me-2"></i>Repositories</h1>
-            <p class="text-body-secondary small mb-0">Your team's shared code, versioned and organized.</p>
+            <h1 class="fw-bold text-body mb-1"><i aria-hidden="true" class="bi bi-diagram-2 text-primary me-2"></i>{% trans "Repositories" %}</h1>
+            <p class="text-body-secondary small mb-0">{% trans "Your team's shared code, versioned and organized." %}</p>
         </div>
         {% if team %}
         <a href="{% url 'repositories:create' %}" class="btn btn-primary rounded-pill px-4 d-flex align-items-center gap-2" style="white-space:nowrap;">
-            <i aria-hidden="true" class="bi bi-plus-lg"></i>New repository
+            <i aria-hidden="true" class="bi bi-plus-lg"></i>{% trans "New repository" %}
         </a>
         {% endif %}
     </div>
@@ -23,8 +24,8 @@
     <!-- No team state -->
     <div class="card-modern p-5 text-center">
         <span class="repository-empty-icon mx-auto mb-3 d-inline-flex"><i aria-hidden="true" class="bi bi-people"></i></span>
-        <h5 class="fw-bold text-body mb-1">Join a team to get started</h5>
-        <p class="text-body-secondary small mb-0">Repositories are shared with your team. Join or create a team first.</p>
+        <h5 class="fw-bold text-body mb-1">{% trans "Join a team to get started" %}</h5>
+        <p class="text-body-secondary small mb-0">{% trans "Repositories are shared with your team. Join or create a team first." %}</p>
     </div>
 
     {% elif repositories %}
@@ -54,7 +55,7 @@
                     {% csrf_token %}
                     <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3"
                             aria-label="Delete {{ repository.name }}">
-                        <i aria-hidden="true" class="bi bi-trash me-1"></i>Delete
+                        <i aria-hidden="true" class="bi bi-trash me-1"></i>{% trans "Delete" %}
                     </button>
                 </form>
             </div>
@@ -67,9 +68,9 @@
     <div class="card-modern p-5 text-center">
         <span class="repository-empty-icon mx-auto mb-3 d-inline-flex"><i aria-hidden="true" class="bi bi-diagram-2"></i></span>
         <h5 class="fw-bold text-body mb-1">No repositories yet</h5>
-        <p class="text-body-secondary small mb-4">Create a repository to give your team a shared place for project code and version history.</p>
+        <p class="text-body-secondary small mb-4">{% trans "Create a repository to give your team a shared place for project code and version history." %}</p>
         <a href="{% url 'repositories:create' %}" class="btn btn-primary rounded-pill px-4 mx-auto d-inline-flex align-items-center gap-2">
-            <i aria-hidden="true" class="bi bi-plus-lg"></i>Create your first repository
+            <i aria-hidden="true" class="bi bi-plus-lg"></i>{% trans "Create your first repository" %}
         </a>
     </div>
     {% endif %}

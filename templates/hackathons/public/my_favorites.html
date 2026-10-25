@@ -1,11 +1,12 @@
+{% load i18n %}
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
-    <div><h1 class="h2 fw-bold mb-1">Mes favoris</h1><p class="text-body-secondary mb-0">Retrouvez vos Hackathons et Challenges enregistrés.</p></div>
+    <div><h1 class="h2 fw-bold mb-1">{% trans "Mes favoris" %}</h1><p class="text-body-secondary mb-0">Retrouvez vos Hackathons et Challenges enregistrés.</p></div>
     <a href="{% url 'hackathons:catalog' %}" class="btn btn-outline-primary rounded-pill px-4"><i class="bi bi-search me-1"></i>Découvrir</a>
 </div>
 <form method="get" class="card-modern p-4 mb-4 row g-3 align-items-end">
-    <div class="col-md-5"><label class="form-label small fw-semibold" for="q">Recherche</label><input class="form-control" id="q" name="q" value="{{ q }}" placeholder="Hackathon, challenge ou Track"></div>
-    <div class="col-md-3"><label class="form-label small fw-semibold" for="kind">Type</label><select class="form-select" id="kind" name="kind"><option value="">Tous</option><option value="hackathon" {% if kind == 'hackathon' %}selected{% endif %}>Hackathons</option><option value="challenge" {% if kind == 'challenge' %}selected{% endif %}>Challenges</option></select></div>
-    <div class="col-md-3"><label class="form-label small fw-semibold" for="track">Track</label><select class="form-select" id="track" name="track"><option value="">Tous</option>{% for t in tracks %}<option value="{{ t.pk }}" {% if track == t.pk|stringformat:'s' %}selected{% endif %}>{{ t.name }}</option>{% endfor %}</select></div>
+    <div class="col-md-5"><label class="form-label small fw-semibold" for="q">{% trans "Recherche" %}</label><input class="form-control" id="q" name="q" value="{{ q }}" placeholder="Hackathon, challenge ou Track"></div>
+    <div class="col-md-3"><label class="form-label small fw-semibold" for="kind">{% trans "Type" %}</label><select class="form-select" id="kind" name="kind"><option value="">{% trans "Tous" %}</option><option value="hackathon" {% if kind == 'hackathon' %}selected{% endif %}>{% trans "Hackathons" %}</option><option value="challenge" {% if kind == 'challenge' %}selected{% endif %}>{% trans "Challenges" %}</option></select></div>
+    <div class="col-md-3"><label class="form-label small fw-semibold" for="track">{% trans "Track" %}</label><select class="form-select" id="track" name="track"><option value="">{% trans "Tous" %}</option>{% for t in tracks %}<option value="{{ t.pk }}" {% if track == t.pk|stringformat:'s' %}selected{% endif %}>{{ t.name }}</option>{% endfor %}</select></div>
     <div class="col-md-1"><button class="btn btn-primary w-100" aria-label="Filtrer"><i class="bi bi-funnel"></i></button></div>
     <div class="col-12"><a class="small text-decoration-none" href="{% url 'hackathons:my_favorites' %}">Effacer les filtres</a></div>
 </form>
@@ -13,15 +14,15 @@
     {% for fav in favorites %}
     <div class="col-md-6 col-xl-4"><article class="card-modern p-4 h-100 d-flex flex-column">
         {% if fav.hackathon %}
-        <div class="d-flex flex-wrap gap-2 mb-3"><span class="badge bg-primary-subtle text-primary-emphasis rounded-pill">Hackathon</span><span class="badge bg-body-secondary text-body-secondary rounded-pill">{{ fav.hackathon.track.name }}</span><span class="badge bg-{{ fav.hackathon.stage_color }}-subtle text-{{ fav.hackathon.stage_color }}-emphasis rounded-pill">{{ fav.hackathon.current_stage_label }}</span></div>
+        <div class="d-flex flex-wrap gap-2 mb-3"><span class="badge bg-primary-subtle text-primary-emphasis rounded-pill">{% trans "Hackathon" %}</span><span class="badge bg-body-secondary text-body-secondary rounded-pill">{{ fav.hackathon.track.name }}</span><span class="badge bg-{{ fav.hackathon.stage_color }}-subtle text-{{ fav.hackathon.stage_color }}-emphasis rounded-pill">{{ fav.hackathon.current_stage_label }}</span></div>
         <h2 class="h5 fw-bold">{{ fav.hackathon.title }}</h2>
         <p class="small text-body-secondary"><i class="bi bi-calendar-event me-1"></i>{{ fav.hackathon.starts_at|date:"d/m/Y H:i" }} → {{ fav.hackathon.ends_at|date:"d/m/Y H:i" }}</p>
-        <div class="mt-auto d-flex gap-2"><a href="{% url 'hackathons:hackathon_detail' fav.hackathon.slug %}" class="btn btn-sm btn-primary rounded-pill px-3">Voir</a>
+        <div class="mt-auto d-flex gap-2"><a href="{% url 'hackathons:hackathon_detail' fav.hackathon.slug %}" class="btn btn-sm btn-primary rounded-pill px-3">{% trans "Voir" %}</a>
             <form method="post" action="{% url 'hackathons:favorite_toggle' 'hackathon' fav.hackathon.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-sm btn-outline-warning rounded-pill px-3"><i class="bi bi-star-fill me-1"></i>Retirer</button></form></div>
         {% else %}
-        <div class="d-flex flex-wrap gap-2 mb-3"><span class="badge bg-info-subtle text-info-emphasis rounded-pill">Challenge</span><span class="badge bg-body-secondary text-body-secondary rounded-pill">{{ fav.challenge.hackathon.track.name }}</span><span class="badge bg-{{ fav.challenge.difficulty_color }}-subtle text-{{ fav.challenge.difficulty_color }}-emphasis rounded-pill">{{ fav.challenge.get_difficulty_display }}</span></div>
+        <div class="d-flex flex-wrap gap-2 mb-3"><span class="badge bg-info-subtle text-info-emphasis rounded-pill">{% trans "Challenge" %}</span><span class="badge bg-body-secondary text-body-secondary rounded-pill">{{ fav.challenge.hackathon.track.name }}</span><span class="badge bg-{{ fav.challenge.difficulty_color }}-subtle text-{{ fav.challenge.difficulty_color }}-emphasis rounded-pill">{{ fav.challenge.get_difficulty_display }}</span></div>
         <h2 class="h5 fw-bold">{{ fav.challenge.title }}</h2><p class="small text-body-secondary">{{ fav.challenge.hackathon.title }}</p>
-        <div class="mt-auto d-flex gap-2"><a href="{% url 'hackathons:challenge_detail' fav.challenge.pk %}" class="btn btn-sm btn-primary rounded-pill px-3">Voir</a>
+        <div class="mt-auto d-flex gap-2"><a href="{% url 'hackathons:challenge_detail' fav.challenge.pk %}" class="btn btn-sm btn-primary rounded-pill px-3">{% trans "Voir" %}</a>
             <form method="post" action="{% url 'hackathons:favorite_toggle' 'challenge' fav.challenge.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-sm btn-outline-warning rounded-pill px-3"><i class="bi bi-star-fill me-1"></i>Retirer</button></form></div>
         {% endif %}
     </article></div>

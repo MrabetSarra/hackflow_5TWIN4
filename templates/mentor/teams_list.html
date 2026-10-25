@@ -1,4 +1,5 @@
 {% extends "layouts/base_mentor.html" %}
+{% load i18n %}
 
 {% block title %}Équipes & Projets - Espace Mentor - HackFlow{% endblock %}
 
@@ -33,7 +34,7 @@
             </div>
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-funnel-fill me-1" aria-hidden="true"></i>Filtrer
+                    <i class="bi bi-funnel-fill me-1" aria-hidden="true"></i>{% trans "Filtrer" %}
                 </button>
             </div>
         </div>
@@ -62,7 +63,7 @@
                 <div class="mentor-team-card__body p-4">
                     <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
                         <h2 id="team-{{ team.pk }}-title" class="mentor-team-card__title fw-bold text-body mb-0">{{ team.name }}</h2>
-                        {% if team.is_followed %}<span class="badge bg-success-subtle text-success rounded-pill flex-shrink-0"><i class="bi bi-star-fill me-1" aria-hidden="true"></i>Suivie</span>{% endif %}
+                        {% if team.is_followed %}<span class="badge bg-success-subtle text-success rounded-pill flex-shrink-0"><i class="bi bi-star-fill me-1" aria-hidden="true"></i>{% trans "Suivie" %}</span>{% endif %}
                     </div>
                     <p class="mentor-team-card__pitch text-body-secondary small mb-4">{{ team.project_pitch|default:team.description|default:"Pas encore de description du projet."|truncatechars:140 }}</p>
 
@@ -81,7 +82,7 @@
                         {% if team.open_requests %}
                         <span class="badge bg-danger rounded-pill">{{ team.open_requests }} demande{{ team.open_requests|pluralize }} d'aide</span>
                         {% else %}
-                        <span class="badge bg-secondary-subtle text-secondary rounded-pill">Sprint actif</span>
+                        <span class="badge bg-secondary-subtle text-secondary rounded-pill">{% trans "Sprint actif" %}</span>
                         {% endif %}
                     </div>
 
@@ -91,7 +92,7 @@
                             {% csrf_token %}
                             <input type="hidden" name="next" value="{{ request.get_full_path }}">
                             <button type="submit" class="btn btn-outline-secondary btn-sm rounded-pill w-100" aria-label="Ne plus suivre {{ team.name }}">
-                                <i class="bi bi-star me-1" aria-hidden="true"></i>Ne plus suivre
+                                <i class="bi bi-star me-1" aria-hidden="true"></i>{% trans "Ne plus suivre" %}
                             </button>
                         </form>
                         {% else %}
@@ -99,7 +100,7 @@
                             {% csrf_token %}
                             <input type="hidden" name="next" value="{{ request.get_full_path }}">
                             <button type="submit" class="btn btn-outline-primary btn-sm rounded-pill w-100" aria-label="Suivre {{ team.name }}">
-                                <i class="bi bi-star-fill me-1" aria-hidden="true"></i>Suivre
+                                <i class="bi bi-star-fill me-1" aria-hidden="true"></i>{% trans "Suivre" %}
                             </button>
                         </form>
                         {% endif %}

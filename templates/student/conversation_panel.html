@@ -1,3 +1,4 @@
+{% load i18n %}
 <div data-conversation-panel>
     <div class="conversation-message-list d-flex flex-column gap-3 mb-3" data-message-list>
         {% for message in thread %}
@@ -9,13 +10,13 @@
             <p class="mb-0 text-break">{{ message.body|linebreaksbr }}</p>
         </div>
         {% empty %}
-        <p class="text-body-secondary mb-0">No messages yet. Send the first one below.</p>
+        <p class="text-body-secondary mb-0">{% trans "No messages yet. Send the first one below." %}</p>
         {% endfor %}
     </div>
 
     <form method="post" action="{% url 'student:conversation' other_user.pk %}" data-message-form>
         {% csrf_token %}
-        <label for="{{ message_form.body.id_for_label }}" class="form-label small fw-semibold">Your message</label>
+        <label for="{{ message_form.body.id_for_label }}" class="form-label small fw-semibold">{% trans "Your message" %}</label>
         {{ message_form.body }}
         {% for error in message_form.body.errors %}<div id="{{ message_form.body.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}
         <div class="message-composer-actions d-flex justify-content-between align-items-center mt-3">
@@ -42,7 +43,7 @@
                     <button type="button" class="emoji-choice" data-emoji="😢" aria-label="Sad face">😢</button>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary rounded-pill px-4"><i aria-hidden="true" class="bi bi-send-fill me-1"></i>Send</button>
+            <button type="submit" class="btn btn-primary rounded-pill px-4"><i aria-hidden="true" class="bi bi-send-fill me-1"></i>{% trans "Send" %}</button>
         </div>
     </form>
 </div>

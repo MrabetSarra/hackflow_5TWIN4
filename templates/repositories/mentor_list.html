@@ -1,4 +1,5 @@
 {% extends "layouts/base_mentor.html" %}
+{% load i18n %}
 {% load static %}
 {% block title %}Team repositories - HackFlow{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'repositories/repositories.css' %}?v={{ repositories_css_version }}">{% endblock %}
@@ -10,7 +11,7 @@
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
             <h2 class="fw-bold text-body mb-1"><i aria-hidden="true" class="bi bi-diagram-2 text-primary me-2"></i>Team repositories</h2>
-            <p class="text-body-secondary small mb-0">Read-only access to repositories for teams where you have an accepted mentor request.</p>
+            <p class="text-body-secondary small mb-0">{% trans "Read-only access to repositories for teams where you have an accepted mentor request." %}</p>
         </div>
     </div>
 
@@ -39,8 +40,8 @@
     {% else %}
     <div class="card-modern p-5 text-center">
         <span class="repository-empty-icon mx-auto mb-3 d-inline-flex"><i aria-hidden="true" class="bi bi-diagram-2"></i></span>
-        <h5 class="fw-bold text-body mb-1">No assigned team repositories</h5>
-        <p class="text-body-secondary small mb-0">Repositories appear here once a team assigns you as their mentor through an accepted request.</p>
+        <h5 class="fw-bold text-body mb-1">{% trans "No assigned team repositories" %}</h5>
+        <p class="text-body-secondary small mb-0">{% trans "Repositories appear here once a team assigns you as their mentor through an accepted request." %}</p>
     </div>
     {% endif %}
 </div>

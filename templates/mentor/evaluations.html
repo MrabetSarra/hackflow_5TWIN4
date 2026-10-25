@@ -1,4 +1,6 @@
 {% extends "layouts/base_mentor.html" %}
+{% load i18n %}
+{% load i18n_content %}
 
 {% block title %}Mes Évaluations - Espace Mentor - HackFlow{% endblock %}
 
@@ -16,7 +18,7 @@
 
     <nav aria-label="Filtrer les évaluations" class="mb-4">
         <ul class="nav nav-pills gap-1">
-            <li class="nav-item"><a class="nav-link {% if not shared %}active{% endif %}" {% if not shared %}aria-current="page"{% endif %} href="?">Toutes</a></li>
+            <li class="nav-item"><a class="nav-link {% if not shared %}active{% endif %}" {% if not shared %}aria-current="page"{% endif %} href="?">{% trans "Toutes" %}</a></li>
             <li class="nav-item"><a class="nav-link {% if shared == 'no' %}active{% endif %}" {% if shared == 'no' %}aria-current="page"{% endif %} href="?shared=no">À partager</a></li>
             <li class="nav-item"><a class="nav-link {% if shared == 'yes' %}active{% endif %}" {% if shared == 'yes' %}aria-current="page"{% endif %} href="?shared=yes">Partagées</a></li>
         </ul>
@@ -29,7 +31,7 @@
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div>
                         <h2 id="eval-{{ evaluation.pk }}-title" class="h5 fw-bold text-body mb-1">Équipe : {{ evaluation.team.name }}</h2>
-                        <span class="text-body-secondary small">{{ evaluation.submission.milestone.title }} • {{ evaluation.updated_at|date:"d/m/Y H:i" }}</span>
+                        <span class="text-body-secondary small">{{ evaluation.submission.milestone.title|localized_milestone }} • {{ evaluation.updated_at|date:"d/m/Y H:i" }}</span>
                     </div>
                     <div class="text-end">
                         <div class="h4 fw-bold font-mono mb-0">{{ evaluation.weighted_total|default:"—" }}<span class="fs-6 text-body-secondary">/20</span></div>
@@ -47,8 +49,8 @@
                 <p class="text-body-secondary small fst-italic mb-3 flex-grow-1">{{ evaluation.general_comment|default:"Pas de commentaire général."|truncatechars:220 }}</p>
 
                 <div class="pt-2 border-top d-flex justify-content-end gap-2">
-                    <a href="{% url 'mentor:evaluation_detail' evaluation.pk %}" class="btn btn-sm btn-outline-primary" aria-label="Voir l'évaluation de {{ evaluation.team.name }}">Voir</a>
-                    <a href="{% url 'mentor:evaluation_update' evaluation.pk %}" class="btn btn-sm btn-outline-secondary" aria-label="Modifier l'évaluation de {{ evaluation.team.name }}">Modifier</a>
+                    <a href="{% url 'mentor:evaluation_detail' evaluation.pk %}" class="btn btn-sm btn-outline-primary" aria-label="Voir l'évaluation de {{ evaluation.team.name }}">{% trans "Voir" %}</a>
+                    <a href="{% url 'mentor:evaluation_update' evaluation.pk %}" class="btn btn-sm btn-outline-secondary" aria-label="Modifier l'évaluation de {{ evaluation.team.name }}">{% trans "Modifier" %}</a>
                 </div>
             </article>
         </div>

@@ -1,7 +1,8 @@
 {% extends "layouts/base_public.html" %}
+{% load i18n %}
 {% load static %}
 
-{% block title %}Log In - HackFlow{% endblock %}
+{% block title %}{% trans "Log In" %} - HackFlow{% endblock %}
 
 {% block public_content %}
 <div class="py-5 bg-gradient-subtle min-vh-100 d-flex align-items-center">
@@ -11,8 +12,8 @@
                 <div class="card-modern p-4 p-md-5 shadow-lg">
                     <div class="text-center mb-4">
                         <img src="{% static 'images/hackflow-mark.png' %}" alt="" width="64" height="48" class="mb-2" style="object-fit: contain;">
-                        <h1 class="fw-bold text-body">Welcome back to HackFlow</h1>
-                        <p class="text-body-secondary small mb-2">Log in to access your HackFlow workspace.</p>
+                        <h1 class="fw-bold text-body">{% trans "Welcome back to HackFlow" %}</h1>
+                        <p class="text-body-secondary small mb-2">{% trans "Log in to access your HackFlow workspace." %}</p>
                         <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 px-3 py-1 small">
                             <i class="bi bi-shield-check me-1"></i>Authentification 2FA prise en charge
                         </span>
@@ -71,8 +72,8 @@
 
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <label for="{{ form.password.id_for_label }}" class="form-label small fw-semibold text-body mb-0">Password</label>
-                                <a href="{% url 'accounts:password_reset_request' %}" class="small text-decoration-none">Forgot password?</a>
+                                <label for="{{ form.password.id_for_label }}" class="form-label small fw-semibold text-body mb-0">{% trans "Password" %}</label>
+                                <a href="{% url 'accounts:password_reset_request' %}" class="small text-decoration-none">{% trans "Forgot password?" %}</a>
                             </div>
                             <div class="input-group">
                                 <span class="input-group-text bg-body-tertiary border-end-0 text-body-secondary"><i aria-hidden="true" class="bi bi-lock"></i></span>
@@ -83,18 +84,18 @@
 
                         <div class="mb-4 form-check">
                             <input type="checkbox" class="form-check-input" id="rememberMe" name="remember_me" checked>
-                            <label class="form-check-label small text-muted" for="rememberMe">Keep me logged in on this device</label>
+                            <label class="form-check-label small text-muted" for="rememberMe">{% trans "Keep me logged in on this device" %}</label>
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold shadow-sm">
-                            <i aria-hidden="true" class="bi bi-box-arrow-in-right me-2"></i>Log in
+                            <i aria-hidden="true" class="bi bi-box-arrow-in-right me-2"></i>{% trans "Log in" %}
                         </button>
                     </form>
 
                     <div class="text-center mt-4 pt-3 border-top">
                         <p class="small text-muted mb-0">
-                            Not registered for the hackathon yet?
-                            <a href="{% url 'accounts:register' %}" class="fw-bold text-primary text-decoration-none">Create an account</a>
+                            {% trans "Not registered for the hackathon yet?" %}
+                            <a href="{% url 'accounts:register' %}" class="fw-bold text-primary text-decoration-none">{% trans "Create an account" %}</a>
                         </p>
                     </div>
                 </div>

@@ -1,6 +1,7 @@
+{% load i18n %}
 <!-- HackFlow - Sélecteur de Thème Sombre / Clair -->
-<button class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1 d-inline-flex align-items-center gap-1 border-opacity-50 theme-toggle-btn" type="button" id="themeToggleBtn" title="Basculer entre thème sombre et clair" aria-label="Changer de thème">
+<button class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1 d-inline-flex align-items-center gap-1 border-opacity-50 theme-toggle-btn" type="button" id="themeToggleBtn" title="{% trans 'Basculer entre thème sombre et clair' %}" aria-label="{% trans 'Changer de thème' %}" data-label-light="{% trans 'Light' %}" data-label-dark="{% trans 'Dark' %}" data-title-light="{% trans 'Switch to light theme' %}" data-title-dark="{% trans 'Switch to dark theme' %}">
     <i aria-hidden="true" class="bi bi-sun-fill text-warning theme-icon-light d-none"></i>
     <i aria-hidden="true" class="bi bi-moon-stars-fill text-info theme-icon-dark d-none"></i>
-    <span class="small d-none d-xl-inline theme-text ms-1 font-mono" style="font-size: 0.75rem;">Thème</span>
+    <span class="small d-none d-xl-inline theme-text ms-1 font-mono" style="font-size: 0.75rem;">{% trans "Theme" %}</span>
 </button>

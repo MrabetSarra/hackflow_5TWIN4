@@ -21,6 +21,7 @@ from django.conf.urls.static import static
 from repositories.views import mentor_repository_list
 from core.views import healthz
 urlpatterns = [
+    path('i18n/', include('django.conf.urls.i18n')),
     path('healthz/', healthz, name='healthz'),
     path('prometheus/', include('django_prometheus.urls')),
     # Espace Public / Landing

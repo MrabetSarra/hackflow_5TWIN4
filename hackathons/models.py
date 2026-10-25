@@ -5,6 +5,7 @@ from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
+from django.utils.translation import gettext_lazy as _
 
 IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif']
 MAX_UPLOAD_BYTES = 5 * 1024 * 1024
@@ -64,17 +65,17 @@ class HackathonProfile(models.Model):
     """Détails d'un hackathon, rattaché à l'événement existant student.Hackathon sans le modifier."""
 
     class Status(models.TextChoices):
-        DRAFT = 'draft', 'Brouillon'
-        PUBLISHED = 'published', 'Publié'
-        CANCELLED = 'cancelled', 'Annulé'
-        ARCHIVED = 'archived', 'Archivé'
+        DRAFT = 'draft', _('Brouillon')
+        PUBLISHED = 'published', _('Publié')
+        CANCELLED = 'cancelled', _('Annulé')
+        ARCHIVED = 'archived', _('Archivé')
 
     class Stage(models.TextChoices):
-        REGISTRATION_OPEN = 'registration_open', 'Inscriptions ouvertes'
-        REGISTRATION_CLOSED = 'registration_closed', 'Inscriptions closes'
-        ONGOING = 'ongoing', 'En cours'
-        EVALUATION = 'evaluation', 'Évaluation'
-        FINISHED = 'finished', 'Terminé'
+        REGISTRATION_OPEN = 'registration_open', _('Inscriptions ouvertes')
+        REGISTRATION_CLOSED = 'registration_closed', _('Inscriptions closes')
+        ONGOING = 'ongoing', _('En cours')
+        EVALUATION = 'evaluation', _('Évaluation')
+        FINISHED = 'finished', _('Terminé')
 
     event = models.OneToOneField('student.Hackathon', on_delete=models.CASCADE, related_name='profile', verbose_name='Événement')
     track = models.ForeignKey(Track, on_delete=models.PROTECT, related_name='hackathons', verbose_name='Track')
@@ -211,15 +212,15 @@ class HackathonProfile(models.Model):
 
 class Challenge(models.Model):
     class Status(models.TextChoices):
-        DRAFT = 'draft', 'Brouillon'
-        PUBLISHED = 'published', 'Publié'
-        ARCHIVED = 'archived', 'Archivé'
+        DRAFT = 'draft', _('Brouillon')
+        PUBLISHED = 'published', _('Publié')
+        ARCHIVED = 'archived', _('Archivé')
 
     class Difficulty(models.TextChoices):
-        BEGINNER = 'beginner', 'Débutant'
-        INTERMEDIATE = 'intermediate', 'Intermédiaire'
-        ADVANCED = 'advanced', 'Avancé'
-        EXPERT = 'expert', 'Expert'
+        BEGINNER = 'beginner', _('Débutant')
+        INTERMEDIATE = 'intermediate', _('Intermédiaire')
+        ADVANCED = 'advanced', _('Avancé')
+        EXPERT = 'expert', _('Expert')
 
     hackathon = models.ForeignKey(HackathonProfile, on_delete=models.CASCADE, related_name='challenges')
     title = models.CharField('Titre', max_length=180)
@@ -294,8 +295,8 @@ class Challenge(models.Model):
 
 class Registration(models.Model):
     class Status(models.TextChoices):
-        CONFIRMED = 'confirmed', 'Confirmée'
-        CANCELLED = 'cancelled', 'Annulée'
+        CONFIRMED = 'confirmed', _('Confirmée')
+        CANCELLED = 'cancelled', _('Annulée')
 
     challenge = models.ForeignKey(Challenge, on_delete=models.CASCADE, related_name='registrations')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='challenge_registrations', verbose_name='Étudiant')
@@ -408,17 +409,17 @@ class AIJob(models.Model):
     """Requête IA exécutée en arrière-plan (Celery) ; sert aussi de journal pour les métriques."""
 
     class Feature(models.TextChoices):
-        HACKATHON_DRAFT = 'hackathon_draft', 'Rédaction de hackathon'
-        CHALLENGE_DRAFT = 'challenge_draft', 'Rédaction de challenge'
-        STUDENT_COACH = 'student_coach', 'Coach IA étudiant'
-        STUDENT_RECOMMEND = 'student_recommend', 'Recommandations étudiant'
-        MENTOR_EXPLAIN = 'mentor_explain', 'Explication mentor'
+        HACKATHON_DRAFT = 'hackathon_draft', _('Rédaction de hackathon')
+        CHALLENGE_DRAFT = 'challenge_draft', _('Rédaction de challenge')
+        STUDENT_COACH = 'student_coach', _('Coach IA étudiant')
+        STUDENT_RECOMMEND = 'student_recommend', _('Recommandations étudiant')
+        MENTOR_EXPLAIN = 'mentor_explain', _('Explication mentor')
 
     class Status(models.TextChoices):
-        PENDING = 'pending', 'En attente'
-        RUNNING = 'running', 'En cours'
-        DONE = 'done', 'Terminée'
-        FAILED = 'failed', 'Échouée'
+        PENDING = 'pending', _('En attente')
+        RUNNING = 'running', _('En cours')
+        DONE = 'done', _('Terminée')
+        FAILED = 'failed', _('Échouée')
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='hackathon_ai_jobs')
     feature = models.CharField('Fonctionnalité', max_length=20, choices=Feature.choices)
@@ -450,16 +451,16 @@ class AIJob(models.Model):
 
 class ScheduleItem(models.Model):
     class Kind(models.TextChoices):
-        OPENING = 'opening', 'Ouverture'
-        DEV_START = 'dev_start', 'Début du développement'
-        WORKSHOP = 'workshop', 'Atelier technique'
-        MENTORING = 'mentoring', 'Permanence de mentorat'
-        CODE_FREEZE = 'code_freeze', 'Gel du code'
-        DEMO = 'demo', 'Démonstrations'
-        DELIBERATION = 'deliberation', 'Délibération'
-        RESULTS = 'results', 'Annonce des résultats'
-        CLOSING = 'closing', 'Clôture'
-        OTHER = 'other', 'Autre'
+        OPENING = 'opening', _('Ouverture')
+        DEV_START = 'dev_start', _('Début du développement')
+        WORKSHOP = 'workshop', _('Atelier technique')
+        MENTORING = 'mentoring', _('Permanence de mentorat')
+        CODE_FREEZE = 'code_freeze', _('Gel du code')
+        DEMO = 'demo', _('Démonstrations')
+        DELIBERATION = 'deliberation', _('Délibération')
+        RESULTS = 'results', _('Annonce des résultats')
+        CLOSING = 'closing', _('Clôture')
+        OTHER = 'other', _('Autre')
 
     challenge = models.ForeignKey(Challenge, on_delete=models.CASCADE, related_name='schedule_items')
     title = models.CharField('Titre', max_length=180)
@@ -493,8 +494,8 @@ class ScheduleItem(models.Model):
 
 class FlashAnnouncement(models.Model):
     class Level(models.TextChoices):
-        INFO = 'info', 'Information'
-        URGENT = 'urgent', 'Urgent'
+        INFO = 'info', _('Information')
+        URGENT = 'urgent', _('Urgent')
 
     challenge = models.ForeignKey(Challenge, on_delete=models.CASCADE, related_name='flash_announcements')
     message = models.CharField('Message', max_length=500)
@@ -520,15 +521,15 @@ class FlashAnnouncement(models.Model):
 
 class HackathonResource(models.Model):
     class Category(models.TextChoices):
-        RULES = 'rules', 'Règlement'
-        STARTER = 'starter', 'Starter kit'
-        TEMPLATE = 'template', 'Template'
-        DOCS = 'docs', 'Documentation'
-        API = 'api', 'Lien API'
-        DATASET = 'dataset', 'Jeu de données'
-        GUIDELINES = 'guidelines', 'Consignes'
-        WIFI = 'wifi', 'Informations Wi-Fi'
-        OTHER = 'other', 'Autre'
+        RULES = 'rules', _('Règlement')
+        STARTER = 'starter', _('Starter kit')
+        TEMPLATE = 'template', _('Template')
+        DOCS = 'docs', _('Documentation')
+        API = 'api', _('Lien API')
+        DATASET = 'dataset', _('Jeu de données')
+        GUIDELINES = 'guidelines', _('Consignes')
+        WIFI = 'wifi', _('Informations Wi-Fi')
+        OTHER = 'other', _('Autre')
 
     challenge = models.ForeignKey(Challenge, on_delete=models.CASCADE, related_name='resources')
     title = models.CharField('Titre', max_length=160)

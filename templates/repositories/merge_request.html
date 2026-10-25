@@ -1,4 +1,5 @@
 {% extends "layouts/base_student.html" %}
+{% load i18n %}
 {% load static %}
 {% block title %}{{ merge_request.title }} · {{ repository.name }} - HackFlow{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'repositories/repositories.css' %}?v={{ repositories_css_version }}">{% endblock %}
@@ -9,11 +10,11 @@
 
     <!-- Header (like GitHub PR header) -->
     <div class="repo-header">
-        <div class="repo-header__breadcrumb">            <a href="{% url 'repositories:list' %}">Repositories</a>
+        <div class="repo-header__breadcrumb">            <a href="{% url 'repositories:list' %}">{% trans "Repositories" %}</a>
             <span class="text-body-secondary">/</span>
             <a href="{% url 'repositories:detail' repository.slug %}">{{ repository.name }}</a>
             <span class="text-body-secondary">/</span>
-            <a href="{% url 'repositories:merge_requests' repository.slug %}">Merge requests</a>
+            <a href="{% url 'repositories:merge_requests' repository.slug %}">{% trans "Merge requests" %}</a>
             <span class="text-body-secondary">/</span>
             <span class="fw-semibold text-body">#{{ merge_request.pk }}</span>
         </div>
@@ -27,7 +28,7 @@
             {% elif merge_request.status == 'closed' %}
             <span class="mr-badge-closed"><i aria-hidden="true" class="bi bi-x-circle"></i>Closed</span>
             {% elif merge_request.status == 'approved' %}
-            <span class="mr-badge-approved"><i aria-hidden="true" class="bi bi-check-circle"></i>Approved</span>
+            <span class="mr-badge-approved"><i aria-hidden="true" class="bi bi-check-circle"></i>{% trans "Approved" %}</span>
             {% else %}
             <span class="mr-badge-open"><i aria-hidden="true" class="bi bi-diagram-2"></i>Open</span>
             {% endif %}
@@ -113,7 +114,7 @@
                 </div>
                 {% empty %}
                 <div class="p-4 text-center text-body-secondary small">
-                    No comments yet. Start the review discussion below.
+                    {% trans "No comments yet. Start the review discussion below." %}
                 </div>
                 {% endfor %}
 
@@ -126,7 +127,7 @@
                                   rows="3" maxlength="5000" required placeholder="Leave a review comment…">{{ comment_state.body }}</textarea>
                         {% if comment_state.error %}<div class="text-danger small mb-2" role="alert">{{ comment_state.error }}</div>{% endif %}
                         <button class="btn btn-sm btn-outline-primary rounded-pill px-3" type="submit">
-                            <i aria-hidden="true" class="bi bi-send me-1"></i>Comment
+                            <i aria-hidden="true" class="bi bi-send me-1"></i>{% trans "Comment" %}
                         </button>
                     </form>
                 </div>
@@ -140,7 +141,7 @@
 
                 <!-- Merge status -->
                 <div class="card-modern p-3">
-                    <h6 class="fw-semibold text-body mb-3 small text-uppercase" style="letter-spacing:.05em;">Review</h6>
+                    <h6 class="fw-semibold text-body mb-3 small text-uppercase" style="letter-spacing:.05em;">{% trans "Review" %}</h6>
 
                     {% if can_approve and merge_request.status != 'merged' and merge_request.status != 'closed' %}
 
@@ -222,7 +223,7 @@
 
                 <!-- Branches info -->
                 <div class="card-modern p-3">
-                    <h6 class="fw-semibold text-body mb-2 small text-uppercase" style="letter-spacing:.05em;">Branches</h6>
+                    <h6 class="fw-semibold text-body mb-2 small text-uppercase" style="letter-spacing:.05em;">{% trans "Branches" %}</h6>
                     <div class="d-flex flex-column gap-2">
                         <div class="d-flex align-items-center justify-content-between">
                             <span class="small text-body-secondary">Source</span>

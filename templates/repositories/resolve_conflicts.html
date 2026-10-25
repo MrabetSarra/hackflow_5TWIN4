@@ -1,4 +1,5 @@
 {% extends "layouts/base_student.html" %}
+{% load i18n %}
 {% load static %}
 {% block title %}Resolve conflicts · {{ repository.name }} - HackFlow{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'repositories/repositories.css' %}?v={{ repositories_css_version }}">{% endblock %}
@@ -9,19 +10,19 @@
 
     <!-- Header -->
     <div class="repo-header">
-        <div class="repo-header__breadcrumb">            <a href="{% url 'repositories:list' %}">Repositories</a>
+        <div class="repo-header__breadcrumb">            <a href="{% url 'repositories:list' %}">{% trans "Repositories" %}</a>
             <span class="text-body-secondary">/</span>
             <a href="{% url 'repositories:detail' repository.slug %}">{{ repository.name }}</a>
             <span class="text-body-secondary">/</span>
-            <a href="{% url 'repositories:merge_requests' repository.slug %}">Merge requests</a>
+            <a href="{% url 'repositories:merge_requests' repository.slug %}">{% trans "Merge requests" %}</a>
             <span class="text-body-secondary">/</span>
             <a href="{% url 'repositories:merge_request' repository.slug merge_request.pk %}">#{{ merge_request.pk }}</a>
             <span class="text-body-secondary">/</span>
-            <span class="fw-semibold text-body">Resolve conflicts</span>
+            <span class="fw-semibold text-body">{% trans "Resolve conflicts" %}</span>
         </div>
         <div class="repo-header__name mt-1">
             <i aria-hidden="true" class="bi bi-exclamation-triangle text-warning"></i>
-            <span>Resolve merge conflicts</span>
+            <span>{% trans "Resolve merge conflicts" %}</span>
         </div>
         <p class="text-body-secondary small mt-1 mb-0">
             <code class="repo-branch-badge">{{ merge_request.source_branch }}</code>
@@ -68,9 +69,9 @@
 
             {% if conflict.binary %}
             <div class="p-4">
-                <p class="text-body-secondary small mb-2">Choose which binary version to keep:</p>
+                <p class="text-body-secondary small mb-2">{% trans "Choose which binary version to keep:" %}</p>
                 <select class="form-select form-select-sm" name="choice_{{ forloop.counter0 }}" style="max-width:260px;">
-                    <option value="">— Choose a version —</option>
+                    <option value="">{% trans "— Choose a version —" %}</option>
                     <option value="source">Keep source ({{ merge_request.source_branch }})</option>
                     <option value="target">Keep target ({{ merge_request.target_branch }})</option>
                 </select>
@@ -132,7 +133,7 @@
 
         <!-- Merge commit + actions -->
         <div class="card-modern p-4">
-            <h6 class="fw-semibold text-body mb-3"><i aria-hidden="true" class="bi bi-diagram-2 text-primary me-1"></i>Complete merge</h6>
+            <h6 class="fw-semibold text-body mb-3"><i aria-hidden="true" class="bi bi-diagram-2 text-primary me-1"></i>{% trans "Complete merge" %}</h6>
             <div class="mb-3" style="max-width:520px;">
                 <label class="form-label fw-semibold small" for="merge-message">Merge commit message</label>
                 <input class="form-control form-control-sm" id="merge-message" name="commit_message"

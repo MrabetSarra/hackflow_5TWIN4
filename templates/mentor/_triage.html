@@ -1,3 +1,4 @@
+{% load i18n %}
 {% if triage %}
 {% if triage.status == 'pending' or triage.status == 'running' %}
 <div class="d-flex align-items-center gap-2 small text-body-secondary">
@@ -10,13 +11,13 @@
     <form method="post" action="{% url 'mentor:triage_retry' req.pk %}">
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ next_url|default:request.get_full_path }}">
-        <button type="submit" class="btn btn-link btn-sm p-0">Relancer l'analyse</button>
+        <button type="submit" class="btn btn-link btn-sm p-0">{% trans "Relancer l'analyse" %}</button>
     </form>
 </div>
 {% else %}
 <div class="small">
     <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
-        <span class="badge bg-info-subtle text-info-emphasis"><i class="bi bi-stars me-1" aria-hidden="true"></i>Suggestion IA</span>
+        <span class="badge bg-info-subtle text-info-emphasis"><i class="bi bi-stars me-1" aria-hidden="true"></i>{% trans "Suggestion IA" %}</span>
         <span class="badge-tag">{{ triage.final_category }}</span>
         <span class="badge bg-body-secondary text-body">Urgence : {{ triage.get_corrected_urgency_display|default:triage.get_suggested_urgency_display }}</span>
         {% if triage.corrected_by %}<span class="badge bg-success-subtle text-success">Corrigée par {{ triage.corrected_by.get_full_name|default:triage.corrected_by.username }}</span>{% endif %}
@@ -28,7 +29,7 @@
     {% endif %}
     {% if triage.suggested_mentor %}<p class="mb-1 text-body-secondary">Mentor suggéré : <strong>{{ triage.suggested_mentor.get_full_name|default:triage.suggested_mentor.username }}</strong>{% if triage.suggested_mentor.specialty %} ({{ triage.suggested_mentor.specialty }}){% endif %}</p>{% endif %}
     <details>
-        <summary class="text-primary">Corriger la suggestion</summary>
+        <summary class="text-primary">{% trans "Corriger la suggestion" %}</summary>
         <form method="post" action="{% url 'mentor:triage_correct' req.pk %}" class="d-flex flex-column flex-sm-row gap-2 align-items-sm-end mt-2">
             {% csrf_token %}
             <input type="hidden" name="next" value="{{ next_url|default:request.get_full_path }}">
@@ -44,7 +45,7 @@
                     {% for value, label in correction_form.urgency.field.choices %}<option value="{{ value }}" {% if value == triage.final_urgency %}selected{% endif %}>{{ label }}</option>{% endfor %}
                 </select>
             </div>
-            <button type="submit" class="btn btn-outline-primary btn-sm">Enregistrer</button>
+            <button type="submit" class="btn btn-outline-primary btn-sm">{% trans "Enregistrer" %}</button>
         </form>
     </details>
 </div>

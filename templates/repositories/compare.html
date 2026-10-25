@@ -1,4 +1,5 @@
 {% extends "layouts/base_student.html" %}
+{% load i18n %}
 {% load static %}
 {% block title %}Compare · {{ repository.name }} - HackFlow{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'repositories/repositories.css' %}?v={{ repositories_css_version }}">{% endblock %}
@@ -9,17 +10,17 @@
 
     <!-- Header -->
     <div class="repo-header">
-        <div class="repo-header__breadcrumb">            <a href="{% url 'repositories:list' %}">Repositories</a>
+        <div class="repo-header__breadcrumb">            <a href="{% url 'repositories:list' %}">{% trans "Repositories" %}</a>
             <span class="text-body-secondary">/</span>
             <a href="{% url 'repositories:detail' repository.slug %}">{{ repository.name }}</a>
             <span class="text-body-secondary">/</span>
-            <span class="fw-semibold text-body">Compare</span>
+            <span class="fw-semibold text-body">{% trans "Compare" %}</span>
         </div>
         <div class="repo-header__name mt-1">
             <i aria-hidden="true" class="bi bi-arrows-collapse text-primary"></i>
-            <span>Compare branches</span>
+            <span>{% trans "Compare branches" %}</span>
         </div>
-        <p class="text-body-secondary small mt-1 mb-0">Choose two branches to see the difference between them.</p>
+        <p class="text-body-secondary small mt-1 mb-0">{% trans "Choose two branches to see the difference between them." %}</p>
     </div>
 
     <!-- Branch picker -->
@@ -38,7 +39,7 @@
                     <i aria-hidden="true" class="bi bi-arrow-left-right fs-5"></i>
                 </div>
                 <div>
-                    <label class="form-label fw-semibold small" for="target">Compare</label>
+                    <label class="form-label fw-semibold small" for="target">{% trans "Compare" %}</label>
                     <select class="form-select form-select-sm" id="target" name="target" style="min-width:160px;">
                         {% for branch in branches %}
                         <option {% if target == branch %}selected{% endif %}>{{ branch }}</option>
@@ -47,7 +48,7 @@
                 </div>
                 <div class="pb-0">
                     <button class="btn btn-primary btn-sm rounded-pill px-4 d-flex align-items-center gap-2" type="submit">
-                        <i aria-hidden="true" class="bi bi-arrows-collapse"></i>Compare
+                        <i aria-hidden="true" class="bi bi-arrows-collapse"></i>{% trans "Compare" %}
                     </button>
                 </div>
             </div>
