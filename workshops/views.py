@@ -259,10 +259,7 @@ def workshop_list(request):
         try:
             from .services.recommend import recommend
             from .services.schedule import optimise_schedule
-            recommended = [
-                w for w in recommend(request.user, workshops, top_n=6)
-                if getattr(w, 'ai_score', 0) > 0
-            ]
+            recommended = recommend(request.user, workshops, top_n=6)
             schedule_plan = optimise_schedule(request.user, recommended, top_n=3)
         except Exception:
             pass
@@ -316,17 +313,23 @@ def workshop_detail(request, slug):
         Workshop.objects.prefetch_related('bookings'), slug=slug)
     booking = _get_user_booking(ws, request.user)
 
-    # Lien Zoom : jamais exposé si non réservé (contrôle serveur)
+    # Lien Zoom : exposé si réservé, ou si l'utilisateur peut gérer l'atelier
     meeting_url = None
     if ws.mode == Workshop.Mode.ONLINE:
-        if booking and booking.status in ['confirmed', 'attended']:
+        can_see_url = (
+            booking and booking.status in ['confirmed', 'attended']
+        ) or _can_manage(request.user, ws)
+        if can_see_url:
             meeting_url = ws.meeting_url
 
-    # Replay : disponible uniquement si réservé et non expiré
+    # Replay : disponible si réservé, ou si l'utilisateur peut gérer l'atelier
     replay_accessible = False
     replay_is_direct = False
     if ws.mode == Workshop.Mode.RECORDED:
-        if booking and booking.status in ['confirmed', 'attended']:
+        can_see_replay = (
+            booking and booking.status in ['confirmed', 'attended']
+        ) or _can_manage(request.user, ws)
+        if can_see_replay:
             replay_accessible = ws.is_replay_available
         clean_url = (ws.replay_url or '').split('?', 1)[0].lower()
         replay_is_direct = clean_url.endswith(
@@ -1312,3 +1315,108 @@ def workshop_quiz_submit(request, pk):
         'workshop_base_template': _workshop_base_template(request.user),
     }
     return render(request, 'workshops/quiz_result.html', context)
+
+
+# ---------------------------------------------------------------------------
+# Quiz de compréhension — gestion des questions (admin/mentor/créateur)
+# ---------------------------------------------------------------------------
+
+@login_required
+def workshop_quiz_manage(request, pk):
+    """Liste et gestion des questions de quiz d'un atelier."""
+    ws = get_object_or_404(Workshop, pk=pk)
+    if not _can_manage(request.user, ws):
+        raise PermissionDenied
+    if ws.mode != Workshop.Mode.RECORDED:
+        messages.error(request, 'Le quiz est uniquement disponible pour les ateliers en replay.')
+        return redirect('workshops:detail', slug=ws.slug)
+
+    questions = ws.quiz_questions.all().order_by('created_at')
+    return render(request, 'workshops/quiz_manage.html', {
+        'workshop': ws,
+        'questions': questions,
+        'workshop_base_template': _workshop_base_template(request.user),
+    })
+
+
+@login_required
+def workshop_quiz_question_add(request, pk):
+    """Ajouter une question de quiz."""
+    ws = get_object_or_404(Workshop, pk=pk)
+    if not _can_manage(request.user, ws):
+        raise PermissionDenied
+    if ws.mode != Workshop.Mode.RECORDED:
+        messages.error(request, 'Le quiz est uniquement disponible pour les ateliers en replay.')
+        return redirect('workshops:detail', slug=ws.slug)
+
+    if request.method == 'POST':
+        question = request.POST.get('question', '').strip()
+        option_a = request.POST.get('option_a', '').strip()
+        option_b = request.POST.get('option_b', '').strip()
+        option_c = request.POST.get('option_c', '').strip()
+        option_d = request.POST.get('option_d', '').strip()
+        correct_index = int(request.POST.get('correct_index', 0))
+        explanation = request.POST.get('explanation', '').strip()
+
+        if not all([question, option_a, option_b, option_c, option_d]):
+            messages.error(request, 'Tous les champs sont requis.')
+        else:
+            WorkshopQuiz.objects.create(
+                workshop=ws,
+                question=question,
+                option_a=option_a,
+                option_b=option_b,
+                option_c=option_c,
+                option_d=option_d,
+                correct_index=correct_index,
+                explanation=explanation,
+                created_by=request.user,
+            )
+            messages.success(request, 'Question ajoutée avec succès.')
+            return redirect('workshops:quiz_manage', pk=pk)
+
+    return render(request, 'workshops/quiz_question_form.html', {
+        'workshop': ws,
+        'action': 'Ajouter',
+        'workshop_base_template': _workshop_base_template(request.user),
+    })
+
+
+@login_required
+def workshop_quiz_question_edit(request, pk, qid):
+    """Éditer une question de quiz."""
+    ws = get_object_or_404(Workshop, pk=pk)
+    question = get_object_or_404(WorkshopQuiz, pk=qid, workshop=ws)
+    if not _can_manage(request.user, ws):
+        raise PermissionDenied
+
+    if request.method == 'POST':
+        question.question = request.POST.get('question', '').strip()
+        question.option_a = request.POST.get('option_a', '').strip()
+        question.option_b = request.POST.get('option_b', '').strip()
+        question.option_c = request.POST.get('option_c', '').strip()
+        question.option_d = request.POST.get('option_d', '').strip()
+        question.correct_index = int(request.POST.get('correct_index', 0))
+        question.explanation = request.POST.get('explanation', '').strip()
+        question.save()
+        messages.success(request, 'Question mise à jour.')
+        return redirect('workshops:quiz_manage', pk=pk)
+
+    return render(request, 'workshops/quiz_question_form.html', {
+        'workshop': ws,
+        'question': question,
+        'action': 'Modifier',
+        'workshop_base_template': _workshop_base_template(request.user),
+    })
+
+
+@login_required
+def workshop_quiz_question_delete(request, pk, qid):
+    """Supprimer une question de quiz."""
+    ws = get_object_or_404(Workshop, pk=pk)
+    question = get_object_or_404(WorkshopQuiz, pk=qid, workshop=ws)
+    if not _can_manage(request.user, ws):
+        raise PermissionDenied
+    question.delete()
+    messages.success(request, 'Question supprimée.')
+    return redirect('workshops:quiz_manage', pk=pk)

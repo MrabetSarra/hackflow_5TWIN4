@@ -75,6 +75,14 @@ class Workshop(models.Model):
     mode           = models.CharField(max_length=12, choices=Mode.choices,
                                       default=Mode.ONSITE, verbose_name='Mode de diffusion')
 
+    # Suggestions pédagogiques générées par IA
+    pedagogical_objectives = models.TextField(
+        blank=True, verbose_name='Objectifs pédagogiques',
+        help_text='Objectifs d\'apprentissage générés par IA (un par ligne)')
+    catalog_summary = models.TextField(
+        blank=True, verbose_name='Résumé catalogue',
+        help_text='Résumé court pour l\'affichage dans les cartes du catalogue')
+
     # Liens selon le mode
     room           = models.CharField(max_length=80, blank=True, verbose_name='Salle')
     meeting_url    = models.URLField(blank=True, verbose_name='Lien Zoom / Meet')

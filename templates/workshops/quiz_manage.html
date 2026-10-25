@@ -1,0 +1,85 @@
+{% extends workshop_base_template %}
+{% load static %}
+
+{% block title %}Gérer le quiz — {{ workshop.title }} — HackFlow{% endblock %}
+
+{% block student_content %}
+<div class="container-fluid px-4 py-4">
+
+  <div class="row justify-content-center">
+    <div class="col-12 col-xl-8">
+
+      <!-- Breadcrumb -->
+      <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{% url 'workshops:list' %}">Ateliers</a></li>
+          <li class="breadcrumb-item"><a href="{{ workshop.get_absolute_url }}">{{ workshop.title|truncatechars:30 }}</a></li>
+          <li class="breadcrumb-item active">Gérer le quiz</li>
+        </ol>
+      </nav>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-info text-white py-3 d-flex justify-content-between align-items-center">
+          <h4 class="mb-0 fw-bold">
+            <i class="bi bi-question-circle me-2"></i>Quiz : {{ workshop.title }}
+          </h4>
+          <a href="{% url 'workshops:quiz_question_add' workshop.pk %}" class="btn btn-light btn-sm">
+            <i class="bi bi-plus-circle me-1"></i>Ajouter une question
+          </a>
+        </div>
+
+        <div class="card-body p-4">
+          {% if questions %}
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead>
+                <tr>
+                  <th style="width:5%">#</th>
+                  <th>Question</th>
+                  <th class="text-center" style="width:15%">Bonne réponse</th>
+                  <th class="text-end" style="width:20%">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for q in questions %}
+                <tr>
+                  <td class="fw-semibold">{{ forloop.counter }}</td>
+                  <td>{{ q.question }}</td>
+                  <td class="text-center">
+                    {% if q.correct_index == 0 %}A{% elif q.correct_index == 1 %}B{% elif q.correct_index == 2 %}C{% else %}D{% endif %}
+                  </td>
+                  <td class="text-end">
+                    <a href="{% url 'workshops:quiz_question_edit' workshop.pk q.pk %}" class="btn btn-sm btn-outline-primary">
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                    <form method="post" action="{% url 'workshops:quiz_question_delete' workshop.pk q.pk %}" class="d-inline">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-outline-danger"
+                              onclick="return confirm('Supprimer cette question ?')">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center py-5">
+            <i class="bi bi-question-circle display-1 text-body-secondary mb-3"></i>
+            <h5>Aucune question configurée</h5>
+            <p class="text-body-secondary">Ajoutez des questions de quiz pour valider la compréhension des étudiants.</p>
+            <a href="{% url 'workshops:quiz_question_add' workshop.pk %}" class="btn btn-info">
+              <i class="bi bi-plus-circle me-1"></i>Ajouter une question
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}
