@@ -20,10 +20,18 @@
   button.hf-step-body:hover .hf-dot { transform: scale(1.08); }
   .hf-dot { width: 38px; height: 38px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; margin-bottom: .6rem; background: var(--bs-secondary-bg); color: var(--bs-secondary-color); transition: transform .15s; }
   .hf-step.done .hf-dot { background: var(--bs-success); color: #fff; }
-  .hf-step.current .hf-dot { background: var(--bs-primary); color: #fff; box-shadow: 0 0 0 6px var(--bs-primary-bg-subtle); }
+  .hf-step.current .hf-dot { background: #0a58ca; color: #fff; box-shadow: 0 0 0 6px var(--bs-primary-bg-subtle); }
   .hf-step-label { font-size: .85rem; font-weight: 600; color: var(--bs-secondary-color); }
-  .hf-step.current .hf-step-label { color: var(--bs-primary); }
-  .hf-step.done .hf-step-label { color: var(--bs-success); }
+  .hf-step.current .hf-step-label { color: var(--bs-primary-text-emphasis); }
+  .hf-step.done .hf-step-label { color: var(--bs-success-text-emphasis); }
+  :focus-visible { outline: 3px solid var(--bs-primary-text-emphasis); outline-offset: 2px; }
+  .hf-page { --hf-accent: #0a58ca; --hf-success: #146c43; --hf-danger: #b02a37; }
+  [data-bs-theme="dark"] .hf-page { --hf-accent: #6ea8fe; --hf-success: #75b798; --hf-danger: #ea868f; }
+  .hf-page .text-primary { color: var(--hf-accent) !important; }
+  .hf-page .text-success { color: var(--hf-success) !important; }
+  .hf-page .text-danger { color: var(--hf-danger) !important; }
+  .hf-page .btn-outline-primary { --bs-btn-color: var(--hf-accent); --bs-btn-border-color: var(--hf-accent); --bs-btn-hover-bg: #0a58ca; --bs-btn-hover-border-color: #0a58ca; --bs-btn-hover-color: #fff; --bs-btn-active-bg: #0a58ca; --bs-btn-active-border-color: #0a58ca; --bs-btn-active-color: #fff; --bs-btn-focus-shadow-rgb: 10, 88, 202; }
+  .hf-page .btn-outline-success { --bs-btn-color: var(--hf-success); --bs-btn-border-color: var(--hf-success); --bs-btn-hover-bg: #146c43; --bs-btn-hover-border-color: #146c43; --bs-btn-hover-color: #fff; --bs-btn-active-bg: #146c43; --bs-btn-active-border-color: #146c43; --bs-btn-active-color: #fff; --bs-btn-focus-shadow-rgb: 20, 108, 67; }
   @media (max-width: 767px) {
     .hf-steps { flex-direction: column; gap: 1rem; }
     .hf-step { text-align: left; }
@@ -34,9 +42,9 @@
 </style>
 {% endblock %}
 
-{% block admin_content %}<div class="container-fluid px-0">{% include "hackathons/_messages.html" %}{% include page_template %}</div>{% endblock %}
-{% block student_content %}<div class="container-fluid px-0">{% include "hackathons/_messages.html" %}{% include page_template %}</div>{% endblock %}
-{% block mentor_content %}<div class="container-fluid px-0">{% include "hackathons/_messages.html" %}{% include page_template %}</div>{% endblock %}
+{% block admin_content %}<div id="main-content" tabindex="-1" class="container-fluid px-0 hf-page">{% include "hackathons/_messages.html" %}{% include page_template %}</div>{% endblock %}
+{% block student_content %}<div class="container-fluid px-0 hf-page">{% include "hackathons/_messages.html" %}{% include page_template %}</div>{% endblock %}
+{% block mentor_content %}<div id="main-content" tabindex="-1" class="container-fluid px-0 hf-page">{% include "hackathons/_messages.html" %}{% include page_template %}</div>{% endblock %}
 
 {% block extra_js %}
 <script>

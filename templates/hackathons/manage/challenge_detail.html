@@ -49,7 +49,7 @@
 
         <div class="tab-pane fade" id="pane-registrations" role="tabpanel">
             <div class="table-responsive"><table class="table align-middle mb-0">
-                <thead><tr><th>Participant</th><th>Équipe</th><th>Date</th><th>Statut</th><th>Annulée le</th></tr></thead>
+                <thead><tr><th scope="col">Participant</th><th scope="col">Équipe</th><th scope="col">Date</th><th scope="col">Statut</th><th scope="col">Annulée le</th></tr></thead>
                 <tbody>
                 {% for r in registrations %}
                 <tr><td>{{ r.user.get_full_name|default:r.user.username }}</td><td>{{ r.team.name|default:"—" }}</td><td>{{ r.registered_at|date:"d/m/Y H:i" }}</td>

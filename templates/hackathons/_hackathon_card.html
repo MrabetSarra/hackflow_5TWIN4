@@ -1,7 +1,7 @@
 {# Carte hackathon : variables h, manage (bool) #}
 <div class="card-modern card-modern-hoverable h-100 overflow-hidden d-flex flex-column">
     {% if h.banner %}
-    <img src="{{ h.banner.url }}" alt="Bannière {{ h.title }}" class="w-100" style="height: 140px; object-fit: cover;">
+    <img src="{{ h.banner.url }}" alt="Bannière {{ h.title }}" width="640" height="140" loading="lazy" decoding="async" class="w-100" style="height: 140px; object-fit: cover;">
     {% else %}
     <div class="d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary" style="height: 140px;"><i class="bi bi-trophy-fill fs-1"></i></div>
     {% endif %}
@@ -13,7 +13,7 @@
             <span class="badge bg-body-secondary text-body-secondary rounded-pill">{{ h.track.name }}</span>
             </div>
         </div>
-        <h5 class="fw-bold mb-1">{{ h.title }}</h5>
+        <h2 class="h5 fw-bold mb-1">{{ h.title }}</h2>
         {% if h.short_description %}<p class="small text-body-secondary mb-2">{{ h.short_description }}</p>{% endif %}
         <ul class="list-unstyled small text-body-secondary mb-3">
             <li><i class="bi bi-calendar-event me-1"></i>{{ h.starts_at|date:"d/m/Y H:i" }} → {{ h.ends_at|date:"d/m/Y H:i" }}</li>

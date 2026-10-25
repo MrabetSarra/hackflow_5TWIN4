@@ -2,10 +2,10 @@
 <div class="table-responsive">
     <table class="table table-hover align-middle mb-0">
         <thead><tr>
-            {% if kind == 'schedule' %}<th>Étape</th><th>Type</th><th>Début</th><th>Fin</th><th>Mentor</th>
-            {% elif kind == 'announcements' %}<th>Message</th><th>Niveau</th><th>Publication</th><th>Expiration</th><th>État</th>
-            {% else %}<th>Titre</th><th>Catégorie</th><th>Lien / fichier</th><th>Publiée</th>{% endif %}
-            <th class="text-end">Actions</th>
+            {% if kind == 'schedule' %}<th scope="col">Étape</th><th scope="col">Type</th><th scope="col">Début</th><th scope="col">Fin</th><th scope="col">Mentor</th>
+            {% elif kind == 'announcements' %}<th scope="col">Message</th><th scope="col">Niveau</th><th scope="col">Publication</th><th scope="col">Expiration</th><th scope="col">État</th>
+            {% else %}<th scope="col">Titre</th><th scope="col">Catégorie</th><th scope="col">Lien / fichier</th><th scope="col">Publiée</th>{% endif %}
+            <th scope="col" class="text-end">Actions</th>
         </tr></thead>
         <tbody>
         {% for i in items %}

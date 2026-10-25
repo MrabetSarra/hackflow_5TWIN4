@@ -9,7 +9,7 @@
     </div>
     {% for error in form.location.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
     <div class="form-text mb-3">Saisissez une adresse puis cliquez sur « Rechercher », ou placez directement le repère sur la carte. Le lieu sera affiché aux étudiants et aux mentors.</div>
-    <div id="hf-map" style="height: 380px; border-radius: 1rem; z-index: 0;"></div>
+    <div id="hf-map" role="region" aria-label="Carte pour choisir le lieu" style="height: 380px; border-radius: 1rem; z-index: 0;"></div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>

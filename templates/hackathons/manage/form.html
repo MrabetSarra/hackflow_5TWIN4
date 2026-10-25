@@ -24,8 +24,8 @@
                 {{ field }}
                 {% endif %}
                 {% if banner_ai and field.name == 'banner' %}{% include "hackathons/_banner_ai.html" %}{% endif %}
-                {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
-                {% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                {% if field.help_text %}<div class="form-text" id="{{ field.auto_id }}_help">{{ field.help_text }}</div>{% endif %}
+                {% if field.errors %}<div id="{{ field.auto_id }}_error">{% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>{% endif %}
             </div>{% endif %}
             {% endfor %}
         </div>

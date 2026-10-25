@@ -59,6 +59,16 @@ class StyledFormMixin:
             if self.is_bound and self._errors and self._errors.get(name):
                 classes.add('is-invalid')
             widget.attrs['class'] = ' '.join(sorted(classes))
+            described = []
+            if field.help_text:
+                described.append(f'{self[name].auto_id}_help')
+            if self.is_bound and self._errors and self._errors.get(name):
+                described.append(f'{self[name].auto_id}_error')
+                widget.attrs['aria-invalid'] = 'true'
+            if described:
+                widget.attrs['aria-describedby'] = ' '.join(described)
+            if field.required:
+                widget.attrs['aria-required'] = 'true'
             if isinstance(widget, forms.Textarea):
                 widget.attrs.setdefault('rows', 4)
 
