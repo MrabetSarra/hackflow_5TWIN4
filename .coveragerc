@@ -3,6 +3,7 @@ source =
     accounts
     core
     dashboard_admin
+    hackathons
     hackflow
     mentor
     repositories
