@@ -43,6 +43,8 @@ urlpatterns = [
 
     # Module Ateliers & Formations
     path('workshops/', include('workshops.urls')),
+    # Tracks, Hackathons & Challenges
+    path('hackathons/', include('hackathons.urls')),
 
     # Django Admin Technique (Standard)
     path('admin/', admin.site.urls),

@@ -1,0 +1,114 @@
+{# Client JavaScript partagé de l'assistant IA : démarrage, suivi (polling), retour utilisateur et helpers DOM #}
+<div id="hf-ai-csrf" hidden>{% csrf_token %}</div>
+<script>
+window.HFAI = (function () {
+  var URLS = {
+    start: "{% url 'hackathons:ai_start' 'FEATURE' %}",
+    status: "{% url 'hackathons:ai_status' 0 %}",
+    feedback: "{% url 'hackathons:ai_feedback' 0 %}"
+  };
+  var POLL_MS = 1200, TIMEOUT_MS = 120000;
+
+  function csrf() { return document.querySelector('#hf-ai-csrf input[name=csrfmiddlewaretoken]').value; }
+  function parse(response) {
+    return response.json().catch(function () { throw new Error('Réponse inattendue du serveur (code ' + response.status + ').'); });
+  }
+  function post(url, data) {
+    return fetch(url, {
+      method: 'POST', credentials: 'same-origin',
+      headers: {'X-CSRFToken': csrf(), 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest'},
+      body: new URLSearchParams(data)
+    }).then(parse);
+  }
+  function poll(jobId, opts, started) {
+    if (Date.now() - started > TIMEOUT_MS) { opts.onError('La réponse met trop de temps. Réessayez dans un instant.'); return; }
+    setTimeout(function () {
+      fetch(URLS.status.replace('/0/', '/' + jobId + '/'), {credentials: 'same-origin'}).then(parse).then(function (job) {
+        if (job.status === 'done') { opts.onDone(job.result, job); }
+        else if (job.status === 'failed') { opts.onError(job.error); }
+        else { poll(jobId, opts, started); }
+      }).catch(function (error) { opts.onError(error.message); });
+    }, POLL_MS);
+  }
+  function run(opts) {
+    if (opts.onLoading) { opts.onLoading(); }
+    post(URLS.start.replace('FEATURE', opts.feature), opts.data || {}).then(function (job) {
+      if (job.status === 'done') { opts.onDone(job.result, job); }
+      else if (job.status === 'failed') { opts.onError(job.error || 'La requête IA a échoué.'); }
+      else { poll(job.job_id, opts, Date.now()); }
+    }).catch(function (error) { opts.onError(error.message); });
+  }
+  function feedback(jobId, value) { return post(URLS.feedback.replace('/0/', '/' + jobId + '/'), {value: value}); }
+
+  function el(tag, attrs, children) {
+    var node = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (key) {
+      if (key === 'text') { node.textContent = attrs[key]; }
+      else if (key === 'class') { node.className = attrs[key]; }
+      else { node.setAttribute(key, attrs[key]); }
+    });
+    (children || []).forEach(function (child) { if (child) { node.appendChild(child); } });
+    return node;
+  }
+  function loading(message) {
+    return el('div', {'class': 'text-center py-5', role: 'status'}, [
+      el('div', {'class': 'spinner-border text-primary mb-3'}),
+      el('div', {'class': 'fw-semibold', text: message || 'L’IA réfléchit…'}),
+      el('div', {'class': 'small text-body-secondary', text: 'Cela peut prendre quelques secondes.'})
+    ]);
+  }
+  function error(message, retry) {
+    var box = el('div', {'class': 'alert alert-danger d-flex flex-column gap-2', role: 'alert'}, [
+      el('div', {'class': 'fw-semibold', text: 'L’assistant IA n’a pas pu répondre'}),
+      el('div', {text: message || 'Une erreur est survenue.'})
+    ]);
+    if (retry) {
+      var button = el('button', {type: 'button', 'class': 'btn btn-sm btn-outline-danger rounded-pill align-self-start px-3', text: 'Réessayer'});
+      button.addEventListener('click', retry);
+      box.appendChild(button);
+    }
+    return box;
+  }
+  function list(title, icon, items, tone) {
+    if (!items || !items.length) { return null; }
+    var ul = el('ul', {'class': 'mb-0 ps-3'}, items.map(function (item) { return el('li', {'class': 'mb-1', text: item}); }));
+    return el('div', {'class': 'hf-tile mb-3'}, [
+      el('div', {'class': 'd-flex align-items-center gap-2 mb-2'}, [
+        el('span', {'class': 'hf-icon bg-' + (tone || 'primary') + '-subtle text-' + (tone || 'primary')}, [el('i', {'class': 'bi ' + icon})]),
+        el('h3', {'class': 'h6 fw-bold mb-0', text: title})
+      ]), ul
+    ]);
+  }
+  function block(title, icon, text, tone) {
+    if (!text) { return null; }
+    return el('div', {'class': 'hf-tile mb-3'}, [
+      el('div', {'class': 'd-flex align-items-center gap-2 mb-2'}, [
+        el('span', {'class': 'hf-icon bg-' + (tone || 'primary') + '-subtle text-' + (tone || 'primary')}, [el('i', {'class': 'bi ' + icon})]),
+        el('h3', {'class': 'h6 fw-bold mb-0', text: title})
+      ]),
+      el('p', {'class': 'hf-text', style: 'white-space: pre-line;', text: text})
+    ]);
+  }
+  function meta(job) {
+    var seconds = job.cached ? 'depuis le cache' : (job.latency_ms / 1000).toFixed(1).replace('.', ',') + ' s';
+    var parts = ['Réponse ' + seconds];
+    if (job.model && !job.cached) { parts.push(job.model + (job.fallback_used ? ' (modèle de secours)' : '')); }
+    return parts.join(' · ');
+  }
+  function feedbackBar(job) {
+    var bar = el('div', {'class': 'd-flex flex-wrap align-items-center gap-2 mt-3 pt-3 border-top'});
+    bar.appendChild(el('span', {'class': 'small text-body-secondary me-auto', text: meta(job)}));
+    var label = el('span', {'class': 'small text-body-secondary', text: 'Cette réponse vous aide-t-elle ?'});
+    bar.appendChild(label);
+    [['1', 'bi-hand-thumbs-up', 'Utile'], ['-1', 'bi-hand-thumbs-down', 'Pas utile']].forEach(function (entry) {
+      var button = el('button', {type: 'button', 'class': 'btn btn-sm btn-outline-secondary rounded-pill', title: entry[2]}, [el('i', {'class': 'bi ' + entry[1]})]);
+      button.addEventListener('click', function () {
+        feedback(job.job_id, entry[0]).then(function () { bar.replaceChildren(el('span', {'class': 'small text-success', text: 'Merci pour votre retour !'})); });
+      });
+      bar.appendChild(button);
+    });
+    return bar;
+  }
+  return {run: run, el: el, loading: loading, error: error, list: list, block: block, feedbackBar: feedbackBar, meta: meta};
+})();
+</script>

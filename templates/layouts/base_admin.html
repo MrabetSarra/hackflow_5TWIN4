@@ -33,6 +33,14 @@
             </a>
 
             <div class="sidebar-heading mt-3">Événement & Évaluation</div>
+            <a href="{% url 'hackathons:hackathon_list' %}" class="nav-link-item {% if request.resolver_match.namespace == 'hackathons' and request.resolver_match.url_name != 'mentor_feedback_list' %}active{% endif %}">
+                <i class="bi bi-trophy"></i>
+                <span>Hackathons</span>
+            </a>
+            <a href="{% url 'hackathons:mentor_feedback_list' %}" class="nav-link-item {% if request.resolver_match.url_name == 'mentor_feedback_list' %}active{% endif %}">
+                <i class="bi bi-chat-square-text-fill"></i>
+                <span>Avis mentors</span>
+            </a>
             <a href="{% url 'dashboard_admin:events_overview' %}" class="nav-link-item {% if request.resolver_match.url_name == 'events_overview' or request.resolver_match.url_name == 'event_edit' %}active{% endif %}">
                 <i class="bi bi-calendar2-week-fill"></i>
                 <span>Events Overview</span>

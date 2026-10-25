@@ -1,0 +1,18 @@
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Hackathons</h2>
+        <p class="text-body-secondary small mb-0">Découvrez les hackathons et leurs challenges.</p>
+    </div>
+</div>
+<form method="get" class="card-modern p-3 mb-4 row g-2 align-items-end">
+    <div class="col-md-5"><label class="form-label small fw-semibold" for="q">Recherche</label><input class="form-control" id="q" name="q" value="{{ q }}" placeholder="Hackathon, thème ou Track"></div>
+    <div class="col-md-4"><label class="form-label small fw-semibold" for="track">Track</label>
+        <select class="form-select" id="track" name="track"><option value="">Tous les Tracks</option>{% for t in tracks %}<option value="{{ t.pk }}" {% if track == t.pk|stringformat:'s' %}selected{% endif %}>{{ t.name }}</option>{% endfor %}</select></div>
+    <div class="col-md-3"><label class="form-label small fw-semibold" for="phase">Période</label>
+        <select class="form-select" id="phase" name="phase"><option value="">Toutes</option><option value="upcoming" {% if phase == 'upcoming' %}selected{% endif %}>À venir</option><option value="ongoing" {% if phase == 'ongoing' %}selected{% endif %}>En cours</option><option value="finished" {% if phase == 'finished' %}selected{% endif %}>Terminés</option></select></div>
+    <div class="col-12 d-flex gap-2"><button class="btn btn-primary">Filtrer</button><a class="btn btn-outline-secondary" href="{% url 'hackathons:catalog' %}">Réinitialiser</a></div>
+</form>
+<div class="row g-3">
+    {% for hh in hackathons %}<div class="col-md-6 col-xl-4">{% include "hackathons/_hackathon_card.html" with h=hh manage=False %}</div>
+    {% empty %}<div class="col-12"><div class="card-modern p-5 text-center text-body-secondary">Aucun hackathon publié ne correspond à ces filtres.</div></div>{% endfor %}
+</div>

@@ -96,6 +96,7 @@ INSTALLED_APPS = [
     'workshops.apps.WorkshopsConfig',
     'career_opportunities.apps.CareerOpportunitiesConfig',
     'repositories.apps.RepositoriesConfig',
+    'hackathons.apps.HackathonsConfig',
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
