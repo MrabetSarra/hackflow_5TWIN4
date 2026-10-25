@@ -171,7 +171,8 @@
       html += '</div>';
       resultDiv.innerHTML = html;
     } catch (err) {
-      resultDiv.innerHTML = '<div class="alert alert-danger">Impossible de contacter Ollama (localhost:11434).</div>';
+      resultDiv.innerHTML = '<div class="alert alert-danger">Impossible de contacter Ollama (localhost:11434).</div>' +
+        '<div class="alert alert-warning mt-2"><small>Erreur technique : ' + err.message + '</small></div>';
     } finally {
       btn.disabled = false;
       btn.innerHTML = originalText;
