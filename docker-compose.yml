@@ -1,0 +1,29 @@
+services:
+  web:
+    build: .
+    container_name: hackflow-web
+    env_file:
+      - .env
+    environment:
+      DJANGO_DEBUG: "True"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,host.docker.internal,hackflow-web"
+      DATABASE_PATH: /data/db.sqlite3
+      MEDIA_ROOT: /app/media/uploads
+      PRIVATE_MEDIA_ROOT: /app/private_media
+      HACKFLOW_REPOS_ROOT: /app/.repository-data
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./docker-data:/data
+      - ./media:/app/media
+      - ./private_media:/app/private_media
+      - ./.repository-data:/app/.repository-data
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: hackflow-redis
+    restart: unless-stopped

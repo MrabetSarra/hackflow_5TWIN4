@@ -135,18 +135,19 @@
                             <h4 class="fw-bold text-dark mb-2">{{ t.name }}</h4>
                             <p class="text-muted small mb-3 flex-grow-1">{{ t.pitch }}</p>
 
-                        <div class="p-3 rounded-3 bg-light border mb-3">
-                            <div class="small fw-bold text-danger mb-1"><i aria-hidden="true" class="bi bi-search me-1"></i>Urgently needed skills:</div>
-                            <div class="d-flex flex-wrap gap-1">
-                                {% for skill in t.missing_skills %}
-                                <span class="badge-tag badge-tag-urgent">{{ skill }}</span>
-                                {% endfor %}
+                            <div class="p-3 rounded-3 bg-light border mb-3">
+                                <div class="small fw-bold text-danger mb-1"><i aria-hidden="true" class="bi bi-search me-1"></i>Urgently needed skills:</div>
+                                <div class="d-flex flex-wrap gap-1">
+                                    {% for skill in t.missing_skills %}
+                                    <span class="badge-tag badge-tag-urgent">{{ skill }}</span>
+                                    {% endfor %}
+                                </div>
                             </div>
-                        </div>
 
-                        <button class="btn btn-outline-primary btn-sm rounded-pill w-100" data-demo-toast="Application sent to team {{ t.name }} !">
-                            <i aria-hidden="true" class="bi bi-send-fill me-1"></i>Apply to join this team
-                        </button>
+                            <button class="btn btn-outline-primary btn-sm rounded-pill w-100" data-demo-toast="Application sent to team {{ t.name }} !">
+                                <i aria-hidden="true" class="bi bi-send-fill me-1"></i>Apply to join this team
+                            </button>
+                        </div>
                     </div>
                 </div>
                 {% endfor %}

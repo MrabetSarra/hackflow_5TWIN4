@@ -1,4 +1,4 @@
-﻿from html.parser import HTMLParser
+from html.parser import HTMLParser
 import tempfile
 from pathlib import Path
 
@@ -72,7 +72,10 @@ class StudentPageAccessibilityTests(TestCase):
 
     def setUp(self):
         self.temp_root = tempfile.TemporaryDirectory(prefix='hackflow-accessibility-')
-        self.override = override_settings(REPOS_ROOT=Path(self.temp_root.name) / 'repos')
+        self.override = override_settings(
+            DEBUG=True,
+            REPOS_ROOT=Path(self.temp_root.name) / 'repos',
+        )
         self.override.enable()
         self.repository = Repository.objects.create(team=self.team, name='Accessible Repository', slug='accessible-repo', created_by=self.student)
         initialize_repository(self.repository, self.student)
