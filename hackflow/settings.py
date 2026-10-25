@@ -95,6 +95,7 @@ INSTALLED_APPS = [
     'dashboard_admin.apps.DashboardAdminConfig',
     'career_opportunities.apps.CareerOpportunitiesConfig',
     'repositories.apps.RepositoriesConfig',
+    'hackathons.apps.HackathonsConfig',
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

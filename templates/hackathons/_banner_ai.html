@@ -1,0 +1,67 @@
+{# Bannière : import depuis le PC (champ ci-dessus) ou génération par IA (Stable Diffusion via Hugging Face). #}
+<div class="mt-2" id="hf-banner-ai" data-url="{% url 'hackathons:banner_generate' %}">
+    <div class="input-group">
+        <input class="form-control" id="hf-banner-instructions" maxlength="300" placeholder="Style de l'image (facultatif) : néons, nature, futuriste…" aria-label="Style de l'image">
+        <button type="button" class="btn text-white px-4" id="hf-banner-generate" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);">
+            <i class="bi bi-stars me-1"></i>Générer avec l'IA
+        </button>
+    </div>
+    <div class="form-text">L'IA utilise le titre, le track et la description courte du hackathon. Vous pouvez aussi importer votre propre image ci-dessus.</div>
+    <div class="small text-danger mt-2 d-none" id="hf-banner-error" role="alert"></div>
+    <div class="small text-body-secondary mt-2 d-none" id="hf-banner-loading"><span class="spinner-border spinner-border-sm me-2"></span>Génération en cours (10 à 40 secondes)…</div>
+    <img id="hf-banner-preview" class="img-fluid rounded-3 mt-3 d-none" alt="Aperçu de la bannière" style="max-height: 260px;">
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var box = document.getElementById('hf-banner-ai');
+  var button = document.getElementById('hf-banner-generate');
+  var errorBox = document.getElementById('hf-banner-error');
+  var loading = document.getElementById('hf-banner-loading');
+  var preview = document.getElementById('hf-banner-preview');
+  var form = box.closest('form');
+  var hidden = form.elements['generated_banner'];
+  var file = form.elements['banner'];
+  function value(name) { var el = form.elements[name]; return el ? el.value.trim() : ''; }
+  function showError(message) { errorBox.textContent = message; errorBox.classList.toggle('d-none', !message); }
+
+  if (file) {
+    file.addEventListener('change', function () {
+      if (file.files && file.files[0]) {
+        hidden.value = '';
+        preview.src = URL.createObjectURL(file.files[0]);
+        preview.classList.remove('d-none');
+        showError('');
+      }
+    });
+  }
+
+  button.addEventListener('click', function () {
+    showError('');
+    var title = value('name');
+    if (title.length < 3) {
+      showError('Renseignez d\u2019abord le champ « Titre » du hackathon (au moins 3 caractères).');
+      if (form.elements['name']) { form.elements['name'].focus(); }
+      return;
+    }
+    var data = new FormData();
+    data.append('csrfmiddlewaretoken', form.elements['csrfmiddlewaretoken'].value);
+    data.append('title', title);
+    data.append('track', value('track_name'));
+    data.append('summary', value('short_description'));
+    data.append('instructions', document.getElementById('hf-banner-instructions').value);
+    button.disabled = true;
+    loading.classList.remove('d-none');
+    fetch(box.dataset.url, {method: 'POST', body: data, credentials: 'same-origin'})
+      .then(function (response) { return response.json().then(function (body) { return {ok: response.ok, body: body}; }); })
+      .then(function (result) {
+        if (!result.ok) { showError(result.body.error || 'La génération a échoué.'); return; }
+        hidden.value = result.body.name;
+        if (file) { file.value = ''; }
+        preview.src = result.body.url;
+        preview.classList.remove('d-none');
+      })
+      .catch(function () { showError('Erreur réseau ou réponse inattendue : réessayez.'); })
+      .finally(function () { button.disabled = false; loading.classList.add('d-none'); });
+  });
+});
+</script>
