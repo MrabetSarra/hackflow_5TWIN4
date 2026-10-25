@@ -44,6 +44,8 @@ services:
         value: /tmp/media/uploads
       - key: PRIVATE_MEDIA_ROOT
         value: /tmp/private_media
+      - key: CLOUDINARY_URL
+        sync: false
       - key: GITHUB_TOKEN
         sync: false
       - key: GITHUB_OWNER

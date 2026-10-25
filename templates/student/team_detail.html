@@ -178,7 +178,7 @@
                         </div>
                         <i aria-hidden="true" class="bi bi-box-arrow-up-right text-muted flex-shrink-0"></i>
                     </a>{% endfor %}
-                    {% for resource in resources %}<a href="{% if resource.url %}{{ resource.url }}{% else %}{{ resource.document.url }}{% endif %}" target="_blank" rel="noopener noreferrer" class="p-3 rounded-3 border text-decoration-none text-dark d-flex align-items-center justify-content-between hover-bg-light">
+                    {% for resource in resources %}<a href="{% if resource.url %}{{ resource.url }}{% else %}{% url 'student:download_team_resource' resource.pk %}{% endif %}" {% if resource.url %}target="_blank" rel="noopener noreferrer"{% endif %} class="p-3 rounded-3 border text-decoration-none text-dark d-flex align-items-center justify-content-between hover-bg-light">
                         <div class="d-flex align-items-center gap-3">
                                 <i aria-hidden="true" class="bi {% if resource.kind == 'github' %}bi-github{% elif resource.kind == 'figma' %}bi-palette-fill{% elif resource.kind == 'demo' %}bi-globe{% else %}bi-file-earmark-text{% endif %} fs-4 text-dark"></i>
                             <div>

@@ -2,6 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 from django.db import IntegrityError, transaction
+from unittest.mock import patch
 
 from accounts.models import User
 from .models import Hackathon, MentorRequest, Milestone, Notification, Resource, Submission, Team, TeamInvitation, TeamLeaveRequest, TeamMembership, Task
@@ -56,6 +57,30 @@ class TeamManagementTests(TestCase):
 
         self.client.force_login(self.mentor)
         self.assertEqual(self.client.get(reverse('student:team_detail')).status_code, 403)
+
+    def test_team_document_download_requires_team_membership(self):
+        resource = Resource.objects.create(
+            team=self.team, title='Private planning document',
+            document='team_resources/plan.pdf', created_by=self.captain,
+        )
+        self.client.force_login(self.other)
+        response = self.client.get(reverse('student:download_team_resource', args=[resource.pk]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_team_member_downloads_team_document_through_authorized_view(self):
+        resource = Resource.objects.create(
+            team=self.team, title='Team notes',
+            document='team_resources/notes.pdf', created_by=self.captain,
+        )
+        self.client.force_login(self.member)
+        with patch('accounts.storage.PrivateCVStorage.open') as open_file:
+            from django.core.files.base import ContentFile
+            open_file.return_value = ContentFile(b'private team file')
+            response = self.client.get(reverse('student:download_team_resource', args=[resource.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('attachment', response['Content-Disposition'])
+        open_file.assert_called_once_with(resource.document.name, 'rb')
 
     def test_captain_can_edit_team(self):
         response = self.post_team(self.captain, {
