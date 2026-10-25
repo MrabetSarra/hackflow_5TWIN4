@@ -142,11 +142,47 @@ TEMPLATES = [
 WSGI_APPLICATION = 'hackflow.wsgi.application'
 
 # Database
-# Use PostgreSQL when DATABASE_URL is configured (e.g. on Render).
-# Otherwise, keep SQLite for local development.
+# DATABASE_URL remains supported for existing deployments. For Aiven, set
+# DB_ENGINE=mysql and provide the DB_* values in the hosting environment.
 DATABASE_URL = os.environ.get('DATABASE_URL', '').strip()
+DB_ENGINE = os.environ.get('DB_ENGINE', '').strip().lower()
 
-if DATABASE_URL:
+if DB_ENGINE == 'mysql':
+    _mysql_required = ('DB_NAME', 'DB_USER', 'DB_PASSWORD', 'DB_HOST')
+    _mysql_missing = [
+        name for name in _mysql_required if not os.environ.get(name)
+    ]
+    if _mysql_missing:
+        raise RuntimeError(
+            'MySQL is selected but required database settings are missing: '
+            + ', '.join(_mysql_missing)
+        )
+
+    _mysql_options = {'charset': 'utf8mb4'}
+    _mysql_ca = os.environ.get('DB_SSL_CA', '').strip()
+    # Aiven requires TLS. Supplying its CA enables certificate validation;
+    # an empty SSL options dictionary still requests TLS when no CA is set.
+    _mysql_options['ssl'] = {'ca': _mysql_ca} if _mysql_ca else {}
+
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ['DB_NAME'],
+            'USER': os.environ['DB_USER'],
+            'PASSWORD': os.environ['DB_PASSWORD'],
+            'HOST': os.environ['DB_HOST'],
+            'PORT': os.environ.get('DB_PORT', '3306'),
+            'CONN_MAX_AGE': 600,
+            'OPTIONS': _mysql_options,
+        },
+    }
+elif DB_ENGINE:
+    raise RuntimeError(
+        'DB_ENGINE must be mysql when set; SQLite is selected automatically '
+        'only for local development.'
+    )
+elif DATABASE_URL:
+    # Keep compatibility with existing DATABASE_URL based deployments.
     DATABASES = {
         'default': dj_database_url.parse(
             DATABASE_URL,
@@ -154,6 +190,12 @@ if DATABASE_URL:
             ssl_require=True,
         )
     }
+elif not DEBUG:
+    raise RuntimeError(
+        'Production database configuration is missing. Set DB_ENGINE=mysql '
+        'and DB_NAME, DB_USER, DB_PASSWORD, DB_HOST (and optionally DB_PORT), '
+        'or configure DATABASE_URL.'
+    )
 else:
     DATABASES = {
         'default': {
