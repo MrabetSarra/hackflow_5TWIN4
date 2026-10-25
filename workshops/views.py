@@ -1244,9 +1244,10 @@ def workshop_quiz(request, pk):
     questions = list(ws.quiz_questions.all())
 
     context = {
-        'workshop': ws,
-        'booking': booking,
-        'questions': questions,
+        'workshop':       ws,
+        'booking':        booking,
+        'questions':      questions,
+        'workshop_base_template': _workshop_base_template(request.user),
     }
     return render(request, 'workshops/quiz.html', context)
 
@@ -1300,13 +1301,14 @@ def workshop_quiz_submit(request, pk):
         )
 
     context = {
-        'workshop': ws,
-        'booking': booking,
-        'questions': questions,
-        'results': results,
-        'score': score,
-        'total': len(questions),
-        'percentage': percentage,
-        'passed': percentage >= 80,
+        'workshop':             ws,
+        'booking':              booking,
+        'questions':            questions,
+        'results':              results,
+        'score':                score,
+        'total':                len(questions),
+        'percentage':           percentage,
+        'passed':               percentage >= 80,
+        'workshop_base_template': _workshop_base_template(request.user),
     }
     return render(request, 'workshops/quiz_result.html', context)
