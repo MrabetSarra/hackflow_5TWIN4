@@ -398,7 +398,6 @@ OPENAI_MODEL = os.environ.get('OPENAI_MODEL', 'gpt-5-mini')
 OLLAMA_BASE_URL = os.environ.get('OLLAMA_BASE_URL', 'http://127.0.0.1:11434')
 OLLAMA_PROXY_TOKEN = os.environ.get('OLLAMA_PROXY_TOKEN', '')
 OLLAMA_MODEL = os.environ.get('OLLAMA_MODEL', 'qwen2.5-coder:3b')
-OLLAMA_PROXY_TOKEN = os.environ.get('OLLAMA_PROXY_TOKEN', '')
 
 REPOSITORY_AI_PROVIDER = os.environ.get(
     'REPOSITORY_AI_PROVIDER',
