@@ -1,6 +1,8 @@
 [run]
+relative_files = True
 source =
     accounts
+    career_opportunities
     core
     dashboard_admin
     hackathons

@@ -173,12 +173,35 @@ python manage.py test
 Generate coverage reports with:
 
 ```bash
+coverage erase
 coverage run manage.py test
-coverage report --fail-under=70
+coverage report --fail-under=80
+coverage xml -o coverage.xml
 coverage html
 ```
 
-The HTML report is written to `htmlcov/`. CI enforces 70% coverage and uploads that report as an artifact.
+The HTML report is written to `htmlcov/`; `coverage.xml` is the Cobertura report read by SonarQube. Coverage uses relative file paths so the report can be imported when the scanner runs in Docker. CI enforces 80% coverage and uploads both reports. Sonar analysis runs locally against the local SonarQube server; the GitHub Actions workflow does not submit analysis to SonarQube Cloud.
+
+For a local SonarQube server on port 9000, activate the virtual environment, create the `HackFlow` project in SonarQube, then generate a fresh report and run the scanner from the repository root:
+
+```powershell
+coverage erase
+coverage run manage.py test
+coverage xml -o coverage.xml
+
+$env:SONAR_HOST_URL = 'http://host.docker.internal:9000'
+$secureToken = Read-Host 'Local SonarQube token' -AsSecureString
+$env:SONAR_TOKEN = [System.Net.NetworkCredential]::new('', $secureToken).Password
+
+docker run --rm `
+  -e SONAR_HOST_URL `
+  -e SONAR_TOKEN `
+  -v "${PWD}:/usr/src" `
+  sonarsource/sonar-scanner-cli
+
+Remove-Item Env:SONAR_TOKEN
+Remove-Variable secureToken
+```
 
 ## Environment variables
 
@@ -187,7 +210,8 @@ Copy `.env.example` to `.env` and set the values for your environment:
 - Django: `DJANGO_DEBUG`, `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`.
 - Production security: `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, `SECURE_SSL_REDIRECT`, `SECURE_HSTS_SECONDS`, `SECURE_HSTS_INCLUDE_SUBDOMAINS`, `SECURE_HSTS_PRELOAD`, `SECURE_CONTENT_TYPE_NOSNIFF`, `X_FRAME_OPTIONS`, `SECURE_PROXY_SSL_HEADER`, and `CSRF_TRUSTED_ORIGINS`.
 - Email: `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL`. The console backend is used unless both SMTP credentials are set.
-- Private repository storage: `HACKFLOW_REPOS_ROOT`.
+- GitHub repository hosting: `GITHUB_TOKEN`, `GITHUB_OWNER`, and optional `GITHUB_PRIVATE_REPOSITORIES`.
+- Local repository cache/staging: `HACKFLOW_REPOS_ROOT` (disposable; GitHub stores durable repository history).
 - AI providers: `REPOSITORY_AI_PROVIDER`, `REPOSITORY_AI_TIMEOUT`, `OLLAMA_BASE_URL`, `OLLAMA_MODEL`, `OPENAI_API_KEY`, `OPENAI_MODEL`, `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`.
 - Background jobs: `CELERY_BROKER_URL`, `CELERY_TASK_ALWAYS_EAGER`.
 
@@ -232,7 +256,8 @@ The complete example is in `.env.production.example`. Configure the following va
 | `DATABASE_PATH` | `/tmp/hackflow.sqlite3` | Ephemeral SQLite database file. |
 | `MEDIA_ROOT` | `/tmp/media/uploads` | Upload storage. |
 | `PRIVATE_MEDIA_ROOT` | `/tmp/private_media` | Private student files. |
-| `HACKFLOW_REPOS_ROOT` | `/tmp/.repository-data` | Private Git repository storage. |
+| `GITHUB_TOKEN`, `GITHUB_OWNER` | **Secret/configuration** | GitHub server credential and owning user/organization. |
+| `GITHUB_PRIVATE_REPOSITORIES` | `true` | Create new GitHub repositories as private by default. |
 | `STATIC_ROOT` | `/opt/render/project/src/staticfiles` | `collectstatic` output served by WhiteNoise. |
 | `SEED_DEMO` | `1` | Re-create demo data at startup. |
 | `CELERY_TASK_ALWAYS_EAGER` | `true` | Run jobs inline; no worker is deployed. |

@@ -39,7 +39,10 @@ class RepositoryForm(AccessibleFormMixin, forms.ModelForm):
         slug = slugify(name)
         if not slug or len(slug) > 100:
             raise forms.ValidationError('Use a repository name with letters or numbers.')
-        if self.team and Repository.objects.filter(team=self.team, slug=slug).exists():
+        duplicates = Repository.objects.filter(team=self.team, slug=slug) if self.team else Repository.objects.none()
+        if self.instance.pk:
+            duplicates = duplicates.exclude(pk=self.instance.pk)
+        if duplicates.exists():
             raise forms.ValidationError('A repository with this name already exists for your team.')
         return name
 

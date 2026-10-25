@@ -6,6 +6,7 @@ import urllib.request
 
 from django.conf import settings
 from django.db.models import Exists, OuterRef
+from hackflow.ollama import request_headers as ollama_request_headers
 
 from student.models import Announcement, Hackathon, Milestone, Submission, Team
 
@@ -86,7 +87,7 @@ def generate_announcement_draft(*, audience, topic, tone, message_type):
     base_url = getattr(settings, 'OLLAMA_BASE_URL', 'http://127.0.0.1:11434').rstrip('/')
     request = urllib.request.Request(
         f'{base_url}/api/chat', data=json.dumps(request_data).encode('utf-8'),
-        headers={'Content-Type': 'application/json'}, method='POST',
+        headers=ollama_request_headers(), method='POST',
     )
     try:
         with urllib.request.urlopen(request, timeout=120) as response:

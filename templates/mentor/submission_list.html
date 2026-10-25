@@ -1,0 +1,70 @@
+{% extends "layouts/base_mentor.html" %}
+
+{% block title %}Soumissions à évaluer - Espace Mentor - HackFlow{% endblock %}
+
+{% block mentor_content %}
+<div class="container-fluid px-0">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h1 class="h2 fw-bold text-body mb-1">Soumissions de Projet</h1>
+            <p class="text-body-secondary small mb-0">Évaluez les livrables des équipes selon la grille de jugement (avis consultatif, le jury décide).</p>
+        </div>
+        <form method="get" class="form-check form-switch m-0">
+            <input class="form-check-input" type="checkbox" role="switch" id="only-mine" name="mine" {% if mine %}checked{% endif %} onchange="this.form.submit()">
+            <label class="form-check-label small" for="only-mine">Mes équipes suivies uniquement</label>
+            <noscript><button type="submit" class="btn btn-sm btn-outline-primary ms-2">Appliquer</button></noscript>
+        </form>
+    </div>
+
+    <div class="card-modern overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <caption class="visually-hidden">Soumissions des équipes et état de mon évaluation</caption>
+                <thead>
+                    <tr>
+                        <th scope="col" class="ps-4">Équipe</th>
+                        <th scope="col">Projet</th>
+                        <th scope="col">Jalon</th>
+                        <th scope="col">Statut</th>
+                        <th scope="col">Livrables</th>
+                        <th scope="col">Ma note</th>
+                        <th scope="col" class="text-end pe-4">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for submission in submissions %}
+                    <tr>
+                        <td class="ps-4 fw-semibold"><a href="{% url 'mentor:team_detail' submission.team.pk %}">{{ submission.team.name }}</a></td>
+                        <td>{{ submission.project_name|default:submission.team.project_name|default:"—" }}</td>
+                        <td>{{ submission.milestone.title }}</td>
+                        <td><span class="badge bg-body-secondary text-body">{{ submission.get_status_display }}</span></td>
+                        <td class="small">
+                            {% if submission.github_url %}<a href="{{ submission.github_url }}" target="_blank" rel="noopener noreferrer" aria-label="Dépôt de code de {{ submission.team.name }} (nouvel onglet)"><i class="bi bi-github" aria-hidden="true"></i></a>{% endif %}
+                            {% if submission.demo_url %}<a href="{{ submission.demo_url }}" target="_blank" rel="noopener noreferrer" class="ms-2" aria-label="Démo de {{ submission.team.name }} (nouvel onglet)"><i class="bi bi-display" aria-hidden="true"></i></a>{% endif %}
+                            {% if submission.file %}<a href="{% url 'student:download_submission' submission.pk %}" class="ms-2" aria-label="Télécharger le ZIP de {{ submission.team.name }}"><i class="bi bi-file-earmark-zip" aria-hidden="true"></i></a>{% endif %}
+                        </td>
+                        <td class="font-mono">
+                            {% if submission.my_evaluation %}
+                            <strong>{{ submission.my_evaluation.weighted_total|default:"—" }}</strong>/20
+                            {% if submission.my_evaluation.is_shared %}<span class="badge bg-success-subtle text-success ms-1">Partagée</span>{% endif %}
+                            {% else %}<span class="text-body-secondary">—</span>{% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            {% if submission.my_evaluation %}
+                            <a class="btn btn-outline-primary btn-sm" href="{% url 'mentor:evaluation_detail' submission.my_evaluation.pk %}">Voir mon évaluation</a>
+                            {% else %}
+                            <a class="btn btn-primary btn-sm" href="{% url 'mentor:evaluation_create' submission.pk %}"><i class="bi bi-pencil-square me-1" aria-hidden="true"></i>Noter</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center text-body-secondary py-5">Aucune soumission à évaluer pour le moment.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% include "mentor/_pagination.html" %}
+</div>
+{% endblock %}

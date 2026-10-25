@@ -1,0 +1,167 @@
+{
+  "generated_at": "2026-10-24T18:34:10.095557+00:00",
+  "model": "llama3.2",
+  "samples": 60,
+  "answered": 60,
+  "errors": [],
+  "category": {
+    "accuracy": 0.95,
+    "macro_precision": 0.962,
+    "macro_recall": 0.95,
+    "macro_f1": 0.951,
+    "per_class": {
+      "Back-End Development & Databases": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 10
+      },
+      "Front-End Development & Frameworks": {
+        "precision": 0.769,
+        "recall": 1.0,
+        "f1": 0.87,
+        "support": 10
+      },
+      "AI, LLMs & Machine Learning": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 10
+      },
+      "DevOps, Docker & Cloud Deployment": {
+        "precision": 1.0,
+        "recall": 0.9,
+        "f1": 0.947,
+        "support": 10
+      },
+      "UI/UX Design & User Experience": {
+        "precision": 1.0,
+        "recall": 0.8,
+        "f1": 0.889,
+        "support": 10
+      },
+      "Pitch & Presentation Structure": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 10
+      }
+    },
+    "labels": [
+      "Back-End Development & Databases",
+      "Front-End Development & Frameworks",
+      "AI, LLMs & Machine Learning",
+      "DevOps, Docker & Cloud Deployment",
+      "UI/UX Design & User Experience",
+      "Pitch & Presentation Structure"
+    ],
+    "confusion_matrix": [
+      [
+        10,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        10,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        10,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0,
+        9,
+        0,
+        0
+      ],
+      [
+        0,
+        2,
+        0,
+        0,
+        8,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        10
+      ]
+    ],
+    "total": 60
+  },
+  "urgency": {
+    "accuracy": 0.8,
+    "macro_precision": 0.795,
+    "macro_recall": 0.801,
+    "macro_f1": 0.795,
+    "per_class": {
+      "blocking": {
+        "precision": 0.75,
+        "recall": 0.882,
+        "f1": 0.811,
+        "support": 17
+      },
+      "important": {
+        "precision": 0.765,
+        "recall": 0.65,
+        "f1": 0.703,
+        "support": 20
+      },
+      "normal": {
+        "precision": 0.87,
+        "recall": 0.87,
+        "f1": 0.87,
+        "support": 23
+      }
+    },
+    "labels": [
+      "blocking",
+      "important",
+      "normal"
+    ],
+    "confusion_matrix": [
+      [
+        15,
+        2,
+        0
+      ],
+      [
+        4,
+        13,
+        3
+      ],
+      [
+        1,
+        2,
+        20
+      ]
+    ],
+    "total": 60
+  },
+  "latency": {
+    "count": 59,
+    "mean_ms": 1175,
+    "p50_ms": 1182,
+    "p95_ms": 1333,
+    "max_ms": 1403
+  },
+  "cold_start_ms": 2226
+}

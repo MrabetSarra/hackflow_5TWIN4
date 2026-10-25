@@ -1,0 +1,39 @@
+{% extends "layouts/base_mentor.html" %}
+
+{% block title %}{% if is_new %}Planifier une session{% else %}Modifier la session{% endif %} - Espace Mentor - HackFlow{% endblock %}
+
+{% block mentor_content %}
+<div class="container-fluid px-0" style="max-width: 860px;">
+    <nav aria-label="Fil d'Ariane" class="mb-3">
+        <ol class="breadcrumb small mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'mentor:sessions_list' %}">Sessions</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{% if is_new %}Nouvelle session{% else %}Modifier{% endif %}</li>
+        </ol>
+    </nav>
+
+    <h1 class="h2 fw-bold text-body mb-4">{% if is_new %}Planifier une session{% else %}Modifier la session{% endif %}</h1>
+
+    <form method="post" class="card-modern p-4">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger" role="alert">{% for error in form.non_field_errors %}{{ error }}{% endfor %}</div>
+        {% endif %}
+        <div class="row g-3">
+            <div class="col-md-6">{% include "mentor/_field.html" with field=form.team %}</div>
+            <div class="col-md-6">{% include "mentor/_field.html" with field=form.help_request %}</div>
+            <div class="col-12">{% include "mentor/_field.html" with field=form.topic %}</div>
+            <div class="col-md-6">{% include "mentor/_field.html" with field=form.starts_at %}</div>
+            <div class="col-md-6">{% include "mentor/_field.html" with field=form.ends_at %}</div>
+            <div class="col-md-6">{% include "mentor/_field.html" with field=form.meeting_url %}</div>
+            <div class="col-md-6">{% include "mentor/_field.html" with field=form.location %}</div>
+            {% if form.status %}<div class="col-md-6">{% include "mentor/_field.html" with field=form.status %}</div>{% endif %}
+            <div class="col-12">{% include "mentor/_field.html" with field=form.notes %}</div>
+        </div>
+        <p class="small text-body-secondary"><span class="text-danger" aria-hidden="true">*</span> Champ obligatoire. Indiquez au moins un lien visio ou un lieu.</p>
+        <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+            <a href="{% url 'mentor:sessions_list' %}" class="btn btn-light border">Annuler</a>
+            <button type="submit" class="btn btn-primary">{% if is_new %}Planifier et prévenir l'équipe{% else %}Enregistrer{% endif %}</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

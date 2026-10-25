@@ -81,7 +81,10 @@ def repository_list(request):
             try:
                 git_service.initialize_repository(repository, request.user)
             except Exception as error:
-                repository.delete()
+                # If the provider already created the remote, retain its
+                # metadata so the user can retry without creating a duplicate.
+                if not repository.remote_id:
+                    repository.delete()
                 messages.error(request, f'Could not create the repository: {_git_error_message(error)}')
             else:
                 messages.success(request, 'Repository created successfully.')
@@ -100,6 +103,50 @@ def repository_create(request):
         messages.error(request, 'Join or create a team before creating a repository.')
         return redirect('repositories:list')
     return render(request, 'repositories/create.html', {'team': team, 'form': RepositoryForm(team=team)})
+
+
+@role_required('student')
+def repository_edit(request, slug):
+    team = student_team(request.user)
+    if not team:
+        from django.http import Http404
+        raise Http404
+    repository = Repository.objects.filter(team=team, slug=slug).first()
+    if not repository:
+        from django.http import Http404
+        raise Http404
+
+    form = RepositoryForm(request.POST or None, instance=repository, team=team)
+    if request.method == 'POST' and form.is_valid():
+        updated_repository = form.save(commit=False)
+        # Keep the repository path and URLs stable when its display name changes.
+        updated_repository.slug = repository.slug
+        updated_repository.save()
+        messages.success(request, 'Repository updated successfully.')
+        return redirect('repositories:list')
+    return render(request, 'repositories/edit.html', {
+        'team': team,
+        'repository': repository,
+        'form': form,
+    })
+
+
+@role_required('student')
+def repository_delete(request, slug):
+    from django.http import Http404
+
+    if request.method != 'POST':
+        raise Http404
+    team = student_team(request.user)
+    if not team:
+        raise Http404
+    repository = Repository.objects.filter(team=team, slug=slug).first()
+    if not repository:
+        raise Http404
+
+    repository.delete()
+    messages.success(request, 'The HackFlow record was removed. The GitHub repository and its history were kept.')
+    return redirect('repositories:list')
 
 
 @role_required('student', 'mentor')
