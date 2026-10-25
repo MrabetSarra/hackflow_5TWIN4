@@ -180,7 +180,7 @@ coverage xml -o coverage.xml
 coverage html
 ```
 
-The HTML report is written to `htmlcov/`; `coverage.xml` is the Cobertura report read by SonarQube. Coverage uses relative file paths so the report can be imported when the scanner runs in Docker. CI enforces 80% coverage and uploads both reports.
+The HTML report is written to `htmlcov/`; `coverage.xml` is the Cobertura report read by SonarQube. Coverage uses relative file paths so the report can be imported when the scanner runs in Docker. CI enforces 80% coverage and uploads both reports. Sonar analysis runs locally against the local SonarQube server; the GitHub Actions workflow does not submit analysis to SonarQube Cloud.
 
 For a local SonarQube server on port 9000, activate the virtual environment, create the `HackFlow` project in SonarQube, then generate a fresh report and run the scanner from the repository root:
 
