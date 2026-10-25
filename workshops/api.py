@@ -12,12 +12,13 @@ GET /workshops/api/<pk>/seats/
     Retourne : {id, capacity, confirmed, seats_left, waitlist}
 """
 
+import json
 import logging
 
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
 
 from .models import Workshop
 
@@ -82,3 +83,36 @@ def api_seats(request, pk):
         'has_started': ws.has_started,
         'booking_closed_reason': ws.booking_closed_reason,
     })
+
+
+@login_required
+@require_POST
+def api_generate_description(request):
+    """
+    Génère une description d'atelier via Ollama (llama3.2).
+    Body JSON : {title, tags, speaker, level}
+    Retourne : {description, ok, error?}
+    """
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'ok': False, 'error': 'Requête invalide.'}, status=400)
+
+    title = payload.get('title', '').strip()
+    tags = payload.get('tags', [])
+    speaker = payload.get('speaker', '').strip()
+    level = payload.get('level', 'Débutant')
+
+    if not title:
+        return JsonResponse({'ok': False, 'error': 'Le titre est requis.'}, status=400)
+
+    from .services.ollama_ai import generate_workshop_description, is_ollama_available
+
+    if not is_ollama_available():
+        return JsonResponse({
+            'ok': False,
+            'error': 'Ollama est indisponible ou le modèle llama3.2 n\'est pas chargé.',
+        }, status=503)
+
+    description = generate_workshop_description(title, tags, speaker, level)
+    return JsonResponse({'ok': True, 'description': description})

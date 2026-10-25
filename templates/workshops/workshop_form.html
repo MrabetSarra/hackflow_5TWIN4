@@ -66,6 +66,12 @@
                 <label class="form-label fw-semibold">Description <span class="text-danger">*</span></label>
                 {{ form.description }}
                 {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors|join:", " }}</div>{% endif %}
+                <div class="d-grid gap-2 mt-2">
+                  <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" id="btn-gen-desc">
+                    <i class="bi bi-magic me-1"></i>Générer la description avec IA
+                  </button>
+                  <small class="form-text text-muted" id="ai-status"></small>
+                </div>
               </div>
               <div class="col-12">
                 <label class="form-label fw-semibold">
@@ -188,7 +194,7 @@
     </div>
   </div>
 
-  <style>
+    <style>
     .mode-field { display: none; }
     .mode-field.show { display: block; }
   </style>
@@ -210,6 +216,63 @@
 
       modeSelect.addEventListener('change', toggleModeFields);
       toggleModeFields();
+
+      // ── Génération de description via Ollama (IA) ──
+      const btn = document.getElementById('btn-gen-desc');
+      const status = document.getElementById('ai-status');
+      const descField = document.querySelector('textarea[name="description"], input[name="description"]');
+      const titleField = document.querySelector('input[name="title"]');
+      const tagsField = document.querySelector('input[name="topic_tags_raw"]');
+      const speakerField = document.querySelector('input[name="speaker_name"]');
+      const levelField = document.querySelector('select[name="level"]');
+
+      if (!btn || !descField) return;
+
+      btn.addEventListener('click', async function () {
+        const title = (titleField && titleField.value.trim()) || '';
+        if (!title) {
+          status.textContent = 'Veuillez saisir un titre d\'atelier d\'abord.';
+          status.className = 'form-text text-danger';
+          return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Génération en cours…';
+        status.textContent = '';
+
+        const tagsRaw = (tagsField && tagsField.value.trim()) || '';
+        const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+        const speaker = (speakerField && speakerField.value.trim()) || '';
+        const level = (levelField && levelField.value) || 'Débutant';
+
+        try {
+          const resp = await fetch("{% url 'workshops:api_generate_description' %}", {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': '{{ csrf_token }}',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ title, tags, speaker, level }),
+          });
+
+          const data = await resp.json();
+
+          if (data.ok && data.description) {
+            descField.value = data.description;
+            status.textContent = 'Description générée par IA (llama3.2).';
+            status.className = 'form-text text-success';
+          } else {
+            status.textContent = data.error || 'Échec de la génération.';
+            status.className = 'form-text text-danger';
+          }
+        } catch (err) {
+          status.textContent = 'Impossible de contacter Ollama (localhost:11434).';
+          status.className = 'form-text text-danger';
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="bi bi-magic me-1"></i>Générer la description avec IA';
+        }
+      });
     })();
   </script>
 {% endblock %}

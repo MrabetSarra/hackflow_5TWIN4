@@ -70,6 +70,7 @@ urlpatterns = [
     # ---------------------------------------------------------------
     path('api/recommend/', api.api_recommend, name='api_recommend'),
     path('api/<int:pk>/seats/', api.api_seats, name='api_seats'),
+    path('api/generate-description/', api.api_generate_description, name='api_generate_description'),
 
     # ---------------------------------------------------------------
     # Détail — EN DERNIER (slug peut matcher n'importe quoi)
