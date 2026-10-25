@@ -21,13 +21,24 @@ def status_badge(status):
     return f'bg-{color}-subtle text-{color}-emphasis border border-{color}-subtle'
 
 
+# Pages (url_name du namespace « mentor ») qui activent chaque lien de la barre latérale.
+# Des listes et non une chaîne : « 'list' in 'sessions_list …' » serait vrai par sous-chaîne.
+NAV_PAGES = {
+    'team_pages': ['teams_list', 'team_detail'],
+    'session_pages': ['sessions_list', 'session_create', 'session_update', 'session_delete'],
+    'submission_pages': ['submissions', 'evaluation_create'],
+    'evaluation_pages': ['evaluations', 'evaluation_detail', 'evaluation_update', 'evaluation_delete'],
+}
+
+
 @register.simple_tag(takes_context=True)
 def mentor_counts(context):
-    """Compteurs de la barre latérale mentor (tickets en attente, équipes suivies)."""
+    """Compteurs de la barre latérale mentor (tickets en attente, équipes suivies) et pages actives."""
     user = context['request'].user
     if not user.is_authenticated:
-        return {'pending': 0, 'followed': 0}
+        return {'pending': 0, 'followed': 0, **NAV_PAGES}
     return {
         'pending': MentorRequest.objects.filter(status=MentorRequest.Status.PENDING).count(),
         'followed': MentorAssignment.objects.filter(mentor=user).count(),
+        **NAV_PAGES,
     }

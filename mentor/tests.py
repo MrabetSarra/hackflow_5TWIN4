@@ -235,6 +235,12 @@ class MentorDashboardTests(MentorViewsTestBase):
         self.assertContains(response, 'Point API')
         self.assertEqual(response.context['pending_count'], 1)
 
+    def test_sidebar_highlights_only_the_current_page(self):
+        # « list » (catalogue des ateliers) ne doit pas activer « Sessions » par sous-chaîne de « sessions_list ».
+        sessions_link = f'href="{reverse("mentor:sessions_list")}" class="nav-link-item active"'
+        self.assertContains(self.client.get(reverse('mentor:sessions_list')), sessions_link)
+        self.assertNotContains(self.client.get(reverse('workshops:list')), sessions_link)
+
 
 class MentorTeamsTests(MentorViewsTestBase):
     def test_list_and_filter_mine(self):
