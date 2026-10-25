@@ -1,0 +1,75 @@
+{% include "hackathons/_ai_client.html" %}
+
+<section class="card-modern p-4 p-lg-5 mb-5" style="background: linear-gradient(135deg, var(--bs-primary-bg-subtle), var(--bs-body-bg) 70%);">
+    <span class="badge bg-primary-subtle text-primary-emphasis rounded-pill px-3 py-2 mb-3"><i class="bi bi-stars me-1"></i>Assistant IA mentor</span>
+    <h1 class="h2 fw-bold mb-2">Comprendre un hackathon ou un défi en quelques secondes</h1>
+    <p class="text-body-secondary mb-0" style="max-width: 680px;">Choisissez un hackathon ou un challenge : l'IA en donne un résumé simple, les points clés, les difficultés probables des équipes, des questions à poser et des conseils d'accompagnement.</p>
+</section>
+
+{% for h in hackathons %}
+<section class="card-modern p-4 p-lg-5 mb-4" data-item-kind="hackathon" data-item-id="{{ h.pk }}" data-title="{{ h.title }}">
+    <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
+        <div><span class="badge bg-body-secondary text-body-secondary rounded-pill mb-2">{{ h.track.name }}</span><h2 class="h4 fw-bold mb-1">{{ h.title }}</h2><p class="text-body-secondary small mb-0">{{ h.short_description }}</p></div>
+        <div class="align-self-md-start d-flex gap-2">
+            <button type="button" class="btn text-white rounded-pill px-4 hf-explain-btn" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);" data-bs-toggle="modal" data-bs-target="#hf-explain-modal"><i class="bi bi-stars me-1"></i>Expliquer le hackathon</button>
+            <a class="btn btn-outline-primary rounded-pill px-4" href="{% url 'hackathons:hackathon_detail' h.slug %}">Ouvrir</a>
+        </div>
+    </div>
+    <div class="d-flex flex-column gap-2">
+        {% for c in h.public_challenges %}
+        <div class="hf-tile d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3" data-item-kind="challenge" data-item-id="{{ c.pk }}" data-title="{{ c.title }}">
+            <div><div class="fw-semibold">{{ c.title }}</div><div class="small text-body-secondary"><span class="badge bg-{{ c.difficulty_color }}-subtle text-{{ c.difficulty_color }}-emphasis rounded-pill me-1">{{ c.get_difficulty_display }}</span>{{ c.technologies|truncatechars:80 }}</div></div>
+            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 hf-explain-btn" data-bs-toggle="modal" data-bs-target="#hf-explain-modal"><i class="bi bi-stars me-1"></i>Expliquer le défi</button>
+        </div>
+        {% empty %}<div class="small text-body-secondary">Aucun challenge publié.</div>{% endfor %}
+    </div>
+</section>
+{% empty %}<div class="card-modern p-5 text-center text-body-secondary"><i class="bi bi-trophy fs-1 d-block mb-3"></i>Aucun hackathon publié pour le moment.</div>{% endfor %}
+
+<div class="modal fade" id="hf-explain-modal" tabindex="-1" aria-labelledby="hf-explain-title" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <div class="d-flex align-items-center gap-3"><span class="hf-icon text-white" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);"><i class="bi bi-stars"></i></span>
+                    <div><h2 class="modal-title h5 fw-bold mb-0" id="hf-explain-title">Explication IA</h2><div class="small text-body-secondary">Pour mieux accompagner les équipes</div></div></div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body" id="hf-explain-output" aria-live="polite"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var el = HFAI.el;
+  var modal = document.getElementById('hf-explain-modal');
+  var output = document.getElementById('hf-explain-output');
+  var title = document.getElementById('hf-explain-title');
+  var current = null;
+
+  function explain() {
+    HFAI.run({
+      feature: 'mentor_explain', data: {kind: current.kind, id: current.id},
+      onLoading: function () { output.replaceChildren(HFAI.loading('L’IA prépare son analyse…')); },
+      onDone: function (result, job) {
+        var summary = el('div', {'class': 'p-4 rounded-4 mb-3', style: 'background: var(--bs-primary-bg-subtle);'}, [
+          el('div', {'class': 'small fw-semibold text-primary-emphasis mb-1', text: 'En bref'}), el('p', {'class': 'mb-0', text: result.summary})
+        ]);
+        var parts = [summary, HFAI.list('Points clés', 'bi-key', result.key_points, 'primary'),
+          HFAI.list('Difficultés probables des équipes', 'bi-exclamation-triangle', result.team_difficulties, 'warning'),
+          HFAI.list('Questions à poser aux équipes', 'bi-question-circle', result.questions_to_ask, 'info'),
+          HFAI.list('Conseils d’accompagnement', 'bi-chat-heart', result.mentoring_tips, 'success'),
+          HFAI.list('Ressources à suggérer', 'bi-link-45deg', result.resources, 'secondary'), HFAI.feedbackBar(job)];
+        output.replaceChildren.apply(output, parts.filter(Boolean));
+      },
+      onError: function (message) { output.replaceChildren(HFAI.error(message, explain)); }
+    });
+  }
+  modal.addEventListener('show.bs.modal', function (event) {
+    var holder = event.relatedTarget.closest('[data-item-kind]');
+    current = {kind: holder.dataset.itemKind, id: holder.dataset.itemId};
+    title.textContent = holder.dataset.title;
+    explain();
+  });
+});
+</script>

@@ -1,0 +1,40 @@
+<div class="mb-4">
+    <a href="{{ back_href }}" class="small text-decoration-none"><i class="bi bi-arrow-left me-1"></i>Retour</a>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-2">
+        <h1 class="h2 fw-bold mb-0">{{ title }}</h1>
+        {% if ai_config %}
+        <button type="button" class="btn text-white rounded-pill px-4 py-2 shadow-sm" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);" data-bs-toggle="modal" data-bs-target="#hf-ai-modal">
+            <i class="bi bi-stars me-2"></i>Assistant IA
+        </button>
+        {% endif %}
+    </div>
+</div>
+<div class="card-modern p-4 p-lg-5">
+    <form method="post" novalidate {% if multipart %}enctype="multipart/form-data"{% endif %}>
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+        <div class="row g-4">
+            {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+            {% for field in form.visible_fields %}{% if not map_picker or field.name != 'location' %}
+            <div class="{% if field.field.widget.input_type == 'checkbox' %}col-12{% elif field.name in 'description,short_description,rules,message,bio,objectives,problem_statement,constraints,deliverables,guidelines' %}col-12{% elif banner_ai and field.name == 'banner' %}col-12{% else %}col-md-6{% endif %}">
+                {% if field.field.widget.input_type == 'checkbox' %}
+                <div class="form-check form-switch">{{ field }}<label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label></div>
+                {% else %}
+                <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}</label>
+                {{ field }}
+                {% endif %}
+                {% if banner_ai and field.name == 'banner' %}{% include "hackathons/_banner_ai.html" %}{% endif %}
+                {% if field.help_text %}<div class="form-text" id="{{ field.auto_id }}_help">{{ field.help_text }}</div>{% endif %}
+                {% if field.errors %}<div id="{{ field.auto_id }}_error">{% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>{% endif %}
+            </div>{% endif %}
+            {% endfor %}
+        </div>
+        {% if map_picker %}{% include "hackathons/_map_picker.html" %}{% endif %}
+        {% if track_suggestions %}<datalist id="track-suggestions">{% for t in track_suggestions %}<option value="{{ t }}"></option>{% endfor %}</datalist>{% endif %}
+        <div class="d-flex gap-2 mt-5">
+            <button class="btn btn-primary rounded-pill px-4" type="submit"><i class="bi bi-check-lg me-1"></i>Enregistrer</button>
+            <a class="btn btn-outline-secondary rounded-pill px-4" href="{{ back_href }}">Annuler</a>
+        </div>
+    </form>
+</div>
+{% if ai_config %}{% include "hackathons/_ai_assistant.html" %}{% endif %}

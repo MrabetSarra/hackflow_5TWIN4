@@ -1,0 +1,79 @@
+<div class="mb-4">
+    <a href="{% url 'hackathons:hackathon_list' %}" class="small text-decoration-none"><i class="bi bi-arrow-left me-1"></i>Hackathons</a>
+</div>
+
+<section class="card-modern p-4 p-lg-5 mb-5">
+    <div class="d-flex flex-column flex-xl-row justify-content-between gap-4">
+        <div>
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <span class="badge bg-{{ h.status_color }}-subtle text-{{ h.status_color }} rounded-pill px-3 py-2">{{ h.get_status_display }}</span>
+                <span class="badge bg-{{ h.stage_color }}-subtle text-{{ h.stage_color }}-emphasis rounded-pill px-3 py-2">{{ h.current_stage_label }}</span>
+                <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2"><i class="bi bi-tag me-1"></i>{{ h.track.name }}</span>
+            </div>
+            <h1 class="h2 fw-bold mb-2">{{ h.title }}</h1>
+            <p class="text-body-secondary mb-0"><i class="bi bi-calendar-event me-1"></i>{{ h.starts_at|date:"d/m/Y H:i" }} → {{ h.ends_at|date:"d/m/Y H:i" }} · <i class="bi bi-geo-alt me-1"></i>{{ h.mode_label }}</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2 align-self-start">
+            <a href="{% url 'hackathons:hackathon_edit' h.pk %}" class="btn btn-outline-secondary rounded-pill px-4"><i class="bi bi-pencil me-1"></i>Modifier</a>
+            {% if h.status == 'published' %}
+            <form method="post" action="{% url 'hackathons:hackathon_status' h.pk %}">{% csrf_token %}<input type="hidden" name="action" value="unpublish">
+                <button class="btn btn-warning rounded-pill px-4" onclick="return confirm('Dépublier ce hackathon ? Ses challenges repasseront aussi en brouillon.')"><i class="bi bi-eye-slash me-1"></i>Dépublier</button></form>
+            {% else %}
+            <form method="post" action="{% url 'hackathons:hackathon_status' h.pk %}">{% csrf_token %}<input type="hidden" name="action" value="publish_all">
+                <button class="btn btn-success rounded-pill px-4" onclick="return confirm('Publier ce hackathon et tous ses challenges en brouillon ?')"><i class="bi bi-rocket-takeoff me-1"></i>Publier hackathon + challenges</button></form>
+            <form method="post" action="{% url 'hackathons:hackathon_status' h.pk %}">{% csrf_token %}<input type="hidden" name="action" value="publish">
+                <button class="btn btn-outline-success rounded-pill px-4" onclick="return confirm('Publier uniquement le hackathon ?')"><i class="bi bi-eye me-1"></i>Publier le hackathon</button></form>
+            {% endif %}
+            <a href="{% url 'hackathons:hackathon_delete' h.pk %}" class="btn btn-outline-danger rounded-pill px-4"><i class="bi bi-trash me-1"></i>Supprimer</a>
+        </div>
+    </div>
+    {% if h.short_description or h.description %}<hr class="my-4">{% if h.short_description %}<p class="fw-semibold mb-2">{{ h.short_description }}</p>{% endif %}{% if h.description %}<p class="text-body-secondary mb-0">{{ h.description|linebreaksbr }}</p>{% endif %}{% endif %}
+</section>
+
+<section class="card-modern p-4 p-lg-5 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h5 fw-bold mb-0">Déroulement du hackathon</h2>
+        <span class="small text-body-secondary">Cliquez sur une étape pour la définir comme étape actuelle</span>
+    </div>
+    {% include "hackathons/_stepper.html" with editable=True %}
+    <p class="small text-body-secondary mt-4 mb-0"><i class="bi bi-info-circle me-1"></i>Les inscriptions se ferment automatiquement à la date limite d'inscription ou au début du hackathon.</p>
+</section>
+
+{% if h.latitude is not None and h.longitude is not None %}
+<section class="card-modern p-4 p-lg-5 mb-5">
+    <h2 class="h5 fw-bold mb-4">Localisation</h2>
+    {% include "hackathons/_map_view.html" %}
+</section>
+{% endif %}
+
+<div class="row g-4 mb-5">
+    <div class="col-sm-6 col-xl-3"><div class="stat-card card-modern h-100 p-4"><div class="text-muted small fw-semibold">Challenges</div><div class="h2 fw-bold mb-0 mt-2">{{ challenges|length }}</div></div></div>
+    <div class="col-sm-6 col-xl-3"><div class="stat-card card-modern h-100 p-4"><div class="text-muted small fw-semibold">Participants inscrits</div><div class="h2 fw-bold mb-0 mt-2">{{ participants }}{% if h.max_participants %}<span class="fs-6 text-muted"> / {{ h.max_participants }}</span>{% endif %}</div></div></div>
+    <div class="col-sm-6 col-xl-3"><div class="stat-card card-modern h-100 p-4"><div class="text-muted small fw-semibold">Inscriptions</div><div class="h4 fw-bold mb-0 mt-2">{% if h.registration_open %}Ouvertes{% else %}Fermées{% endif %}</div></div></div>
+    <div class="col-sm-6 col-xl-3"><div class="stat-card card-modern h-100 p-4"><div class="text-muted small fw-semibold">Date limite</div><div class="h6 fw-bold mb-0 mt-2">{{ h.registration_deadline|default:h.starts_at|date:"d/m/Y H:i" }}</div></div></div>
+</div>
+
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
+    <div><h2 class="h3 fw-bold mb-1">Challenges</h2><p class="text-body-secondary mb-0">Ouvrez un challenge pour gérer son programme, ses annonces et ses ressources.</p></div>
+    <a href="{% url 'hackathons:challenge_create' h.pk %}" class="btn btn-primary rounded-pill px-4"><i class="bi bi-plus-lg me-1"></i>Nouveau challenge</a>
+</div>
+<div class="row g-4">
+    {% for ch in challenges %}
+    <div class="col-md-6 col-xl-4"><div class="card-modern p-4 h-100 d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+            <span class="badge bg-{{ ch.difficulty_color }}-subtle text-{{ ch.difficulty_color }} rounded-pill px-3 py-2">{{ ch.get_difficulty_display }}</span>
+            <span class="badge bg-{{ ch.status_color }}-subtle text-{{ ch.status_color }} rounded-pill px-3 py-2">{{ ch.get_status_display }}</span>
+        </div>
+        <h3 class="h5 fw-bold mb-2">{{ ch.title }}</h3>
+        <p class="small text-body-secondary mb-3">{{ ch.short_description|default:"—" }}</p>
+        <div class="small text-body-secondary mb-4"><i class="bi bi-people me-1"></i>{{ ch.slots_used }} équipe(s) inscrite(s)</div>
+        <div class="d-flex flex-wrap gap-2 mt-auto">
+            <a href="{% url 'hackathons:challenge_manage' h.pk ch.pk %}" class="btn btn-sm btn-primary rounded-pill px-3">Gérer</a>
+            <form method="post" action="{% url 'hackathons:challenge_status' h.pk ch.pk %}">{% csrf_token %}
+                {% if ch.status == 'published' %}<input type="hidden" name="action" value="unpublish"><button class="btn btn-sm btn-outline-warning rounded-pill px-3" onclick="return confirm('Dépublier ce challenge ?')">Dépublier</button>
+                {% else %}<input type="hidden" name="action" value="publish"><button class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="return confirm('Publier ce challenge ?')">Publier</button>{% endif %}
+            </form>
+        </div>
+    </div></div>
+    {% empty %}<div class="col-12"><div class="card-modern p-5 text-center text-body-secondary"><i class="bi bi-flag fs-1 d-block mb-3"></i>Aucun challenge. Créez-en un pour démarrer.</div></div>{% endfor %}
+</div>

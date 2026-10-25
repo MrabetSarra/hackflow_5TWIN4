@@ -41,6 +41,22 @@
             </a>
 
             <div class="sidebar-heading mt-3">Network & Support</div>
+            <a href="{% url 'hackathons:catalog' %}" class="nav-link-item {% if request.resolver_match.namespace == 'hackathons' and request.resolver_match.url_name != 'my_registrations' and request.resolver_match.url_name != 'my_favorites' and request.resolver_match.url_name != 'ai_recommendations' %}active{% endif %}">
+                <i class="bi bi-trophy-fill" aria-hidden="true"></i>
+                <span>Hackathons</span>
+            </a>
+            <a href="{% url 'hackathons:my_registrations' %}" class="nav-link-item {% if request.resolver_match.url_name == 'my_registrations' %}active{% endif %}">
+                <i class="bi bi-ticket-perforated-fill" aria-hidden="true"></i>
+                <span>Mes inscriptions</span>
+            </a>
+            <a href="{% url 'hackathons:my_favorites' %}" class="nav-link-item {% if request.resolver_match.url_name == 'my_favorites' %}active{% endif %}">
+                <i class="bi bi-star-fill" aria-hidden="true"></i>
+                <span>Mes favoris</span>
+            </a>
+            <a href="{% url 'hackathons:ai_recommendations' %}" class="nav-link-item {% if request.resolver_match.url_name == 'ai_recommendations' %}active{% endif %}">
+                <i class="bi bi-stars" aria-hidden="true"></i>
+                <span>Recommandations IA</span>
+            </a>
             <a href="{% url 'student:skills_matching' %}" class="nav-link-item {% if request.resolver_match.url_name == 'skills_matching' %}active{% endif %}" {% if request.resolver_match.url_name == 'skills_matching' %}aria-current="page"{% endif %}>
                 <i class="bi bi-search-heart-fill" aria-hidden="true"></i>
                 <span>Talent Matching</span>

@@ -1,0 +1,131 @@
+{# Assistant IA de rédaction (admin) : bouton + fenêtre. Variable attendue : ai_config #}
+{{ ai_config|json_script:"hf-ai-config" }}
+{% include "hackathons/_ai_client.html" %}
+
+<div class="modal fade" id="hf-ai-modal" tabindex="-1" aria-labelledby="hf-ai-title" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="hf-icon text-white" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);"><i class="bi bi-stars"></i></span>
+                    <div><h2 class="modal-title h5 fw-bold mb-0" id="hf-ai-title">Assistant IA</h2><div class="small text-body-secondary">Propositions modifiables avant l'enregistrement</div></div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-12"><label class="form-label fw-semibold" for="hf-ai-input-title">Titre</label><input class="form-control" id="hf-ai-input-title" maxlength="160" placeholder="Saisissez le titre à partir duquel l'IA propose le contenu"></div>
+                    <div class="col-12"><label class="form-label fw-semibold" for="hf-ai-input-instructions">Consignes pour l'IA <span class="text-body-secondary fw-normal">(facultatif)</span></label><textarea class="form-control" id="hf-ai-input-instructions" rows="2" maxlength="400" placeholder="Ex. : public débutant, ton formel, thème écologie…"></textarea></div>
+                </div>
+                <div class="d-flex gap-2 mb-4">
+                    <button type="button" class="btn text-white rounded-pill px-4" id="hf-ai-generate" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);"><i class="bi bi-magic me-1"></i>Générer des propositions</button>
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4 d-none" id="hf-ai-regenerate"><i class="bi bi-arrow-repeat me-1"></i>Régénérer</button>
+                </div>
+                <div id="hf-ai-output" aria-live="polite"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var config = JSON.parse(document.getElementById('hf-ai-config').textContent);
+  var modal = document.getElementById('hf-ai-modal');
+  var titleInput = document.getElementById('hf-ai-input-title');
+  var instructions = document.getElementById('hf-ai-input-instructions');
+  var output = document.getElementById('hf-ai-output');
+  var generate = document.getElementById('hf-ai-generate');
+  var regenerate = document.getElementById('hf-ai-regenerate');
+  var el = HFAI.el;
+
+  function formInput(id) { return document.getElementById(id); }
+  function setField(id, value) {
+    var input = formInput(id);
+    if (!input) { return false; }
+    input.value = value;
+    input.dispatchEvent(new Event('input', {bubbles: true}));
+    input.dispatchEvent(new Event('change', {bubbles: true}));
+    return true;
+  }
+  function applyButton(label, apply) {
+    var button = el('button', {type: 'button', 'class': 'btn btn-sm btn-outline-primary rounded-pill px-3', text: label});
+    button.addEventListener('click', function () {
+      if (apply()) { button.textContent = 'Appliqué ✓'; button.classList.replace('btn-outline-primary', 'btn-success'); button.disabled = true; }
+    });
+    return button;
+  }
+  function card(label, body, applyNode) {
+    return el('div', {'class': 'hf-tile mb-3'}, [
+      el('div', {'class': 'd-flex justify-content-between align-items-center gap-2 mb-2'}, [el('h3', {'class': 'h6 fw-bold mb-0', text: label}), applyNode]),
+      body
+    ]);
+  }
+  function chips(items, onPick) {
+    return el('div', {'class': 'd-flex flex-wrap gap-2'}, items.map(function (item) {
+      var chip = el('button', {type: 'button', 'class': 'btn btn-sm btn-outline-secondary rounded-pill', text: item});
+      chip.addEventListener('click', function () { if (onPick(item)) { chip.classList.add('active'); } });
+      return chip;
+    }));
+  }
+
+  function render(result, job) {
+    output.replaceChildren();
+    var appliers = [];
+    if (result.alternative_titles && result.alternative_titles.length) {
+      output.appendChild(card('Titres alternatifs', chips(result.alternative_titles, function (title) { return setField(config.title_input, title); }), null));
+    }
+    config.fields.forEach(function (field) {
+      var value = result[field.key];
+      if (!value) { return; }
+      var text = Array.isArray(value) ? value.join(', ') : String(value);
+      var apply = function () { return setField(field.input, text); };
+      appliers.push(apply);
+      output.appendChild(card(field.label, el('p', {'class': 'hf-text mb-0', style: 'white-space: pre-line;', text: text}), applyButton('Utiliser', apply)));
+    });
+    if (result.difficulty && config.difficulty_input) {
+      var applyDifficulty = function () { return setField(config.difficulty_input, result.difficulty); };
+      appliers.push(applyDifficulty);
+      output.appendChild(card('Difficulté suggérée', el('span', {'class': 'badge bg-primary-subtle text-primary-emphasis rounded-pill px-3 py-2', text: result.difficulty}), applyButton('Utiliser', applyDifficulty)));
+    }
+    if (result.reward_ideas && result.reward_ideas.length && config.reward_input) {
+      output.appendChild(card('Idées de récompense', chips(result.reward_ideas, function (idea) { return setField(config.reward_input, idea); }), null));
+    }
+    if (result.challenge_ideas && result.challenge_ideas.length) {
+      var ideas = el('ul', {'class': 'mb-0 ps-3'}, result.challenge_ideas.map(function (idea) {
+        return el('li', {'class': 'mb-2'}, [el('strong', {text: idea.title}), el('span', {'class': 'badge bg-body-secondary text-body-secondary rounded-pill ms-2', text: idea.difficulty}), el('div', {'class': 'small text-body-secondary', text: idea.why})]);
+      }));
+      output.appendChild(card('Idées de challenges à créer ensuite', ideas, null));
+    }
+    if (appliers.length) {
+      var all = el('button', {type: 'button', 'class': 'btn btn-primary rounded-pill px-4 mb-2', text: 'Tout appliquer au formulaire'});
+      all.addEventListener('click', function () { appliers.forEach(function (apply) { apply(); }); all.textContent = 'Tout est appliqué ✓'; all.disabled = true; });
+      output.insertBefore(all, output.firstChild);
+    }
+    output.appendChild(HFAI.feedbackBar(job));
+    regenerate.classList.remove('d-none');
+  }
+
+  function start(refresh) {
+    var data = {title: titleInput.value.trim(), instructions: instructions.value.trim(), refresh: refresh ? '1' : '0'};
+    if (config.track_input && formInput(config.track_input)) { data.track = formInput(config.track_input).value; }
+    if (config.hackathon_id) { data.hackathon_id = config.hackathon_id; }
+    generate.disabled = true; regenerate.disabled = true;
+    HFAI.run({
+      feature: config.feature, data: data,
+      onLoading: function () { output.replaceChildren(HFAI.loading('L’IA rédige vos propositions…')); },
+      onDone: function (result, job) { generate.disabled = false; regenerate.disabled = false; render(result, job); },
+      onError: function (message) {
+        generate.disabled = false; regenerate.disabled = false;
+        output.replaceChildren(HFAI.error(message, function () { start(true); }));
+      }
+    });
+  }
+
+  modal.addEventListener('show.bs.modal', function () {
+    var current = formInput(config.title_input);
+    if (current && current.value.trim() && !titleInput.value) { titleInput.value = current.value.trim(); }
+  });
+  generate.addEventListener('click', function () { start(false); });
+  regenerate.addEventListener('click', function () { start(true); });
+});
+</script>

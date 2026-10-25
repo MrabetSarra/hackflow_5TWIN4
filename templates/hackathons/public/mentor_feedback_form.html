@@ -1,0 +1,40 @@
+<div class="mb-4">
+    <a href="{{ back_url }}" class="small text-decoration-none"><i class="bi bi-arrow-left me-1"></i>Retour au hackathon</a>
+    <div class="mt-3 d-flex align-items-center gap-3">
+        <span class="hf-icon bg-primary-subtle text-primary"><i class="bi bi-chat-square-text fs-5"></i></span>
+        <div><h1 class="h2 fw-bold mb-1">Avis mentor</h1><p class="text-body-secondary mb-0">{{ hackathon.title }} · {{ feedback_target }}</p></div>
+    </div>
+</div>
+<div class="card-modern p-4 p-lg-5" style="max-width: 860px;">
+    {% if feedback %}
+    <div class="d-flex align-items-start gap-3 mb-4">
+        <span class="hf-icon bg-success-subtle text-success"><i class="bi bi-check2-circle fs-5"></i></span>
+        <div><h2 class="h5 fw-bold mb-1">Votre avis a été envoyé</h2><p class="text-body-secondary mb-0">Il est visible par l’équipe organisatrice. Vous ne pouvez pas en créer un second pour cette cible.</p></div>
+    </div>
+    {% if feedback.rating %}<div class="mb-4"><div class="small text-body-secondary mb-1">Votre note</div><div class="text-warning-emphasis fs-5">{% for star in "12345" %}{% if forloop.counter <= feedback.rating %}<i class="bi bi-star-fill"></i>{% else %}<i class="bi bi-star"></i>{% endif %}{% endfor %} <span class="small fw-semibold">{{ feedback.rating }}/5</span></div></div>{% endif %}
+    {% if feedback.review %}<div class="p-4 rounded-4 bg-body-tertiary mb-3"><div class="small text-body-secondary fw-semibold mb-2">Avis</div><p class="mb-0" style="white-space: pre-line;">{{ feedback.review }}</p></div>{% endif %}
+    {% if feedback.ideas %}<div class="p-4 rounded-4 bg-body-tertiary mb-4"><div class="small text-body-secondary fw-semibold mb-2">Idées et suggestions</div><p class="mb-0" style="white-space: pre-line;">{{ feedback.ideas }}</p></div>{% endif %}
+    <div class="d-flex flex-wrap gap-2 mt-4">
+        <a href="{{ back_url }}" class="btn btn-outline-secondary rounded-pill px-4">Retour au Hackathon</a>
+        <form method="post" action="{% url 'hackathons:mentor_feedback_delete' feedback.pk %}" onsubmit="return confirm('Supprimer votre avis ? Vous pourrez ensuite en rédiger un nouveau.')">{% csrf_token %}<button type="submit" class="btn btn-outline-danger rounded-pill px-4"><i class="bi bi-trash me-1"></i>Supprimer mon avis</button></form>
+    </div>
+    {% else %}
+    <p class="text-body-secondary mb-4">Votre retour sera transmis à l’équipe organisatrice et affiché dans la page « Avis mentors ».</p>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+        {% for field in form %}
+        <div class="mb-4">
+            <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<div class="form-text" id="{{ field.auto_id }}_help">{{ field.help_text }}</div>{% endif %}
+            {% if field.errors %}<div id="{{ field.auto_id }}_error">{% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>{% endif %}
+        </div>
+        {% endfor %}
+        <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary rounded-pill px-4"><i class="bi bi-send me-1"></i>Envoyer l'avis</button>
+            <a href="{{ back_url }}" class="btn btn-outline-secondary rounded-pill px-4">Annuler</a>
+        </div>
+    </form>
+    {% endif %}
+</div>

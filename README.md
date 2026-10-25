@@ -57,6 +57,9 @@ Prérequis : Python 3.10 ou plus récent.
 git clone https://github.com/MrabetSarra/hackflow_5TWIN4.git
 cd hackflow_5TWIN4
 python -m venv .venv
+# Windows PowerShell: create local settings if they do not exist yet
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+# macOS / Linux: test -f .env || cp .env.example .env
 ```
 
 Activez l’environnement virtuel, puis installez et lancez le projet :
@@ -180,7 +183,7 @@ coverage xml -o coverage.xml
 coverage html
 ```
 
-The HTML report is written to `htmlcov/`; `coverage.xml` is the Cobertura report read by SonarQube. Coverage uses relative file paths so the report can be imported when the scanner runs in Docker. CI enforces 80% coverage and uploads both reports.
+The HTML report is written to `htmlcov/`; `coverage.xml` is the Cobertura report read by SonarQube. Coverage uses relative file paths so the report can be imported when the scanner runs in Docker. CI enforces 80% coverage and uploads both reports. Sonar analysis runs locally against the local SonarQube server; the GitHub Actions workflow does not submit analysis to SonarQube Cloud.
 
 For a local SonarQube server on port 9000, activate the virtual environment, create the `HackFlow` project in SonarQube, then generate a fresh report and run the scanner from the repository root:
 
@@ -194,10 +197,13 @@ $secureToken = Read-Host 'Local SonarQube token' -AsSecureString
 $env:SONAR_TOKEN = [System.Net.NetworkCredential]::new('', $secureToken).Password
 
 docker run --rm `
+  --workdir /usr/src `
   -e SONAR_HOST_URL `
   -e SONAR_TOKEN `
   -v "${PWD}:/usr/src" `
-  sonarsource/sonar-scanner-cli
+  sonarsource/sonar-scanner-cli `
+  -Dsonar.projectBaseDir=/usr/src `
+  -Dsonar.verbose=true
 
 Remove-Item Env:SONAR_TOKEN
 Remove-Variable secureToken
