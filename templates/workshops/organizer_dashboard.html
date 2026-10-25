@@ -141,17 +141,38 @@
               {% endif %}
             </td>
             <td class="small">
-              {% if ws.mode == 'onsite' and ws.room %}
-                <span class="badge bg-info text-dark"><i class="bi bi-geo-alt-fill me-1"></i>{{ ws.room }}</span>
-              {% elif ws.mode == 'online' and ws.meeting_url %}
-                <a href="{{ ws.meeting_url }}" target="_blank" rel="noopener noreferrer"
-                   class="badge bg-primary text-decoration-none"><i class="bi bi-link-45deg me-1"></i>Lien visio</a>
-              {% elif ws.mode == 'recorded' and ws.replay_url %}
-                <a href="{{ ws.replay_url }}" target="_blank" rel="noopener noreferrer"
-                   class="badge bg-secondary text-decoration-none"><i class="bi bi-play-circle me-1"></i>Replay</a>
-              {% elif ws.mode == 'recorded' and ws.video_file %}
-                <a href="{{ ws.video_file.url }}" target="_blank" rel="noopener noreferrer"
-                   class="badge bg-secondary text-decoration-none"><i class="bi bi-file-earmark-play me-1"></i>Vidéo</a>
+              {% if ws.mode == 'onsite' %}
+                {% if ws.room %}
+                  <a href="#" class="badge bg-info text-dark text-decoration-none d-inline-block"
+                     title="Salle présente">
+                    <i class="bi bi-geo-alt-fill me-1"></i>{{ ws.room }}
+                  </a>
+                {% else %}
+                  <span class="badge bg-warning text-dark"><i class="bi bi-geo-alt me-1"></i>Salle non définie</span>
+                {% endif %}
+              {% elif ws.mode == 'online' %}
+                {% if ws.meeting_url %}
+                  <a href="{{ ws.meeting_url }}" target="_blank" rel="noopener noreferrer"
+                     class="badge bg-primary text-decoration-none d-inline-block">
+                    <i class="bi bi-link-45deg me-1"></i>Lien visio
+                  </a>
+                {% else %}
+                  <span class="badge bg-warning text-dark"><i class="bi bi-link me-1"></i>Lien non configuré</span>
+                {% endif %}
+              {% elif ws.mode == 'recorded' %}
+                {% if ws.replay_url %}
+                  <a href="{{ ws.replay_url }}" target="_blank" rel="noopener noreferrer"
+                     class="badge bg-secondary text-decoration-none d-inline-block">
+                    <i class="bi bi-play-circle me-1"></i>Replay
+                  </a>
+                {% elif ws.video_file %}
+                  <a href="{{ ws.video_file.url }}" target="_blank" rel="noopener noreferrer"
+                     class="badge bg-secondary text-decoration-none d-inline-block">
+                    <i class="bi bi-file-earmark-play me-1"></i>Vidéo
+                  </a>
+                {% else %}
+                  <span class="badge bg-warning text-dark"><i class="bi bi-play me-1"></i>Vidéo non configurée</span>
+                {% endif %}
               {% else %}
                 <span class="text-body-secondary small">—</span>
               {% endif %}
