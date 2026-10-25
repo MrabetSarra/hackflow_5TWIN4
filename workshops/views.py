@@ -325,23 +325,25 @@ def workshop_detail(request, slug):
 
     # Lien Zoom : exposé si réservé (étudiant) ou accès libre (admin/mentor)
     meeting_url = None
+    can_access_meeting = False
     if ws.mode == Workshop.Mode.ONLINE:
-        can_see_url = (
+        can_access_meeting = (
             (booking and booking.status in ['confirmed', 'attended'])
             or _can_view_content(request.user, ws)
         )
-        if can_see_url:
+        if can_access_meeting:
             meeting_url = ws.meeting_url
 
     # Replay : disponible si réservé (étudiant) ou accès libre (admin/mentor)
     replay_accessible = False
+    can_access_replay = False
     replay_is_direct = False
     if ws.mode == Workshop.Mode.RECORDED:
-        can_see_replay = (
+        can_access_replay = (
             (booking and booking.status in ['confirmed', 'attended'])
             or _can_view_content(request.user, ws)
         )
-        if can_see_replay:
+        if can_access_replay:
             replay_accessible = ws.is_replay_available
         clean_url = (ws.replay_url or '').split('?', 1)[0].lower()
         replay_is_direct = clean_url.endswith(
@@ -370,7 +372,9 @@ def workshop_detail(request, slug):
         'workshop':          ws,
         'booking':           booking,
         'meeting_url':       meeting_url,
+        'can_access_meeting': can_access_meeting,
         'replay_accessible': replay_accessible,
+        'can_access_replay': can_access_replay,
         'replay_is_direct':  replay_is_direct,
         'forecast':          forecast_data,
         'avis':              avis,
