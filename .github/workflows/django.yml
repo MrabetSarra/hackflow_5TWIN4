@@ -80,6 +80,15 @@ jobs:
             echo "Coverage data is unavailable."
           fi
 
+      - name: Analyze with SonarQube
+        uses: SonarSource/sonarqube-scan-action@v6
+        with:
+          args: >
+            ${{ vars.SONAR_ORGANIZATION && format('-Dsonar.organization={0}', vars.SONAR_ORGANIZATION) || '' }}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+
       - name: Report coverage (minimum 80%)
         run: coverage report --fail-under=80 | tee coverage-report.txt
 
