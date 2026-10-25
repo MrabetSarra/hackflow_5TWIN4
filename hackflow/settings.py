@@ -10,6 +10,7 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 import os
 import tempfile
 from pathlib import Path
+from urllib.parse import unquote, urlsplit
 
 import dj_database_url
 
@@ -47,6 +48,31 @@ def _env_bool(name, default=False):
 
 # Security settings
 DEBUG = _env_bool('DJANGO_DEBUG', False)
+CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL', '').strip()
+if not DEBUG and not CLOUDINARY_URL:
+    raise RuntimeError(
+        'CLOUDINARY_URL must be set when DJANGO_DEBUG is false; '
+        'production uploads must not use the ephemeral local filesystem.'
+    )
+
+CLOUDINARY_STORAGE = {}
+if CLOUDINARY_URL:
+    _cloudinary = urlsplit(CLOUDINARY_URL)
+    if (
+        _cloudinary.scheme != 'cloudinary'
+        or not _cloudinary.hostname
+        or not _cloudinary.username
+        or not _cloudinary.password
+    ):
+        raise RuntimeError('CLOUDINARY_URL must be a valid Cloudinary credential URL.')
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': _cloudinary.hostname,
+        'API_KEY': unquote(_cloudinary.username),
+        'API_SECRET': unquote(_cloudinary.password),
+        # django-cloudinary-storage otherwise prepends MEDIA_URL to generated URLs,
+        # even though its uploads are stored without that prefix.
+        'PREFIX': '',
+    }
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '')
 if not SECRET_KEY:
@@ -88,6 +114,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    *(['cloudinary_storage', 'cloudinary'] if CLOUDINARY_URL else []),
     'core.apps.CoreConfig',
     'accounts.apps.AccountsConfig',
     'student.apps.StudentConfig',
@@ -334,16 +361,21 @@ STATICFILES_DIRS = [
 try:
     import whitenoise  # noqa: F401
 except ImportError:
-    pass
+    _staticfiles_storage_backend = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 else:
-    STORAGES = {
-        'default': {
-            'BACKEND': 'django.core.files.storage.FileSystemStorage',
-        },
-        'staticfiles': {
-            'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
-        },
-    }
+    _staticfiles_storage_backend = 'whitenoise.storage.CompressedStaticFilesStorage'
+
+STORAGES = {
+    'default': {
+        'BACKEND': (
+            'cloudinary_storage.storage.MediaCloudinaryStorage'
+            if CLOUDINARY_URL else 'django.core.files.storage.FileSystemStorage'
+        ),
+    },
+    'staticfiles': {
+        'BACKEND': _staticfiles_storage_backend,
+    },
+}
 
 # Media files and private application data
 MEDIA_URL = '/media/'

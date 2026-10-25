@@ -57,6 +57,9 @@ Prérequis : Python 3.10 ou plus récent.
 git clone https://github.com/MrabetSarra/hackflow_5TWIN4.git
 cd hackflow_5TWIN4
 python -m venv .venv
+# Windows PowerShell: create local settings if they do not exist yet
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+# macOS / Linux: test -f .env || cp .env.example .env
 ```
 
 Activez l’environnement virtuel, puis installez et lancez le projet :
@@ -201,14 +204,16 @@ $env:DJANGO_SECRET_KEY = 'local-test-key-change-me'
 python manage.py test
 ```
 
-Generate coverage reports with:
+In Windows PowerShell, generate a fresh coverage report with:
 
-```bash
-coverage erase
-coverage run manage.py test
-coverage report --fail-under=80
-coverage xml -o coverage.xml
-coverage html
+```powershell
+$env:DJANGO_DEBUG = "true"
+python -m coverage erase
+python -m coverage run manage.py test
+if ($LASTEXITCODE -ne 0) { throw "Django tests failed; do not use this coverage report." }
+python -m coverage report
+python -m coverage xml -o coverage.xml
+python -m coverage html
 ```
 
 The HTML report is written to `htmlcov/`; `coverage.xml` is the Cobertura report read by SonarQube. Coverage uses relative file paths so the report can be imported when the scanner runs in Docker. CI enforces 80% coverage and uploads both reports. Sonar analysis runs locally against the local SonarQube server; the GitHub Actions workflow does not submit analysis to SonarQube Cloud.
@@ -225,10 +230,13 @@ $secureToken = Read-Host 'Local SonarQube token' -AsSecureString
 $env:SONAR_TOKEN = [System.Net.NetworkCredential]::new('', $secureToken).Password
 
 docker run --rm `
+  --workdir /usr/src `
   -e SONAR_HOST_URL `
   -e SONAR_TOKEN `
   -v "${PWD}:/usr/src" `
-  sonarsource/sonar-scanner-cli
+  sonarsource/sonar-scanner-cli `
+  -Dsonar.projectBaseDir=/usr/src `
+  -Dsonar.verbose=true
 
 Remove-Item Env:SONAR_TOKEN
 Remove-Variable secureToken
@@ -263,7 +271,7 @@ When `DJANGO_DEBUG=false`, Django refuses to start without `DJANGO_SECRET_KEY`. 
 
 Render runs one native Python web service from the `main` branch. The Blueprint pins Python 3.12.11, collects static files, starts Django with Gunicorn through `scripts/start.sh`, and uses `/healthz/` for its health check. WhiteNoise serves static files. GitHub Actions is the deployment controller: a successful CI run on `main` triggers the Render Deploy Hook, waits for health, and runs the smoke checks. The app logs to stdout.
 
-The service uses SQLite and the free Render filesystem. `DATABASE_PATH`, uploads, private files, and Git repositories are stored under `/tmp`; they are ephemeral. **The free Render instance resets its data on restart and re-seeds the demo data at startup** (`SEED_DEMO=1`). Real user data will not survive a restart on this plan. Celery runs eagerly in the web process because this deployment has no background worker.
+The service uses SQLite and the free Render filesystem. `DATABASE_PATH` and the local Git cache are under `/tmp` and are ephemeral. Cloudinary stores uploaded media: profile photos use public image delivery, while CVs, submission ZIPs, and team documents use authenticated delivery through permission-checked Django views. **The free Render instance still resets database records on restart and re-seeds demo data at startup** (`SEED_DEMO=1`). Cloudinary preserves media files, but it does not preserve database records. Celery runs eagerly in the web process because this deployment has no background worker.
 
 ### Environment variables
 
@@ -285,8 +293,9 @@ The complete example is in `.env.production.example`. Configure the following va
 | `X_FRAME_OPTIONS` | `DENY` | Prevent framing by other sites. |
 | `SECURE_PROXY_SSL_HEADER` | `HTTP_X_FORWARDED_PROTO,https` | Trust Render’s HTTPS proxy header. |
 | `DATABASE_PATH` | `/tmp/hackflow.sqlite3` | Ephemeral SQLite database file. |
-| `MEDIA_ROOT` | `/tmp/media/uploads` | Upload storage. |
-| `PRIVATE_MEDIA_ROOT` | `/tmp/private_media` | Private student files. |
+| `MEDIA_ROOT` | `/tmp/media/uploads` | Local development/fallback public media storage; production uses Cloudinary. |
+| `PRIVATE_MEDIA_ROOT` | `/tmp/private_media` | Local development/fallback private file storage; production uses authenticated Cloudinary storage. |
+| `CLOUDINARY_URL` | **Secret from Cloudinary** | Required in Render for persistent uploaded media. |
 | `GITHUB_TOKEN`, `GITHUB_OWNER` | **Secret/configuration** | GitHub server credential and owning user/organization. |
 | `GITHUB_PRIVATE_REPOSITORIES` | `true` | Create new GitHub repositories as private by default. |
 | `STATIC_ROOT` | `/opt/render/project/src/staticfiles` | `collectstatic` output served by WhiteNoise. |
@@ -310,7 +319,11 @@ The complete example is in `.env.production.example`. Configure the following va
 | `RENDER_DEPLOY_HOOK_URL` | **GitHub `production` environment secret** | Starts the Render deploy after CI passes. |
 | `SITE_URL` | **GitHub `production` environment secret** | Public base URL used for health and smoke checks. |
 
-Render values declared with `sync: false` in `render.yaml` are intentionally entered in Render’s dashboard rather than stored in the repository. The admin command skips creation when any `DJANGO_SUPERUSER_*` value is missing; it never prints the password.
+Render values declared with `sync: false` in `render.yaml` are intentionally entered in Render’s dashboard rather than stored in the repository. Add `CLOUDINARY_URL` from the Cloudinary Console to the Render service's Environment settings. Production startup fails with a clear configuration error if it is missing; local development continues to use filesystem media when it is absent. WhiteNoise continues to serve static files separately. The admin command skips creation when any `DJANGO_SUPERUSER_*` value is missing; it never prints the password.
+
+Profile photos are public profile media. CVs, application CVs, project ZIPs, and uploaded team documents are stored as authenticated Cloudinary raw assets. Their signed delivery is performed server-side only after the existing account, organizer, jury, or team-membership checks; private file URLs are not exposed in templates. Team documents are downloaded through the authenticated `student:download_team_resource` view. Event artwork, team covers, and repository covers are URL-based fields rather than uploaded files, so they continue to use their existing URLs.
+
+Media files uploaded to a previous Render instance may already be gone because the old `/tmp` filesystem was ephemeral. This change does not delete or bulk-migrate any existing media. If an existing image URL fails after enabling Cloudinary, re-upload the original image from its source. Existing private files can be re-uploaded through their existing workflows when their original file is available.
 
 ### First deploy
 
@@ -332,7 +345,9 @@ To roll back, open the Render service’s deploy history and redeploy a previous
 ### Troubleshooting
 
 - **Cold start:** Free services sleep while idle. The first request may take a minute; the deploy job allows five minutes for `/healthz/` to return HTTP 200.
-- **Data reset after restart:** This is expected on the free filesystem. Demo rows are re-seeded when `SEED_DEMO=1`; uploads and user-created records are not durable.
+- **Data reset after restart:** This is expected for the database on the free filesystem. Demo rows are re-seeded when `SEED_DEMO=1`; Cloudinary media persists, but database records do not.
+- **Media configuration:** Production requires `CLOUDINARY_URL`. Set it in the Render web service Environment settings, redeploy, and upload a new profile photo. Its `profile_photo.url` should point to Cloudinary. Private CVs and team files remain downloadable only through their authorized HackFlow views.
+- **Existing image missing:** Cloudinary does not restore files already lost from Render's ephemeral filesystem. Re-upload the original image; database records are retained.
 - **Git is unavailable:** Check startup warnings. The app remains available, but repository operations and the optional repository demo seed need the Git executable in the runtime. The demo seed is skipped with a warning if Git is absent.
 - **CSRF 403 behind the proxy:** Check that `CSRF_TRUSTED_ORIGINS` contains the exact HTTPS origin and that `SECURE_PROXY_SSL_HEADER` matches Render’s forwarded protocol header.
 - **SQLite locked:** The app uses a 20-second SQLite timeout and WAL mode, but a single ephemeral SQLite file is not intended for sustained concurrent writes. Keep background jobs eager and avoid adding a second writer process on this plan.

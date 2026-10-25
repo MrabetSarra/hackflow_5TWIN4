@@ -4,7 +4,7 @@
 {% block layout %}
 <div class="dashboard-wrapper">
     <!-- Sidebar Student -->
-    <aside class="app-sidebar shadow-sm">
+    <aside class="app-sidebar shadow-sm" id="workspaceSidebar" aria-label="Student workspace">
         <div class="p-4 border-bottom border-light-subtle d-flex align-items-center justify-content-between">
             <a href="{% url 'student:dashboard' %}" class="d-flex align-items-center gap-2 text-decoration-none">
                 <img src="{% static 'images/hackflow-mark.png' %}" alt="" width="44" height="32" style="object-fit: contain;">
@@ -105,7 +105,7 @@
         <!-- Topbar Student -->
         <header class="app-topbar justify-content-between">
             <div class="d-flex align-items-center gap-3">
-                <button class="btn btn-outline-secondary d-lg-none p-1 px-2" id="sidebarToggle" type="button" aria-label="Open navigation menu">
+                <button class="btn btn-outline-secondary d-lg-none p-1 px-2" id="sidebarToggle" type="button" aria-label="Open or close navigation" aria-controls="workspaceSidebar" aria-expanded="false">
                     <i class="bi bi-list fs-4" aria-hidden="true"></i>
                 </button>
                 <div class="d-none d-sm-flex align-items-center gap-2 bg-body-tertiary px-3 py-1 rounded-pill border">
