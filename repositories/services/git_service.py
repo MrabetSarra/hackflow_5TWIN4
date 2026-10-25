@@ -1,4 +1,5 @@
 import contextlib
+import base64
 import difflib
 from functools import wraps
 import os
@@ -25,8 +26,8 @@ def git_failure_fallback(view):
     def wrapped(request, *args, **kwargs):
         try:
             return view(request, *args, **kwargs)
-        except GitError:
-            message = 'Repository Git operations are unavailable. Check that Git is installed and try again.'
+        except GitError as error:
+            message = str(error).strip()[:300] or 'Repository operations are temporarily unavailable.'
             if request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('accept', ''):
                 return JsonResponse({'error': message}, status=503)
             messages.error(request, message)
@@ -38,13 +39,16 @@ _thread_locks = {}
 _thread_locks_guard = threading.Lock()
 
 
-def _run(args, *, cwd=None, env=None, check=True, text=True, input=None):
+def _run(args, *, cwd=None, env=None, check=True, text=True, input=None, timeout=60):
     try:
         result = subprocess.run(
             ['git', *map(str, args)], cwd=cwd, env=env, input=input,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False,
             text=text, encoding='utf-8' if text else None, errors='replace' if text else None, shell=False,
+            timeout=timeout,
         )
+    except subprocess.TimeoutExpired as exc:
+        raise GitError('The Git operation timed out. Check GitHub connectivity and try again.') from exc
     except OSError as exc:
         raise GitError('Git could not be started. Check that Git is installed.') from exc
     if check and result.returncode:
@@ -98,6 +102,14 @@ def git_env(author=None):
     env['GIT_CONFIG_GLOBAL'] = os.devnull
     disabled_hooks = Path(settings.BASE_DIR) / 'repositories' / '.hooks-disabled'
     env.update({'GIT_CONFIG_COUNT': '1', 'GIT_CONFIG_KEY_0': 'core.hooksPath', 'GIT_CONFIG_VALUE_0': str(disabled_hooks)})
+    token = getattr(settings, 'GITHUB_TOKEN', '')
+    if token:
+        credential = base64.b64encode(f'x-access-token:{token}'.encode()).decode('ascii')
+        env.update({
+            'GIT_CONFIG_COUNT': '2',
+            'GIT_CONFIG_KEY_1': 'http.https://github.com/.extraheader',
+            'GIT_CONFIG_VALUE_1': f'AUTHORIZATION: basic {credential}',
+        })
     env.pop('GIT_DIR', None)
     env.pop('GIT_WORK_TREE', None)
     if author:
@@ -108,7 +120,98 @@ def git_env(author=None):
     return env
 
 
+def _ensure_remote_cache(repository, *, fetch=True):
+    """Hydrate the disposable local bare cache from its GitHub source of truth."""
+    if repository.remote_provider != 'github' or not repository.clone_url:
+        if settings.DEBUG and repository.path.exists():
+            valid = _run(['--git-dir', repository.path, 'rev-parse', '--is-bare-repository'], check=False)
+            if valid.returncode == 0 and valid.stdout.strip() == 'true':
+                return
+        from .github import GitHubError
+        try:
+            from .github import _configuration
+            _configuration()
+        except GitHubError as error:
+            raise GitError(str(error)) from None
+        raise GitError('This repository has no GitHub remote. Run the repository migration command first.')
+
+    if not getattr(settings, 'GITHUB_TOKEN', ''):
+        raise GitError('GitHub is not configured. Set GITHUB_TOKEN and GITHUB_OWNER in the server environment.')
+    from urllib.parse import urlparse
+    remote = urlparse(repository.clone_url)
+    if remote.scheme != 'https' or remote.hostname != 'github.com' or not remote.path.endswith('.git'):
+        raise GitError('The stored GitHub remote URL is invalid; contact an administrator.')
+
+    path = repository.path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    env = git_env()
+    if not path.exists():
+        result = _run(['clone', '--bare', repository.clone_url, path], check=False, env=env)
+        if result.returncode:
+            try:
+                from .github import GitHubError, refresh_repository
+                refresh_repository(repository)
+            except GitHubError as error:
+                raise GitError(str(error)) from None
+            _run(['clone', '--bare', repository.clone_url, path], env=env)
+    else:
+        valid = _run(['--git-dir', path, 'rev-parse', '--is-bare-repository'], check=False)
+        if valid.returncode or valid.stdout.strip() != 'true':
+            raise GitError('The local repository cache is invalid. It was left untouched; contact an administrator.')
+        origin = _run(['--git-dir', path, 'remote', 'get-url', 'origin'], check=False)
+        if origin.returncode:
+            _run(['--git-dir', path, 'remote', 'add', 'origin', repository.clone_url], env=env)
+        else:
+            _run(['--git-dir', path, 'remote', 'set-url', 'origin', repository.clone_url], env=env)
+        if fetch:
+            result = _run([
+                '--git-dir', path, 'fetch', '--prune', 'origin',
+                '+refs/heads/*:refs/heads/*',
+            ], check=False, env=env)
+            if result.returncode:
+                # Retry once after following a repository rename in GitHub.
+                try:
+                    from .github import GitHubError, refresh_repository
+                    refresh_repository(repository)
+                except GitHubError as error:
+                    raise GitError(str(error)) from None
+                _run(['--git-dir', path, 'remote', 'set-url', 'origin', repository.clone_url], env=env)
+                _run(['--git-dir', path, 'fetch', '--prune', 'origin', '+refs/heads/*:refs/heads/*'], env=env)
+
+
+def _push_branch(repository, branch):
+    """Push one validated real branch and report rejection as a failed operation."""
+    if settings.DEBUG and repository.remote_provider != 'github':
+        return
+    _run([
+        '--git-dir', repository.path, 'push', 'origin',
+        f'refs/heads/{branch}:refs/heads/{branch}',
+    ], env=git_env())
+
+
+def _delete_remote_branch(repository, branch):
+    if settings.DEBUG and repository.remote_provider != 'github':
+        return
+    _run(['--git-dir', repository.path, 'push', 'origin', f':refs/heads/{branch}'], env=git_env())
+
+
 def initialize_repository(repository, author):
+    if repository.remote_provider == 'github':
+        _ensure_remote_cache(repository, fetch=False)
+        return
+    if not settings.DEBUG:
+        if repository.path.exists():
+            raise GitError(
+                'Local Git data already exists for this repository. It was left untouched; '
+                'use migrate_local_repositories to transfer its history before linking GitHub.'
+            )
+        from .github import GitHubError, create_repository
+        try:
+            create_repository(repository)
+            _ensure_remote_cache(repository, fetch=False)
+        except GitHubError as error:
+            raise GitError(str(error)) from None
+        return
     path = repository.path
     path.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='hackflow-init-') as working:
@@ -128,11 +231,13 @@ def validate_branch_name(repository, name):
 
 
 def branch_names(repository):
+    _ensure_remote_cache(repository)
     result = _run(['--git-dir', repository.path, 'for-each-ref', '--format=%(refname:short)', 'refs/heads'])
     return [line for line in result.stdout.splitlines() if line]
 
 
 def branch_details(repository):
+    _ensure_remote_cache(repository)
     output = _run([
         '--git-dir', repository.path, 'for-each-ref',
         '--format=%(refname:short)%00%(objectname)%00%(authorname)%00%(authordate:iso8601)%00%(subject)',
@@ -151,6 +256,7 @@ def branch_exists(repository, branch):
 
 
 def resolve_branch(repository, branch):
+    _ensure_remote_cache(repository)
     branch = validate_branch_name(repository, branch)
     result = _run(['--git-dir', repository.path, 'rev-parse', '--verify', f'refs/heads/{branch}^{{commit}}'], check=False)
     if result.returncode:
@@ -167,6 +273,7 @@ def create_branch(repository, name, source):
         if branch_exists(repository, name):
             raise ValidationError('A branch with this name already exists.')
         _run(['--git-dir', repository.path, 'branch', name, source])
+        _push_branch(repository, name)
 
 
 def delete_branch(repository, name):
@@ -174,7 +281,9 @@ def delete_branch(repository, name):
     if name == repository.default_branch:
         raise ValidationError('The default branch cannot be deleted.')
     with repository_lock(repository):
+        _ensure_remote_cache(repository)
         _run(['--git-dir', repository.path, 'branch', '-D', name])
+        _delete_remote_branch(repository, name)
 
 
 @contextlib.contextmanager
@@ -301,6 +410,7 @@ def commit_upload(repository, branch, stage_dir, mode, message, author, *, allow
     message = ' '.join((message or '').replace('\x00', '').split()).strip()
     if not message or len(message) > 200:
         raise ValidationError('Enter a commit message between 1 and 200 characters.')
+    _ensure_remote_cache(repository)
     manifest = (stage_dir / 'manifest.txt').read_text(encoding='utf-8').splitlines()
     uploaded = {path: stage_dir / 'files' / Path(*path.split('/')) for path in manifest if path}
     with repository_lock(repository):
@@ -349,6 +459,7 @@ def commit_upload(repository, branch, stage_dir, mode, message, author, *, allow
             _run(['commit', '-m', message], cwd=directory, env=git_env(author))
             new_commit = _run(['rev-parse', 'HEAD'], cwd=directory).stdout.strip()
             _run(['--git-dir', repository.path, 'update-ref', f'refs/heads/{branch}', new_commit, old_commit])
+            _push_branch(repository, branch)
     return new_commit
 
 
@@ -403,6 +514,7 @@ def commit_history(repository, branch, *, skip=0, limit=25):
 
 
 def commit_count(repository, branch):
+    _ensure_remote_cache(repository)
     branch = validate_branch_name(repository, branch)
     result = _run(['--git-dir', repository.path, 'rev-list', '--count', branch], check=False)
     return int(result.stdout.strip()) if result.returncode == 0 else 0
@@ -420,6 +532,7 @@ def commit_detail(repository, revision):
 
 
 def _resolve_commit(repository, revision):
+    _ensure_remote_cache(repository)
     if not isinstance(revision, str) or not revision or len(revision) > 100:
         raise ValidationError('Choose a valid commit.')
     result = _run(['--git-dir', repository.path, 'rev-parse', '--verify', f'{revision}^{{commit}}'], check=False)
@@ -536,6 +649,7 @@ def merge_branches(repository, source, target, message, author, *, expected_sour
             _run(['merge', '--no-ff', source, '-m', message], cwd=directory, env=git_env(author))
             new_commit = _run(['rev-parse', 'HEAD'], cwd=directory).stdout.strip()
             _run(['--git-dir', repository.path, 'update-ref', f'refs/heads/{target}', new_commit, old_target])
+            _push_branch(repository, target)
     return new_commit
 
 
@@ -583,6 +697,7 @@ def finish_conflicted_merge(repository, source, target, target_tip, source_tip, 
             _run(['commit', '-m', message], cwd=directory, env=git_env(author))
             new_commit = _run(['rev-parse', 'HEAD'], cwd=directory).stdout.strip()
             _run(['--git-dir', repository.path, 'update-ref', f'refs/heads/{target}', new_commit, old_target])
+            _push_branch(repository, target)
     return new_commit
 
 
@@ -601,4 +716,5 @@ def restore_commit(repository, branch, revision, message, author):
         tree = _run(['--git-dir', repository.path, 'rev-parse', f'{commit}^{{tree}}']).stdout.strip()
         created = _run(['--git-dir', repository.path, 'commit-tree', tree, '-p', parent, '-m', message], env=git_env(author)).stdout.strip()
         _run(['--git-dir', repository.path, 'update-ref', f'refs/heads/{branch}', created, parent])
+        _push_branch(repository, branch)
     return created
