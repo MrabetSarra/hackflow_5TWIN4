@@ -1,4 +1,3 @@
-import json
 from datetime import timedelta
 
 from django.contrib import messages
@@ -210,7 +209,7 @@ def help_requests(request):
 
     page = Paginator(requests, 10).get_page(request.GET.get('page'))
     _decorate_requests(page.object_list)
-    ensure_triages(page.object_list)  # analyse IA des tickets en attente, en arrière-plan
+    ensure_triages(page.object_list)  # analyse IA des tickets ouverts, en arrière-plan
     params = request.GET.copy()
     params.pop('page', None)
     context = {
@@ -304,43 +303,6 @@ def triage_retry(request, request_id):
     retry_triage(triage)
     messages.info(request, 'Analyse IA relancée.')
     return redirect(_safe_next(request, 'mentor:help_requests'))
-
-
-@role_required('mentor')
-def ai_metrics(request):
-    """Qualité et performance du tri IA : rapport d'évaluation hors ligne + indicateurs en direct."""
-    from .ai import model_name
-    from .management.commands.evaluate_triage import REPORT_JSON
-    from .metrics import latency_stats
-
-    try:
-        report = json.loads(REPORT_JSON.read_text(encoding='utf-8'))
-    except (OSError, ValueError):
-        report = None
-    if report:
-        for key in ('category', 'urgency'):
-            section = report[key]
-            section['rows'] = [
-                {'label': label, **section['per_class'][label], 'matrix': row}
-                for label, row in zip(section['labels'], section['confusion_matrix'])
-            ]
-
-    triages = RequestTriage.objects.all()
-    done = triages.filter(status=RequestTriage.Status.DONE)
-    corrected = list(done.exclude(corrected_category='').values_list(
-        'suggested_category', 'corrected_category', 'suggested_urgency', 'corrected_urgency'))
-    live = {
-        'total': triages.count(),
-        'done': done.count(),
-        'failed': triages.filter(status=RequestTriage.Status.FAILED).count(),
-        'corrected': len(corrected),
-        'category_agreement': (round(100 * sum(1 for c in corrected if c[0] == c[1]) / len(corrected))
-                               if corrected else None),
-        'urgency_agreement': (round(100 * sum(1 for c in corrected if c[2] == c[3]) / len(corrected))
-                              if corrected else None),
-        'latency': latency_stats(list(done.exclude(latency_ms=None).values_list('latency_ms', flat=True))),
-    }
-    return render(request, 'mentor/ai_metrics.html', {'report': report, 'live': live, 'model': model_name()})
 
 
 def _my_open_requests(request):

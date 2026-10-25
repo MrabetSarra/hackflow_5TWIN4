@@ -18,7 +18,6 @@ Chaque page est auditée dans les deux thèmes de l'application (clair et sombre
 | /mentor/submissions/4/evaluate/ (formulaire de notation) | 100 | 100 |
 | /mentor/evaluations/ | 100 | 100 |
 | /mentor/evaluations/3/ (détail) | 100 | 100 |
-| /mentor/ai-metrics/ | 100 | 100 |
 
 Rapports complets joints (exemple représentatif) : `light_dashboard.report.html`, `dark_dashboard.report.html`
 (le cookie de session utilisé pour l'audit a été masqué).

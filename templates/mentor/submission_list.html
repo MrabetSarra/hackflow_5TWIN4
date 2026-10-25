@@ -1,4 +1,5 @@
 {% extends "layouts/base_mentor.html" %}
+{% load mentor_tags %}
 
 {% block title %}Soumissions à évaluer - Espace Mentor - HackFlow{% endblock %}
 
@@ -37,7 +38,7 @@
                         <td class="ps-4 fw-semibold"><a href="{% url 'mentor:team_detail' submission.team.pk %}">{{ submission.team.name }}</a></td>
                         <td>{{ submission.project_name|default:submission.team.project_name|default:"—" }}</td>
                         <td>{{ submission.milestone.title }}</td>
-                        <td><span class="badge bg-body-secondary text-body">{{ submission.get_status_display }}</span></td>
+                        <td><span class="badge {{ submission.status|status_badge }}">{{ submission.get_status_display }}</span></td>
                         <td class="small">
                             {% if submission.github_url %}<a href="{{ submission.github_url }}" target="_blank" rel="noopener noreferrer" aria-label="Dépôt de code de {{ submission.team.name }} (nouvel onglet)"><i class="bi bi-github" aria-hidden="true"></i></a>{% endif %}
                             {% if submission.demo_url %}<a href="{{ submission.demo_url }}" target="_blank" rel="noopener noreferrer" class="ms-2" aria-label="Démo de {{ submission.team.name }} (nouvel onglet)"><i class="bi bi-display" aria-hidden="true"></i></a>{% endif %}

@@ -61,7 +61,7 @@
 
             <p class="text-body-secondary small mb-3 p-3 bg-body-tertiary rounded-3">{{ req.description|linebreaksbr }}</p>
 
-            {% if req.triage %}
+            {% if req.triage.status == 'done' or req.triage.status == 'failed' or req.triage and req.status != 'resolved' %}
             <div class="mb-3 p-3 border rounded-3 js-triage" id="triage-{{ req.pk }}" data-request-id="{{ req.pk }}" data-status="{{ req.triage.status }}" aria-live="polite">
                 {% include "mentor/_triage.html" with triage=req.triage %}
             </div>

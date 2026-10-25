@@ -1,4 +1,5 @@
 {% extends "layouts/base_mentor.html" %}
+{% load mentor_tags %}
 
 {% block title %}Mes Sessions - Espace Mentor - HackFlow{% endblock %}
 
@@ -28,7 +29,7 @@
                 <div>
                     <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
                         <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-mono">{{ sess.starts_at|date:"d/m/Y" }} • {{ sess.starts_at|time:"H:i" }} – {{ sess.ends_at|time:"H:i" }}</span>
-                        <span class="badge {% if sess.status == 'cancelled' %}bg-danger-subtle text-danger{% elif sess.status == 'done' %}bg-secondary-subtle text-secondary{% else %}bg-success-subtle text-success{% endif %}">{{ sess.get_status_display }}</span>
+                        <span class="badge {{ sess.status|status_badge }}">{{ sess.get_status_display }}</span>
                     </div>
                     <h2 id="session-{{ sess.pk }}-title" class="h5 fw-bold text-body mb-1">{{ sess.topic }}</h2>
                     <p class="small text-body-secondary mb-0">
