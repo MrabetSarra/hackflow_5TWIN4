@@ -26,13 +26,6 @@
                 <div class="d-flex flex-wrap align-items-center gap-2">
                     <span class="badge {% if feedback.challenge %}bg-info-subtle text-info-emphasis{% else %}bg-primary-subtle text-primary-emphasis{% endif %} rounded-pill px-3 py-2">{% if feedback.challenge %}Challenge · {{ feedback.challenge.title }}{% else %}Avis général{% endif %}</span>
                     {% if feedback.rating %}<span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-2"><i class="bi bi-star-fill me-1"></i>{{ feedback.rating }}/5</span>{% endif %}
-                    <form method="post" action="{% url 'hackathons:mentor_feedback_delete' feedback.pk %}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet avis mentor ?');" class="d-inline ms-1">
-                        {% csrf_token %}
-                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1" title="Supprimer cet avis">
-                            <i class="bi bi-trash me-1"></i>Supprimer
-                        </button>
-                    </form>
                 </div>
             </div>
             {% if feedback.review %}<div class="mb-4"><div class="small text-body-secondary fw-semibold mb-2"><i class="bi bi-chat-quote me-1"></i>{% trans "Avis" %}</div><p class="mb-0" style="white-space: pre-line; line-height: 1.75;">{{ feedback.review }}</p></div>{% endif %}

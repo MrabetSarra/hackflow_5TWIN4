@@ -11,6 +11,7 @@ import urllib.request
 import uuid
 
 from django.core.files.base import ContentFile
+from hackflow.ai_telemetry import timed_ai
 from django.core.files.storage import default_storage
 from PIL import Image, UnidentifiedImageError
 
@@ -110,6 +111,7 @@ def _request_fallback(prompt, config):
         raise ImageError('Le service de secours de génération d’image est indisponible.') from None
 
 
+@timed_ai('hackathon_banner_image')
 def generate_banner(prompt):
     """Génère l'image, l'enregistre dans le stockage média et retourne son nom relatif."""
     config = configuration()

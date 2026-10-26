@@ -44,15 +44,17 @@ def _sync_student_skills_from_cv(user, analysis):
     extracted = {item.get('name', '').casefold() for item in analysis.get('data', {}).get('skills', [])}
     skill_groups = {
         'Python / Django': {'python', 'django'},
-        'React / TypeScript': {'react', 'javascript', 'typescript'},
-        'Vue.js': {'vue.js'}, 'FastAPI': {'fastapi'},
-        'UI/UX & Figma': {'figma'},
-        'IA & Machine Learning': {'machine learning', 'tensorflow', 'pytorch'},
-        'DevOps & Docker': {'docker', 'kubernetes', 'aws', 'azure', 'linux'},
-        'Flutter / Mobile': {'flutter'}, 'PostgreSQL': {'postgresql'},
+        'React / TypeScript': {'react', 'javascript', 'typescript', 'next.js', 'angular', 'vue.js'},
+        'Vue.js': {'vue.js'},
+        'FastAPI': {'fastapi', 'node.js', 'express', 'rest api'},
+        'UI/UX & Figma': {'figma', 'ui/ux', 'tailwind css', 'html/css'},
+        'IA & Machine Learning': {'machine learning', 'deep learning', 'tensorflow', 'pytorch', 'rag', 'chromadb', 'nlp', 'scikit-learn', 'langchain'},
+        'DevOps & Docker': {'docker', 'kubernetes', 'aws', 'azure', 'gcp', 'linux', 'ci/cd', 'git'},
+        'Flutter / Mobile': {'flutter'},
+        'PostgreSQL': {'postgresql', 'postgres', 'sql', 'mysql', 'mongodb'},
     }
     detected = [label for label, names in skill_groups.items() if names & extracted]
-    existing = user.skills or []
+    existing = list(user.skills or [])
     additions = [skill for skill in detected if skill not in existing]
     if additions:
         user.skills = existing + additions
@@ -231,11 +233,28 @@ def profile_view(request):
     layout_template = _get_layout_template(request.user)
     cv_skill_additions = []
     cv_detected_skills = []
-    if request.user.role == 'student' and request.user.cv:
+
+    force_sync = request.GET.get('sync_cv') == '1' or (
+        request.method == 'POST' and request.POST.get('action') == 'sync_cv_skills'
+    )
+
+    if request.user.cv:
         from career_opportunities.services.cv_analysis import analyze_student_cv
-        cv_analysis = analyze_student_cv(request.user)
+        cv_analysis = analyze_student_cv(request.user, force=force_sync)
         cv_detected_skills = cv_analysis.get('data', {}).get('skills', [])
         cv_skill_additions = _sync_student_skills_from_cv(request.user, cv_analysis)
+        if force_sync:
+            detected_names = [s.get('name') for s in cv_detected_skills if s.get('name')]
+            if detected_names:
+                messages.success(
+                    request,
+                    f"Compétences extraites avec succès de votre CV ({len(detected_names)}) : {', '.join(detected_names)}."
+                )
+            elif cv_analysis.get('status') == 'ready':
+                messages.info(request, "L'analyse du CV est terminée mais aucune compétence connue n'a été détectée.")
+            else:
+                messages.warning(request, "Impossible de lire le texte de ce fichier PDF. Assurez-vous d'utiliser un PDF textuel.")
+            return redirect('accounts:profile')
     details_form = ProfileDetailsForm(
         request.POST if request.method == 'POST' and request.POST.get('form_type') == 'details' else None,
         instance=request.user,
@@ -258,6 +277,7 @@ def profile_view(request):
         old_photo = request.user.profile_photo
         old_cv = request.user.cv
         photo_uploaded = bool(request.FILES.get('profile_photo'))
+        cv_uploaded = bool(request.FILES.get('cv'))
         try:
             profile_user = form.save()
             if photo_uploaded:
@@ -280,7 +300,7 @@ def profile_view(request):
                 f'{storage.__class__.__module__}.{storage.__class__.__name__}',
                 urlsplit(photo_url).hostname or 'relative',
             )
-        cv_changed = bool(profile_user.cv and (not old_cv or old_cv.name != profile_user.cv.name))
+        cv_changed = cv_uploaded or bool(profile_user.cv and (not old_cv or old_cv.name != profile_user.cv.name))
         if old_photo and old_photo.name != profile_user.profile_photo.name:
             try:
                 old_photo.delete(save=False)
@@ -293,15 +313,18 @@ def profile_view(request):
                     old_cv.delete(save=False)
                 except Exception as error:
                     logger.warning('Old private CV cleanup failed (user_id=%s, error_type=%s)', profile_user.pk, type(error).__name__)
-        if cv_changed and profile_user.role == 'student':
+        if cv_changed and profile_user.cv:
             from career_opportunities.services.cv_analysis import analyze_student_cv
-            analysis = analyze_student_cv(profile_user)
-            if analysis['status'] != 'ready':
-                messages.warning(request, 'The CV was saved privately, but no readable text could be extracted. Upload a text-based PDF to enable matching.')
+            analysis = analyze_student_cv(profile_user, force=True)
+            if analysis.get('status') != 'ready':
+                messages.warning(request, 'The CV was saved privately, but no readable text could be extracted. Upload a text-based PDF to enable matching.' if profile_user.role == 'student' else "Le CV a été enregistré, mais aucun texte lisible n'a pu être extrait. Téléversez un PDF textuel pour activer la détection des compétences.")
             else:
                 cv_skill_additions = _sync_student_skills_from_cv(profile_user, analysis)
-                if cv_skill_additions:
-                    messages.success(request, f"Skills added from your CV: {', '.join(cv_skill_additions)}.")
+                detected = [s.get('name') for s in analysis.get('data', {}).get('skills', []) if s.get('name')]
+                if detected:
+                    messages.success(request, f"Compétences extraites avec succès de votre CV : {', '.join(detected)}.")
+                elif cv_skill_additions:
+                    messages.success(request, f"Skills added from your CV: {', '.join(cv_skill_additions)}." if profile_user.role == 'student' else f"Compétences ajoutées à votre profil : {', '.join(cv_skill_additions)}.")
         messages.success(request, 'Your profile photo and CV have been updated.' if request.user.role == 'student' else 'Votre photo et votre CV ont été mis à jour.')
         return redirect('accounts:profile')
 

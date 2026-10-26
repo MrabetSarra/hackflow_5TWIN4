@@ -21,8 +21,8 @@
         <div class="col-lg-4">
             <section class="card-modern p-4 text-center h-100">
                 {% if profile_user.profile_photo %}
-                    <img src="{{ profile_user.profile_photo.url }}" alt="Photo of {{ profile_user.get_full_name }}" class="rounded-circle mb-3" width="96" height="96" style="object-fit: cover;" onerror="this.hidden=true;this.nextElementSibling.hidden=false;this.nextElementSibling.style.display='inline-flex';">
-                    <div hidden role="img" aria-label="Profile photo unavailable" class="rounded-circle bg-primary bg-opacity-10 text-primary align-items-center justify-content-center fw-bold fs-2 mb-3" style="width: 96px; height: 96px;">
+                    <img src="{{ profile_user.profile_photo.url }}" alt="Photo of {{ profile_user.get_full_name }}" class="rounded-circle mb-3" width="96" height="96" style="object-fit: cover;" onerror="this.hidden=true;this.nextElementSibling.hidden=false;">
+                    <div hidden role="img" aria-label="Profile photo unavailable" class="rounded-circle bg-primary bg-opacity-10 text-primary align-items-center justify-content-center fw-bold fs-2 mb-3" style="width: 96px; height: 96px; display: inline-flex;" data-fallback="nextElementSibling.style.display='inline-flex'">
                         {{ profile_user.first_name|first|upper }}{{ profile_user.last_name|first|upper }}
                     </div>
                 {% else %}
@@ -72,7 +72,21 @@
                     <dd class="col-sm-8">{{ profile_user.email }}</dd>
                     <dt class="col-sm-4 text-body-secondary">CV</dt>
                     <dd class="col-sm-8">
-                        {% if profile_user.cv %}<a href="{% url 'accounts:download_cv' %}">{% trans "Download CV (PDF)" %}</a>{% else %}No CV uploaded{% endif %}
+                        {% if profile_user.cv %}
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <a href="{% url 'accounts:download_cv' %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i>{% trans "Download CV (PDF)" %}
+                                </a>
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" name="action" value="sync_cv_skills" class="btn btn-sm btn-success text-white">
+                                        <i class="bi bi-magic me-1"></i>Extraire les compétences du CV
+                                    </button>
+                                </form>
+                            </div>
+                        {% else %}
+                            <span class="text-body-secondary">{% trans "No CV uploaded" %}</span>
+                        {% endif %}
                     </dd>
                     <dt class="col-sm-4 text-body-secondary">{% trans "School / organization" %}</dt>
                     <dd class="col-sm-8">{{ profile_user.school|default:'â€”' }}</dd>
@@ -138,17 +152,51 @@
                 {% endif %}
             </section>
 
-            {% if profile_user.role == 'student' %}
+            {% if profile_user.role == 'student' or profile_user.skills or cv_detected_skills or profile_user.cv %}
             <section class="card-modern p-4 p-md-5 mb-4">
-                <div class="d-flex justify-content-between align-items-center gap-3 mb-3"><h3 class="h5 fw-bold mb-0">{% trans "Skills" %}</h3><a class="small text-decoration-none" href="{% url 'accounts:profile' %}?edit=1">{% trans "Edit profile" %}</a></div>
+                <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
+                    <h3 class="h5 fw-bold mb-0">{% trans "Skills" %}</h3>
+                    <div class="d-flex align-items-center gap-2">
+                        {% if profile_user.cv %}
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" name="action" value="sync_cv_skills" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-arrow-repeat me-1"></i>Extraire depuis le CV
+                            </button>
+                        </form>
+                        {% endif %}
+                        <a class="small text-decoration-none" href="{% url 'accounts:profile' %}?edit=1">{% trans "Edit profile" %}</a>
+                    </div>
+                </div>
                 {% if profile_user.skills %}
                 <div class="d-flex flex-wrap gap-2">
                     {% for skill in profile_user.skills %}<span class="badge rounded-pill bg-primary bg-opacity-10 text-primary px-3 py-2">{{ skill }}</span>{% endfor %}
                 </div>
                 {% endif %}
-                {% if cv_detected_skills %}<div class="{% if profile_user.skills %}mt-4{% endif %}"><div class="small fw-semibold text-body-secondary mb-2">{% trans "Detected in your CV" %}</div><div class="d-flex flex-wrap gap-2">{% for item in cv_detected_skills %}<span class="badge rounded-pill bg-success bg-opacity-10 text-success px-3 py-2" title="{{ item.evidence }}"><i class="bi bi-file-earmark-check me-1"></i>{{ item.name }}</span>{% endfor %}</div></div>
-                {% elif not profile_user.skills %}<p class="text-body-secondary mb-0">{% trans "No skills detected yet. CV text is extracted locally, including scanned pages when OCR can read them. You can also add skills in your profile details." %}</p>{% endif %}
+                {% if cv_detected_skills %}
+                <div class="{% if profile_user.skills %}mt-4{% endif %}">
+                    <div class="small fw-semibold text-body-secondary mb-2 d-flex align-items-center gap-2">
+                        <i class="bi bi-file-earmark-check text-success"></i>
+                        <span>{% trans "Detected in your CV" %} ({{ cv_detected_skills|length }})</span>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for item in cv_detected_skills %}
+                        <span class="badge rounded-pill bg-success bg-opacity-10 text-success px-3 py-2 border border-success border-opacity-25" title="{{ item.evidence }}">
+                            <i class="bi bi-check2 me-1"></i>{{ item.name }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% elif profile_user.cv %}
+                <div class="alert alert-info border-0 mt-3 mb-0 small">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Votre CV est téléversé. Cliquez sur <strong>"Extraire les compétences du CV"</strong> pour analyser le document et synchroniser vos compétences automatiquement.
+                </div>
+                {% elif not profile_user.skills %}
+                <p class="text-body-secondary mb-0">{% trans "No skills detected yet. CV text is extracted locally, including scanned pages when OCR can read them. You can also add skills in your profile details." %}</p>
+                {% endif %}
             </section>
+            {% endif %}
 
             <section class="card-modern p-4 p-md-5 mb-4">
                 <div class="d-flex justify-content-between align-items-center gap-3 mb-3"><h3 class="h5 fw-bold mb-0">{% trans "Team formation preferences" %}</h3><a class="small text-decoration-none" href="{% url 'accounts:profile' %}?edit=1">{% trans "Edit profile" %}</a></div>
@@ -169,7 +217,6 @@
                     {% if not profile_user.availability_windows %}<span class="small text-body-secondary">{% trans "Not provided." %}</span>{% endif %}
                 </div></div>
             </section>
-            {% endif %}
 
             {% if profile_user.github_url or profile_user.linkedin_url %}
             <section class="card-modern p-4 p-md-5">

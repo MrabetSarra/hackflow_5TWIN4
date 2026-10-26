@@ -442,17 +442,9 @@ def mentor_feedback_challenge(request, pk):
     })
 
 
-@role_required('mentor', 'admin', 'organization')
+@role_required('mentor')
 @require_POST
 def mentor_feedback_delete(request, pk):
-    if request.user.role in ('admin', 'organization'):
-        feedback = get_object_or_404(MentorFeedback, pk=pk)
-        feedback.delete()
-        messages.success(request, 'L’avis mentor a été supprimé.')
-        next_url = request.POST.get('next')
-        if next_url:
-            return redirect(next_url)
-        return redirect('hackathons:mentor_feedback_list')
     feedback = get_object_or_404(MentorFeedback, pk=pk, mentor=request.user)
     hackathon = feedback.hackathon if feedback.hackathon_id else feedback.challenge.hackathon
     feedback.delete()
@@ -464,7 +456,7 @@ def mentor_feedback_delete(request, pk):
 def mentor_feedback_list(request):
     reviews = MentorFeedback.objects.select_related(
         'mentor', 'hackathon', 'hackathon__event', 'challenge', 'challenge__hackathon', 'challenge__hackathon__event',
-    ).distinct()
+    )
     hackathon_id = request.GET.get('hackathon', '')
     target_type = request.GET.get('type', '')
     if hackathon_id.isdigit():
@@ -475,20 +467,9 @@ def mentor_feedback_list(request):
         reviews = reviews.filter(challenge__isnull=False)
 
     grouped = {}
-    seen_mentors_by_hackathon = {}
     for review in reviews:
         target_hackathon = review.hackathon if review.hackathon_id else review.challenge.hackathon
-        if target_hackathon not in grouped:
-            grouped[target_hackathon] = []
-            seen_mentors_by_hackathon[target_hackathon.pk] = set()
-
-        # Remove duplicated mentor reviews: keep only the latest feedback per mentor per hackathon
-        if review.mentor_id in seen_mentors_by_hackathon[target_hackathon.pk]:
-            continue
-
-        seen_mentors_by_hackathon[target_hackathon.pk].add(review.mentor_id)
-        grouped[target_hackathon].append(review)
-
+        grouped.setdefault(target_hackathon, []).append(review)
     review_groups = sorted(grouped.items(), key=lambda item: item[0].event.name.casefold())
     return page(request, 'hackathons/manage/mentor_feedback_list.html', {
         'review_groups': review_groups, 'hackathons': HackathonProfile.objects.select_related('event').order_by('event__name'),

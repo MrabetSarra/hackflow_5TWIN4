@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from .models import (Announcement, DirectMessage, Hackathon, MentorRequest, Milestone, Notification, Resource,
-                     Sprint, Submission, Task, Team, TeamInvitation, TeamMembership)
+                     Sprint, Submission, Task, Team, TeamInvitation, TeamJoinRequest, TeamMembership)
 
 
 @admin.register(Hackathon)
@@ -22,6 +22,6 @@ class TeamAdmin(admin.ModelAdmin):
     list_filter = ('hackathon', 'category')
 
 
-for model in (TeamMembership, TeamInvitation, Resource, Task, Submission, MentorRequest, Notification, DirectMessage, Sprint):
+for model in (TeamMembership, TeamInvitation, TeamJoinRequest, Resource, Task, Submission, MentorRequest, Notification, DirectMessage, Sprint):
     admin.site.register(model)
 admin.site.register(Announcement)

@@ -14,7 +14,7 @@
 </style>
 
 {% load i18n %}
-<div class="admin-copilot" data-copilot-widget data-close-label="{% trans 'Close messaging' %}" data-open-label="{% trans 'Open messaging' %}" data-user-label="{% trans 'You' %}" data-assistant-label="{% trans 'Copilot' %}" data-message-label="{% trans 'Message' %}">
+<div class="admin-copilot" data-copilot-widget data-close-label="{% trans 'Close messaging' %}" data-open-label="{% trans 'Open messaging' %}" data-user-label="{% trans 'You' %}" data-assistant-label="{% trans 'Copilot' %}" data-draft-title-label="{% trans 'Draft title' %}" data-message-label="{% trans 'Message' %}" data-save-draft-label="{% trans 'Save as draft' %}">
     <section class="admin-copilot__panel" id="adminCopilotPanel" aria-labelledby="adminCopilotTitle" {% if not copilot_history %}hidden{% endif %}>
         <div class="admin-copilot__header p-3 border-bottom">
             <div class="d-flex align-items-center justify-content-between gap-3">
@@ -33,12 +33,20 @@
                     <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill js-copilot-prompt" data-prompt="{% trans 'Summarize the hackathon status.' %}">{% trans "Summarize the hackathon" %}</button>
                     <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill js-copilot-prompt" data-prompt="{% trans 'Which teams need help, and why?' %}">{% trans "Teams to follow up with" %}</button>
                     <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill js-copilot-prompt" data-prompt="{% trans 'Which teams may miss the deadline?' %}">{% trans "Deadline risks" %}</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill js-copilot-prompt" data-prompt="{% trans 'Write an announcement reminding everyone of the deadline.' %}">{% trans "Write an announcement" %}</button>
                 </div>
             </div>
             {% endif %}
             {% for message in copilot_history %}
             <div class="copilot-message copilot-message--{{ message.role }}">
                 <div class="copilot-message__label">{% if message.role == 'user' %}Vous{% else %}Copilot{% endif %}</div>{{ message.content }}
+                {% if message.announcement_title and message.announcement_body %}
+                <form method="post" action="{% url 'dashboard_admin:dashboard' %}" class="mt-3 pt-3 border-top">{% csrf_token %}<input type="hidden" name="action" value="save_announcement">
+                    <label class="form-label small" for="announcementTitle{{ forloop.counter }}">{% trans "Draft title" %}</label><input class="form-control form-control-sm mb-2" id="announcementTitle{{ forloop.counter }}" name="announcement_title" maxlength="220" value="{{ message.announcement_title }}" required>
+                    <label class="form-label small" for="announcementBody{{ forloop.counter }}">{% trans "Message" %}</label><textarea class="form-control form-control-sm mb-2" id="announcementBody{{ forloop.counter }}" name="announcement_body" rows="4" maxlength="5000" required>{{ message.announcement_body }}</textarea>
+                    <button class="btn btn-outline-primary btn-sm rounded-pill" type="submit"><i class="bi bi-save me-1"></i>{% trans "Save as draft" %}</button>
+                </form>
+                {% endif %}
             </div>
             {% endfor %}
             <div class="small text-secondary px-2 pb-2" data-copilot-loading role="status" aria-live="polite" hidden><span class="spinner-grow spinner-grow-sm text-primary me-2" aria-hidden="true"></span>{% trans "Reviewing the data and preparing a response…" %}</div>
@@ -91,6 +99,30 @@
         scrollToLatest();
         return bubble;
     };
+    const addAnnouncementDraft = (bubble, title, body) => {
+        if (!title || !body) return;
+        const draftForm = document.createElement('form');
+        draftForm.method = 'post';
+        draftForm.action = '{% url "dashboard_admin:dashboard" %}';
+        draftForm.className = 'mt-3 pt-3 border-top';
+        const csrf = document.createElement('input');
+        csrf.type = 'hidden'; csrf.name = 'csrfmiddlewaretoken';
+        csrf.value = form.querySelector('[name="csrfmiddlewaretoken"]').value;
+        const action = document.createElement('input');
+        action.type = 'hidden'; action.name = 'action'; action.value = 'save_announcement';
+        const titleInput = document.createElement('input');
+        titleInput.className = 'form-control form-control-sm mb-2'; titleInput.name = 'announcement_title';
+        titleInput.maxLength = 220; titleInput.required = true; titleInput.value = title;
+        const bodyInput = document.createElement('textarea');
+        bodyInput.className = 'form-control form-control-sm mb-2'; bodyInput.name = 'announcement_body';
+        bodyInput.maxLength = 5000; bodyInput.rows = 4; bodyInput.required = true; bodyInput.value = body;
+        const titleLabel = document.createElement('label'); titleLabel.className = 'form-label small'; titleLabel.textContent = widget.dataset.draftTitleLabel;
+        const bodyLabel = document.createElement('label'); bodyLabel.className = 'form-label small'; bodyLabel.textContent = widget.dataset.messageLabel;
+        const save = document.createElement('button'); save.type = 'submit'; save.className = 'btn btn-outline-primary btn-sm rounded-pill';
+        save.innerHTML = `<i class="bi bi-save me-1"></i>${widget.dataset.saveDraftLabel}`;
+        draftForm.append(csrf, action, titleLabel, titleInput, bodyLabel, bodyInput, save);
+        bubble.appendChild(draftForm);
+    };
     toggle.addEventListener('click', () => setOpen(panel.hidden));
     widget.querySelector('[data-copilot-close]').addEventListener('click', () => setOpen(false));
     widget.querySelectorAll('.js-copilot-prompt').forEach((button) => button.addEventListener('click', () => {
@@ -126,7 +158,8 @@
             }
             const result = await response.json();
             if (!response.ok) throw new Error(result.error || 'La réponse du copilote est indisponible.');
-            addMessage('assistant', result.answer || 'Je n’ai pas obtenu de réponse. Réessayez avec une question plus précise.');
+            const bubble = addMessage('assistant', result.answer || 'Je n’ai pas obtenu de réponse. Réessayez avec une question plus précise.');
+            addAnnouncementDraft(bubble, result.announcement_title, result.announcement_body);
         } catch (error) {
             addMessage('assistant', error.message || 'Le copilote est momentanément indisponible. Réessayez dans quelques instants.');
         } finally {

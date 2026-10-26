@@ -56,9 +56,9 @@
                         <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 border-top pt-3">
                             <div class="d-flex align-items-start gap-2 min-w-0">
                                 <i class="bi bi-file-earmark-zip text-primary mt-1"></i>
-                                <div class="min-w-0"><div class="submission-file small fw-semibold">{{ submission.file.name|cut:"submissions/" }}</div><div class="small text-body-secondary">ZIP archive · {{ submission.file.size|filesizeformat }}</div></div>
+                                <div class="min-w-0"><div class="submission-file small fw-semibold">{{ submission.display_file_name|cut:"submissions/" }}</div><div class="small text-body-secondary">{% if not submission.file_missing %}ZIP archive · {% endif %}{% if submission.file_missing %}{% trans "File missing from storage" %}{% elif submission.file_unavailable %}{% trans "File status temporarily unavailable" %}{% elif submission.display_file_size != None %}{{ submission.display_file_size|filesizeformat }}{% endif %}</div></div>
                             </div>
-                            <a class="btn btn-primary rounded-3 flex-shrink-0" href="{% url 'student:download_submission' submission.id %}"><i class="bi bi-download me-2"></i>{% trans "Download ZIP" %}</a>
+                            {% if not submission.file_missing %}<a class="btn btn-primary rounded-3 flex-shrink-0" href="{% url 'student:download_submission' submission.id %}"><i class="bi bi-download me-2"></i>{% trans "Download ZIP" %}</a>{% endif %}
                         </div>
                     </div>
                 </div>

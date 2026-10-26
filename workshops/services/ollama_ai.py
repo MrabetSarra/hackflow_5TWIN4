@@ -10,23 +10,27 @@ from __future__ import annotations
 
 import json
 import logging
+from hackflow.ai_telemetry import timed_ai
 from urllib import request
 from urllib.error import URLError, HTTPError
+from django.conf import settings
+from hackflow.ollama import request_headers as ollama_request_headers
 
 logger = logging.getLogger(__name__)
 
-OLLAMA_BASE = "http://localhost:11434"
-OLLAMA_MODEL = "llama3.2"
+OLLAMA_BASE = getattr(settings, 'OLLAMA_BASE_URL', 'http://localhost:11434').rstrip('/')
+OLLAMA_MODEL = getattr(settings, 'OLLAMA_WORKSHOP_MODEL', '') or getattr(settings, 'OLLAMA_MODEL', 'llama3.2')
 OLLAMA_TIMEOUT = 30  # secondes
 
 
+@timed_ai('workshop_generation')
 def _ollama_generate(prompt: str, model: str = OLLAMA_MODEL, temperature: float = 0.7, num_predict: int = 500) -> str | None:
     """
     Envoie un prompt à Ollama et retourne le texte généré, ou None en cas d'échec.
     """
     payload = {
         "model": model,
-        "prompt": prompt,
+        "messages": [{"role": "user", "content": prompt}],
         "stream": False,
         "options": {
             "temperature": temperature,
@@ -36,9 +40,9 @@ def _ollama_generate(prompt: str, model: str = OLLAMA_MODEL, temperature: float 
 
     data = json.dumps(payload).encode("utf-8")
     req = request.Request(
-        f"{OLLAMA_BASE}/api/generate",
+        f"{OLLAMA_BASE}/api/chat",
         data=data,
-        headers={"Content-Type": "application/json"},
+        headers=ollama_request_headers(),
         method="POST",
     )
 
@@ -46,7 +50,7 @@ def _ollama_generate(prompt: str, model: str = OLLAMA_MODEL, temperature: float 
         with request.urlopen(req, timeout=OLLAMA_TIMEOUT) as resp:
             body = resp.read().decode("utf-8")
             result = json.loads(body)
-            return (result.get("response") or "").strip()
+            return (result.get("message", {}).get("content") or "").strip()
     except (URLError, HTTPError, OSError, json.JSONDecodeError) as exc:
         logger.warning("Ollama indisponible ou erreur : %s", exc)
         return None

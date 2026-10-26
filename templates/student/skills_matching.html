@@ -102,7 +102,7 @@
                             {% endfor %}
                         </div>
 
-                        {% if can_invite %}<form method="post">{% csrf_token %}<input type="hidden" name="user_id" value="{{ student.id }}"><button class="btn btn-primary btn-sm rounded-pill w-100" type="submit">
+                        {% if can_invite %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="invite"><input type="hidden" name="user_id" value="{{ student.id }}"><button class="btn btn-primary btn-sm rounded-pill w-100" type="submit">
                             <i aria-hidden="true" class="bi bi-person-plus-fill me-1"></i>{% trans "Invite to team" %}
                         </button></form>{% endif %}
                     </div>
@@ -145,9 +145,21 @@
                                 </div>
                             </div>
 
-                            <button class="btn btn-outline-primary btn-sm rounded-pill w-100" data-demo-toast="Application sent to team {{ t.name }} !">
-                                <i aria-hidden="true" class="bi bi-send-fill me-1"></i>Apply to join this team
-                            </button>
+                            {% if can_apply_to_teams %}
+                            <form method="post" action="{% url 'student:skills_matching' %}">{% csrf_token %}
+                                <input type="hidden" name="action" value="apply">
+                                <input type="hidden" name="team_id" value="{{ t.id }}">
+                                {% if t.join_pending %}
+                                <button class="btn btn-outline-secondary btn-sm rounded-pill w-100" type="button" disabled aria-disabled="true">{% trans "Request pending captain approval" %}</button>
+                                {% else %}
+                                <button class="btn btn-outline-primary btn-sm rounded-pill w-100" type="submit">
+                                    <i aria-hidden="true" class="bi bi-send-fill me-1"></i>{% trans "Apply to join this team" %}
+                                </button>
+                                {% endif %}
+                            </form>
+                            {% else %}
+                            <button class="btn btn-outline-secondary btn-sm rounded-pill w-100" type="button" disabled aria-disabled="true">{% trans "You are already on a team" %}</button>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
