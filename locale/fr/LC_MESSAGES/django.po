@@ -1572,11 +1572,11 @@ msgstr "Date limite :"
 
 
 msgid "Voir le challenge"
-msgstr "Voir le d?fi"
+msgstr "Voir le défi"
 
 
 msgid "S'inscrire"
-msgstr "S?inscrire"
+msgstr "S'inscrire"
 
 
 msgid "Voir mon avis"
@@ -1700,7 +1700,7 @@ msgstr "Publier le hackathon"
 
 
 msgid "Publier hackathon + challenges"
-msgstr "Publier le hackathon et les d?fis"
+msgstr "Publier le hackathon et les défis"
 
 
 msgid "Nouveau hackathon"
@@ -1712,7 +1712,7 @@ msgstr "Recherche"
 
 
 msgid "Track"
-msgstr "Th?matique"
+msgstr "Thématique"
 
 
 msgid "Tous"
@@ -1720,7 +1720,7 @@ msgstr "Tous"
 
 
 msgid "Tous les Tracks"
-msgstr "Toutes les th?matiques"
+msgstr "Toutes les thématiques"
 
 
 msgid "Publication"
@@ -1760,11 +1760,11 @@ msgstr "Avis concernant"
 
 
 msgid "Hackathons et Challenges"
-msgstr "Hackathons et d?fis"
+msgstr "Hackathons et défis"
 
 
 msgid "Challenge"
-msgstr "D?fi"
+msgstr "Défi"
 
 
 msgid "Filtrer"
@@ -1792,7 +1792,7 @@ msgstr "Id?es et suggestions"
 
 
 msgid "Aucun avis mentor pour ces filtres."
-msgstr "Aucun avis mentor ne correspond ? ces filtres."
+msgstr "Aucun avis mentor ne correspond à ces filtres."
 
 
 msgid "Modifier l'annonce"
@@ -1928,7 +1928,7 @@ msgstr "Localisation"
 
 
 msgid "Challenges"
-msgstr "D?fis"
+msgstr "Défis"
 
 
 msgid "Inscriptions"
@@ -1960,11 +1960,11 @@ msgstr "Prochain rendez-vous"
 
 
 msgid "Conflit d'agenda."
-msgstr "Conflit d?agenda."
+msgstr "Conflit d'agenda."
 
 
 msgid "Aujourd'hui"
-msgstr "Aujourd?hui"
+msgstr "Aujourd'hui"
 
 
 msgid "Aucune inscription pour le moment : vos hackathons appara?tront ici."
@@ -1976,7 +1976,7 @@ msgstr "Voir les d?tails du hackathon"
 
 
 msgid "Annuler l'inscription"
-msgstr "Annuler l?inscription"
+msgstr "Annuler l'inscription"
 
 
 msgid "Retirer des favoris"
@@ -2036,7 +2036,7 @@ msgstr "D?fis class?s pour vous"
 
 
 msgid "Expliquer avec l'IA"
-msgstr "Expliquer avec l?IA"
+msgstr "Expliquer avec l'IA"
 
 
 msgid "Coach IA"
@@ -2064,7 +2064,7 @@ msgstr "Votre inscription engage votre ?quipe sur ce d?fi ; un seul d?fi par hac
 
 
 msgid "Confirmer l'inscription"
-msgstr "Confirmer l?inscription"
+msgstr "Confirmer l'inscription"
 
 
 msgid "Annuler mon inscription"
@@ -2108,7 +2108,7 @@ msgstr "Votre avis sera transmis ? l??quipe organisatrice et affich? dans la pag
 
 
 msgid "Envoyer l'avis"
-msgstr "Envoyer l?avis"
+msgstr "Envoyer l'avis"
 
 
 msgid "Votre calendrier personnel : hackathons et ?tapes de programme de vos challenges."
@@ -4616,7 +4616,7 @@ msgstr "R?daction de hackathon"
 
 
 msgid "Starter kit"
-msgstr "Kit de d?marrage"
+msgstr "Kit de démarrage"
 
 
 msgid "Students"
@@ -4632,7 +4632,7 @@ msgstr "Capitaines d??quipe"
 
 
 msgid "Template"
-msgstr "Mod?le"
+msgstr "Modèle"
 
 
 msgid "Termin?e"

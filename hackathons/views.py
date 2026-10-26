@@ -33,6 +33,7 @@ def page(request, template, context=None, status=200):
     role = getattr(request.user, 'role', 'student')
     ctx = {
         'base_layout': LAYOUTS.get(role, 'layouts/base_admin.html'),
+        'layout_role': role if role in LAYOUTS else 'admin',
         'page_template': template,
         'is_organizer': role in ('admin', 'organization'),
         'is_mentor': role == 'mentor',

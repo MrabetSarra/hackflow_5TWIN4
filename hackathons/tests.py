@@ -440,11 +440,30 @@ class AgendaTests(Base):
         resp = self.client.get(reverse('hackathons:my_registrations'), {'month': self._month()})
         self.assertFalse(resp.context['agenda']['has_events'])
 
-    def test_overlapping_hackathons_raise_conflict_warning(self):
+    def test_overlapping_hackathons_are_refused_at_registration(self):
         other_hackathon = make_hackathon(self.track, name='Overlap Jam', start_in=6)
         other = Challenge.objects.create(hackathon=other_hackathon, title='Overlap challenge', status='published')
         services.register(self.student, self.c)
-        services.register(self.student, other)
+        with self.assertRaisesMessage(services.RegistrationError, 'mêmes dates'):
+            services.register(self.student, other)
+        self.assertFalse(Registration.objects.filter(user=self.student, challenge=other).exists())
+        services.register(self.student2, other)
+
+    def test_overlap_rule_ignores_cancelled_registration_and_consecutive_hackathons(self):
+        overlapping = make_hackathon(self.track, name='Overlap Jam', start_in=6)
+        later = make_hackathon(self.track, name='Later Jam', start_in=20)
+        overlap_challenge = Challenge.objects.create(hackathon=overlapping, title='Overlap challenge', status='published')
+        later_challenge = Challenge.objects.create(hackathon=later, title='Later challenge', status='published')
+        reg = services.register(self.student, self.c)
+        services.register(self.student, later_challenge)
+        services.cancel(reg)
+        services.register(self.student, overlap_challenge)
+
+    def test_existing_overlapping_registrations_still_raise_conflict_warning(self):
+        other_hackathon = make_hackathon(self.track, name='Overlap Jam', start_in=6)
+        other = Challenge.objects.create(hackathon=other_hackathon, title='Overlap challenge', status='published')
+        services.register(self.student, self.c)
+        Registration.objects.create(challenge=other, user=self.student)
         self.client.force_login(self.student)
         resp = self.client.get(reverse('hackathons:my_registrations'), {'month': self._month()})
         self.assertEqual(len(resp.context['agenda']['conflicts']), 1)
