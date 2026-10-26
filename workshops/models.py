@@ -9,11 +9,19 @@ workshops/models.py
   BadgeAward  — table de jonction M2M User↔Badge avec contexte
 """
 
+import re
 import secrets
 import string
 import uuid
 from datetime import timezone as dt_timezone
 from urllib.parse import urlencode
+
+# Identifiants vidéo YouTube / Vimeo reconnus dans les URLs de replay.
+_YOUTUBE_ID_RE = re.compile(
+    r'(?:youtu\.be/|youtube(?:-nocookie)?\.com/(?:watch|embed|shorts|live)/?)'
+    r'(?:[^#]*?[?&]v=)?([A-Za-z0-9_-]{6,})'
+)
+_VIMEO_ID_RE = re.compile(r'vimeo\.com/(?:video/)?(\d+)')
 
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -256,7 +264,38 @@ class Workshop(models.Model):
             return False
         if self.available_until and self.available_until < timezone.now():
             return False
-        return bool(self.replay_url)
+        return bool(self.video_file or self.replay_url)
+
+    @property
+    def replay_embed_url(self):
+        """URL d'intégration YouTube/Vimeo, ou '' si ce n'est pas une vidéo connue."""
+        url = (self.replay_url or '').strip()
+        if not url:
+            return ''
+
+        youtube_match = _YOUTUBE_ID_RE.search(url)
+        if youtube_match:
+            return f'https://www.youtube.com/embed/{youtube_match.group(1)}'
+
+        vimeo_match = _VIMEO_ID_RE.search(url)
+        if vimeo_match:
+            return f'https://player.vimeo.com/video/{vimeo_match.group(1)}'
+
+        return ''
+
+    @property
+    def replay_video_source(self):
+        """Source directe lisible par une balise <video> (fichier uploadé prioritaire)."""
+        if self.video_file:
+            return self.video_file.url
+        url = (self.replay_url or '').split('?', 1)[0].lower()
+        if url.endswith(('.mp4', '.webm', '.ogg', '.ogv', '.mov', '.m4v')):
+            return self.replay_url
+        return ''
+
+    @property
+    def replay_is_embed(self):
+        return bool(not self.video_file and self.replay_embed_url)
 
     @property
     def google_calendar_url(self):
@@ -339,6 +378,10 @@ class Booking(models.Model):
     booked_at      = models.DateTimeField(auto_now_add=True)
     cancelled_at   = models.DateTimeField(null=True, blank=True)
     attended_at    = models.DateTimeField(null=True, blank=True)
+    reminder_sent_at = models.DateTimeField(
+        null=True, blank=True, verbose_name='Rappel de démarrage envoyé le')
+    feedback_reminder_sent_at = models.DateTimeField(
+        null=True, blank=True, verbose_name='Rappel de feedback envoyé le')
 
     # Replay
     replay_progress = models.PositiveSmallIntegerField(

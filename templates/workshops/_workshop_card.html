@@ -79,8 +79,9 @@
           Atelier en cours
         {% else %}
           Début dans
-          <span data-workshop-countdown="{{ ws.starts_at|date:'c' }}"
-                data-countdown-finished="Atelier en cours">…</span>
+          <span data-workshop-countdown="{{ ws.starts_at.isoformat }}"
+                data-countdown-finished="Atelier en cours"
+                data-starts-at="{{ ws.starts_at|date:'Y-m-d H:i' }}">{{ ws.starts_at|date:'d/m à H\hi' }}</span>
         {% endif %}
       </p>
       {% endif %}

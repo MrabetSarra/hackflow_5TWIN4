@@ -7,7 +7,7 @@
 <div class="container-fluid px-4 py-4">
 
   <div class="row justify-content-center">
-    <div class="col-12 col-xl-8">
+    <div class="col-12 col-xl-9">
 
       <!-- Breadcrumb -->
       <nav aria-label="breadcrumb" class="mb-3">
@@ -19,12 +19,12 @@
       </nav>
 
       <div class="card border-0 shadow-sm">
-        <div class="card-header bg-info text-white py-3 d-flex justify-content-between align-items-center">
+        <div class="card-header bg-info text-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
           <h4 class="mb-0 fw-bold">
             <i class="bi bi-question-circle me-2"></i>Quiz : {{ workshop.title }}
           </h4>
           <div class="d-flex gap-2">
-            <button type="button" class="btn btn-light btn-sm" onclick="document.getElementById('generate-quiz-form').classList.toggle('d-none')">
+            <button type="button" class="btn btn-light btn-sm" id="toggle-generate">
               <i class="bi bi-magic me-1"></i>Générer via Ollama
             </button>
             <a href="{% url 'workshops:quiz_question_add' workshop.pk %}" class="btn btn-light btn-sm">
@@ -34,15 +34,22 @@
         </div>
 
         <div class="card-body p-4">
+          <div class="alert alert-light border small mb-4">
+            <i class="bi bi-info-circle me-1"></i>
+            Le modèle <strong>llama3.2</strong> lit le titre, la description et les tags de
+            l'atelier pour proposer des questions. Vous pouvez aussi rédiger une question :
+            l'IA suggérera les quatre options et la bonne réponse.
+          </div>
+
           <!-- Formulaire génération IA -->
           <div id="generate-quiz-form" class="d-none mb-4 p-3 bg-light rounded border">
-            <h6 class="fw-bold mb-3">Générer des questions avec IA (llama3.2)</h6>
+            <h6 class="fw-bold mb-3">Générer des questions avec l'IA (llama3.2)</h6>
             <form id="generate-quiz-ajax" class="row g-3">
-              <div class="col-6">
-                <label class="form-label fw-semibold">Nombre de questions</label>
-                <input type="number" name="num_questions" class="form-control" value="5" min="1" max="20">
+              <div class="col-sm-6">
+                <label class="form-label fw-semibold" for="num-questions">Nombre de questions</label>
+                <input type="number" name="num_questions" id="num-questions" class="form-control" value="5" min="1" max="20">
               </div>
-              <div class="col-6 d-flex align-items-end">
+              <div class="col-sm-6 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary w-100">
                   <i class="bi bi-robot me-1"></i>Générer
                 </button>
@@ -66,18 +73,30 @@
                 {% for q in questions %}
                 <tr>
                   <td class="fw-semibold">{{ forloop.counter }}</td>
-                  <td>{{ q.question }}</td>
+                  <td>
+                    <div class="fw-semibold">{{ q.question }}</div>
+                    <div class="small text-body-secondary mt-1">
+                      {% for option in q.options %}
+                      <span class="me-2 {% if forloop.counter0 == q.correct_index %}text-success fw-semibold{% endif %}">
+                        {% if forloop.counter == 1 %}A{% elif forloop.counter == 2 %}B{% elif forloop.counter == 3 %}C{% else %}D{% endif %}.
+                        {{ option }}
+                      </span>
+                      {% endfor %}
+                    </div>
+                  </td>
                   <td class="text-center">
-                    {% if q.correct_index == 0 %}A{% elif q.correct_index == 1 %}B{% elif q.correct_index == 2 %}C{% else %}D{% endif %}
+                    <span class="badge bg-success rounded-pill">
+                      {% if q.correct_index == 0 %}A{% elif q.correct_index == 1 %}B{% elif q.correct_index == 2 %}C{% else %}D{% endif %}
+                    </span>
                   </td>
                   <td class="text-end">
-                    <a href="{% url 'workshops:quiz_question_edit' workshop.pk q.pk %}" class="btn btn-sm btn-outline-primary">
+                    <a href="{% url 'workshops:quiz_question_edit' workshop.pk q.pk %}" class="btn btn-sm btn-outline-primary" title="Modifier">
                       <i class="bi bi-pencil"></i>
                     </a>
                     <form method="post" action="{% url 'workshops:quiz_question_delete' workshop.pk q.pk %}" class="d-inline">
                       {% csrf_token %}
                       <button type="submit" class="btn btn-sm btn-outline-danger"
-                              onclick="return confirm('Supprimer cette question ?')">
+                              onclick="return confirm('Supprimer cette question ?')" title="Supprimer">
                         <i class="bi bi-trash"></i>
                       </button>
                     </form>
@@ -106,77 +125,147 @@
 </div>
 {% endblock %}
 
+{% block extra_js %}
 <script>
-(function() {
+(function () {
+  const toggle = document.getElementById('toggle-generate');
   const form = document.getElementById('generate-quiz-ajax');
   const resultDiv = document.getElementById('generate-quiz-result');
-  if (!form) return;
+  if (!form || !resultDiv) return;
 
-  form.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const btn = form.querySelector('button[type="submit"]');
-    const originalText = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Génération…';
+  const generateUrl = "{% url 'workshops:api_generate_quiz' workshop.pk %}";
+  const saveUrl = "{% url 'workshops:api_save_quiz_questions' workshop.pk %}";
+  const addUrl = "{% url 'workshops:quiz_question_add' workshop.pk %}";
+  const csrfToken = '{{ csrf_token }}';
+  let lastGenerated = [];
+
+  toggle?.addEventListener('click', function () {
+    document.getElementById('generate-quiz-form').classList.toggle('d-none');
+  });
+
+  function escapeHtml(value) {
+    const div = document.createElement('div');
+    div.textContent = value == null ? '' : String(value);
+    return div.innerHTML;
+  }
+
+  function optionLetter(index) {
+    return 'ABCD'[index] || '?';
+  }
+
+  async function readJson(response) {
+    try {
+      return await response.json();
+    } catch (error) {
+      return { ok: false, error: 'Réponse invalide du serveur (HTTP ' + response.status + ').' };
+    }
+  }
+
+  function renderQuestions(questions) {
+    lastGenerated = questions;
+    let html = '<div class="alert alert-success d-flex flex-wrap justify-content-between align-items-center gap-2">';
+    html += '<span><i class="bi bi-check-circle me-1"></i>' + questions.length + ' question(s) générée(s) par l\'IA.</span>';
+    html += '<button type="button" class="btn btn-sm btn-success" id="save-all-questions">';
+    html += '<i class="bi bi-cloud-arrow-down me-1"></i>Tout enregistrer</button>';
+    html += '</div><div class="list-group">';
+
+    questions.forEach(function (q, idx) {
+      const options = q.options || ['', '', '', ''];
+      const correct = q.correct_index != null ? q.correct_index : 0;
+      html += '<div class="list-group-item">';
+      html += '<div class="d-flex w-100 justify-content-between align-items-start gap-2">';
+      html += '<div><strong>Q' + (idx + 1) + ' :</strong> ' + escapeHtml(q.question) + '</div>';
+      const params = new URLSearchParams({
+        question: q.question || '',
+        option_a: options[0] || '',
+        option_b: options[1] || '',
+        option_c: options[2] || '',
+        option_d: options[3] || '',
+        correct_index: correct,
+        explanation: q.explanation || '',
+      });
+      html += '<a href="' + addUrl + '?' + params.toString() + '" class="btn btn-sm btn-outline-primary flex-shrink-0">Enregistrer seule</a>';
+      html += '</div>';
+      html += '<ul class="list-unstyled small mt-2 mb-1">';
+      options.forEach(function (option, optIdx) {
+        const isCorrect = optIdx === correct;
+        html += '<li class="' + (isCorrect ? 'text-success fw-semibold' : 'text-body-secondary') + '">';
+        html += optionLetter(optIdx) + '. ' + escapeHtml(option);
+        if (isCorrect) html += ' <i class="bi bi-check-circle-fill ms-1"></i>';
+        html += '</li>';
+      });
+      html += '</ul>';
+      if (q.explanation) {
+        html += '<small class="text-body-secondary d-block">Explication : ' + escapeHtml(q.explanation) + '</small>';
+      }
+      html += '</div>';
+    });
+    html += '</div>';
+    resultDiv.innerHTML = html;
+
+    const saveAllButton = document.getElementById('save-all-questions');
+    saveAllButton?.addEventListener('click', async function () {
+      saveAllButton.disabled = true;
+      saveAllButton.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Enregistrement…';
+      try {
+        const response = await fetch(saveUrl, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ questions: lastGenerated }),
+        });
+        const data = await readJson(response);
+        if (!data.ok) {
+          alert(data.error || 'Impossible d\'enregistrer les questions.');
+          saveAllButton.disabled = false;
+          saveAllButton.innerHTML = '<i class="bi bi-cloud-arrow-down me-1"></i>Tout enregistrer';
+          return;
+        }
+        window.location.reload();
+      } catch (error) {
+        alert('Impossible de contacter le serveur : ' + error.message);
+        saveAllButton.disabled = false;
+        saveAllButton.innerHTML = '<i class="bi bi-cloud-arrow-down me-1"></i>Tout enregistrer';
+      }
+    });
+  }
+
+  form.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    const button = form.querySelector('button[type="submit"]');
+    const originalText = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Génération…';
     resultDiv.innerHTML = '';
 
-    const numQuestions = form.querySelector('input[name="num_questions"]').value;
-    const addUrl = "{% url 'workshops:quiz_question_add' workshop.pk %}";
+    const numQuestions = parseInt(form.querySelector('input[name="num_questions"]').value, 10) || 5;
 
     try {
-      const resp = await fetch("{% url 'workshops:api_generate_quiz' workshop.pk %}", {
+      const response = await fetch(generateUrl, {
         method: 'POST',
-        headers: {
-          'X-CSRFToken': '{{ csrf_token }}',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ num_questions: parseInt(numQuestions) }),
+        headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ num_questions: numQuestions }),
       });
-      const data = await resp.json();
+      const data = await readJson(response);
 
       if (!data.ok) {
-        resultDiv.innerHTML = '<div class="alert alert-danger">' + (data.error || 'Erreur') + '</div>';
+        resultDiv.innerHTML = '<div class="alert alert-danger">' + escapeHtml(data.error || 'Erreur') + '</div>';
         return;
       }
 
-      const questions = data.questions;
-      if (!questions || questions.length === 0) {
+      if (!data.questions || data.questions.length === 0) {
         resultDiv.innerHTML = '<div class="alert alert-warning">Aucune question générée.</div>';
         return;
       }
 
-      let html = '<div class="alert alert-success">' + questions.length + ' question(s) générée(s) par IA.</div>';
-      html += '<div class="list-group">';
-      questions.forEach((q, idx) => {
-        const opts = q.options || ['', '', '', ''];
-        const params = new URLSearchParams({
-          question: q.question || '',
-          option_a: opts[0] || '',
-          option_b: opts[1] || '',
-          option_c: opts[2] || '',
-          option_d: opts[3] || '',
-          correct_index: q.correct_index != null ? q.correct_index : 0,
-          explication: q.explication || '',
-        });
-        html += '<div class="list-group-item">';
-        html += '<div class="d-flex w-100 justify-content-between align-items-start">';
-        html += '<div><strong>Q' + (idx + 1) + ':</strong> ' + (q.question || '') + '</div>';
-        html += '<a href="' + addUrl + '?' + params.toString() + '" class="btn btn-sm btn-primary">Enregistrer cette question</a>';
-        html += '</div>';
-        if (q.explication) {
-          html += '<small class="text-muted d-block mt-1">Explication : ' + q.explication + '</small>';
-        }
-        html += '</div>';
-      });
-      html += '</div>';
-      resultDiv.innerHTML = html;
-    } catch (err) {
+      renderQuestions(data.questions);
+    } catch (error) {
       resultDiv.innerHTML = '<div class="alert alert-danger">Impossible de contacter Ollama (localhost:11434).</div>' +
-        '<div class="alert alert-warning mt-2"><small>Erreur technique : ' + err.message + '</small></div>';
+        '<div class="alert alert-warning mt-2"><small>Erreur technique : ' + escapeHtml(error.message) + '</small></div>';
     } finally {
-      btn.disabled = false;
-      btn.innerHTML = originalText;
+      button.disabled = false;
+      button.innerHTML = originalText;
     }
   });
 })();
 </script>
+{% endblock %}

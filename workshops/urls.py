@@ -86,6 +86,8 @@ urlpatterns = [
     path('api/generate-summary/', api.api_generate_summary, name='api_generate_summary'),
     path('api/explain-recommendation/', api.api_explain_recommendation, name='api_explain_recommendation'),
     path('api/<int:pk>/generate-quiz/', api.api_generate_quiz, name='api_generate_quiz'),
+    path('api/<int:pk>/suggest-quiz-options/', api.api_suggest_quiz_options, name='api_suggest_quiz_options'),
+    path('api/<int:pk>/save-quiz-questions/', api.api_save_quiz_questions, name='api_save_quiz_questions'),
 
     # ---------------------------------------------------------------
     # Détail — EN DERNIER (slug peut matcher n'importe quoi)

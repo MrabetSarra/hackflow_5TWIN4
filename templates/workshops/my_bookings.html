@@ -119,6 +119,15 @@
                 {% endif %}
               </p>
 
+              <!-- Compte à rebours avant le démarrage -->
+              {% if booking.is_upcoming %}
+              <div class="alert alert-primary py-2 px-3 small mb-2">
+                <i class="bi bi-alarm-fill me-1"></i>Démarre dans
+                <strong data-workshop-countdown="{{ booking.workshop.starts_at|date:'c' }}"
+                        data-countdown-finished="Atelier en cours">…</strong>
+              </div>
+              {% endif %}
+
               <!-- Place / progression replay -->
               {% if booking.workshop.mode == 'onsite' and booking.seat_number and booking.status != 'cancelled' and booking.status != 'waiting' %}
               <p class="small mb-2">
@@ -188,10 +197,10 @@
                    class="btn btn-sm btn-outline-primary rounded-pill flex-grow-1">
                   Détail
                 </a>
-                {% if booking.status == 'attended' and not booking.rating %}
+                {% if booking.can_review %}
                 <a href="{% url 'workshops:rate' booking.workshop.pk %}"
                    class="btn btn-sm btn-outline-warning rounded-pill">
-                  <i class="bi bi-star me-1"></i>Noter
+                  <i class="bi bi-star me-1"></i>Donner mon avis
                 </a>
                 {% endif %}
                 {% if booking.status != 'cancelled' %}
@@ -322,7 +331,7 @@
       {% if recommended %}
       <div class="alert alert-primary py-2 small">
         <i class="bi bi-stars me-1"></i>
-        Suggestions basées sur vos compétences et votre profil (TF-IDF).
+        Suggestions personnalisées par Ollama (llama3.2) selon vos compétences et votre profil.
       </div>
       <div class="row g-3">
         {% for ws in recommended %}

@@ -72,8 +72,23 @@
 
       {% if passed %}
       <div class="d-grid gap-2 mt-4">
+        {% if certificate %}
+        <a href="{% url 'workshops:download_certificate' certificate.pk %}"
+           class="btn btn-success rounded-pill px-4">
+          <i class="bi bi-download me-2"></i>Télécharger mon certificat
+        </a>
+        {% endif %}
+        {% if badge_award %}
+        <div class="alert alert-warning d-flex align-items-center gap-2 mb-0">
+          <i class="{{ badge_award.badge.icon }} fs-4"></i>
+          <div>
+            <strong>Badge débloqué : {{ badge_award.badge.name }}</strong>
+            <p class="small mb-0">{{ badge_award.badge.description }}</p>
+          </div>
+        </div>
+        {% endif %}
         <a href="{% url 'workshops:my_bookings' %}" class="btn btn-primary rounded-pill px-4">
-          <i class="bi bi-award-fill me-2"></i>Voir mes certificats
+          <i class="bi bi-award-fill me-2"></i>Voir mes certificats et badges
         </a>
         <a href="{% url 'workshops:list' %}" class="btn btn-outline-secondary rounded-pill px-4">
           Retour au catalogue

@@ -146,12 +146,17 @@
                 <label class="form-label fw-semibold">URL du replay <small class="text-body-secondary">(vidéo enregistrée)</small></label>
                 {{ form.replay_url }}
                 {% if form.replay_url.errors %}<div class="text-danger small mt-1">{{ form.replay_url.errors|join:", " }}</div>{% endif %}
+                <div class="form-text">
+                  Lien YouTube / Vimeo <strong>ou</strong> fichier vidéo direct (.mp4, .webm).
+                  Ex. : <code>https://www.youtube.com/watch?v=…</code> ou <code>https://cdn.exemple.com/replay.mp4</code>.
+                </div>
               </div>
 
               <div class="col-12 col-md-6 mode-field-recorded">
                 <label class="form-label fw-semibold">Fichier vidéo (upload) <small class="text-body-secondary">(MP4, WebM…)</small></label>
                 {{ form.video_file }}
                 {% if form.video_file.errors %}<div class="text-danger small mt-1">{{ form.video_file.errors|join:", " }}</div>{% endif %}
+                <div class="form-text">Prioritaire sur l'URL si les deux sont renseignés.</div>
               </div>
 
               <div class="col-6 col-md-2 mode-field-recorded">

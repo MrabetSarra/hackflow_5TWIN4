@@ -16,13 +16,43 @@ import json
 import logging
 
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
+from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
-from .models import Workshop
+from .models import Booking, Workshop, WorkshopQuiz
 
 logger = logging.getLogger(__name__)
+
+
+def _is_organizer(user):
+    return getattr(user, 'role', None) in ('admin', 'mentor')
+
+
+def _can_manage(user, workshop):
+    if getattr(user, 'role', None) == 'admin':
+        return True
+    return (
+        getattr(user, 'role', None) == 'mentor'
+        and workshop.created_by_id == user.pk
+    )
+
+
+def _forbidden():
+    return JsonResponse(
+        {'ok': False, 'error': 'Action réservée aux organisateurs.'},
+        status=403,
+    )
+
+
+def _parse_json_body(request):
+    try:
+        return json.loads(request.body.decode('utf-8'))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return None
 
 
 @login_required
@@ -31,14 +61,22 @@ def api_recommend(request):
     """Retourne les recommandations IA pour l'utilisateur courant (JSON)."""
     try:
         from .services.recommend import recommend
+        now = timezone.now()
         workshops = list(
-            Workshop.objects.filter(is_open=True)
+            Workshop.objects.filter(is_open=True, ends_at__gte=now)
+            .exclude(Q(mode__in=['onsite', 'online']) & Q(starts_at__lt=now))
             .select_related('created_by')
             .order_by('starts_at')
         )
+        booked_ids = set(
+            Booking.objects.filter(
+                user=request.user,
+                status__in=['confirmed', 'waiting', 'attended'],
+            ).values_list('workshop_id', flat=True)
+        )
         recommended = [
             w for w in recommend(request.user, workshops, top_n=6)
-            if getattr(w, 'ai_score', 0) > 0
+            if getattr(w, 'ai_score', 0) > 0 and w.pk not in booked_ids
         ]
         data = [
             {
@@ -93,6 +131,9 @@ def api_generate_description(request):
     Body JSON : {title, tags, speaker, level}
     Retourne : {description, ok, error?}
     """
+    if not _is_organizer(request.user):
+        return _forbidden()
+
     try:
         payload = json.loads(request.body.decode("utf-8"))
     except (json.JSONDecodeError, UnicodeDecodeError):
@@ -126,6 +167,9 @@ def api_generate_titles(request):
     Body JSON : {theme, audience, level}
     Retourne : {titles: [...], ok, error?}
     """
+    if not _is_organizer(request.user):
+        return _forbidden()
+
     try:
         payload = json.loads(request.body.decode("utf-8"))
     except (json.JSONDecodeError, UnicodeDecodeError):
@@ -158,6 +202,9 @@ def api_generate_objectives(request):
     Body JSON : {title, level, tags}
     Retourne : {objectives: [...], ok, error?}
     """
+    if not _is_organizer(request.user):
+        return _forbidden()
+
     try:
         payload = json.loads(request.body.decode("utf-8"))
     except (json.JSONDecodeError, UnicodeDecodeError):
@@ -190,6 +237,9 @@ def api_generate_summary(request):
     Body JSON : {title, description, level}
     Retourne : {summary, ok, error?}
     """
+    if not _is_organizer(request.user):
+        return _forbidden()
+
     try:
         payload = json.loads(request.body.decode("utf-8"))
     except (json.JSONDecodeError, UnicodeDecodeError):
@@ -256,6 +306,9 @@ def api_generate_quiz(request, pk):
     """
     ws = get_object_or_404(Workshop, pk=pk)
 
+    if not _can_manage(request.user, ws):
+        return _forbidden()
+
     if ws.mode != Workshop.Mode.RECORDED:
         return JsonResponse({'ok': False, 'error': 'Le quiz est uniquement disponible pour les ateliers en mode replay.'}, status=400)
 
@@ -264,7 +317,11 @@ def api_generate_quiz(request, pk):
     except (json.JSONDecodeError, UnicodeDecodeError):
         return JsonResponse({'ok': False, 'error': 'Requête invalide.'}, status=400)
 
-    num_questions = int(payload.get('num_questions', 5))
+    try:
+        num_questions = int(payload.get('num_questions', 5))
+    except (TypeError, ValueError):
+        num_questions = 5
+    num_questions = max(1, min(20, num_questions))
 
     from .services.ollama_ai import generate_quiz_questions, is_ollama_available
 
@@ -274,5 +331,127 @@ def api_generate_quiz(request, pk):
             'error': 'Ollama est indisponible ou le modèle llama3.2 n\'est pas chargé.',
         }, status=503)
 
-    questions = generate_quiz_questions(ws.title, ws.description or '', ws.level, num_questions)
+    questions = generate_quiz_questions(
+        ws.title,
+        ws.description or '',
+        ws.level,
+        num_questions,
+        tags=ws.topic_tags if isinstance(ws.topic_tags, list) else None,
+    )
     return JsonResponse({'ok': True, 'questions': questions})
+
+
+@login_required
+@require_POST
+def api_suggest_quiz_options(request, pk):
+    """
+    Propose 4 options + la bonne réponse pour une question saisie par
+    l'organisateur, à partir du contenu de l'atelier.
+    Body JSON : {question}
+    Retourne : {ok, options, correct_index, explanation, error?}
+    """
+    ws = get_object_or_404(Workshop, pk=pk)
+
+    if not _can_manage(request.user, ws):
+        return _forbidden()
+
+    if ws.mode != Workshop.Mode.RECORDED:
+        return JsonResponse({'ok': False, 'error': 'Le quiz est uniquement disponible pour les ateliers en mode replay.'}, status=400)
+
+    payload = _parse_json_body(request)
+    if payload is None:
+        return JsonResponse({'ok': False, 'error': 'Requête invalide.'}, status=400)
+
+    question = str(payload.get('question', '')).strip()
+    if not question:
+        return JsonResponse({'ok': False, 'error': 'La question est requise.'}, status=400)
+
+    from .services.ollama_ai import is_ollama_available, suggest_quiz_options
+
+    if not is_ollama_available():
+        return JsonResponse({
+            'ok': False,
+            'error': 'Ollama est indisponible ou le modèle llama3.2 n\'est pas chargé.',
+        }, status=503)
+
+    suggestion = suggest_quiz_options(
+        question, ws.title, ws.description or '', ws.level)
+    if not suggestion:
+        return JsonResponse({
+            'ok': False,
+            'error': 'L\'IA n\'a pas pu proposer d\'options. Réessayez ou saisissez-les manuellement.',
+        }, status=502)
+
+    return JsonResponse({'ok': True, **suggestion})
+
+
+@login_required
+@require_POST
+def api_save_quiz_questions(request, pk):
+    """
+    Enregistre en une fois plusieurs questions générées par l'IA.
+    Body JSON : {questions: [{question, options, correct_index, explanation}, ...]}
+    Retourne : {ok, created, skipped}
+    """
+    ws = get_object_or_404(Workshop, pk=pk)
+
+    if not _can_manage(request.user, ws):
+        return _forbidden()
+
+    if ws.mode != Workshop.Mode.RECORDED:
+        return JsonResponse({'ok': False, 'error': 'Le quiz est uniquement disponible pour les ateliers en mode replay.'}, status=400)
+
+    payload = _parse_json_body(request)
+    if payload is None:
+        return JsonResponse({'ok': False, 'error': 'Requête invalide.'}, status=400)
+
+    questions = payload.get('questions')
+    if not isinstance(questions, list) or not questions:
+        return JsonResponse({'ok': False, 'error': 'Aucune question à enregistrer.'}, status=400)
+
+    created = 0
+    skipped = 0
+    with transaction.atomic():
+        for item in questions[:30]:
+            if not isinstance(item, dict):
+                skipped += 1
+                continue
+
+            question = str(item.get('question', '')).strip()
+            options = item.get('options')
+            if not isinstance(options, (list, tuple)):
+                options = [
+                    item.get('option_a'), item.get('option_b'),
+                    item.get('option_c'), item.get('option_d'),
+                ]
+            options = [str(option).strip() for option in options if option is not None]
+            if not question or len(options) != 4 or not all(options):
+                skipped += 1
+                continue
+
+            try:
+                correct_index = int(item.get('correct_index', 0))
+            except (TypeError, ValueError):
+                correct_index = 0
+            correct_index = min(3, max(0, correct_index))
+
+            WorkshopQuiz.objects.create(
+                workshop=ws,
+                question=question,
+                option_a=options[0],
+                option_b=options[1],
+                option_c=options[2],
+                option_d=options[3],
+                correct_index=correct_index,
+                explanation=str(item.get('explanation', '')).strip(),
+                created_by=request.user,
+            )
+            created += 1
+
+    if created:
+        return JsonResponse({'ok': True, 'created': created, 'skipped': skipped})
+    return JsonResponse({
+        'ok': False,
+        'error': 'Aucune question valide : 4 options et un intitulé sont requis.',
+        'skipped': skipped,
+    }, status=400)
