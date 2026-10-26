@@ -9,7 +9,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Q
 from django.utils import timezone
-from hackflow.ollama import request_headers as ollama_request_headers
+from hackflow.ollama import chat_completion
+from hackflow.ai_telemetry import timed_ai
 
 from student.models import Hackathon, HackathonRegistration, MentorRequest, Milestone, Submission, Task, Team, TeamMembership
 
@@ -27,12 +28,17 @@ def build_hackathon_snapshot():
     team_ids = teams.values('pk')
     students = get_user_model().objects.filter(role='student', is_active=True)
     registrations = HackathonRegistration.objects.filter(hackathon=hackathon) if hackathon else None
-    if registrations is not None:
-        eligible_student_ids = registrations.filter(user__role='student', user__is_active=True).values('user_id')
-        participants_count = eligible_student_ids.distinct().count()
+    if registrations is not None and registrations.exists():
+        registered_student_ids = set(registrations.filter(user__role='student', user__is_active=True).values_list('user_id', flat=True))
+        team_student_ids = set(TeamMembership.objects.filter(team_id__in=team_ids, user__role='student', user__is_active=True).values_list('user_id', flat=True))
+        eligible_student_pks = registered_student_ids | team_student_ids
+        if len(eligible_student_pks) < students.count():
+            eligible_student_pks = set(students.values_list('pk', flat=True))
+        eligible_student_ids = list(eligible_student_pks)
+        participants_count = len(eligible_student_ids)
     else:
-        eligible_student_ids = students.values('pk')
-        participants_count = students.count()
+        eligible_student_ids = list(students.values_list('pk', flat=True))
+        participants_count = len(eligible_student_ids)
     team_count = teams.count()
     assigned_count = TeamMembership.objects.filter(
         team_id__in=team_ids, user_id__in=eligible_student_ids,
@@ -67,7 +73,7 @@ def build_hackathon_snapshot():
         item = risk_by_team.setdefault(submission.team_id, {'team': submission.team.name, 'reasons': []})
         item['reasons'].append(f'Livrable à corriger : {submission.project_name or submission.team.project_name or "projet"}')
 
-    category_rows = teams.exclude(category='').values('category').annotate(count=Count('pk')).order_by('-count', 'category')
+    category_rows = teams.exclude(category='').values('category').annotate(count=Count('pk', distinct=True)).order_by('-count', 'category')
     challenge_stats = [{'name': row['category'], 'count': row['count']} for row in category_rows]
     milestone_alerts = [
         {'title': milestone.title, 'due_at': timezone.localtime(milestone.due_at).strftime('%d/%m/%Y %H:%M'),
@@ -99,6 +105,7 @@ def build_hackathon_snapshot():
     return facts, hackathon
 
 
+@timed_ai('admin_copilot')
 def ask_copilot(question, facts):
     """Ask the configured local Ollama model to explain grounded facts."""
     system_message = (
@@ -131,13 +138,8 @@ def ask_copilot(question, facts):
         'options': {'temperature': 0.2},
     }
     base_url = getattr(settings, 'OLLAMA_BASE_URL', 'http://127.0.0.1:11434').rstrip('/')
-    request = urllib.request.Request(
-        f'{base_url}/api/chat', data=json.dumps(payload).encode('utf-8'),
-        headers=ollama_request_headers(), method='POST',
-    )
     try:
-        with urllib.request.urlopen(request, timeout=120) as response:
-            result = json.loads(response.read().decode('utf-8'))
+        result = chat_completion(payload, timeout=120, base_url=base_url)
         content = result.get('message', {}).get('content', '')
         answer = json.loads(content)
     except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, TypeError, AttributeError) as exc:

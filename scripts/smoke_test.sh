@@ -53,7 +53,7 @@ fi
 
 request "$BASE_URL/smoke-test-page-that-does-not-exist/" || HTTP_STATUS=000
 if [ "$HTTP_STATUS" = '404' ] \
-  && grep -Fqi 'Page not found' "$BODY" \
+  && grep -Fq '404' "$BODY" \
   && ! grep -Eiq 'Traceback|Exception Value|DEBUG[[:space:]]*=[[:space:]]*True|Django tried these URL patterns' "$BODY"; then
   pass 'Unknown URL returns the custom 404 page without debug details'
 else

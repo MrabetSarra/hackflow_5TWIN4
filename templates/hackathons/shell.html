@@ -42,9 +42,10 @@
 </style>
 {% endblock %}
 
-{% block admin_content %}<div id="main-content" tabindex="-1" class="container-fluid px-0 hf-page">{% include "hackathons/_messages.html" %}{% include page_template %}</div>{% endblock %}
-{% block student_content %}<div class="container-fluid px-0 hf-page">{% include "hackathons/_messages.html" %}{% include page_template %}</div>{% endblock %}
-{% block mentor_content %}<div id="main-content" tabindex="-1" class="container-fluid px-0 hf-page">{% include "hackathons/_messages.html" %}{% include page_template %}</div>{% endblock %}
+{# Les layouts admin et mentor affichent plusieurs blocs : un seul doit être rempli, sinon la page est répétée. #}
+{% block admin_content %}{% if layout_role == 'admin' %}<div id="main-content" tabindex="-1" class="container-fluid px-0 hf-page">{% include "hackathons/_messages.html" %}{% include page_template %}</div>{% endif %}{% endblock %}
+{% block student_content %}{% if layout_role == 'student' %}<div class="container-fluid px-0 hf-page">{% include "hackathons/_messages.html" %}{% include page_template %}</div>{% endif %}{% endblock %}
+{% block mentor_content %}{% if layout_role == 'mentor' %}<div id="main-content" tabindex="-1" class="container-fluid px-0 hf-page">{% include "hackathons/_messages.html" %}{% include page_template %}</div>{% endif %}{% endblock %}
 
 {% block extra_js %}
 <script>

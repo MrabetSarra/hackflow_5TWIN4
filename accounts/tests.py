@@ -573,3 +573,61 @@ class OAuthAuthenticationTests(TestCase):
         self.assertRedirects(response, reverse('accounts:two_factor_verify'))
         self.assertNotIn('_auth_user_id', self.client.session)
         self.assertEqual(self.client.session.get('2fa_user_id'), user.pk)
+
+
+class CVSkillExtractionTests(TestCase):
+    def test_sync_cv_skills_action_triggers_extraction_and_updates_profile(self):
+        user = get_user_model().objects.create_user(
+            username='cv-sync-user',
+            email='cvsync@example.test',
+            password='Test-Password-123!',
+            role='student',
+            skills=['Python / Django'],
+        )
+        # Attach dummy CV
+        user.cv = SimpleUploadedFile('test_cv.pdf', b'%PDF-1.4 mock content with react and docker', content_type='application/pdf')
+        user.save()
+        self.client.force_login(user)
+
+        # Mock analyze_student_cv
+        with patch('career_opportunities.services.cv_analysis.analyze_student_cv') as mock_analyze:
+            mock_analyze.return_value = {
+                'status': 'ready',
+                'data': {
+                    'skills': [
+                        {'name': 'React', 'evidence': 'React and TypeScript frontend'},
+                        {'name': 'Docker', 'evidence': 'Docker container deployment'},
+                    ]
+                }
+            }
+            response = self.client.post(reverse('accounts:profile'), {'action': 'sync_cv_skills'})
+            self.assertRedirects(response, reverse('accounts:profile'))
+            mock_analyze.assert_any_call(user, force=True)
+
+        user.refresh_from_db()
+        self.assertIn('React / TypeScript', user.skills)
+        self.assertIn('DevOps & Docker', user.skills)
+        self.assertIn('Python / Django', user.skills)
+
+    def test_clean_skills_allows_already_synced_skills(self):
+        user = get_user_model().objects.create_user(
+            username='cv-details-user',
+            email='cvdetails@example.test',
+            password='Test-Password-123!',
+            role='student',
+            skills=['Python / Django', 'Extra Synced Skill'],
+        )
+        form = ProfileDetailsForm(
+            data={
+                'first_name': 'CV',
+                'last_name': 'Tester',
+                'username': user.username,
+                'email': user.email,
+                'school': 'ESPRIT',
+                'study_level': 'Master 1',
+                'skills': ['Python / Django', 'Extra Synced Skill'],
+            },
+            instance=user,
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+

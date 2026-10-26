@@ -6,7 +6,8 @@ import urllib.error
 import urllib.request
 
 from django.conf import settings
-from hackflow.ollama import request_headers as ollama_request_headers
+from hackflow.ollama import chat_completion
+from hackflow.ai_telemetry import timed_ai
 
 
 class ProjectEvaluationError(Exception):
@@ -88,6 +89,7 @@ def build_project_evidence(submission):
     }
 
 
+@timed_ai('project_evaluation')
 def analyze_project_submission(submission):
     """Ask local Ollama for a jury aid. It must never score or rank a project."""
     evidence = build_project_evidence(submission)
@@ -144,13 +146,8 @@ def analyze_project_submission(submission):
         'options': {'temperature': 0.2},
     }
     base_url = getattr(settings, 'OLLAMA_BASE_URL', 'http://127.0.0.1:11434').rstrip('/')
-    request = urllib.request.Request(
-        f'{base_url}/api/chat', data=json.dumps(payload).encode('utf-8'),
-        headers=ollama_request_headers(), method='POST',
-    )
     try:
-        with urllib.request.urlopen(request, timeout=150) as response:
-            ollama_result = json.loads(response.read().decode('utf-8'))
+        ollama_result = chat_completion(payload, timeout=150, base_url=base_url)
         result = json.loads(ollama_result.get('message', {}).get('content', ''))
     except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, TypeError, AttributeError) as exc:
         raise ProjectEvaluationError(

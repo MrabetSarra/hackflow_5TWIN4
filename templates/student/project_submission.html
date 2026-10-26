@@ -103,7 +103,7 @@
                         <div class="p-4 rounded-3 border border-2 border-dashed text-center bg-light">
                             <i aria-hidden="true" class="bi bi-file-earmark-zip-fill fs-2 text-primary mb-2"></i>
                             <div class="fw-bold small mb-1">{% if submission.slide_file %}{{ submission.slide_file|cut:"submissions/" }}{% else %}No ZIP archive uploaded yet{% endif %}</div>
-                            {% if submission.file_size %}<span class="text-muted small d-block mb-3">Current file ({{ submission.file_size|filesizeformat }})</span>{% else %}<span class="text-muted small d-block mb-3">ZIP archive only · 100 MB maximum</span>{% endif %}
+                            {% if submission.file_missing %}<span class="text-warning small d-block mb-3">The saved file is currently missing from storage. Contact the organizers before replacing it.</span>{% elif submission.file_unavailable %}<span class="text-warning small d-block mb-3">File status is temporarily unavailable. Try again later.</span>{% elif submission.file_size %}<span class="text-muted small d-block mb-3">Current file ({{ submission.file_size|filesizeformat }})</span>{% else %}<span class="text-muted small d-block mb-3">ZIP archive only · 100 MB maximum</span>{% endif %}
                             <input type="file" name="file" id="submission-file" class="d-none" accept=".zip,application/zip">
                             <label for="submission-file" class="btn btn-outline-primary btn-sm rounded-pill">
                                 <i aria-hidden="true" class="bi bi-cloud-arrow-up me-1"></i>{% if submission.slide_file %}Replace ZIP archive{% else %}Choose ZIP archive{% endif %}

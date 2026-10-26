@@ -175,6 +175,24 @@ class TeamLeaveRequest(models.Model):
         )]
 
 
+class TeamJoinRequest(models.Model):
+    class Status(models.TextChoices):
+        PENDING = 'pending', _('Pending')
+        ACCEPTED = 'accepted', _('Accepted')
+        DECLINED = 'declined', _('Declined')
+
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='join_requests')
+    applicant = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='team_join_requests')
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    decided_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name='decided_team_join_requests')
+    created_at = models.DateTimeField(auto_now_add=True)
+    decided_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['team', 'applicant'], name='unique_team_join_request')]
+
+
 class Sprint(models.Model):
     class Status(models.TextChoices):
         PLANNED = 'planned', _('Planned')

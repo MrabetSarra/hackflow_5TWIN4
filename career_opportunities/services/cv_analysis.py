@@ -6,6 +6,7 @@ from io import BytesIO
 
 from django.conf import settings
 from django.utils import timezone
+from hackflow.ai_telemetry import timed_ai
 from pdfminer.high_level import extract_text
 
 from ..models import StudentCVAnalysis
@@ -19,14 +20,27 @@ ANALYSIS_VERSION = 2
 SKILL_ALIASES = {
     'Python': ('python',), 'Django': ('django',), 'Java': ('java',),
     'JavaScript': ('javascript', 'js'), 'TypeScript': ('typescript', 'ts'),
-    'React': ('react', 'react.js', 'reactjs'), 'Vue.js': ('vue.js', 'vuejs'),
+    'React': ('react', 'react.js', 'reactjs'), 'Next.js': ('next.js', 'nextjs'),
+    'Vue.js': ('vue.js', 'vuejs'), 'Angular': ('angular', 'angularjs'),
+    'Node.js': ('node.js', 'nodejs'), 'Express': ('express', 'express.js', 'expressjs'),
+    'FastAPI': ('fastapi',), 'PHP': ('php',), 'C#': ('c#',), 'C++': ('c++',),
     'SQL': ('sql',), 'PostgreSQL': ('postgresql', 'postgres'), 'MySQL': ('mysql',),
-    'Git': ('git',), 'Docker': ('docker',), 'Kubernetes': ('kubernetes', 'k8s'),
-    'AWS': ('aws', 'amazon web services'), 'Azure': ('azure',), 'Linux': ('linux',),
-    'Figma': ('figma',), 'Machine Learning': ('machine learning', 'ml'),
-    'TensorFlow': ('tensorflow',), 'PyTorch': ('pytorch',), 'C++': ('c++',),
-    'C#': ('c#',), 'PHP': ('php',), 'Node.js': ('node.js', 'nodejs'),
-    'FastAPI': ('fastapi',), 'Flutter': ('flutter',), 'PostgreSQL': ('postgresql', 'postgres'),
+    'MongoDB': ('mongodb', 'mongo'),
+    'Git': ('git', 'github', 'gitlab'), 'Docker': ('docker',),
+    'Kubernetes': ('kubernetes', 'k8s'), 'CI/CD': ('ci/cd', 'github actions', 'gitlab ci'),
+    'AWS': ('aws', 'amazon web services'), 'Azure': ('azure',), 'GCP': ('gcp', 'google cloud'),
+    'Linux': ('linux', 'ubuntu', 'debian'),
+    'Figma': ('figma',), 'UI/UX': ('ui/ux', 'ux/ui', 'design system'),
+    'Machine Learning': ('machine learning', 'ml'), 'Deep Learning': ('deep learning', 'dl'),
+    'TensorFlow': ('tensorflow',), 'PyTorch': ('pytorch',),
+    'Scikit-Learn': ('scikit-learn', 'sklearn'),
+    'NLP': ('nlp', 'natural language processing'),
+    'RAG': ('rag', 'retrieval-augmented generation', 'retrieval augmented generation'),
+    'ChromaDB': ('chromadb', 'chroma'), 'LangChain': ('langchain',),
+    'Tailwind CSS': ('tailwind', 'tailwindcss'),
+    'HTML/CSS': ('html', 'css', 'html5', 'css3'),
+    'REST API': ('rest api', 'restful', 'apis rest', 'api rest'),
+    'Flutter': ('flutter',),
 }
 LANGUAGES = ('Arabic', 'English', 'French', 'German', 'Italian', 'Spanish', 'Turkish')
 
@@ -133,6 +147,7 @@ def _extract_profile(text):
             'text_characters_analyzed': len(text)}
 
 
+@timed_ai('cv_extraction_ocr')
 def analyze_student_cv(user, *, force=False):
     """Return cached analysis or parse the authenticated user's private CV locally."""
     if not user.cv:

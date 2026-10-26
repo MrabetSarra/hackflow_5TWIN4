@@ -13,6 +13,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from hackflow.ollama import request_headers as ollama_request_headers
+from hackflow.ai_telemetry import timed_ai
 
 from .models import AIUsageLog
 
@@ -387,6 +388,7 @@ def contains_raw_data(text):
     return bool(re.search(r'(?m)^\s*["\'][\w-]+["\']\s*:', stripped))
 
 
+@timed_ai('repository_suggestion')
 def suggest(user, feature, source, instruction, *, count_against_limit=True):
     if count_against_limit:
         message = _rate_limit_message(user)

@@ -22,26 +22,26 @@
 
         <nav aria-label="Navigation principale mentor" class="py-3 flex-grow-1 overflow-y-auto">
             <div class="sidebar-heading">{% trans "Accompagnement" %}</div>
-            <a href="{% url 'mentor:dashboard' %}" class="nav-link-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+            <a href="{% url 'mentor:dashboard' %}" class="nav-link-item {% if request.resolver_match.namespace == 'mentor' and request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                 <i class="bi bi-speedometer2"></i>
                 <span>{% trans "Tableau de Bord" %}</span>
             </a>
-            <a href="{% url 'mentor:help_requests' %}" class="nav-link-item {% if request.resolver_match.url_name == 'help_requests' %}active{% endif %}">
+            <a href="{% url 'mentor:help_requests' %}" class="nav-link-item {% if request.resolver_match.namespace == 'mentor' and request.resolver_match.url_name == 'help_requests' %}active{% endif %}">
                 <i class="bi bi-bell-fill"></i>
                 <span>{% trans "Demandes d'Aide" %}</span>
                 {% if mentor_nav.pending %}<span class="badge bg-danger ms-auto rounded-pill px-2 py-0" style="font-size: 0.7rem;">{% blocktrans with count=mentor_nav.pending %}{{ count }} en attente{% endblocktrans %}</span>{% endif %}
             </a>
-            <a href="{% url 'mentor:teams_list' %}" class="nav-link-item {% if request.resolver_match.url_name == 'teams_list' or request.resolver_match.url_name == 'team_detail' %}active{% endif %}">
+            <a href="{% url 'mentor:teams_list' %}" class="nav-link-item {% if request.resolver_match.namespace == 'mentor' and request.resolver_match.url_name in mentor_nav.team_pages %}active{% endif %}">
                 <i class="bi bi-collection-fill"></i>
                 <span>{% trans "Équipes & Projets" %}</span>
                 <span class="badge bg-secondary-subtle text-secondary ms-auto rounded-pill px-2 py-0" style="font-size: 0.7rem;" title="{% trans 'Équipes suivies' %}">{{ mentor_nav.followed }}</span>
             </a>
 
-            <a href="{% url 'mentor:sessions_list' %}" class="nav-link-item {% if request.resolver_match.url_name in 'sessions_list session_create session_update session_delete' %}active{% endif %}">
+            <a href="{% url 'mentor:sessions_list' %}" class="nav-link-item {% if request.resolver_match.namespace == 'mentor' and request.resolver_match.url_name in mentor_nav.session_pages %}active{% endif %}">
                 <i class="bi bi-calendar-event" aria-hidden="true"></i>
                 <span>{% trans "Sessions" %}</span>
             </a>
-            <a href="{% url 'mentor:submissions' %}" class="nav-link-item {% if request.resolver_match.url_name == 'submissions' or request.resolver_match.url_name == 'evaluation_create' %}active{% endif %}">
+            <a href="{% url 'mentor:submissions' %}" class="nav-link-item {% if request.resolver_match.namespace == 'mentor' and request.resolver_match.url_name in mentor_nav.submission_pages %}active{% endif %}">
                 <i class="bi bi-file-earmark-zip-fill" aria-hidden="true"></i>
                 <span>{% trans "Soumissions à évaluer" %}</span>
             </a>
@@ -65,7 +65,7 @@
                 <i class="bi bi-stars"></i>
                 <span>{% trans "Assistant IA" %}</span>
             </a>
-            <a href="{% url 'mentor:evaluations' %}" class="nav-link-item {% if request.resolver_match.url_name in 'evaluations evaluation_detail evaluation_update evaluation_delete' %}active{% endif %}">
+            <a href="{% url 'mentor:evaluations' %}" class="nav-link-item {% if request.resolver_match.namespace == 'mentor' and request.resolver_match.url_name in mentor_nav.evaluation_pages %}active{% endif %}">
                 <i class="bi bi-pencil-square"></i>
                 <span>{% trans "Retours & Conseils" %}</span>
             </a>

@@ -11,6 +11,7 @@ from django.utils import timezone
 from . import ai_prompts as prompts
 from . import gemini
 from .models import AIJob, Challenge, HackathonProfile
+from hackflow.ai_telemetry import timed_ai
 
 logger = logging.getLogger(__name__)
 
@@ -205,6 +206,7 @@ def create_job(user, feature, payload, refresh=False):
     return AIJob.objects.create(user=user, feature=feature, payload=payload, payload_hash=digest)
 
 
+@timed_ai('hackathon_ai_job')
 def run_job(job_id):
     """Exécutée par Celery : appelle Gemini (modèle principal puis secours) et enregistre résultat et mesures."""
     job = AIJob.objects.filter(pk=job_id).first()

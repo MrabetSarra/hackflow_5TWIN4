@@ -320,7 +320,8 @@ class ProfileDetailsForm(AccessibleFormMixin, forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['preferred_categories'].help_text = _('Separate multiple themes with commas (for example: health, climate, education).')
         self.fields['availability_windows'].help_text = _('Unspecified availability is treated as unknown.')
-        self.fields['skills'].choices = self.SKILL_CHOICES
+        existing_skills = [(s, s) for s in (self.instance.skills or []) if s not in dict(self.SKILL_CHOICES)]
+        self.fields['skills'].choices = [*self.SKILL_CHOICES, *existing_skills]
         self.fields['study_level'].choices = [('', _('Choose a study level')), *self.STUDY_LEVEL_CHOICES]
         self.initial['skills'] = self.instance.skills or []
         self.initial['preferred_roles'] = self.instance.preferred_roles or []
@@ -407,7 +408,7 @@ class ProfileDetailsForm(AccessibleFormMixin, forms.ModelForm):
 
     def clean_skills(self):
         skills = self.cleaned_data.get('skills', [])
-        allowed = {value for value, _label in self.SKILL_CHOICES}
+        allowed = {value for value, _label in self.SKILL_CHOICES} | set(self.instance.skills or [])
         invalid = set(skills) - allowed
         if invalid:
             message = 'Select skills from the available list.' if self.instance.role == 'student' else 'Sélectionnez des compétences proposées dans la liste.'

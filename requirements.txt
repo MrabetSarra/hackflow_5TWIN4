@@ -15,6 +15,7 @@ onnxruntime>=1.18,<2
 Markdown==3.10.3
 bleach==6.4.0
 Pygments==2.21.0
+matplotlib>=3.8,<4          # Matrices de confusion de l'évaluation IA
 
 # --- Module Workshops ---
 scikit-learn==1.9.1        # IA recommandation TF-IDF + forecast Ridge

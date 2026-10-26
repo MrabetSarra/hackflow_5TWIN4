@@ -3,7 +3,7 @@ from django.utils import timezone
 
 from student.models import TeamMembership
 
-from .models import Registration
+from .models import HackathonProfile, Registration
 
 # Règle métier retenue : une équipe (et un étudiant) ne participe qu'à un Challenge par Hackathon.
 ONE_CHALLENGE_PER_HACKATHON = True
@@ -43,6 +43,19 @@ def register(user, challenge):
                 raise RegistrationError('Vous êtes déjà inscrit à un challenge de ce hackathon. Annulez-le avant de changer.')
             if team and mine.filter(team=team).exclude(challenge=challenge).exists():
                 raise RegistrationError('Votre équipe participe déjà à un autre challenge de ce hackathon.')
+
+        overlapping = Registration.objects.filter(
+            user=user, status=Registration.Status.CONFIRMED,
+            challenge__hackathon__event__starts_at__lt=hackathon.ends_at,
+            challenge__hackathon__event__ends_at__gt=hackathon.starts_at,
+        ).exclude(challenge__hackathon=hackathon).exclude(
+            challenge__hackathon__status=HackathonProfile.Status.CANCELLED,
+        ).select_related('challenge__hackathon__event').first()
+        if overlapping:
+            raise RegistrationError(
+                f'Vous êtes déjà inscrit au hackathon « {overlapping.challenge.hackathon.title} » '
+                'qui a lieu aux mêmes dates. Annulez cette inscription pour participer à celui-ci.'
+            )
 
         if hackathon.max_participants:
             participants = Registration.objects.filter(

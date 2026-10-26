@@ -56,7 +56,12 @@ if not DEBUG and not CLOUDINARY_URL:
         'production uploads must not use the ephemeral local filesystem.'
     )
 
-CLOUDINARY_STORAGE = {}
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'dev_cloud',
+    'API_KEY': 'dev_key',
+    'API_SECRET': 'dev_secret',
+    'PREFIX': '',
+}
 if CLOUDINARY_URL:
     _cloudinary = urlsplit(CLOUDINARY_URL)
     if (

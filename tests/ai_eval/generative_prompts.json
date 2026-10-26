@@ -1,0 +1,21 @@
+{
+  "provenance": "Jeu de prompts rédigé pour l'évaluation. Les critères de référence sont à renseigner par l'équipe; aucune note de modèle n'est préremplie.",
+  "rubric": {
+    "relevance": "0 hors sujet, 1 partiel, 2 répond directement au besoin",
+    "correctness": "0 faits inventés/incorrects, 1 incertain ou incomplet, 2 cohérent avec les seules données fournies",
+    "format_validity": "0 format invalide, 1 partiel, 2 conforme au format demandé",
+    "language": "0 langue incorrecte, 1 mélange, 2 langue demandée respectée"
+  },
+  "cases": [
+    {"id":"copilot-01","feature":"admin_copilot","language":"fr","prompt":"À partir des faits fournis, résume les risques et propose deux actions concrètes. N'ajoute aucun fait."},
+    {"id":"copilot-02","feature":"admin_copilot","language":"fr","prompt":"Rédige un brouillon d'annonce à partir des informations fournies et signale toute donnée manquante."},
+    {"id":"announcement-01","feature":"announcement_draft","language":"fr","prompt":"Rédige une annonce courte destinée aux participants pour rappeler la date limite de dépôt, sans inventer de date."},
+    {"id":"announcement-02","feature":"announcement_draft","language":"fr","prompt":"Prépare un brouillon cordial annonçant une séance de mentorat; laisse les détails absents à confirmer."},
+    {"id":"project-evaluation-01","feature":"project_evaluation","language":"fr","prompt":"À partir des preuves fournies, résume le projet et distingue clairement les faits des éléments à vérifier."},
+    {"id":"project-evaluation-02","feature":"project_evaluation","language":"fr","prompt":"Propose trois questions ouvertes au jury fondées sur les informations disponibles; ne note et ne classe pas le projet."},
+    {"id":"repository-01","feature":"repository_suggestion","language":"en","prompt":"Review this small change and return one actionable improvement. If evidence is insufficient, say so."},
+    {"id":"repository-02","feature":"repository_suggestion","language":"en","prompt":"Summarize the supplied merge request in two sentences without asserting tests that were not run."},
+    {"id":"repository-03","feature":"repository_suggestion","language":"fr","prompt":"Décris le projet uniquement à partir des fichiers et technologies fournis; indique les inconnues."},
+    {"id":"copilot-03","feature":"admin_copilot","language":"fr","prompt":"Réponds à une question sur les données du hackathon avec une réponse JSON conforme au schéma annoncé."}
+  ]
+}

@@ -32,6 +32,10 @@ class PrivateCVStorage(FileSystemStorage):
             resource_type='raw', type='authenticated',
         )
 
+    @staticmethod
+    def _local_storage():
+        return FileSystemStorage(location=settings.PRIVATE_MEDIA_ROOT, base_url=None)
+
     def _open(self, name, mode='rb'):
         if self._cloudinary_enabled():
             import cloudinary.utils
@@ -60,7 +64,7 @@ class PrivateCVStorage(FileSystemStorage):
                 temporary_file.close()
                 raise
         try:
-            return super()._open(name, mode)
+            return self._local_storage()._open(name, mode)
         except FileNotFoundError:
             # Team documents used to be written under public MEDIA_ROOT. Keep them readable
             # during rollout, but only via the membership-checked download view.
@@ -85,39 +89,42 @@ class PrivateCVStorage(FileSystemStorage):
 
     def exists(self, name):
         if self._cloudinary_enabled():
+            from cloudinary.exceptions import NotFound
             try:
                 self._cloudinary_resource(name)
                 return True
-            except Exception as error:
-                if getattr(error, 'http_code', None) != 404:
-                    raise
-        return super().exists(name)
+            except NotFound:
+                pass
+        return self._local_storage().exists(name)
 
     def size(self, name):
         if self._cloudinary_enabled():
+            from cloudinary.exceptions import NotFound
             try:
                 return self._cloudinary_resource(name)['bytes']
-            except Exception as error:
-                if getattr(error, 'http_code', None) != 404:
-                    raise
-        return super().size(name)
+            except NotFound as error:
+                # Keep rollout-era local copies readable, but do not let a missing
+                # Cloudinary object fall through to FileSystemStorage.size().
+                if not self._local_storage().exists(name):
+                    raise FileNotFoundError(name) from error
+        return self._local_storage().size(name)
 
     def delete(self, name):
         if self._cloudinary_enabled():
             import cloudinary.uploader
+            from cloudinary.exceptions import NotFound
 
             try:
                 self._cloudinary_resource(name)
-            except Exception as error:
-                if getattr(error, 'http_code', None) != 404:
-                    raise
+            except NotFound:
+                pass
             else:
                 cloudinary.uploader.destroy(
                     self._cloudinary_public_id(name), invalidate=True,
                     resource_type='raw', type='authenticated',
                 )
                 return
-        return super().delete(name)
+        return self._local_storage().delete(name)
 
     def url(self, name):
         if self._cloudinary_enabled():

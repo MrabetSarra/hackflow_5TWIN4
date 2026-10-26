@@ -6,7 +6,8 @@ import urllib.request
 
 from django.conf import settings
 from django.db.models import Exists, OuterRef
-from hackflow.ollama import request_headers as ollama_request_headers
+from hackflow.ollama import chat_completion
+from hackflow.ai_telemetry import timed_ai
 
 from student.models import Announcement, Hackathon, Milestone, Submission, Team
 
@@ -24,7 +25,7 @@ def _target_context(audience):
         audience_label = dict(Announcement.Audience.choices).get(audience)
         if not audience_label:
             raise ValueError('Choisissez une audience valide.')
-        return {'hackathon': hackathon.name if hackathon else None, 'audience': audience_label}, None
+        return {'hackathon': hackathon.name if hackathon else None, 'audience': str(audience_label)}, None
 
     if not hackathon:
         raise ValueError('Activez un hackathon pour cibler les équipes sans dépôt.')
@@ -50,6 +51,7 @@ def _target_context(audience):
     return target, {'milestone': milestone, 'teams': teams}
 
 
+@timed_ai('announcement_draft')
 def generate_announcement_draft(*, audience, topic, tone, message_type):
     """Generate a draft. This function never publishes or sends it."""
     topic = topic.strip()[:500]
@@ -85,13 +87,8 @@ def generate_announcement_draft(*, audience, topic, tone, message_type):
         'stream': False, 'format': schema, 'options': {'temperature': 0.35},
     }
     base_url = getattr(settings, 'OLLAMA_BASE_URL', 'http://127.0.0.1:11434').rstrip('/')
-    request = urllib.request.Request(
-        f'{base_url}/api/chat', data=json.dumps(request_data).encode('utf-8'),
-        headers=ollama_request_headers(), method='POST',
-    )
     try:
-        with urllib.request.urlopen(request, timeout=120) as response:
-            result = json.loads(response.read().decode('utf-8'))
+        result = chat_completion(request_data, timeout=120, base_url=base_url)
         draft = json.loads(result.get('message', {}).get('content', ''))
     except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, TypeError, AttributeError) as exc:
         raise AnnouncementGenerationError('La génération du brouillon est momentanément indisponible. Réessayez dans quelques instants.') from exc
