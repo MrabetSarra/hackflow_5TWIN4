@@ -1015,3 +1015,71 @@ def conversation(request, user_id):
     }
     template = 'student/conversation_panel.html' if partial else 'student/conversation.html'
     return render(request, template, context)
+
+
+@role_required('student', 'mentor', 'admin', 'organization')
+def hackathon_results(request):
+    """Public results page — shows winners ranked by JuryScore.rating (1–5)."""
+    from dashboard_admin.models import JuryScore
+
+    hackathon = Hackathon.objects.filter(is_active=True).order_by('-starts_at', '-pk').first()
+
+    teams = list(
+        Team.objects.filter(hackathon=hackathon).prefetch_related('memberships__user')
+        if hackathon else Team.objects.all().prefetch_related('memberships__user')
+    )
+
+    # Load jury scores
+    scores_by_team = {
+        js.team_id: js
+        for js in JuryScore.objects.filter(
+            team__hackathon=hackathon
+        ).select_related('team') if hackathon
+    }
+
+    ranking = []
+    for t in teams:
+        js = scores_by_team.get(t.pk)
+        members = [m.user for m in t.memberships.all()]
+        ranking.append({
+            'team': t,
+            'rating': js.rating if js else None,
+            'notes': js.notes if js else '',
+            'scored': js is not None,
+            'members': members,
+        })
+
+    ranking.sort(key=lambda r: (not r['scored'], -(r['rating'] or 0), r['team'].name.casefold()))
+
+    for i, row in enumerate(ranking, 1):
+        row['rank'] = i
+        if i == 1:
+            row['medal'] = '🥇'
+            row['award'] = '1er Prix'
+            row['color'] = 'warning'
+        elif i == 2:
+            row['medal'] = '🥈'
+            row['award'] = '2e Prix'
+            row['color'] = 'secondary'
+        elif i == 3:
+            row['medal'] = '🥉'
+            row['award'] = '3e Prix'
+            row['color'] = 'info'
+        else:
+            row['medal'] = ''
+            row['award'] = f'Finaliste #{i}'
+            row['color'] = 'light'
+
+    podium = [r for r in ranking[:3] if r['scored']]
+    has_results = bool(podium)
+
+    now = timezone.now()
+    hackathon_ended = hackathon and hackathon.ends_at < now
+
+    return render(request, 'student/hackathon_results.html', {
+        'hackathon': hackathon,
+        'ranking': ranking,
+        'podium': podium,
+        'has_results': has_results,
+        'hackathon_ended': hackathon_ended,
+    })

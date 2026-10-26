@@ -1,0 +1,371 @@
+{% extends "layouts/base_student.html" %}
+{% load i18n %}
+{% block title %}Résultats du Hackathon{% if hackathon %} — {{ hackathon.name }}{% endif %} - HackFlow{% endblock %}
+
+{% block student_content %}
+<style>
+/* ── Animated gradient background for hero ── */
+.results-hero{
+  background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);
+  border-radius:1.5rem;padding:4rem 2rem;text-align:center;position:relative;overflow:hidden;
+  margin-bottom:2rem;
+}
+.results-hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 30% 40%,rgba(251,191,36,.12) 0%,transparent 60%),
+             radial-gradient(ellipse at 70% 60%,rgba(96,165,250,.1) 0%,transparent 60%);
+}
+.results-hero *{position:relative;}
+
+/* ── Podium cards ── */
+.podium-card{
+  border-radius:1.25rem;padding:2rem 1.5rem;text-align:center;
+  transition:transform .2s ease,box-shadow .2s ease;
+}
+.podium-card:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,.15);}
+.podium-1{border:3px solid #f59e0b;background:linear-gradient(160deg,#fffbeb,#fef3c7);}
+.podium-2{border:2px solid #94a3b8;background:linear-gradient(160deg,#f8fafc,#f1f5f9);}
+.podium-3{border:2px solid #67e8f9;background:linear-gradient(160deg,#ecfeff,#cffafe);}
+.podium-medal{font-size:3rem;line-height:1;margin-bottom:.5rem;}
+.star-gold{color:#f59e0b;}
+
+/* ── Ranking row ── */
+.ranking-row td{vertical-align:middle;}
+.rank-badge{
+  width:36px;height:36px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:.85rem;font-family:monospace;
+}
+.member-avatar{
+  width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  display:inline-flex;align-items:center;justify-content:center;
+  color:#fff;font-size:.65rem;font-weight:700;border:2px solid #fff;
+  margin-left:-6px;
+}
+.member-avatar:first-child{margin-left:0;}
+
+/* ── Fireworks animation ── */
+@keyframes burst{
+  0%{transform:scale(0);opacity:1;}
+  100%{transform:scale(1.4);opacity:0;}
+}
+.firework{
+  position:absolute;border-radius:50%;pointer-events:none;
+  animation:burst 1.2s ease-out forwards;
+}
+
+/* ── Countdown badge ── */
+.coming-soon-badge{
+  background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.4);
+  border-radius:99px;padding:.5rem 1.5rem;display:inline-block;
+  color:#fbbf24;font-family:monospace;font-size:.95rem;
+}
+
+/* ── Section "not yet" ── */
+.pending-section{
+  border:2px dashed var(--bs-border-color);border-radius:1.25rem;
+  padding:4rem 2rem;text-align:center;
+}
+</style>
+
+<div class="container-fluid px-0">
+
+  {# ══ HERO ══ #}
+  <div class="results-hero mb-5" id="results-hero">
+    {% if has_results %}
+      <div class="display-3 mb-2">🏆</div>
+      <span class="badge bg-warning text-dark rounded-pill px-3 py-1 small fw-bold mb-3 d-inline-block">
+        Résultats Officiels
+      </span>
+      <h1 class="fw-black text-white mb-2" style="font-size:clamp(1.8rem,5vw,3rem);">
+        Palmarès HackFlow
+      </h1>
+      {% if hackathon %}
+      <p class="text-white text-opacity-75 mb-0 fs-5">{{ hackathon.name }}</p>
+      {% endif %}
+    {% else %}
+      <div class="display-3 mb-2">⏳</div>
+      <h1 class="fw-black text-white mb-2" style="font-size:clamp(1.8rem,5vw,3rem);">
+        Résultats en préparation
+      </h1>
+      <p class="text-white text-opacity-75 mb-0">
+        {% if hackathon %}{{ hackathon.name }} · {% endif %}
+        Les résultats seront publiés à la fin du hackathon par le jury.
+      </p>
+    {% endif %}
+  </div>
+
+  {% if has_results %}
+
+    {# ══ PODIUM TOP 3 ══ #}
+    <div class="row g-4 justify-content-center align-items-end mb-5">
+
+      {# 2e — gauche #}
+      {% if podium.1 %}
+      <div class="col-md-4 col-lg-3 order-2 order-md-1">
+        <div class="podium-card podium-2">
+          <div class="podium-medal">🥈</div>
+          <div class="fw-black fs-4 mb-1">{{ podium.1.team.name }}</div>
+          {% if podium.1.team.category %}
+          <span class="badge bg-secondary-subtle text-secondary rounded-pill mb-2">{{ podium.1.team.category }}</span>
+          {% endif %}
+          <div class="star-gold mb-1" style="font-size:1.3rem;letter-spacing:2px;">
+            {% with r=podium.1.rating|floatformat:"0" %}
+              {% for i in "12345" %}{% if forloop.counter <= r %}★{% else %}☆{% endif %}{% endfor %}
+            {% endwith %}
+          </div>
+          <div class="fw-bold font-mono fs-3 mb-1">{{ podium.1.rating }}<span class="small text-secondary">/5</span></div>
+          <div class="small text-secondary mb-3">{{ podium.1.votes }} avis mentor{{ podium.1.votes|pluralize:"s" }}</div>
+          {% if podium.1.members %}
+          <div class="d-flex justify-content-center flex-wrap gap-1">
+            {% for member in podium.1.members|slice:":5" %}
+            <span class="member-avatar" title="{{ member.get_full_name|default:member.username }}">
+              {{ member.first_name|first|upper }}{{ member.last_name|first|upper }}
+            </span>
+            {% endfor %}
+          </div>
+          {% endif %}
+          <span class="badge bg-secondary rounded-pill mt-2 font-mono">{{ podium.1.award }}</span>
+        </div>
+      </div>
+      {% endif %}
+
+      {# 1er — centre (plus grand) #}
+      {% if podium.0 %}
+      <div class="col-md-4 col-lg-4 order-1 order-md-2">
+        <div class="podium-card podium-1 shadow-lg" style="transform:scale(1.05);transform-origin:bottom center;">
+          <div class="position-relative">
+            <div class="podium-medal">🥇</div>
+            <div class="position-absolute" style="top:-1.5rem;right:-1rem;font-size:1.5rem;animation:spin 3s linear infinite;">⭐</div>
+          </div>
+          <span class="badge bg-warning text-dark rounded-pill fw-bold mb-2">⭐ GRAND VAINQUEUR</span>
+          <div class="fw-black mb-1" style="font-size:clamp(1.4rem,3vw,2rem);">{{ podium.0.team.name }}</div>
+          {% if podium.0.team.category %}
+          <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill mb-2">{{ podium.0.team.category }}</span>
+          {% endif %}
+          <div class="star-gold mb-1" style="font-size:1.6rem;letter-spacing:3px;">
+            {% with r=podium.0.rating|floatformat:"0" %}
+              {% for i in "12345" %}{% if forloop.counter <= r %}★{% else %}☆{% endif %}{% endfor %}
+            {% endwith %}
+          </div>
+          <div class="fw-black font-mono mb-1" style="font-size:2.2rem;color:#f59e0b;">{{ podium.0.rating }}<span class="fs-5 text-secondary">/5</span></div>
+          <div class="small text-secondary mb-3">{{ podium.0.votes }} avis mentor{{ podium.0.votes|pluralize:"s" }}</div>
+          {% if podium.0.team.project_name or podium.0.team.project_pitch %}
+          <p class="small text-secondary fst-italic mb-3">
+            "{{ podium.0.team.project_pitch|default:podium.0.team.project_name|truncatechars:120 }}"
+          </p>
+          {% endif %}
+          {% if podium.0.members %}
+          <div class="d-flex justify-content-center flex-wrap gap-1 mb-2">
+            {% for member in podium.0.members|slice:":5" %}
+            <span class="member-avatar" style="width:36px;height:36px;font-size:.75rem;" title="{{ member.get_full_name|default:member.username }}">
+              {{ member.first_name|first|upper }}{{ member.last_name|first|upper }}
+            </span>
+            {% endfor %}
+          </div>
+          {% endif %}
+          <span class="badge bg-warning text-dark rounded-pill font-mono fw-bold">{{ podium.0.award }}</span>
+        </div>
+      </div>
+      {% endif %}
+
+      {# 3e — droite #}
+      {% if podium.2 %}
+      <div class="col-md-4 col-lg-3 order-3">
+        <div class="podium-card podium-3">
+          <div class="podium-medal">🥉</div>
+          <div class="fw-black fs-4 mb-1">{{ podium.2.team.name }}</div>
+          {% if podium.2.team.category %}
+          <span class="badge bg-info-subtle text-info rounded-pill mb-2">{{ podium.2.team.category }}</span>
+          {% endif %}
+          <div class="star-gold mb-1" style="font-size:1.3rem;letter-spacing:2px;">
+            {% with r=podium.2.rating|floatformat:"0" %}
+              {% for i in "12345" %}{% if forloop.counter <= r %}★{% else %}☆{% endif %}{% endfor %}
+            {% endwith %}
+          </div>
+          <div class="fw-bold font-mono fs-3 mb-1">{{ podium.2.rating }}<span class="small text-secondary">/5</span></div>
+          <div class="small text-secondary mb-3">{{ podium.2.votes }} avis mentor{{ podium.2.votes|pluralize:"s" }}</div>
+          {% if podium.2.members %}
+          <div class="d-flex justify-content-center flex-wrap gap-1">
+            {% for member in podium.2.members|slice:":5" %}
+            <span class="member-avatar" title="{{ member.get_full_name|default:member.username }}">
+              {{ member.first_name|first|upper }}{{ member.last_name|first|upper }}
+            </span>
+            {% endfor %}
+          </div>
+          {% endif %}
+          <span class="badge bg-info rounded-pill mt-2 font-mono">{{ podium.2.award }}</span>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+
+    {# ══ CLASSEMENT COMPLET ══ #}
+    {% if ranking|length > 3 %}
+    <div class="card-modern overflow-hidden mb-4">
+      <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="h5 fw-bold mb-0">Classement Complet</h2>
+          <span class="small text-secondary">Toutes les équipes participantes</span>
+        </div>
+        <span class="badge bg-light text-secondary border font-mono">{{ ranking|length }} équipes</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="bg-body-tertiary">
+            <tr>
+              <th class="ps-4 py-3 small text-uppercase text-secondary fw-bold">Rang</th>
+              <th class="py-3 small text-uppercase text-secondary fw-bold">Équipe</th>
+              <th class="py-3 small text-uppercase text-secondary fw-bold">Membres</th>
+              <th class="py-3 small text-uppercase text-secondary fw-bold text-center">Note / 5</th>
+              <th class="pe-4 py-3 small text-uppercase text-secondary fw-bold text-end">Prix</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in ranking %}
+            <tr {% if forloop.counter <= 3 and row.scored %}class="table-warning bg-opacity-25"{% endif %}>
+              <td class="ps-4">
+                {% if row.medal %}
+                  <span style="font-size:1.4rem;">{{ row.medal }}</span>
+                {% else %}
+                  <span class="rank-badge bg-body-secondary text-secondary border">#{{ row.rank }}</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="fw-bold">{{ row.team.name }}</div>
+                {% if row.team.category %}
+                <span class="badge rounded-pill bg-light text-secondary border small">{{ row.team.category }}</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="d-flex align-items-center">
+                  {% for member in row.members|slice:":4" %}
+                  <span class="member-avatar" title="{{ member.get_full_name|default:member.username }}">
+                    {{ member.first_name|first|upper }}{{ member.last_name|first|upper }}
+                  </span>
+                  {% endfor %}
+                  {% if row.members|length > 4 %}
+                  <span class="small text-secondary ms-2">+{{ row.members|length|add:"-4" }}</span>
+                  {% endif %}
+                </div>
+              </td>
+              <td class="text-center">
+                {% if row.scored %}
+                  <span class="star-gold">
+                    {% with r=row.rating|floatformat:"0" %}
+                      {% for i in "12345" %}{% if forloop.counter <= r %}★{% else %}☆{% endif %}{% endfor %}
+                    {% endwith %}
+                  </span>
+                  <span class="fw-bold font-mono ms-1">{{ row.rating }}</span>
+                {% else %}
+                  <span class="text-secondary small fst-italic">—</span>
+                {% endif %}
+              </td>
+              <td class="pe-4 text-end">
+                {% if row.scored %}
+                <span class="badge rounded-pill
+                  bg-{% if row.color == 'warning' %}warning text-dark
+                  {% elif row.color == 'secondary' %}secondary
+                  {% elif row.color == 'info' %}info
+                  {% else %}light text-body border{% endif %}
+                  font-mono small">{{ row.award }}</span>
+                {% else %}
+                <span class="text-secondary small">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {# ══ MESSAGE DE FELICITATIONS ══ #}
+    <div class="card-modern p-4 p-md-5 text-center mb-4" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #86efac;">
+      <div class="display-4 mb-2">🎉</div>
+      <h2 class="h4 fw-bold text-success mb-2">Félicitations à tous les participants !</h2>
+      <p class="text-secondary mb-0">
+        Merci à toutes les équipes pour leur créativité, leur travail et leur esprit d'innovation.
+        {% if hackathon %}Rendez-vous à la prochaine édition de <strong>{{ hackathon.name }}</strong>.{% endif %}
+      </p>
+    </div>
+
+  {% else %}
+    {# ══ PAS DE RÉSULTATS ENCORE ══ #}
+    <div class="pending-section mb-4">
+      <div class="display-4 text-secondary mb-3">🔒</div>
+      <h2 class="h4 fw-bold mb-2">Résultats non encore disponibles</h2>
+      <p class="text-secondary mb-4">
+        Les résultats seront affichés ici dès que le jury aura finalisé les évaluations.
+        {% if not hackathon_ended %}Le hackathon est encore en cours.{% endif %}
+      </p>
+      {% if hackathon %}
+      <div class="coming-soon-badge">
+        <i class="bi bi-clock me-2"></i>
+        Fin prévue : {{ hackathon.ends_at|date:"d/m/Y à H:i" }}
+      </div>
+      {% endif %}
+    </div>
+
+    {# Liste des équipes sans score #}
+    {% if ranking %}
+    <div class="card-modern overflow-hidden">
+      <div class="p-4 border-bottom">
+        <h3 class="h5 fw-bold mb-0">Équipes participantes</h3>
+        <span class="small text-secondary">{{ ranking|length }} équipe{{ ranking|length|pluralize:"s" }} inscrite{{ ranking|length|pluralize:"s" }}</span>
+      </div>
+      <div class="d-grid">
+        {% for row in ranking %}
+        <div class="p-4 border-bottom d-flex align-items-center gap-3">
+          <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold" style="width:42px;height:42px;font-family:monospace;">{{ forloop.counter }}</div>
+          <div class="flex-grow-1">
+            <div class="fw-bold">{{ row.team.name }}</div>
+            {% if row.team.category %}<span class="badge rounded-pill bg-light text-secondary border small">{{ row.team.category }}</span>{% endif %}
+          </div>
+          <div class="d-flex">
+            {% for member in row.members|slice:":4" %}
+            <span class="member-avatar" title="{{ member.get_full_name|default:member.username }}">
+              {{ member.first_name|first|upper }}{{ member.last_name|first|upper }}
+            </span>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  {% endif %}
+
+</div>
+
+<style>
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+</style>
+
+{% if has_results %}
+<script>
+/* Confetti burst on load */
+(() => {
+  const hero = document.getElementById('results-hero');
+  if (!hero) return;
+  const colors = ['#f59e0b','#fbbf24','#34d399','#60a5fa','#a78bfa','#f472b6'];
+  for (let i = 0; i < 14; i++) {
+    const f = document.createElement('div');
+    f.className = 'firework';
+    const size = Math.random() * 60 + 30;
+    f.style.cssText = [
+      'width:' + size + 'px', 'height:' + size + 'px',
+      'background:radial-gradient(circle,' + colors[Math.floor(Math.random()*colors.length)] + '80,transparent)',
+      'left:' + (Math.random()*90+5) + '%',
+      'top:' + (Math.random()*80+10) + '%',
+      'animation-delay:' + (Math.random()*.8) + 's',
+    ].join(';');
+    hero.appendChild(f);
+  }
+})();
+</script>
+{% endif %}
+{% endblock %}

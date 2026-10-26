@@ -22,5 +22,6 @@ urlpatterns = [
     path('announcements/<int:announcement_id>/delete/', views.announcement_delete, name='announcement_delete'),
     path('judging/', project_evaluation_views.judging, name='judging'),
     path('judging/submissions/<int:submission_id>/evaluate/', project_evaluation_views.project_evaluate, name='project_evaluate'),
+    path('judging/teams/<int:team_id>/score/', project_evaluation_views.save_jury_score, name='save_jury_score'),
     path('careers/', include('career_opportunities.organizer_urls')),
 ]

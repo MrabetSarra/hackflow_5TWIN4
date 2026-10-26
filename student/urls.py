@@ -18,4 +18,5 @@ urlpatterns = [
     path('invitation/<str:token>/<str:decision>/', views.respond_invitation, name='respond_invitation'),
     path('messages/', views.message_inbox, name='messages'),
     path('messages/<int:user_id>/', views.conversation, name='conversation'),
+    path('results/', views.hackathon_results, name='hackathon_results'),
 ]
