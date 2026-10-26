@@ -155,7 +155,14 @@ def recommend(user, workshops, top_n: int = 6) -> list:
             elif workshop.ai_score:
                 workshop.ai_reason = 'Recommandé selon ton profil'
             else:
-                workshop.ai_reason = 'Atelier suggéré pour découvrir de nouveaux thèmes'
+                workshop.ai_reason = ''
+    except Exception:
+        logger.warning('Échec du calcul TF-IDF : utilisation du score par mots-clés.')
+        profile_skills = user.skills if isinstance(user.skills, list) else []
+        for workshop in workshop_list:
+            score = _default_score(workshop, profile_skills)
+            workshop.ai_score = score
+            workshop.ai_reason = 'Recommandé selon votre profil et centres d’intérêt' if score else ''
 
     # Amélioration IA : si Ollama est disponible, régénérer les explications
     # de manière plus naturelle et personnalisée.

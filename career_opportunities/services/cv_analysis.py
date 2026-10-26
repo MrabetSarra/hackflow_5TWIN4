@@ -6,6 +6,7 @@ from io import BytesIO
 
 from django.conf import settings
 from django.utils import timezone
+from hackflow.ai_telemetry import timed_ai
 from pdfminer.high_level import extract_text
 
 from ..models import StudentCVAnalysis
@@ -146,6 +147,7 @@ def _extract_profile(text):
             'text_characters_analyzed': len(text)}
 
 
+@timed_ai('cv_extraction_ocr')
 def analyze_student_cv(user, *, force=False):
     """Return cached analysis or parse the authenticated user's private CV locally."""
     if not user.cv:
