@@ -25,7 +25,7 @@ except ImportError:  # Local eager-mode fallback does not need Celery's broker p
 from accounts.decorators import role_required
 from .forms import AITaskJobForm, DirectMessageForm, InvitationForm, MentorRequestForm, ResourceForm, SubmissionForm, TaskForm, TeamForm
 from .models import (AITaskJob, Announcement, DirectMessage, Hackathon, MentorRequest, Milestone, Notification, Resource,
-                     Sprint, Submission, Task, Team, TeamInvitation, TeamLeaveRequest, TeamMembership)
+                     Sprint, Submission, Task, Team, TeamInvitation, TeamJoinRequest, TeamLeaveRequest, TeamMembership)
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +150,8 @@ def team_detail(request):
     if team and request.method == 'POST':
         action = request.POST.get('action')
         captain_actions = {'edit_team', 'remove_member', 'transfer_captain', 'cancel_invitation',
-                           'approve_leave_request', 'decline_leave_request'}
+                           'approve_leave_request', 'decline_leave_request',
+                           'approve_join_request', 'decline_join_request'}
         if action in captain_actions and team.captain_id != request.user.pk:
             messages.error(request, 'Only the team captain can manage team members and settings.')
         elif action == 'edit_team':
@@ -227,6 +228,56 @@ def team_detail(request):
                         messages.success(request, 'Pending invitation canceled.')
                         return redirect('student:team_detail')
                 messages.error(request, 'That pending invitation could not be found.')
+        elif action in {'approve_join_request', 'decline_join_request'}:
+            with transaction.atomic():
+                locked_team = Team.objects.select_for_update().filter(pk=team.pk, is_archived=False).first()
+                join_request = TeamJoinRequest.objects.select_for_update().filter(
+                    team=locked_team,
+                    pk=_safe_pk(request.POST.get('join_request_id')),
+                    status=TeamJoinRequest.Status.PENDING,
+                ).select_related('applicant').first() if locked_team else None
+                if not locked_team or locked_team.captain_id != request.user.pk:
+                    messages.error(request, 'Only the team captain can decide join requests.')
+                elif join_request is None:
+                    messages.error(request, 'That pending join request could not be found.')
+                elif action == 'approve_join_request' and locked_team.places_left < 1:
+                    messages.error(request, 'The team is full. The join request remains pending.')
+                elif action == 'approve_join_request' and TeamMembership.objects.filter(user=join_request.applicant).exists():
+                    join_request.status = TeamJoinRequest.Status.DECLINED
+                    join_request.decided_by = request.user
+                    join_request.decided_at = timezone.now()
+                    join_request.save(update_fields=['status', 'decided_by', 'decided_at'])
+                    Notification.objects.create(
+                        user=join_request.applicant, title='Team join request closed',
+                        message=f'Your request to join {locked_team.name} was closed because you are already on a team.',
+                        icon='bi-people-fill', url=reverse('student:team_detail'),
+                    )
+                    messages.error(request, 'The applicant has already joined a team; the request was closed.')
+                else:
+                    if action == 'approve_join_request':
+                        TeamMembership.objects.create(
+                            team=locked_team, user=join_request.applicant,
+                            role=join_request.applicant.specialty or '',
+                        )
+                        join_request.status = TeamJoinRequest.Status.ACCEPTED
+                        title = 'Team join request accepted'
+                        message = f'Your request to join {locked_team.name} was accepted.'
+                        messages.success(request, f'{join_request.applicant.get_full_name() or join_request.applicant.username} joined your team.')
+                    else:
+                        join_request.status = TeamJoinRequest.Status.DECLINED
+                        title = 'Team join request declined'
+                        message = f'Your request to join {locked_team.name} was declined.'
+                        messages.success(request, 'The join request was declined.')
+                    join_request.decided_by = request.user
+                    join_request.decided_at = timezone.now()
+                    join_request.save(update_fields=['status', 'decided_by', 'decided_at'])
+                    Notification.objects.create(
+                        user=join_request.applicant, title=title, message=message,
+                        icon='bi-people-fill', url=reverse(
+                            'student:team_detail' if action == 'approve_join_request' else 'student:skills_matching',
+                        ),
+                    )
+                    return redirect('student:team_detail')
         elif action in {'approve_leave_request', 'decline_leave_request'}:
             with transaction.atomic():
                 locked_team = Team.objects.select_for_update().filter(pk=team.pk, is_archived=False).first()
@@ -412,7 +463,10 @@ def team_detail(request):
                    'pending_invitations': team.invitations.filter(status=TeamInvitation.Status.PENDING).order_by('-created_at') if team else [],
                    'pending_leave_requests': team.leave_requests.filter(
                        status=TeamLeaveRequest.Status.PENDING,
-                   ).select_related('member').order_by('created_at') if team and team.captain_id == request.user.pk else []})
+                   ).select_related('member').order_by('created_at') if team and team.captain_id == request.user.pk else [],
+                   'pending_join_requests': team.join_requests.filter(
+                       status=TeamJoinRequest.Status.PENDING,
+                   ).select_related('applicant').order_by('created_at') if team and team.captain_id == request.user.pk else []})
 
 
 @role_required('student')
@@ -430,34 +484,83 @@ def skills_matching(request):
                  'preferred_role': u.specialty} for u in available.distinct()]
     available_count = available.count()
     if request.method == 'POST':
-        if not team:
-            messages.error(request, 'Join a team before inviting a member.')
-        elif team.captain_id != request.user.id:
-            messages.error(request, 'Only the team captain can add members.')
-        elif not team.places_left:
-            messages.error(request, 'The team is full.')
-        else:
-            candidate = get_object_or_404(available, pk=_safe_pk(request.POST.get('user_id')))
+        action = request.POST.get('action')
+        if action == 'apply':
             with transaction.atomic():
-                invitation, created = TeamInvitation.objects.get_or_create(team=team, invited_user=candidate, status='pending',
-                    defaults={'email': candidate.email, 'invited_by': request.user, 'token': secrets.token_urlsafe(24)})
-                if created:
-                    Notification.objects.create(user=candidate, title='Team invitation',
-                        message=f"{team.name} invited you to join their team.",
-                        icon='bi-people-fill', url=reverse('student:respond_invitation', args=[invitation.token, 'accept']))
-            invited_name = candidate.get_full_name() or candidate.username
-            messages.success(request, f'Invitation sent successfully to {invited_name}.')
+                target_team = Team.objects.select_for_update().filter(
+                    pk=_safe_pk(request.POST.get('team_id')), is_archived=False,
+                ).first()
+                if target_team is None:
+                    messages.error(request, 'That team is no longer accepting requests.')
+                elif TeamMembership.objects.filter(user=request.user).exists():
+                    messages.error(request, 'Leave your current team before applying to another team.')
+                elif target_team.captain_id is None:
+                    messages.error(request, 'This team cannot accept requests right now.')
+                elif TeamInvitation.objects.filter(
+                    team=target_team, invited_user=request.user, status=TeamInvitation.Status.PENDING,
+                ).exists():
+                    messages.info(request, 'This team has already invited you. Respond to that invitation instead.')
+                elif target_team.places_left < 1:
+                    messages.error(request, 'This team is full.')
+                else:
+                    join_request = TeamJoinRequest.objects.select_for_update().filter(
+                        team=target_team, applicant=request.user,
+                    ).first()
+                    if join_request and join_request.status == TeamJoinRequest.Status.PENDING:
+                        messages.info(request, 'Your request is already waiting for the team captain.')
+                    else:
+                        if join_request:
+                            join_request.status = TeamJoinRequest.Status.PENDING
+                            join_request.decided_by = None
+                            join_request.decided_at = None
+                            join_request.created_at = timezone.now()
+                            join_request.save(update_fields=['status', 'decided_by', 'decided_at', 'created_at'])
+                        else:
+                            join_request = TeamJoinRequest.objects.create(team=target_team, applicant=request.user)
+                        Notification.objects.create(
+                            user=target_team.captain, title='New team join request',
+                            message=f'{request.user.get_full_name() or request.user.username} wants to join {target_team.name}.',
+                            icon='bi-person-plus-fill', url=reverse('student:team_detail'),
+                        )
+                        messages.success(request, f'Your request to join {target_team.name} was sent to its captain.')
+        elif action == 'invite':
+            if not team:
+                messages.error(request, 'Join a team before inviting a member.')
+            elif team.captain_id != request.user.id:
+                messages.error(request, 'Only the team captain can add members.')
+            elif not team.places_left:
+                messages.error(request, 'The team is full.')
+            else:
+                candidate = get_object_or_404(available, pk=_safe_pk(request.POST.get('user_id')))
+                with transaction.atomic():
+                    invitation, created = TeamInvitation.objects.get_or_create(team=team, invited_user=candidate, status='pending',
+                        defaults={'email': candidate.email, 'invited_by': request.user, 'token': secrets.token_urlsafe(24)})
+                    if created:
+                        Notification.objects.create(user=candidate, title='Team invitation',
+                            message=f"{team.name} invited you to join their team.",
+                            icon='bi-people-fill', url=reverse('student:respond_invitation', args=[invitation.token, 'accept']))
+                invited_name = candidate.get_full_name() or candidate.username
+                messages.success(request, f'Invitation sent successfully to {invited_name}.')
+        else:
+            messages.error(request, 'Choose a valid team action.')
         return redirect('student:skills_matching')
     teams_qs = Team.objects.filter(is_archived=False).annotate(member_total=Count('memberships')).filter(member_total__lt=models_f('max_members'))
     if team:
         teams_qs = teams_qs.exclude(pk=team.pk)
-    teams = [{'name': t.name, 'pitch': t.description, 'category': t.category,
+    team_objects = list(teams_qs.select_related('captain'))
+    pending_join_team_ids = set(TeamJoinRequest.objects.filter(
+        applicant=request.user, team_id__in=[item.pk for item in team_objects],
+        status=TeamJoinRequest.Status.PENDING,
+    ).values_list('team_id', flat=True))
+    teams = [{'id': t.pk, 'name': t.name, 'pitch': t.description, 'category': t.category,
               'cover_img': t.cover_image_url, 'current_members': t.member_total,
-              'target_members': t.max_members, 'missing_skills': [t.seeking_skill] if t.seeking_skill else []}
-             for t in teams_qs]
+              'target_members': t.max_members, 'join_pending': t.pk in pending_join_team_ids,
+              'missing_skills': [t.seeking_skill] if t.seeking_skill else []}
+             for t in team_objects]
     return render(request, 'student/skills_matching.html', {'students_looking': students, 'teams_looking': teams,
                    'team': team, 'available_count': available_count,
-                   'can_invite': bool(team and team.captain_id == request.user.id and team.places_left)})
+                   'can_invite': bool(team and team.captain_id == request.user.id and team.places_left),
+                   'can_apply_to_teams': not TeamMembership.objects.filter(user=request.user).exists()})
 
 
 @role_required('student')
@@ -709,16 +812,17 @@ def mentor_request(request):
             messages.success(request, 'Your request was updated.')
             return redirect('student:mentor_request')
     if request.method == 'POST':
-        if request.POST.get('action') not in {'update', 'cancel'} and form.is_valid():
-            item = form.save(commit=False); item.student = request.user; item.team = team; item.save()
-            messages.success(request, 'Your request has been sent to the mentors.')
-            return redirect('student:mentor_request')
+        if request.POST.get('action') not in {'update', 'cancel'}:
+            form = MentorRequestForm(request.POST)
+            if form.is_valid():
+                item = form.save(commit=False); item.student = request.user; item.team = team; item.save()
+                messages.success(request, 'Your request has been sent to the mentors.')
+                return redirect('student:mentor_request')
+            messages.error(request, 'Please correct the highlighted fields before sending your request.')
     requests = MentorRequest.objects.filter(student=request.user).select_related('mentor')
-    today = timezone.localdate()
-    is_past_session = lambda request_item: (
-        request_item.status == 'resolved'
-        or timezone.localtime(request_item.created_at).date() < today
-    )
+    # A request remains active until a mentor resolves it. Its age alone must
+    # not move a pending or accepted request into the past-session list.
+    is_past_session = lambda request_item: request_item.status == MentorRequest.Status.RESOLVED
     active = [{'pk': r.pk, 'is_pending': r.status == MentorRequest.Status.PENDING, 'id': f'#T-{r.pk:03}', 'subject': r.subject, 'category': r.category, 'urgency': r.get_urgency_display(),
                'status': r.get_status_display(), 'mentor_name': r.mentor.get_full_name() if r.mentor else '',
                'mentor_initials': _user_initials(r.mentor) if r.mentor else '',

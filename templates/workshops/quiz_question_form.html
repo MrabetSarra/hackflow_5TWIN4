@@ -31,10 +31,17 @@
             {% csrf_token %}
 
             <div class="mb-4">
-              <label class="form-label fw-semibold">Question <span class="text-danger">*</span></label>
-              <input type="text" name="question" class="form-control"
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label fw-semibold mb-0" for="quiz-question">Question <span class="text-danger">*</span></label>
+                <button type="button" class="btn btn-sm btn-outline-info rounded-pill" id="suggest-options-btn">
+                  <i class="bi bi-stars me-1"></i>Suggérer les options avec l'IA
+                </button>
+              </div>
+              <input type="text" name="question" id="quiz-question" class="form-control"
                      value="{% if question %}{{ question.question }}{% endif %}"
                      placeholder="Ex: Quel est l'objectif principal de cet atelier ?" required>
+              <div class="form-text">Rédigez la question, puis laissez llama3.2 proposer les options et la bonne réponse.</div>
+              <div id="suggest-options-status" class="mt-2"></div>
             </div>
 
             <div class="row g-3 mb-4">
@@ -96,4 +103,82 @@
   </div>
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const button = document.getElementById('suggest-options-btn');
+  const questionInput = document.getElementById('quiz-question');
+  const statusDiv = document.getElementById('suggest-options-status');
+  if (!button || !questionInput || !statusDiv) return;
+
+  const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+  const csrfToken = csrfInput ? csrfInput.value : '{{ csrf_token }}';
+  const suggestUrl = "{% url 'workshops:api_suggest_quiz_options' workshop.pk %}";
+
+  function fillField(name, value) {
+    const field = document.querySelector('[name="' + name + '"]');
+    if (field && value != null) field.value = value;
+  }
+
+  button.addEventListener('click', async function () {
+    const question = questionInput.value.trim();
+    if (!question) {
+      statusDiv.innerHTML = '<div class="alert alert-warning py-2 mb-0">Saisissez d\'abord la question.</div>';
+      questionInput.focus();
+      return;
+    }
+
+    const original = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Suggestion…';
+    statusDiv.innerHTML = '';
+
+    try {
+      const response = await fetch(suggestUrl, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: question }),
+      });
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (error) {
+        data = { ok: false, error: 'Réponse invalide du serveur (HTTP ' + response.status + ').' };
+      }
+
+      if (!data.ok) {
+        statusDiv.innerHTML = '<div class="alert alert-danger py-2 mb-0">' + (data.error || 'Suggestion impossible.') + '</div>';
+        return;
+      }
+
+      const options = data.options || [];
+      fillField('option_a', options[0] || '');
+      fillField('option_b', options[1] || '');
+      fillField('option_c', options[2] || '');
+      fillField('option_d', options[3] || '');
+
+      const correctSelect = document.querySelector('select[name="correct_index"]');
+      if (correctSelect && data.correct_index != null) {
+        correctSelect.value = String(data.correct_index);
+      }
+
+      const explanationField = document.querySelector('textarea[name="explanation"]');
+      if (explanationField && data.explanation && !explanationField.value.trim()) {
+        explanationField.value = data.explanation;
+      }
+
+      statusDiv.innerHTML = '<div class="alert alert-success py-2 mb-0">' +
+        '<i class="bi bi-check-circle me-1"></i>Options proposées. Vérifiez-les avant d\'enregistrer.</div>';
+    } catch (error) {
+      statusDiv.innerHTML = '<div class="alert alert-danger py-2 mb-0">Impossible de contacter Ollama (localhost:11434).</div>';
+    } finally {
+      button.disabled = false;
+      button.innerHTML = original;
+    }
+  });
+})();
+</script>
 {% endblock %}

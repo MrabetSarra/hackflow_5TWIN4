@@ -820,7 +820,7 @@ class WorkshopCrudTests(TestCase):
         response = self.client.get(
             reverse('workshops:detail', kwargs={'slug': ws.slug}))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Tableau de Bord')
+        self.assertContains(response, 'Tableau de bord')
 
     # ------------------------------------------------------------------
     # Test 37 — L'admin garde son layout et le dashboard ateliers s'affiche
@@ -833,7 +833,7 @@ class WorkshopCrudTests(TestCase):
             response.context['workshop_base_template'],
             'layouts/base_admin.html',
         )
-        self.assertContains(response, 'Cockpit Organisateur')
+        self.assertContains(response, 'Cockpit organisateur')
 
     # ------------------------------------------------------------------
     # Test 38 — Export .ics : pas de lien Zoom pour une liste d'attente

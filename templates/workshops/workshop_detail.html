@@ -188,7 +188,7 @@
           <h5 class="fw-bold mb-3"><i class="bi bi-play-circle-fill text-secondary me-2"></i>Replay vidéo</h5>
           {% if can_access_replay %}
             {% if replay_accessible %}
-            {% if booking.replay_progress < 100 %}
+            {% if booking %}
             <div class="mb-3">
               <div class="d-flex justify-content-between small mb-1">
                 <span>Progression</span>
@@ -199,13 +199,21 @@
                      style="width:{{ booking.replay_progress }}%"></div>
               </div>
             </div>
+            {% endif %}
+
             <div class="ratio ratio-16x9 mb-3">
-              {% if replay_is_direct %}
+              {% if replay_video_source %}
               <video id="replay-video" controls preload="metadata"
                      class="rounded-3 w-100 h-100"
-                     src="{{ workshop.replay_url }}">
+                     src="{{ replay_video_source }}">
                 Votre navigateur ne supporte pas la lecture vidéo.
               </video>
+              {% elif replay_embed_url %}
+              <iframe src="{{ replay_embed_url }}"
+                      title="{{ workshop.title }}"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowfullscreen
+                      class="rounded-3"></iframe>
               {% else %}
               <iframe src="{{ workshop.replay_url }}"
                       title="{{ workshop.title }}"
@@ -213,25 +221,32 @@
                       class="rounded-3"></iframe>
               {% endif %}
             </div>
-            {% if not replay_is_direct %}
-            <p class="small text-body-secondary">
-              <i class="bi bi-info-circle me-1"></i>
-              La progression est enregistrée lorsque vous cliquez sur
-              « J'ai terminé la vidéo ».
-            </p>
-            {% endif %}
+
+            {% if quiz_passed %}
+            <div class="alert alert-success d-flex align-items-center gap-2 mb-0">
+              <i class="bi bi-patch-check-fill fs-4"></i>
+              <span>Quiz validé — votre certificat et votre badge sont disponibles dans « Mes ateliers ».</span>
+            </div>
+            {% elif has_quiz %}
+            <div class="alert alert-info d-flex align-items-center gap-3">
+              <i class="bi bi-question-circle-fill fs-4"></i>
+              <div class="flex-grow-1">
+                <p class="mb-1 fw-semibold">Pour valider cet atelier, passez le quiz de compréhension.</p>
+                <p class="mb-0 small">Un score de 80% minimum débloque votre certificat et votre badge.</p>
+              </div>
+              <a href="{% url 'workshops:quiz' workshop.pk %}" class="btn btn-info rounded-pill px-4 text-white">
+                <i class="bi bi-play-circle me-1"></i>Passer le quiz
+              </a>
+            </div>
+            {% elif booking %}
             <form method="post" action="{% url 'workshops:replay_complete' workshop.pk %}">
               {% csrf_token %}
               <button type="submit" class="btn btn-success rounded-pill px-4">
                 <i class="bi bi-check-circle-fill me-2"></i>J'ai terminé la vidéo
               </button>
             </form>
-            {% else %}
-            <div class="alert alert-success d-flex align-items-center gap-2">
-              <i class="bi bi-patch-check-fill fs-4"></i>
-              <span>Vous avez complété ce replay. Votre certificat est disponible dans « Mes ateliers ».</span>
-            </div>
             {% endif %}
+
             {% if workshop.available_until %}
             <p class="small text-body-secondary mt-2">
               <i class="bi bi-clock me-1"></i>Accès disponible jusqu'au {{ workshop.available_until|date:"d/m/Y à H\hi" }}
@@ -250,25 +265,20 @@
             </div>
           {% endif %}
 
-          <!-- Quiz de compréhension (replay uniquement) -->
-          {% if workshop.mode == 'recorded' and can_access_replay and replay_accessible %}
+          <!-- Quiz : gestion organisateur (le CTA étudiant est au-dessus) -->
+          {% if workshop.mode == 'recorded' and can_manage %}
           <div class="card border-0 shadow-sm mt-4">
             <div class="card-header bg-info text-white py-3">
               <h5 class="mb-0 fw-bold"><i class="bi bi-question-circle me-2"></i>Quiz de compréhension</h5>
             </div>
-            <div class="card-body">
-              <p class="text-body-secondary small">
-                Validez votre compréhension de l'atelier avec un quiz à choix multiples.
-                Un score de 80% minimum valide votre présence et débloque votre certificat.
+            <div class="card-body d-flex flex-wrap align-items-center gap-2">
+              <p class="text-body-secondary small mb-0 flex-grow-1">
+                {{ workshop.quiz_questions.count }} question(s) configurée(s).
+                Les étudiants doivent obtenir 80% pour valider leur présence.
               </p>
-              <a href="{% url 'workshops:quiz' workshop.pk %}" class="btn btn-info rounded-pill px-4">
-                <i class="bi bi-play-circle me-1"></i>Passer le quiz
+              <a href="{% url 'workshops:quiz_manage' workshop.pk %}" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="bi bi-gear me-1"></i>Gérer le quiz
               </a>
-              {% if can_manage %}
-              <a href="{% url 'workshops:quiz_manage' workshop.pk %}" class="btn btn-outline-secondary rounded-pill px-4 ms-2">
-                <i class="bi bi-gear me-1"></i>Gérer
-              </a>
-              {% endif %}
             </div>
           </div>
           {% endif %}
@@ -386,8 +396,8 @@
               <div class="alert alert-primary py-2 small mb-0">
                 <i class="bi bi-hourglass-split me-1"></i>
                 Début dans
-                <strong data-workshop-countdown="{{ workshop.starts_at|date:'c' }}"
-                        data-countdown-finished="Atelier en cours">…</strong>
+                <strong data-workshop-countdown="{{ workshop.starts_at.isoformat }}"
+                        data-countdown-finished="Atelier en cours">{{ workshop.starts_at|date:'d/m à H\hi' }}</strong>
               </div>
             {% endif %}
           </div>
@@ -457,6 +467,12 @@
                     <i class="bi bi-x-circle me-1"></i>Annuler
                   </button>
                 </form>
+                {% if workshop.is_past and workshop.mode != 'recorded' and booking.rating is None %}
+                <a href="{% url 'workshops:rate' workshop.pk %}"
+                   class="btn btn-outline-warning w-100 rounded-pill">
+                  <i class="bi bi-star me-1"></i>Donner mon avis
+                </a>
+                {% endif %}
               </div>
               {% elif booking.status == 'waiting' %}
               <div class="alert alert-info py-2 small mb-3">
@@ -552,7 +568,7 @@
 <!-- Progression replay : uniquement pour un lecteur vidéo direct.
      La progression est calculée à partir de la durée réelle de la vidéo,
      plus aucune simulation artificielle. -->
-{% if workshop.mode == 'recorded' and replay_accessible and replay_is_direct %}
+{% if workshop.mode == 'recorded' and replay_accessible and replay_video_source and booking %}
 <script>
 (function() {
   const video = document.getElementById('replay-video');

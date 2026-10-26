@@ -17,6 +17,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Count, Q
 
 from repositories.ai import redact_secrets
+from hackflow.ai_telemetry import timed_ai
 from student.forms import MentorRequestForm
 from student.models import MentorRequest
 
@@ -83,7 +84,7 @@ class TriageError(Exception):
 
 
 def model_name():
-    return os.environ.get('MENTOR_AI_MODEL', 'llama3.2')
+    return os.environ.get('MENTOR_AI_MODEL') or getattr(settings, 'OLLAMA_MODEL', 'llama3.2')
 
 
 def _base_url():
@@ -154,6 +155,7 @@ def parse_response(raw):
     return {'category': category, 'urgency': urgency, 'summary': summary[:300]}
 
 
+@timed_ai('mentor_triage')
 def classify(subject, description):
     """Classe un ticket ; renvoie (résultat, latence en ms)."""
     started = time.perf_counter()

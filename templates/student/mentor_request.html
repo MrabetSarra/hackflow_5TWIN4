@@ -25,6 +25,7 @@
 
                 <form method="post" novalidate>{% csrf_token %}
                     <input type="hidden" name="action" value="{% if editing_request %}update{% else %}create{% endif %}">{% if editing_request %}<input type="hidden" name="request_id" value="{{ editing_request.pk }}">{% endif %}
+                    {% if form.errors %}<div class="alert alert-danger py-2" role="alert">{% trans "Please correct the highlighted fields before sending your request." %}</div>{% endif %}
                     <div class="mb-3">
                         <label for="{{ form.subject.id_for_label }}" class="form-label small fw-semibold">{% trans "Issue / Request" %}</label>
                         {{ form.subject }}{% for error in form.subject.errors %}<div id="{{ form.subject.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}
@@ -35,30 +36,24 @@
                         {{ form.category }}{% for error in form.category.errors %}<div id="{{ form.category.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
 
-                    <div class="mb-3">
-                        <label for="{{ form.urgency.id_for_label }}" class="form-label small fw-semibold">{% trans "Urgency" %}</label>
+                    <fieldset class="border-0 p-0 mb-3">
+                        <legend class="form-label small fw-semibold">{% trans "Urgency" %}</legend>
                         <div class="row g-2">
                             <div class="col-4">
-                                <label class="card-modern p-2 text-center cursor-pointer border-danger bg-danger bg-opacity-10 w-100">
-                                    <input type="radio" name="urgency" value="blocking" class="form-check-input d-none" {% if form.urgency.value == 'blocking' or not form.urgency.value %}checked{% endif %}>
-                                    <span class="small fw-bold text-danger">{% trans "Blocking" %}</span>
-                                </label>
+                                <input type="radio" name="urgency" value="blocking" id="id_urgency_blocking" class="btn-check" autocomplete="off" {% if form.urgency.value == 'blocking' or not form.urgency.value %}checked{% endif %} {% if form.urgency.errors %}aria-describedby="id_urgency_errors" aria-invalid="true"{% endif %}>
+                                <label for="id_urgency_blocking" class="btn btn-outline-danger w-100 h-100 py-2">{% trans "Blocking" %}</label>
                             </div>
                             <div class="col-4">
-                                <label class="card-modern p-2 text-center cursor-pointer w-100">
-                                    <input type="radio" name="urgency" value="important" class="form-check-input d-none" {% if form.urgency.value == 'important' %}checked{% endif %}>
-                                    <span class="small fw-semibold text-warning-emphasis">{% trans "Important" %}</span>
-                                </label>
+                                <input type="radio" name="urgency" value="important" id="id_urgency_important" class="btn-check" autocomplete="off" {% if form.urgency.value == 'important' %}checked{% endif %} {% if form.urgency.errors %}aria-describedby="id_urgency_errors" aria-invalid="true"{% endif %}>
+                                <label for="id_urgency_important" class="btn btn-outline-warning w-100 h-100 py-2">{% trans "Important" %}</label>
                             </div>
                             <div class="col-4">
-                                <label class="card-modern p-2 text-center cursor-pointer w-100">
-                                    <input type="radio" name="urgency" value="normal" class="form-check-input d-none" {% if form.urgency.value == 'normal' %}checked{% endif %}>
-                                    <span class="small fw-semibold text-secondary">{% trans "Advice" %}</span>
-                                </label>
+                                <input type="radio" name="urgency" value="normal" id="id_urgency_normal" class="btn-check" autocomplete="off" {% if form.urgency.value == 'normal' %}checked{% endif %} {% if form.urgency.errors %}aria-describedby="id_urgency_errors" aria-invalid="true"{% endif %}>
+                                <label for="id_urgency_normal" class="btn btn-outline-secondary w-100 h-100 py-2">{% trans "Advice" %}</label>
                             </div>
                         </div>
-                        {% for error in form.urgency.errors %}<div id="{{ form.urgency.id_for_label }}_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}
-                    </div>
+                        {% for error in form.urgency.errors %}<div id="id_urgency_errors" class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                    </fieldset>
 
                     <div class="mb-3">
                         <label for="{{ form.meeting_url.id_for_label }}" class="form-label small fw-semibold">{% trans "Meeting room link (Meet / Discord)" %}</label>

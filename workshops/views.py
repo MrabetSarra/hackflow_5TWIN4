@@ -32,7 +32,9 @@ Dashboard & calendrier
   export_ics           GET          fichier .ics
 """
 
+import json
 from datetime import timezone as dt_timezone
+from types import SimpleNamespace
 from urllib.parse import quote
 
 from django.contrib import messages
@@ -56,7 +58,7 @@ from student.models import Notification
 
 from .forms import RatingForm, WorkshopFilterForm, WorkshopForm
 from .models import (Badge, BadgeAward, Booking, Certificate, Workshop,
-                     WorkshopActivity, WorkshopFavorite)
+                     WorkshopActivity, WorkshopFavorite, WorkshopQuiz)
 
 logger = logging.getLogger(__name__)
 
@@ -269,10 +271,22 @@ def workshop_list(request):
         try:
             from .services.recommend import recommend
             from .services.schedule import optimise_schedule
-            recommended = recommend(request.user, workshops, top_n=6)
+            recommended = [
+                workshop for workshop in recommend(request.user, workshops, top_n=6)
+                if getattr(workshop, 'ai_score', 0) > 0
+            ]
             schedule_plan = optimise_schedule(request.user, recommended, top_n=3)
-        except Exception:
-            pass
+        except Exception as exc:
+            # En cas d'échec, on affiche quand même des ateliers à venir
+            import logging
+            logging.getLogger(__name__).warning(
+                'Recommandation IA échouée : %s', exc
+            )
+            now = timezone.now()
+            recommended = [
+                workshop for workshop in workshops
+                if workshop.is_open and workshop.ends_at >= now
+            ][:6]
 
     # Marquer les ateliers déjà réservés / favoris de l'utilisateur courant
     booked_ids = set()
@@ -289,6 +303,10 @@ def workshop_list(request):
                 user=request.user,
             ).values_list('workshop_id', flat=True)
         )
+
+    if booked_ids:
+        recommended = [w for w in recommended if w.pk not in booked_ids]
+        schedule_plan = [w for w in schedule_plan if w.pk not in booked_ids]
 
     # Pagination : 12 cartes par page, sans perdre les filtres courants.
     total_count = len(workshops)
@@ -337,7 +355,8 @@ def workshop_detail(request, slug):
     # Replay : disponible si réservé (étudiant) ou accès libre (admin/mentor)
     replay_accessible = False
     can_access_replay = False
-    replay_is_direct = False
+    replay_video_source = ''
+    replay_embed_url = ''
     if ws.mode == Workshop.Mode.RECORDED:
         can_access_replay = (
             (booking and booking.status in ['confirmed', 'attended'])
@@ -345,9 +364,15 @@ def workshop_detail(request, slug):
         )
         if can_access_replay:
             replay_accessible = ws.is_replay_available
-        clean_url = (ws.replay_url or '').split('?', 1)[0].lower()
-        replay_is_direct = clean_url.endswith(
-            ('.mp4', '.webm', '.ogg', '.ogv', '.mov', '.m4v'))
+            if replay_accessible:
+                replay_video_source = ws.replay_video_source
+                if not replay_video_source:
+                    replay_embed_url = ws.replay_embed_url
+
+    has_quiz = ws.quiz_questions.exists()
+    quiz_passed = bool(
+        booking and booking.status == Booking.Status.ATTENDED and has_quiz
+    )
 
     # Prédiction de remplissage (organisateur uniquement)
     forecast_data = None
@@ -375,7 +400,10 @@ def workshop_detail(request, slug):
         'can_access_meeting': can_access_meeting,
         'replay_accessible': replay_accessible,
         'can_access_replay': can_access_replay,
-        'replay_is_direct':  replay_is_direct,
+        'replay_video_source': replay_video_source,
+        'replay_embed_url':  replay_embed_url,
+        'has_quiz':          has_quiz,
+        'quiz_passed':       quiz_passed,
         'forecast':          forecast_data,
         'avis':              avis,
         'can_manage':        _can_manage(request.user, ws),
@@ -762,8 +790,19 @@ def rate(request, pk):
     ws = get_object_or_404(Workshop, pk=pk)
     booking = get_object_or_404(
         Booking, workshop=ws, user=request.user,
-        status=Booking.Status.ATTENDED,
+        status__in=[Booking.Status.CONFIRMED, Booking.Status.ATTENDED],
     )
+
+    # Le feedback n'est ouvert qu'après la fin de l'atelier (ou après
+    # validation du replay), jamais pendant la session.
+    if booking.status == Booking.Status.CONFIRMED:
+        replay_unfinished = ws.mode == Workshop.Mode.RECORDED
+        if replay_unfinished or ws.ends_at > timezone.now():
+            messages.error(
+                request,
+                'Terminez d\'abord l\'atelier (vidéo et quiz pour un replay) '
+                'avant de donner votre avis.')
+            return redirect('workshops:detail', slug=ws.slug)
 
     form = RatingForm(request.POST or None, instance=booking)
     if request.method == 'POST' and form.is_valid():
@@ -892,8 +931,23 @@ def replay_complete(request, pk):
         Workshop, pk=pk, mode=Workshop.Mode.RECORDED)
     booking = get_object_or_404(
         Booking, workshop=ws, user=request.user,
-        status__in=['confirmed'],
+        status__in=['confirmed', 'attended'],
     )
+
+    # Un atelier replay avec quiz exige la réussite du quiz : la vidéo seule
+    # ne valide pas la présence (le certificat serait trop facile à obtenir).
+    if ws.quiz_questions.exists():
+        if booking.status != Booking.Status.ATTENDED:
+            booking.replay_progress = 100
+            booking.save(update_fields=['replay_progress'])
+        messages.info(
+            request,
+            'Vidéo terminée. Passez le quiz (80% minimum) pour valider '
+            'votre présence et obtenir votre certificat.')
+        return redirect('workshops:quiz', pk=ws.pk)
+
+    if booking.status == Booking.Status.ATTENDED:
+        return redirect('workshops:my_bookings')
 
     with transaction.atomic():
         booking.replay_progress = 100
@@ -915,12 +969,39 @@ def replay_complete(request, pk):
 
 @login_required
 def my_bookings(request):
-    bookings = (
+    now = timezone.now()
+
+    try:
+        from .services.reminders import dispatch_reminders_for_user
+        dispatch_reminders_for_user(request.user)
+    except Exception:
+        logger.exception('Rappels ateliers indisponibles pour %s', request.user)
+
+    bookings = list(
         Booking.objects.filter(user=request.user)
         .select_related('workshop')
         .prefetch_related('workshop__bookings')
         .order_by('-booked_at')
     )
+
+    for booking in bookings:
+        workshop = booking.workshop
+        booking.is_upcoming = (
+            booking.status == Booking.Status.CONFIRMED
+            and workshop.mode in ('onsite', 'online')
+            and workshop.starts_at > now
+        )
+        booking.can_review = (
+            booking.rating is None
+            and (
+                booking.status == Booking.Status.ATTENDED
+                or (
+                    booking.status == Booking.Status.CONFIRMED
+                    and workshop.mode != Workshop.Mode.RECORDED
+                    and workshop.ends_at < now
+                )
+            )
+        )
     certificates = list(
         Certificate.objects.filter(user=request.user)
         .select_related('workshop')
@@ -1250,6 +1331,15 @@ def _issue_certificate(workshop, booking):
 # Quiz de compréhension (mode replay)
 # ---------------------------------------------------------------------------
 
+def _safe_correct_index(value, default=0):
+    """Convertit une valeur de formulaire en index 0-3, sans lever d'exception."""
+    try:
+        index = int(value)
+    except (TypeError, ValueError):
+        return default
+    return min(3, max(0, index))
+
+
 @login_required
 def workshop_quiz(request, pk):
     """Affiche le quiz d'un atelier enregistré pour un étudiant inscrit."""
@@ -1284,41 +1374,88 @@ def workshop_quiz(request, pk):
 def workshop_quiz_submit(request, pk):
     """Traite la soumission du quiz et calcule le score."""
     ws = get_object_or_404(Workshop, pk=pk)
+    if ws.mode != Workshop.Mode.RECORDED:
+        messages.error(
+            request,
+            'Le quiz est uniquement disponible pour les ateliers en replay.')
+        return redirect('workshops:detail', slug=ws.slug)
+
     questions = list(ws.quiz_questions.all())
 
     if not questions:
         messages.error(request, 'Aucune question de quiz configurée pour cet atelier.')
         return redirect('workshops:detail', slug=ws.slug)
 
+    booking = _get_user_booking(ws, request.user)
+    can_access = (
+        (booking and booking.status in ['confirmed', 'attended'])
+        or _can_view_content(request.user, ws)
+    )
+    if not can_access:
+        messages.error(
+            request, 'Réservez cet atelier pour passer le quiz.')
+        return redirect('workshops:detail', slug=ws.slug)
+
     score = 0
     results = []
     for q in questions:
-        user_answer = request.POST.get(f'question_{q.pk}')
+        raw_answer = request.POST.get(f'question_{q.pk}')
+        try:
+            user_index = int(raw_answer) if raw_answer is not None else None
+        except (TypeError, ValueError):
+            user_index = None
+
         correct = q.options()[q.correct_index]
-        is_correct = (user_answer is not None and int(user_answer) == q.correct_index)
+        is_correct = user_index == q.correct_index
         if is_correct:
             score += 1
         results.append({
             'question': q,
-            'user_answer': user_answer,
+            'user_answer': raw_answer,
             'correct_answer': correct,
             'is_correct': is_correct,
             'explanation': q.explanation,
         })
 
     percentage = round(100 * score / len(questions))
+    passed = percentage >= 80
+    certificate = None
 
-    # Marquer l'atelier comme complété si score >= 80%
-    booking = _get_user_booking(ws, request.user)
-    if booking and percentage >= 80 and booking.status != 'attended':
-        booking.status = 'attended'
-        booking.attended_at = timezone.now()
-        booking.save(update_fields=['status', 'attended_at'])
-        messages.success(
-            request,
-            f'Quiz réussi avec {score}/{len(questions)} ({percentage}%) ! '
-            f'Présence validée et certificat disponible.'
-        )
+    if passed and booking and booking.status in ['confirmed', 'attended']:
+        just_validated = booking.status != Booking.Status.ATTENDED
+        with transaction.atomic():
+            if just_validated:
+                booking.status = Booking.Status.ATTENDED
+                booking.attended_at = timezone.now()
+                booking.replay_progress = 100
+                booking.save(update_fields=[
+                    'status', 'attended_at', 'replay_progress'])
+                _log_activity(ws, request.user, 'checkin', 'quiz réussi')
+            _issue_certificate(ws, booking)
+        certificate = Certificate.objects.filter(
+            workshop=ws, user=request.user).first()
+
+        if just_validated:
+            _notify(
+                request.user,
+                title='Atelier validé — certificat disponible',
+                message=(
+                    f'Quiz réussi ({percentage}%) pour « {ws.title} ». '
+                    f'Votre certificat et votre badge sont disponibles.'),
+                icon='bi-patch-check-fill',
+                url=ws.get_absolute_url(),
+            )
+            messages.success(
+                request,
+                f'Quiz réussi avec {score}/{len(questions)} ({percentage}%) ! '
+                f'Présence validée, certificat et badge débloqués.'
+            )
+        else:
+            messages.success(
+                request,
+                f'Quiz réussi avec {score}/{len(questions)} ({percentage}%) ! '
+                f'Votre certificat est disponible.'
+            )
     elif booking:
         messages.warning(
             request,
@@ -1335,12 +1472,17 @@ def workshop_quiz_submit(request, pk):
     context = {
         'workshop':             ws,
         'booking':              booking,
+        'certificate':          certificate,
+        'badge_award':          (
+            BadgeAward.objects.filter(user=request.user, workshop=ws)
+            .select_related('badge').first() if certificate else None
+        ),
         'questions':            questions,
         'results':              results,
         'score':                score,
         'total':                len(questions),
         'percentage':           percentage,
-        'passed':               percentage >= 80,
+        'passed':               passed,
         'workshop_base_template': _workshop_base_template(request.user),
     }
     return render(request, 'workshops/quiz_result.html', context)
@@ -1384,7 +1526,7 @@ def workshop_quiz_question_add(request, pk):
         option_b = request.POST.get('option_b', '').strip()
         option_c = request.POST.get('option_c', '').strip()
         option_d = request.POST.get('option_d', '').strip()
-        correct_index = int(request.POST.get('correct_index', 0))
+        correct_index = _safe_correct_index(request.POST.get('correct_index'))
         explanation = request.POST.get('explanation', '').strip()
 
         if not all([question, option_a, option_b, option_c, option_d]):
@@ -1407,15 +1549,20 @@ def workshop_quiz_question_add(request, pk):
     # Pré-remplissage depuis les paramètres GET (génération IA)
     prefill = None
     if request.GET.get('question'):
-        prefill = type('obj', (object,), {
-            'question': request.GET.get('question', ''),
-            'option_a': request.GET.get('option_a', ''),
-            'option_b': request.GET.get('option_b', ''),
-            'option_c': request.GET.get('option_c', ''),
-            'option_d': request.GET.get('option_d', ''),
-            'correct_index': int(request.GET.get('correct_index', 0)),
-            'explication': request.GET.get('explication', ''),
-        })()
+        prefill = SimpleNamespace(
+            question=request.GET.get('question', ''),
+            option_a=request.GET.get('option_a', ''),
+            option_b=request.GET.get('option_b', ''),
+            option_c=request.GET.get('option_c', ''),
+            option_d=request.GET.get('option_d', ''),
+            correct_index=_safe_correct_index(
+                request.GET.get('correct_index')),
+            explanation=(
+                request.GET.get('explanation')
+                or request.GET.get('explication')
+                or ''
+            ),
+        )
 
     return render(request, 'workshops/quiz_question_form.html', {
         'workshop': ws,
@@ -1439,7 +1586,8 @@ def workshop_quiz_question_edit(request, pk, qid):
         question.option_b = request.POST.get('option_b', '').strip()
         question.option_c = request.POST.get('option_c', '').strip()
         question.option_d = request.POST.get('option_d', '').strip()
-        question.correct_index = int(request.POST.get('correct_index', 0))
+        question.correct_index = _safe_correct_index(
+            request.POST.get('correct_index'))
         question.explanation = request.POST.get('explanation', '').strip()
         question.save()
         messages.success(request, 'Question mise à jour.')
@@ -1454,6 +1602,7 @@ def workshop_quiz_question_edit(request, pk, qid):
 
 
 @login_required
+@require_POST
 def workshop_quiz_question_delete(request, pk, qid):
     """Supprimer une question de quiz."""
     ws = get_object_or_404(Workshop, pk=pk)
